@@ -104,6 +104,14 @@ body {
 .badge-pink { background: #fce7f3; color: #be185d; }
 .badge-lime { background: #ecfccb; color: #4d7c0f; }
 
+.chart-seg {
+  transition: opacity 0.2s ease;
+}
+
+.chart-seg:hover {
+  opacity: 0.82;
+}
+
 .checklist-item.is-checked .item-label {
   color: #6d848c;
   text-decoration: line-through;

@@ -133,22 +133,40 @@
       mapsQuery: "Songshan Cultural and Creative Park Taipei",
     },
     {
-      id: "chifeng",
+      id: "maokong",
       zone: "expedition",
-      category: "Cafe",
-      name: "赤峰街 Cafe 圈",
-      detail: "中山文青巷弄半日遠征。",
-      transit: "藍／紅線至中山",
-      mapsQuery: "Chifeng Street cafe Zhongshan Taipei",
+      category: "纜車",
+      name: "貓空纜車",
+      detail: "永春→動物園站轉貓空纜車，山上喝茶看夜景。",
+      transit: "藍線轉棕線至動物園站",
+      mapsQuery: "Maokong Gondola Taipei",
     },
     {
-      id: "huashan",
+      id: "tamsui",
       zone: "expedition",
-      category: "文創",
-      name: "華山 1914 文創園區",
-      detail: "展覽與園區散步，藍線可達。",
-      transit: "藍線善導寺／忠孝新生再步行",
-      mapsQuery: "Huashan 1914 Creative Park Taipei",
+      category: "夕陽",
+      name: "淡水老街／河岸",
+      detail: "紅線直達，傍晚看淡水夕陽。",
+      transit: "藍線轉紅線至淡水",
+      mapsQuery: "Tamsui Old Street Taipei",
+    },
+    {
+      id: "beitou",
+      zone: "expedition",
+      category: "溫泉",
+      name: "北投溫泉",
+      detail: "紅線至北投／新北投，泡湯放鬆。",
+      transit: "藍線轉紅線至北投",
+      mapsQuery: "Beitou Hot Spring Taipei",
+    },
+    {
+      id: "jiufen",
+      zone: "expedition",
+      category: "山城",
+      name: "九份／十分",
+      detail: "山城老街與十分天燈，安排一日往返。",
+      transit: "捷運＋客運／火車轉乘",
+      mapsQuery: "Jiufen Old Street Taiwan",
     },
   ];
 
@@ -221,17 +239,46 @@
       items: [
         item("10:30", "永春巷弄早午餐", "Coffee Water 或其他常客店二訪。", "Cafe", "near", "cafe near Yongchun MRT Taipei"),
         item("14:00", "新光三越 A11 日用品", "洗劑、零食、長住耗材一次補。", "商場", "near", "Shin Kong Mitsukoshi A11 Taipei"),
-        item("18:30", "酒店附近晚餐", "早睡，隔天遠征赤峰街。", "生活", "near", "Yongchun Station Taipei"),
+        item("18:30", "酒店附近晚餐", "早睡，隔天遠征貓空纜車。", "生活", "near", "Yongchun Station Taipei"),
       ],
     },
     "2026-08-14": {
-      title: "遠征 · 赤峰街 Cafe",
-      vibe: "5% 遠征 · 中山",
+      title: "遠征 · 貓空纜車",
+      vibe: "5% 遠征 · 文山貓空",
       mode: "expedition",
       items: [
-        item("10:30", "永春藍線出發", "轉乘至中山站，預留轉車時間。", "交通", "expedition", "Yongchun MRT Station Taipei"),
-        item("12:00", "赤峰街文青 Cafe 圈", "獨立咖啡、選物店半日漫遊。", "Cafe", "expedition", "Chifeng Street cafe Taipei"),
-        item("16:30", "中山線性公園後回程", "傍晚前藍／紅線回永春。", "漫步", "expedition", "Zhongshan Linear Park Taipei"),
+        item(
+          "09:30",
+          "永春站出發（往動物園）",
+          "捷運藍線永春站往西（往南勢角／頂埔方向視轉乘），在忠孝復興或市政府轉棕線（文湖線）至動物園站；也可搭公車往動物園方向。預留 40–60 分交通時間。",
+          "交通",
+          "expedition",
+          "Yongchun MRT Station to Taipei Zoo"
+        ),
+        item(
+          "11:00",
+          "動物園站搭貓空纜車",
+          "在貓空纜車動物園站購票上車，沿途看指南山與市區。若遇強風／維修可能暫停，出發前可查官方營運。",
+          "纜車",
+          "expedition",
+          "Maokong Gondola Taipei Zoo Station"
+        ),
+        item(
+          "12:30",
+          "貓空茶園午餐／品茶",
+          "貓空站下纜車後找茶館，點壺茶配点心，慢慢看山景。",
+          "美食",
+          "expedition",
+          "Maokong tea house Taipei"
+        ),
+        item(
+          "16:00",
+          "下山回永春",
+          "原路纜車回動物園站，棕線轉藍線回永春。晚上落樓輕食即可。",
+          "交通",
+          "expedition",
+          "Yongchun MRT Station Taipei"
+        ),
       ],
     },
     "2026-08-15": {
@@ -291,17 +338,46 @@
       items: [
         item("11:00", "永春巷弄 Cafe", "Out of Office 或新店試喝。", "Cafe", "near", "cafe Hulin Street Yongchun Taipei"),
         item("15:00", "全聯／超市補貨", "長住食材與日用品。", "生活", "near", "PX Mart near Yongchun Taipei"),
-        item("18:30", "巷弄晚餐＋早睡", "隔天遠征華山。", "美食", "near", "Yongchun alleys restaurants Taipei"),
+        item("18:30", "巷弄晚餐＋早睡", "隔天遠征淡水看夕陽。", "美食", "near", "Yongchun alleys restaurants Taipei"),
       ],
     },
     "2026-08-21": {
-      title: "遠征 · 華山 1914",
-      vibe: "5% 遠征 · 文創",
+      title: "遠征 · 淡水夕陽",
+      vibe: "5% 遠征 · 淡水河岸",
       mode: "expedition",
       items: [
-        item("10:30", "藍線往華山／善導寺", "永春出發，步行進園區。", "交通", "expedition", "Huashan 1914 Creative Park Taipei"),
-        item("12:00", "華山 1914 文創園區", "展覽、市集、園區用餐。", "文創", "expedition", "Huashan 1914 Creative Park"),
-        item("16:30", "回程永春", "傍晚前藍線回家，晚上落樓輕食。", "交通", "expedition", "Yongchun MRT Station Taipei"),
+        item(
+          "11:00",
+          "永春 → 淡水",
+          "藍線永春往台北車站／民權西路方向，轉紅線（淡水信義線）直達淡水站。單程約 50–70 分。",
+          "交通",
+          "expedition",
+          "Tamsui MRT Station Taipei"
+        ),
+        item(
+          "12:30",
+          "淡水老街午餐",
+          "老街小吃、魚酥、阿給，別吃太撐，留肚子給傍晚。",
+          "美食",
+          "expedition",
+          "Tamsui Old Street Taipei"
+        ),
+        item(
+          "15:30",
+          "漁人碼頭／河岸散步",
+          "往河岸或漁人碼頭方向走，找位子等日落。",
+          "漫步",
+          "expedition",
+          "Tamsui Fisherman's Wharf"
+        ),
+        item(
+          "18:00",
+          "看完夕陽回永春",
+          "紅線回程再轉藍線回永春，晚上落樓休息。",
+          "交通",
+          "expedition",
+          "Yongchun MRT Station Taipei"
+        ),
       ],
     },
     "2026-08-22": {
@@ -361,17 +437,46 @@
       items: [
         item("11:30", "微風南山", "記下想買的伴手禮，先不結帳。", "商場", "near", "Breeze Nan Shan Taipei"),
         item("15:30", "101／遠百 A13 比價", "同一品項比價做清單。", "購物", "near", "Taipei 101 Mall souvenirs"),
-        item("19:00", "信義晚餐", "早點休息。", "美食", "near", "Xinyi dinner Taipei"),
+        item("19:00", "信義晚餐", "早點休息，隔天遠征北投溫泉。", "美食", "near", "Xinyi dinner Taipei"),
       ],
     },
     "2026-08-28": {
-      title: "松菸市集／展覽",
-      vibe: "落樓即到 · 文創",
-      mode: "near",
+      title: "遠征 · 北投溫泉",
+      vibe: "5% 遠征 · 泡湯放鬆",
+      mode: "expedition",
       items: [
-        item("11:00", "松山文創園區", "看當期展覽或週末市集。", "文創", "near", "Songshan Cultural and Creative Park Taipei"),
-        item("14:30", "園區 Cafe", "下午茶後慢慢走回。", "Cafe", "near", "Songshan Creative Park cafe"),
-        item("18:30", "永春晚餐", "落樓收工。", "美食", "near", "Yongchun Station Taipei"),
+        item(
+          "10:00",
+          "永春 → 北投／新北投",
+          "藍線轉紅線至北投站，再轉新北投支線（或步行／公車）。單程約 50–70 分。",
+          "交通",
+          "expedition",
+          "Xinbeitou MRT Station Taipei"
+        ),
+        item(
+          "11:30",
+          "北投圖書館／地熱谷周邊",
+          "先散步看溫泉地景與圖書館建築，感受北投氛圍。",
+          "文化",
+          "expedition",
+          "Beitou Library Taipei"
+        ),
+        item(
+          "13:30",
+          "溫泉會館泡湯",
+          "選一家日式或大眾湯，避開週末人潮更佳；記得帶換洗衣物。",
+          "放鬆",
+          "expedition",
+          "Beitou hot spring hotel Taipei"
+        ),
+        item(
+          "17:30",
+          "回程永春",
+          "紅線轉藍線回家，晚上落樓輕食，別再安排重行程。",
+          "交通",
+          "expedition",
+          "Yongchun MRT Station Taipei"
+        ),
       ],
     },
     "2026-08-29": {
@@ -401,25 +506,54 @@
       items: [
         item("11:00", "A8 → A9 → A11 全線", "把還沒逛完的樓層走完。", "商場", "near", "Shin Kong Mitsukoshi Xinyi Taipei"),
         item("15:30", "A4 下午茶／小吃", "休息腿力。", "美食", "near", "Shin Kong Mitsukoshi A4 Taipei"),
-        item("19:00", "永春回程晚餐", "落樓。", "美食", "near", "Yongchun dinner Taipei"),
+        item("19:00", "永春回程晚餐", "早睡，隔天遠征九份／十分。", "美食", "near", "Yongchun dinner Taipei"),
       ],
     },
     "2026-09-01": {
-      title: "微風南山下午茶",
-      vibe: "落樓即到",
-      mode: "near",
+      title: "遠征 · 九份／十分",
+      vibe: "5% 遠征 · 山城一日",
+      mode: "expedition",
       items: [
-        item("12:00", "微風南山午餐", "商場餐廳。", "美食", "near", "Breeze Nan Shan Taipei"),
-        item("15:00", "南山高空／窗景座位", "慢慢待到傍晚。", "商場", "near", "Breeze Nan Shan Taipei"),
-        item("19:00", "101 一帶晚餐", "夜景收工。", "美食", "near", "Taipei 101 restaurants"),
+        item(
+          "08:30",
+          "永春出發往九份",
+          "建議提早出門：藍線至台北車站或忠孝復興一帶，轉客運／旅遊巴士往九份；或火車至瑞芳再轉公車。預留塞車與排隊時間。",
+          "交通",
+          "expedition",
+          "Jiufen Old Street from Taipei"
+        ),
+        item(
+          "11:00",
+          "九份老街",
+          "芋圓、茶樓、山城巷弄拍照；中午避開最擠時段找位子。",
+          "景點",
+          "expedition",
+          "Jiufen Old Street Taiwan"
+        ),
+        item(
+          "14:30",
+          "十分（可選）",
+          "若體力允許，轉往十分看天燈／鐵道；時間不夠就留在九份喝茶。",
+          "景點",
+          "expedition",
+          "Shifen Old Street Taiwan"
+        ),
+        item(
+          "17:30",
+          "回程永春",
+          "傍晚前下山，晚上落樓輕食即可，隔天放慢。",
+          "交通",
+          "expedition",
+          "Yongchun MRT Station Taipei"
+        ),
       ],
     },
     "2026-09-02": {
-      title: "Out of Office · 生活補給",
-      vibe: "落樓即到",
+      title: "Out of Office · 九份恢復日",
+      vibe: "落樓即到 · 充電",
       mode: "near",
       items: [
-        item("10:30", "Out of Office", "咖啡＋整理行李草稿清單。", "Cafe", "near", "Out of Office cafe Taipei"),
+        item("10:30", "Out of Office", "山城遠征隔天，只走步行圈慢慢坐。", "Cafe", "near", "Out of Office cafe Taipei"),
         item("14:00", "A11／超市補耗材", "最後一週日用品。", "生活", "near", "Shin Kong Mitsukoshi A11 Taipei"),
         item("18:30", "永春晚餐", "落樓。", "美食", "near", "Yongchun food Taipei"),
       ],
@@ -467,10 +601,10 @@
 
   const WEEK_META = {
     1: { label: "Week 1", hint: "永春安頓 · 信義步行" },
-    2: { label: "Week 2", hint: "赤峰遠征 · 落樓恢復" },
-    3: { label: "Week 3", hint: "華山遠征 · 信義深度" },
-    4: { label: "Week 4", hint: "松菸 · 伴手禮決選" },
-    5: { label: "Week 5", hint: "結帳 · 告別 · 返程" },
+    2: { label: "Week 2", hint: "貓空纜車 · 落樓恢復" },
+    3: { label: "Week 3", hint: "淡水夕陽 · 信義深度" },
+    4: { label: "Week 4", hint: "北投溫泉 · 伴手禮" },
+    5: { label: "Week 5", hint: "九份十分 · 告別返程" },
   };
 
   const DEFAULT_CHECKLIST = [
@@ -1067,103 +1201,286 @@
     });
   }
 
+  const CHART_COLORS = [
+    "#0F766E",
+    "#14B8A6",
+    "#F97316",
+    "#EA580C",
+    "#0284C7",
+    "#7C3AED",
+    "#DB2777",
+    "#65A30D",
+  ];
+
+  function expenseDailyTotals() {
+    const totals = {};
+    state.days.forEach((d) => {
+      totals[d.id] = 0;
+    });
+    state.expenses.forEach((entry) => {
+      const id = toDateId(new Date(entry.createdAt));
+      if (totals[id] !== undefined) totals[id] += entry.twd;
+      else {
+        // Outside trip calendar: fold into nearest trip week day by week index
+        const w = entry.week || weekOf(new Date(entry.createdAt));
+        const anchor = state.days.find((d) => d.week === w);
+        if (anchor) totals[anchor.id] = (totals[anchor.id] || 0) + entry.twd;
+      }
+    });
+    return totals;
+  }
+
+  function polar(cx, cy, r, angleDeg) {
+    const rad = ((angleDeg - 90) * Math.PI) / 180;
+    return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
+  }
+
+  function donutSegment(cx, cy, rOuter, rInner, startAngle, endAngle) {
+    const large = endAngle - startAngle > 180 ? 1 : 0;
+    const [x1, y1] = polar(cx, cy, rOuter, startAngle);
+    const [x2, y2] = polar(cx, cy, rOuter, endAngle);
+    const [x3, y3] = polar(cx, cy, rInner, endAngle);
+    const [x4, y4] = polar(cx, cy, rInner, startAngle);
+    return `M ${x1} ${y1} A ${rOuter} ${rOuter} 0 ${large} 1 ${x2} ${y2} L ${x3} ${y3} A ${rInner} ${rInner} 0 ${large} 0 ${x4} ${y4} Z`;
+  }
+
   function renderExpenseSummary() {
     const totalTwd = state.expenses.reduce((sum, e) => sum + e.twd, 0);
     const totalHkd = totalTwd * state.rate.hkdPerTwd;
     const avgDaily = totalTwd / TRIP_DAYS;
+    const avgHkd = avgDaily * state.rate.hkdPerTwd;
     const remaining = state.budgetTwd - totalTwd;
     const budgetPct = state.budgetTwd > 0 ? Math.min(100, Math.round((totalTwd / state.budgetTwd) * 100)) : 0;
+    const catTotals = expenseCategoryTotals();
+    const topCat = EXPENSE_CATEGORIES.map((c) => ({ ...c, total: catTotals[c.id] || 0 })).sort(
+      (a, b) => b.total - a.total
+    )[0];
     const remainClass = remaining < 0 ? "text-coral" : "text-jade-700";
 
     els.expenseSummary.innerHTML = `
+      <div class="col-span-2 rounded-3xl bg-gradient-to-br from-jade-800 via-jade-600 to-jade-500 p-4 text-white shadow-soft">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-white/70">預算 vs 實際</p>
+            <p class="mt-1 font-display text-xl font-bold">${formatTwd(totalTwd)} <span class="text-sm font-medium text-white/75">/ ${formatTwd(state.budgetTwd)}</span></p>
+            <p class="mt-1 text-xs text-white/80">剩餘 <span class="font-bold">${formatTwd(remaining)}</span> · 已用 ${budgetPct}%</p>
+          </div>
+          <div class="rounded-2xl bg-white/15 px-3 py-2 text-right backdrop-blur-sm">
+            <p class="text-[10px] uppercase tracking-wider text-white/70">進度</p>
+            <p class="font-display text-lg font-bold">${budgetPct}%</p>
+          </div>
+        </div>
+        <div class="mt-3 h-2 overflow-hidden rounded-full bg-white/20">
+          <div class="h-full rounded-full ${remaining < 0 ? "bg-coral" : "bg-white"}" style="width:${budgetPct}%"></div>
+        </div>
+      </div>
+      <div class="rounded-2xl bg-white/85 p-3 shadow-soft backdrop-blur">
+        <p class="text-[10px] font-semibold uppercase tracking-wider text-ink-faint">日均開支</p>
+        <p class="mt-1 font-display text-base font-bold text-ink">${formatTwd(avgDaily)}</p>
+        <p class="text-xs text-jade-700">${formatHkd(avgHkd)}</p>
+      </div>
+      <div class="rounded-2xl bg-white/85 p-3 shadow-soft backdrop-blur">
+        <p class="text-[10px] font-semibold uppercase tracking-wider text-ink-faint">最高分類</p>
+        <p class="mt-1 font-display text-base font-bold text-ink">${
+          topCat && topCat.total > 0 ? escapeHtml(topCat.label) : "—"
+        }</p>
+        <p class="text-xs text-ink-soft">${topCat && topCat.total > 0 ? formatTwd(topCat.total) : "尚無資料"}</p>
+      </div>
       <div class="rounded-2xl bg-white/85 p-3 shadow-soft backdrop-blur">
         <p class="text-[10px] font-semibold uppercase tracking-wider text-ink-faint">總支出 TWD</p>
-        <p class="mt-1 font-display text-lg font-bold text-ink">${formatTwd(totalTwd)}</p>
+        <p class="mt-1 font-display text-base font-bold text-ink">${formatTwd(totalTwd)}</p>
       </div>
       <div class="rounded-2xl bg-white/85 p-3 shadow-soft backdrop-blur">
         <p class="text-[10px] font-semibold uppercase tracking-wider text-ink-faint">等值 HKD</p>
-        <p class="mt-1 font-display text-lg font-bold text-jade-700">${formatHkd(totalHkd)}</p>
-      </div>
-      <div class="rounded-2xl bg-white/85 p-3 shadow-soft backdrop-blur">
-        <p class="text-[10px] font-semibold uppercase tracking-wider text-ink-faint">日均（31 天）</p>
-        <p class="mt-1 font-display text-lg font-bold text-ink">${formatTwd(avgDaily)}</p>
-      </div>
-      <div class="rounded-2xl bg-white/85 p-3 shadow-soft backdrop-blur">
-        <p class="text-[10px] font-semibold uppercase tracking-wider text-ink-faint">剩餘預算</p>
-        <p class="mt-1 font-display text-lg font-bold ${remainClass}">${formatTwd(remaining)}</p>
-        <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-jade-50">
-          <div class="h-full rounded-full ${remaining < 0 ? "bg-coral" : "bg-jade-500"}" style="width:${budgetPct}%"></div>
+        <p class="mt-1 font-display text-base font-bold ${remainClass}">${formatHkd(totalHkd)}</p>
+      </div>`;
+  }
+
+  function renderDonutChart(catEntries, monthTwd) {
+    const cx = 90;
+    const cy = 90;
+    const rOuter = 70;
+    const rInner = 44;
+    const active = catEntries.filter((c) => c.total > 0);
+    if (!monthTwd || !active.length) {
+      return `
+        <div class="flex flex-col items-center justify-center py-6">
+          <svg viewBox="0 0 180 180" class="h-40 w-40">
+            <circle cx="90" cy="90" r="70" fill="none" stroke="#E7F7F4" stroke-width="26" />
+            <circle cx="90" cy="90" r="44" fill="#F4F9F8" />
+            <text x="90" y="88" text-anchor="middle" class="fill-ink-faint" font-size="11">尚無</text>
+            <text x="90" y="104" text-anchor="middle" class="fill-ink-faint" font-size="11">資料</text>
+          </svg>
+        </div>`;
+    }
+
+    let angle = 0;
+    const segments = active
+      .map((c, i) => {
+        const sweep = (c.total / monthTwd) * 360;
+        const start = angle;
+        const end = angle + Math.max(sweep, 0.8);
+        angle += sweep;
+        const color = CHART_COLORS[EXPENSE_CATEGORIES.findIndex((x) => x.id === c.id) % CHART_COLORS.length];
+        const mid = (start + end) / 2;
+        return `<path class="chart-seg cursor-pointer transition-opacity hover:opacity-80" data-filter-cat="${c.id}" d="${donutSegment(
+          cx,
+          cy,
+          rOuter,
+          rInner,
+          start,
+          end
+        )}" fill="${color}"><title>${escapeHtml(c.label)} ${Math.round((c.total / monthTwd) * 100)}%</title></path>`;
+      })
+      .join("");
+
+    return `
+      <div class="flex flex-col items-center gap-3 sm:flex-row sm:items-start">
+        <svg viewBox="0 0 180 180" class="h-44 w-44 shrink-0">
+          ${segments}
+          <circle cx="90" cy="90" r="40" fill="#fff" />
+          <text x="90" y="86" text-anchor="middle" fill="#14262B" font-size="11" font-weight="700">本月</text>
+          <text x="90" y="102" text-anchor="middle" fill="#0F766E" font-size="10" font-weight="700">${Math.round(monthTwd).toLocaleString("zh-TW")}</text>
+        </svg>
+        <div class="grid w-full grid-cols-2 gap-2">
+          ${active
+            .map((c) => {
+              const color = CHART_COLORS[EXPENSE_CATEGORIES.findIndex((x) => x.id === c.id) % CHART_COLORS.length];
+              const share = Math.round((c.total / monthTwd) * 100);
+              const on = state.filterCategory === c.id;
+              return `<button type="button" data-filter-cat="${c.id}" class="flex items-center gap-2 rounded-xl px-2 py-1.5 text-left transition ${on ? "bg-jade-50 ring-1 ring-jade-500" : "hover:bg-mist"}">
+                <span class="h-2.5 w-2.5 shrink-0 rounded-full" style="background:${color}"></span>
+                <span class="min-w-0">
+                  <span class="block truncate text-[11px] font-bold text-ink">${escapeHtml(c.label)}</span>
+                  <span class="text-[10px] text-ink-faint">${share}% · ${formatTwd(c.total)}</span>
+                </span>
+              </button>`;
+            })
+            .join("")}
         </div>
       </div>`;
+  }
+
+  function renderWeeklyBarChart(weekTotals) {
+    const maxWeek = Math.max(...Object.values(weekTotals), 1);
+    const W = 300;
+    const H = 160;
+    const padL = 28;
+    const padB = 28;
+    const padT = 12;
+    const chartH = H - padB - padT;
+    const gap = 10;
+    const barW = (W - padL - 12 - gap * 4) / 5;
+
+    const bars = [1, 2, 3, 4, 5]
+      .map((w, i) => {
+        const val = weekTotals[w] || 0;
+        const h = Math.max(val > 0 ? 6 : 2, (val / maxWeek) * chartH);
+        const x = padL + i * (barW + gap);
+        const y = padT + chartH - h;
+        const active = state.filterWeek === String(w);
+        const fill = active ? "#F97316" : "#0F766E";
+        return `
+          <g class="chart-seg cursor-pointer" data-filter-week="${w}">
+            <rect x="${x}" y="${y}" width="${barW}" height="${h}" rx="8" fill="${fill}" class="transition-all hover:opacity-85">
+              <title>Week ${w}: ${formatTwd(val)}</title>
+            </rect>
+            <text x="${x + barW / 2}" y="${H - 10}" text-anchor="middle" fill="#6D848C" font-size="10" font-weight="700">W${w}</text>
+          </g>`;
+      })
+      .join("");
+
+    return `
+      <svg viewBox="0 0 ${W} ${H}" class="h-44 w-full" role="img" aria-label="每週開支長條圖">
+        <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT + chartH}" stroke="#E7F7F4" stroke-width="1" />
+        <line x1="${padL}" y1="${padT + chartH}" x2="${W - 8}" y2="${padT + chartH}" stroke="#E7F7F4" stroke-width="1" />
+        ${bars}
+      </svg>
+      <div class="mt-1 flex justify-between px-1 text-[10px] text-ink-faint">
+        ${[1, 2, 3, 4, 5].map((w) => `<span>W${w} ${formatTwd(weekTotals[w] || 0).replace("NT$ ", "")}</span>`).join("")}
+      </div>`;
+  }
+
+  function renderDailyTrendChart(dailyTotals) {
+    const values = state.days.map((d) => dailyTotals[d.id] || 0);
+    const maxV = Math.max(...values, 1);
+    const W = 320;
+    const H = 150;
+    const pad = { l: 8, r: 8, t: 16, b: 24 };
+    const innerW = W - pad.l - pad.r;
+    const innerH = H - pad.t - pad.b;
+    const n = values.length;
+    const points = values.map((v, i) => {
+      const x = pad.l + (n === 1 ? innerW / 2 : (i / (n - 1)) * innerW);
+      const y = pad.t + innerH - (v / maxV) * innerH;
+      return [x, y, v];
+    });
+
+    const line = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(" ");
+    const area = `${line} L ${points[points.length - 1][0].toFixed(1)} ${(pad.t + innerH).toFixed(1)} L ${points[0][0].toFixed(1)} ${(pad.t + innerH).toFixed(1)} Z`;
+    const peakIdx = values.indexOf(Math.max(...values));
+    const peak = points[peakIdx];
+
+    return `
+      <svg viewBox="0 0 ${W} ${H}" class="h-40 w-full" role="img" aria-label="每日開支趨勢">
+        <defs>
+          <linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#14B8A6" stop-opacity="0.35" />
+            <stop offset="100%" stop-color="#14B8A6" stop-opacity="0.02" />
+          </linearGradient>
+        </defs>
+        <path d="${area}" fill="url(#areaFill)" />
+        <path d="${line}" fill="none" stroke="#0F766E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+        ${
+          values.some((v) => v > 0)
+            ? `<circle cx="${peak[0]}" cy="${peak[1]}" r="4.5" fill="#F97316" stroke="#fff" stroke-width="2">
+                <title>高峰：${formatTwd(peak[2])}</title>
+              </circle>`
+            : ""
+        }
+        <text x="${pad.l}" y="${H - 6}" fill="#6D848C" font-size="9">8/7</text>
+        <text x="${W / 2}" y="${H - 6}" text-anchor="middle" fill="#6D848C" font-size="9">旅程中段</text>
+        <text x="${W - pad.r}" y="${H - 6}" text-anchor="end" fill="#6D848C" font-size="9">9/6</text>
+      </svg>
+      <p class="mt-1 text-center text-[10px] text-ink-faint">${
+        values.some((v) => v > 0)
+          ? `高峰日約 ${state.days[peakIdx] ? formatShort(state.days[peakIdx].date) : "—"} · ${formatTwd(values[peakIdx])}`
+          : "有開支紀錄後會顯示每日曲線"
+      }</p>`;
   }
 
   function renderExpenseAnalytics() {
     const weekTotals = expenseWeekTotals();
     const catTotals = expenseCategoryTotals();
+    const dailyTotals = expenseDailyTotals();
     const monthTwd = Object.values(weekTotals).reduce((a, b) => a + b, 0);
-    const maxWeek = Math.max(...Object.values(weekTotals), 1);
     const catEntries = EXPENSE_CATEGORIES.map((c) => ({ ...c, total: catTotals[c.id] || 0 })).sort(
       (a, b) => b.total - a.total
     );
-    const maxCat = Math.max(...catEntries.map((c) => c.total), 1);
 
     els.expenseAnalytics.innerHTML = `
       <div class="rounded-3xl bg-white/85 p-4 shadow-soft backdrop-blur">
         <div class="mb-3 flex items-center justify-between">
-          <h3 class="font-display text-sm font-bold text-ink">每週開支比較</h3>
-          <span class="text-[10px] font-semibold text-ink-faint">Week 1–5</span>
+          <h3 class="font-display text-sm font-bold text-ink">分類環形圖</h3>
+          <span class="text-[10px] font-semibold text-ink-faint">點圖例可篩選</span>
         </div>
-        <div class="space-y-3">
-          ${[1, 2, 3, 4, 5]
-            .map((w) => {
-              const pct = Math.round((weekTotals[w] / maxWeek) * 100);
-              const active = state.filterWeek === String(w);
-              return `<button type="button" class="week-filter-row w-full text-left ${active ? "opacity-100" : ""}" data-filter-week="${w}">
-                <div class="mb-1 flex items-center justify-between text-xs">
-                  <span class="font-semibold text-ink">Week ${w}${active ? " · 篩選中" : ""}</span>
-                  <span class="text-ink-soft">${formatTwd(weekTotals[w])}</span>
-                </div>
-                <div class="h-2.5 overflow-hidden rounded-full bg-jade-50">
-                  <div class="h-full rounded-full bg-gradient-to-r from-jade-500 to-jade-600 transition-all" style="width:${pct}%"></div>
-                </div>
-              </button>`;
-            })
-            .join("")}
-        </div>
-        <div class="mt-4 flex h-20 items-end gap-1.5">
-          ${[1, 2, 3, 4, 5]
-            .map((w) => {
-              const barH = Math.max(4, Math.round((weekTotals[w] / maxWeek) * 64));
-              const active = state.filterWeek === String(w);
-              return `<button type="button" class="flex flex-1 flex-col items-center justify-end gap-1" data-filter-week="${w}" aria-label="篩選 Week ${w}">
-                <div class="w-full rounded-t-lg ${active ? "bg-coral" : "bg-jade-500/90"} transition-all" style="height:${barH}px"></div>
-                <span class="text-[10px] font-semibold text-ink-faint">W${w}</span>
-              </button>`;
-            })
-            .join("")}
-        </div>
+        ${renderDonutChart(catEntries, monthTwd)}
       </div>
 
       <div class="rounded-3xl bg-white/85 p-4 shadow-soft backdrop-blur">
-        <h3 class="mb-3 font-display text-sm font-bold text-ink">分類佔比</h3>
-        <div class="space-y-2.5">
-          ${catEntries
-            .map((c) => {
-              const share = monthTwd ? Math.round((c.total / monthTwd) * 100) : 0;
-              const bar = Math.round((c.total / maxCat) * 100);
-              const active = state.filterCategory === c.id;
-              return `<button type="button" class="w-full text-left" data-filter-cat="${c.id}">
-                <div class="mb-1 flex items-center justify-between text-xs">
-                  <span class="font-semibold ${active ? "text-coral" : "text-ink"}">${escapeHtml(c.label)}${active ? " · 篩選中" : ""} · ${share}%</span>
-                  <span class="text-ink-soft">${formatTwd(c.total)}</span>
-                </div>
-                <div class="h-2 overflow-hidden rounded-full bg-coral-soft">
-                  <div class="h-full rounded-full ${active ? "bg-coral" : "bg-coral/80"} transition-all" style="width:${bar}%"></div>
-                </div>
-              </button>`;
-            })
-            .join("")}
+        <div class="mb-2 flex items-center justify-between">
+          <h3 class="font-display text-sm font-bold text-ink">每週比較</h3>
+          <span class="text-[10px] font-semibold text-ink-faint">Week 1–5 · 點長條篩選</span>
         </div>
+        ${renderWeeklyBarChart(weekTotals)}
+      </div>
+
+      <div class="rounded-3xl bg-white/85 p-4 shadow-soft backdrop-blur">
+        <div class="mb-2 flex items-center justify-between">
+          <h3 class="font-display text-sm font-bold text-ink">每日開支趨勢</h3>
+          <span class="text-[10px] font-semibold text-ink-faint">8/7 – 9/6</span>
+        </div>
+        ${renderDailyTrendChart(dailyTotals)}
       </div>`;
   }
 
