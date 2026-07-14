@@ -68,6 +68,42 @@ body {
   color: #f97316;
 }
 
+.filter-chip {
+  min-height: 2.5rem;
+  border-radius: 1rem;
+  border: 1px solid #cff0ea;
+  background: #f4f9f8;
+  padding: 0 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #3e5a62;
+  transition: 0.15s ease;
+}
+
+.filter-chip.is-active {
+  background: #0f766e;
+  border-color: #0f766e;
+  color: #fff;
+}
+
+.tag-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.badge-jade { background: #e7f7f4; color: #0b5b55; }
+.badge-sky { background: #e0f2fe; color: #0369a1; }
+.badge-coral { background: #fff3e8; color: #c2410c; }
+.badge-amber { background: #fef3c7; color: #b45309; }
+.badge-rose { background: #ffe4e6; color: #be123c; }
+.badge-violet { background: #ede9fe; color: #6d28d9; }
+.badge-pink { background: #fce7f3; color: #be185d; }
+.badge-lime { background: #ecfccb; color: #4d7c0f; }
+
 .checklist-item.is-checked .item-label {
   color: #6d848c;
   text-decoration: line-through;
