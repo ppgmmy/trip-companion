@@ -2,14 +2,40 @@
   "use strict";
 
   const STORAGE_KEYS = {
-    checklist: "trip-companion:checklist-v2",
-    expenses: "trip-companion:expenses-v2",
-    cafes: "trip-companion:cafes-v2",
-    rate: "trip-companion:fx-rate-v1",
-    budget: "trip-companion:budget-v1",
-    tab: "trip-companion:active-tab-v1",
-    week: "trip-companion:active-week-v1",
-    day: "trip-companion:active-day-v1",
+    expenses: "tokyo-expenses",
+    itinerary: "tokyo-itinerary",
+    checklist: "tokyo-checklist",
+    cafes: "tokyo-cafe-log",
+    rate: "tokyo-fx-rate",
+    budget: "tokyo-budget",
+    tab: "tokyo-active-tab",
+    week: "tokyo-active-week",
+    day: "tokyo-active-day",
+  };
+
+  /** Older keys — read once for migration, never wipe user data. */
+  const LEGACY_KEYS = {
+    expenses: [
+      "tokyo-expenses",
+      "trip-companion:expenses-v2",
+      "trip-companion:expenses-v1",
+    ],
+    itinerary: ["tokyo-itinerary", "trip-companion:itinerary-v1"],
+    checklist: [
+      "tokyo-checklist",
+      "trip-companion:checklist-v2",
+      "trip-companion:checklist-v1",
+    ],
+    cafes: [
+      "tokyo-cafe-log",
+      "trip-companion:cafes-v2",
+      "trip-companion:cafes-v1",
+    ],
+    rate: ["tokyo-fx-rate", "trip-companion:fx-rate-v1"],
+    budget: ["tokyo-budget", "trip-companion:budget-v1"],
+    tab: ["tokyo-active-tab", "trip-companion:active-tab-v1"],
+    week: ["tokyo-active-week", "trip-companion:active-week-v1"],
+    day: ["tokyo-active-day", "trip-companion:active-day-v1"],
   };
 
   const DEFAULT_RATE = { hkdPerTwd: 0.24, source: "manual", updatedAt: null };
@@ -781,7 +807,7 @@
     </a>`;
   }
 
-  function buildDays() {
+  function buildDaysFromSample() {
     const days = [];
     const cursor = new Date(TRIP_START);
     let index = 1;
@@ -807,6 +833,38 @@
     return days;
   }
 
+  function hydrateDays(rawDays) {
+    if (!Array.isArray(rawDays) || !rawDays.length) return null;
+    return rawDays.map((day, i) => ({
+      id: day.id || `day-${i + 1}`,
+      index: Number(day.index) || i + 1,
+      week: Number(day.week) || weekOf(new Date(day.date || TRIP_START)),
+      date: new Date(day.date || TRIP_START),
+      title: day.title || `Day ${i + 1}`,
+      vibe: day.vibe || "",
+      mode: day.mode === "expedition" ? "expedition" : "near",
+      items: Array.isArray(day.items)
+        ? day.items.map((entry) => ({
+            time: entry.time || "",
+            title: entry.title || "",
+            detail: entry.detail || "",
+            tag: entry.tag || "",
+            zone: entry.zone === "expedition" ? "expedition" : "near",
+            mapsQuery: entry.mapsQuery || "",
+          }))
+        : [],
+    }));
+  }
+
+  function loadItineraryDays() {
+    const seeded = loadOrSeed(STORAGE_KEYS.itinerary, LEGACY_KEYS.itinerary, {
+      version: 1,
+      days: buildDaysFromSample(),
+    });
+    const hydrated = hydrateDays(seeded && seeded.days);
+    return hydrated && hydrated.length ? hydrated : buildDaysFromSample();
+  }
+
   function zoneLabel(zone) {
     return zone === "expedition" ? "遠征 5%" : "落樓即到";
   }
@@ -818,7 +876,7 @@
   function readJSON(key, fallback) {
     try {
       const raw = localStorage.getItem(key);
-      if (!raw) return fallback;
+      if (raw === null) return fallback;
       return JSON.parse(raw);
     } catch {
       return fallback;
@@ -827,6 +885,87 @@
 
   function writeJSON(key, value) {
     localStorage.setItem(key, JSON.stringify(value));
+  }
+
+  function storageHas(key) {
+    return localStorage.getItem(key) !== null;
+  }
+
+  function safeParse(raw, fallback) {
+    try {
+      if (raw === null || raw === undefined) return fallback;
+      return JSON.parse(raw);
+    } catch {
+      return fallback;
+    }
+  }
+
+  /**
+   * Strict conditional load:
+   * - If canonical key exists → use it (never overwrite with mocks).
+   * - Else try legacy keys → copy the richest payload into canonical once.
+   * - Else brand-new user → seed defaultValue and persist once.
+   */
+  function loadOrSeed(canonicalKey, legacyKeys, defaultValue) {
+    if (storageHas(canonicalKey)) {
+      return safeParse(localStorage.getItem(canonicalKey), defaultValue);
+    }
+
+    const keys = legacyKeys && legacyKeys.length ? legacyKeys : [canonicalKey];
+    let bestRaw = null;
+    let bestScore = -1;
+
+    for (const key of keys) {
+      if (key === canonicalKey) continue;
+      if (!storageHas(key)) continue;
+      const raw = localStorage.getItem(key);
+      const parsed = safeParse(raw, null);
+      let score = 0;
+      if (Array.isArray(parsed)) score = parsed.length;
+      else if (parsed && typeof parsed === "object") score = Object.keys(parsed).length;
+      else if (parsed !== null && parsed !== undefined) score = 1;
+      if (score > bestScore) {
+        bestRaw = raw;
+        bestScore = score;
+      }
+    }
+
+    if (bestRaw !== null) {
+      localStorage.setItem(canonicalKey, bestRaw);
+      return safeParse(bestRaw, defaultValue);
+    }
+
+    writeJSON(canonicalKey, defaultValue);
+    return defaultValue;
+  }
+
+  /** Load without seeding (returns null if nothing stored anywhere). */
+  function loadExisting(canonicalKey, legacyKeys) {
+    if (storageHas(canonicalKey)) {
+      return safeParse(localStorage.getItem(canonicalKey), null);
+    }
+
+    const keys = legacyKeys && legacyKeys.length ? legacyKeys : [];
+    let bestRaw = null;
+    let bestScore = -1;
+    for (const key of keys) {
+      if (key === canonicalKey) continue;
+      if (!storageHas(key)) continue;
+      const raw = localStorage.getItem(key);
+      const parsed = safeParse(raw, null);
+      let score = 0;
+      if (Array.isArray(parsed)) score = parsed.length;
+      else if (parsed && typeof parsed === "object") score = Object.keys(parsed).length;
+      else if (parsed !== null && parsed !== undefined) score = 1;
+      if (score > bestScore) {
+        bestRaw = raw;
+        bestScore = score;
+      }
+    }
+
+    if (bestRaw === null) return null;
+    localStorage.setItem(canonicalKey, bestRaw);
+    return safeParse(bestRaw, null);
   }
 
   function formatHkd(amount) {
@@ -966,14 +1105,22 @@
   }
 
   function ensureChecklistState() {
-    const saved = readJSON(STORAGE_KEYS.checklist, null);
+    const saved = loadExisting(STORAGE_KEYS.checklist, LEGACY_KEYS.checklist);
     const next = {};
     DEFAULT_CHECKLIST.forEach((group) => {
       group.items.forEach((entry) => {
-        next[entry.id] = Boolean(saved && saved[entry.id]);
+        if (saved && Object.prototype.hasOwnProperty.call(saved, entry.id)) {
+          next[entry.id] = Boolean(saved[entry.id]);
+        } else {
+          next[entry.id] = false;
+        }
       });
     });
     state.checklist = next;
+    // Only seed when this user has never had a checklist key.
+    if (saved === null) {
+      writeJSON(STORAGE_KEYS.checklist, next);
+    }
   }
 
   function saveChecklist() {
@@ -1055,14 +1202,63 @@
 
   function migrateCafes(raw) {
     if (!Array.isArray(raw)) return [];
-    return raw.map((cafe) => {
-      if (Array.isArray(cafe.tags)) return cafe;
-      const tags = [];
-      if (cafe.hasOutlets) tags.push("outlets");
-      if (cafe.quiet) tags.push("quiet");
-      if (cafe.excellentCoffee) tags.push("coffee");
-      return { ...cafe, tags };
-    });
+    return raw
+      .map((cafe) => {
+        if (!cafe || typeof cafe !== "object") return null;
+        let tags = Array.isArray(cafe.tags) ? cafe.tags.filter(Boolean) : [];
+        if (!tags.length) {
+          if (cafe.hasOutlets) tags.push("outlets");
+          if (cafe.quiet) tags.push("quiet");
+          if (cafe.excellentCoffee) tags.push("coffee");
+        }
+        const rating = Math.min(5, Math.max(1, Number(cafe.rating) || 1));
+        return {
+          id: cafe.id || crypto.randomUUID(),
+          name: String(cafe.name || "未命名 Cafe"),
+          area: String(cafe.area || ""),
+          rating,
+          tags,
+          createdAt: Number(cafe.createdAt) || Date.now(),
+        };
+      })
+      .filter(Boolean);
+  }
+
+  function normalizeExpense(entry, fallbackRate) {
+    if (!entry || typeof entry !== "object") return null;
+    const rateFallback =
+      Number.isFinite(fallbackRate) && fallbackRate > 0 ? fallbackRate : DEFAULT_RATE.hkdPerTwd;
+    const twd = Number(entry.twd ?? entry.amount ?? entry.amountTwd);
+    const safeTwd = Number.isFinite(twd) && twd >= 0 ? twd : 0;
+    const storedRate = Number(
+      entry.storedRate ?? entry.rateUsed ?? entry.rate ?? entry.fxRate
+    );
+    const safeRate =
+      Number.isFinite(storedRate) && storedRate > 0 ? storedRate : rateFallback;
+
+    let hkd = Number(entry.hkd ?? entry.amountInHKD ?? entry.amountHkd);
+    if (!Number.isFinite(hkd)) {
+      hkd = safeTwd * safeRate;
+    }
+
+    const createdAt = Number(entry.createdAt) || Date.now();
+    return {
+      id: entry.id || crypto.randomUUID(),
+      twd: safeTwd,
+      hkd,
+      amountInHKD: hkd,
+      storedRate: safeRate,
+      rateUsed: safeRate,
+      note: String(entry.note || entry.category || ""),
+      categoryId: entry.categoryId || guessCategoryId(entry.note || entry.category),
+      week: Number(entry.week) || weekOf(new Date(createdAt)),
+      createdAt,
+    };
+  }
+
+  function migrateExpenses(raw, fallbackRate) {
+    if (!Array.isArray(raw)) return [];
+    return raw.map((entry) => normalizeExpense(entry, fallbackRate)).filter(Boolean);
   }
 
   function saveCafes() {
@@ -1114,15 +1310,6 @@
     state.cafes = state.cafes.filter((c) => c.id !== id);
     saveCafes();
     renderCafes();
-  }
-
-  function migrateExpenses(raw) {
-    if (!Array.isArray(raw)) return [];
-    return raw.map((entry) => ({
-      ...entry,
-      categoryId: entry.categoryId || guessCategoryId(entry.note),
-      week: entry.week || weekOf(new Date(entry.createdAt || Date.now())),
-    }));
   }
 
   function guessCategoryId(note) {
@@ -1554,12 +1741,16 @@
 
   function addExpense(twd, note, categoryId) {
     const now = Date.now();
+    const storedRate = state.rate.hkdPerTwd;
+    const hkd = twd * storedRate;
     state.expenses = [
       {
         id: crypto.randomUUID(),
         twd,
-        hkd: twdToHkd(twd),
-        rateUsed: state.rate.hkdPerTwd,
+        hkd,
+        amountInHKD: hkd,
+        storedRate,
+        rateUsed: storedRate,
         note: note.trim(),
         categoryId: categoryId || guessCategoryId(note),
         week: weekOf(new Date(now)),
@@ -1592,9 +1783,10 @@
   }
 
   function loadRateFromStorage() {
-    const saved = readJSON(STORAGE_KEYS.rate, null);
-    if (!saved || typeof saved.hkdPerTwd !== "number") {
+    const saved = loadExisting(STORAGE_KEYS.rate, LEGACY_KEYS.rate);
+    if (!saved || typeof saved.hkdPerTwd !== "number" || !(saved.hkdPerTwd > 0)) {
       state.rate = { ...DEFAULT_RATE };
+      // Do not write default rate until user/API sets it — avoids clobbering later.
       return;
     }
     state.rate = {
@@ -1605,8 +1797,15 @@
   }
 
   function loadBudget() {
-    const saved = readJSON(STORAGE_KEYS.budget, null);
-    state.budgetTwd = typeof saved === "number" && saved >= 0 ? saved : DEFAULT_BUDGET_TWD;
+    const saved = loadExisting(STORAGE_KEYS.budget, LEGACY_KEYS.budget);
+    if (typeof saved === "number" && saved >= 0) {
+      state.budgetTwd = saved;
+    } else if (saved === null) {
+      state.budgetTwd = DEFAULT_BUDGET_TWD;
+      writeJSON(STORAGE_KEYS.budget, DEFAULT_BUDGET_TWD);
+    } else {
+      state.budgetTwd = DEFAULT_BUDGET_TWD;
+    }
     els.budgetInput.value = String(state.budgetTwd);
   }
 
@@ -1783,20 +1982,34 @@
 
   function init() {
     cacheEls();
-    state.days = buildDays();
-    state.expenses = migrateExpenses(
-      readJSON(STORAGE_KEYS.expenses, readJSON("trip-companion:expenses-v1", []))
-    );
-    state.cafes = migrateCafes(
-      readJSON(STORAGE_KEYS.cafes, readJSON("trip-companion:cafes-v1", []))
-    );
-    ensureChecklistState();
+
+    // Itinerary: seed mock only for brand-new users; never overwrite existing.
+    state.days = loadItineraryDays();
+
+    // Rate first so expense migration can fall back to current rate.
     loadRateFromStorage();
+
+    // Expenses / cafes: load existing or seed empty — never reset populated stores.
+    const loadedExpenses = loadOrSeed(STORAGE_KEYS.expenses, LEGACY_KEYS.expenses, []);
+    state.expenses = migrateExpenses(loadedExpenses, state.rate.hkdPerTwd);
+    // Soft schema upgrade only (adds missing hkd/storedRate) — does not wipe rows.
+    if (Array.isArray(loadedExpenses) && loadedExpenses.length) {
+      writeJSON(STORAGE_KEYS.expenses, state.expenses);
+    }
+
+    const loadedCafes = loadOrSeed(STORAGE_KEYS.cafes, LEGACY_KEYS.cafes, []);
+    state.cafes = migrateCafes(loadedCafes);
+    if (Array.isArray(loadedCafes) && loadedCafes.length) {
+      writeJSON(STORAGE_KEYS.cafes, state.cafes);
+    }
+
+    ensureChecklistState();
     loadBudget();
 
-    const savedTab = readJSON(STORAGE_KEYS.tab, "itinerary");
-    const savedWeek = Number(readJSON(STORAGE_KEYS.week, 1)) || 1;
-    const savedDay = readJSON(STORAGE_KEYS.day, null);
+    const savedTab = loadExisting(STORAGE_KEYS.tab, LEGACY_KEYS.tab) || "itinerary";
+    const savedWeekRaw = loadExisting(STORAGE_KEYS.week, LEGACY_KEYS.week);
+    const savedWeek = Number(savedWeekRaw) || 1;
+    const savedDay = loadExisting(STORAGE_KEYS.day, LEGACY_KEYS.day);
 
     renderCafeTagInputs();
     renderChecklist();
