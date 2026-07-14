@@ -3,7 +3,8 @@
 
   const STORAGE_KEYS = {
     checklist: "trip-companion:checklist-v1",
-    expenses: "trip-companion:expenses-v1",
+    expenses: "trip-companion:expenses-v2",
+    cafes: "trip-companion:cafes-v1",
     rate: "trip-companion:fx-rate-v1",
     tab: "trip-companion:active-tab-v1",
     week: "trip-companion:active-week-v1",
@@ -18,14 +19,25 @@
 
   const RATE_TTL_MS = 12 * 60 * 60 * 1000;
   const WEEKDAY_LABELS = ["日", "一", "二", "三", "四", "五", "六"];
+  const TRIP_START = new Date(2026, 7, 7);
+  const TRIP_END = new Date(2026, 8, 6);
 
-  /**
-   * Base: 信義區 · 捷運永春站
-   * near = 走路／極近（約 95% 日常）
-   * expedition = 需搭藍線／紅線等大眾運輸（約 5% 遠征）
-   */
+  const EXPENSE_CATEGORIES = [
+    { id: "breakfast", label: "早餐", note: "早餐" },
+    { id: "lunch", label: "午餐", note: "午餐" },
+    { id: "dinner", label: "晚餐", note: "晚餐" },
+    { id: "cafe", label: "Cafe", note: "Cafe" },
+    { id: "shopping", label: "購物", note: "購物" },
+    { id: "transport", label: "交通", note: "交通" },
+    { id: "hotel", label: "住宿", note: "住宿" },
+    { id: "other", label: "其他", note: "其他" },
+  ];
+
+  function mapsLink(query) {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+  }
+
   const PLACES = [
-    // —— 95% 落樓即到 ——
     {
       id: "yongchun-alleys",
       zone: "near",
@@ -33,6 +45,7 @@
       name: "永春站周邊巷弄 Cafe",
       detail: "松山路、永吉路、虎林街一帶獨立咖啡與早午餐，落樓步行即可。",
       transit: "走路 3–10 分",
+      mapsQuery: "cafe near Yongchun MRT Station Taipei",
     },
     {
       id: "skm-a4",
@@ -41,6 +54,7 @@
       name: "新光三越 A4（美食街）",
       detail: "信義商圈經典美食據點，適合午餐／晚餐快速補給。",
       transit: "走路約 12–18 分 · 或藍線永春→市政府 1 站",
+      mapsQuery: "Shin Kong Mitsukoshi A4 Xinyi Taipei",
     },
     {
       id: "skm-a8",
@@ -49,6 +63,7 @@
       name: "新光三越 A8",
       detail: "時尚與生活選品，連通道可串其他信義館別。",
       transit: "步行可達信義商圈核心",
+      mapsQuery: "Shin Kong Mitsukoshi A8 Xinyi Taipei",
     },
     {
       id: "skm-a9",
@@ -57,6 +72,7 @@
       name: "新光三越 A9",
       detail: "與 A8／A11 串連，雨天室內逛街路線首選。",
       transit: "步行可達",
+      mapsQuery: "Shin Kong Mitsukoshi A9 Xinyi Taipei",
     },
     {
       id: "skm-a11",
@@ -65,6 +81,7 @@
       name: "新光三越 A11",
       detail: "生活雜貨與餐飲選擇多，適合半日慢慢逛。",
       transit: "步行可達",
+      mapsQuery: "Shin Kong Mitsukoshi A11 Xinyi Taipei",
     },
     {
       id: "breeze-xinyi",
@@ -73,6 +90,7 @@
       name: "微風信義",
       detail: "信義路側逛街點，傍晚燈光好看。",
       transit: "步行可達",
+      mapsQuery: "Breeze Xinyi Taipei",
     },
     {
       id: "breeze-nanshan",
@@ -81,6 +99,7 @@
       name: "微風南山",
       detail: "高空與商場複合，適合下午茶與夜景。",
       transit: "步行可達 · 近 101",
+      mapsQuery: "Breeze Nan Shan Taipei",
     },
     {
       id: "fe-a13",
@@ -89,6 +108,7 @@
       name: "遠東百貨信義 A13",
       detail: "信義商圈另一端，可與 101、微風串成一圈。",
       transit: "步行可達",
+      mapsQuery: "Far Eastern Department Store A13 Xinyi Taipei",
     },
     {
       id: "taipei-101",
@@ -97,6 +117,7 @@
       name: "台北 101",
       detail: "展望台、商場與周邊廣場，信義區必走一圈。",
       transit: "走路約 15–25 分 · 或藍線市政府站",
+      mapsQuery: "Taipei 101",
     },
     {
       id: "songshan-crepark",
@@ -105,16 +126,16 @@
       name: "松山文創園區",
       detail: "倉庫園區、展覽與 Cafe，永春／市政府方向都方便。",
       transit: "走路或短程捷運／公車",
+      mapsQuery: "Songshan Cultural and Creative Park Taipei",
     },
-
-    // —— 5% 遠征（藍／紅線）——
     {
       id: "chifeng",
       zone: "expedition",
       category: "Cafe",
       name: "中山 · 赤峰街文青 Cafe 圈",
       detail: "獨立咖啡、選物店與巷弄散步，適合半日遠征。",
-      transit: "藍線永春→忠孝新生→轉橘線或走路至中山；或藍線到台北車站轉紅線中山",
+      transit: "藍線／紅線至中山站",
+      mapsQuery: "Chifeng Street cafe Zhongshan Taipei",
     },
     {
       id: "zhongshan-linear",
@@ -123,6 +144,7 @@
       name: "中山線性公園／雙連巷弄",
       detail: "赤峰街延伸散步，傍晚氣氛佳。",
       transit: "紅線中山／雙連站",
+      mapsQuery: "Zhongshan Linear Park Taipei",
     },
     {
       id: "east-district",
@@ -130,7 +152,8 @@
       category: "商圈",
       name: "東區 · 忠孝敦化商圈",
       detail: "忠孝東路四段、敦化南路百貨與巷弄 Cafe。",
-      transit: "藍線永春→忠孝敦化（約 2–3 站）",
+      transit: "藍線永春→忠孝敦化",
+      mapsQuery: "Zhongxiao Dunhua shopping district Taipei",
     },
     {
       id: "dinghao",
@@ -139,6 +162,7 @@
       name: "忠孝復興／頂好商圈",
       detail: "東區逛街延伸，可接忠孝敦化一起走。",
       transit: "藍線忠孝復興站",
+      mapsQuery: "Zhongxiao Fuxing Station Taipei shopping",
     },
     {
       id: "dadaocheng",
@@ -146,7 +170,8 @@
       category: "Cafe",
       name: "大稻埕老宅 Cafe",
       detail: "迪化街老屋咖啡、選物與河岸散步。",
-      transit: "藍線至西門或北門方向，再轉公車／走路；或紅線至台北車站再接",
+      transit: "大眾運輸往北門／大橋頭",
+      mapsQuery: "Dadaocheng Dihua Street cafe Taipei",
     },
     {
       id: "dihua",
@@ -155,10 +180,10 @@
       name: "迪化街 · 大稻埕碼頭",
       detail: "老街、中藥行與碼頭夜景，安排一日足夠。",
       transit: "大眾運輸往北門／大橋頭一帶",
+      mapsQuery: "Dihua Street Dadaocheng Wharf Taipei",
     },
   ];
 
-  /** Sample days keyed by YYYY-MM-DD — mostly near-base, sparse expeditions. */
   const SAMPLE_BY_DATE = {
     "2026-08-07": {
       title: "抵達 · 永春安頓",
@@ -171,6 +196,7 @@
           detail: "機場捷運／公車進城後，以捷運永春站為基地 check-in。",
           tag: "交通",
           zone: "near",
+          mapsQuery: "Yongchun MRT Station Taipei",
         },
         {
           time: "16:00",
@@ -178,6 +204,7 @@
           detail: "松山路、永吉路找超商／全聯，順便瞄準幾間巷弄 Cafe。",
           tag: "生活",
           zone: "near",
+          mapsQuery: "Yongji Road Yongchun Taipei",
         },
         {
           time: "19:00",
@@ -185,6 +212,7 @@
           detail: "新光三越 A4 美食街或附近餐廳，別走太遠。",
           tag: "美食",
           zone: "near",
+          mapsQuery: "Shin Kong Mitsukoshi A4 food court Taipei",
         },
       ],
     },
@@ -199,6 +227,7 @@
           detail: "雨天友善：館別連通，慢慢逛生活雜貨與時尚。",
           tag: "商場",
           zone: "near",
+          mapsQuery: "Shin Kong Mitsukoshi A8 A9 A11 Xinyi Taipei",
         },
         {
           time: "14:00",
@@ -206,6 +235,7 @@
           detail: "午餐後轉南山，適合下午茶與室內走走。",
           tag: "商場",
           zone: "near",
+          mapsQuery: "Breeze Nan Shan Taipei",
         },
         {
           time: "17:30",
@@ -213,6 +243,7 @@
           detail: "步行串到 101 與遠百 A13，看信義區亮燈。",
           tag: "地標",
           zone: "near",
+          mapsQuery: "Taipei 101",
         },
       ],
     },
@@ -227,6 +258,7 @@
           detail: "虎林街／永吉路選一間坐上午，當長住的第一間常客店。",
           tag: "Cafe",
           zone: "near",
+          mapsQuery: "cafe Hulin Street Yongchun Taipei",
         },
         {
           time: "14:00",
@@ -234,6 +266,7 @@
           detail: "倉庫園區散步、看展、再找一間園區 Cafe。",
           tag: "文創",
           zone: "near",
+          mapsQuery: "Songshan Cultural and Creative Park Taipei",
         },
         {
           time: "18:30",
@@ -241,6 +274,7 @@
           detail: "不必進市區核心，落樓找巷弄小吃即可。",
           tag: "美食",
           zone: "near",
+          mapsQuery: "restaurants near Yongchun Station Taipei",
         },
       ],
     },
@@ -255,6 +289,7 @@
           detail: "信義商圈補給站，適合試幾樣台灣味。",
           tag: "美食",
           zone: "near",
+          mapsQuery: "Shin Kong Mitsukoshi A4 Taipei",
         },
         {
           time: "15:00",
@@ -262,6 +297,7 @@
           detail: "與 101 同側逛一圈，補日用品或伴手禮清單。",
           tag: "商場",
           zone: "near",
+          mapsQuery: "Far Eastern Department Store A13 Taipei",
         },
       ],
     },
@@ -276,6 +312,7 @@
           detail: "藍線往西，轉乘至中山站一帶；預留轉車時間。",
           tag: "交通",
           zone: "expedition",
+          mapsQuery: "Yongchun MRT Station Taipei",
         },
         {
           time: "12:00",
@@ -283,6 +320,7 @@
           detail: "獨立咖啡、選物店與巷弄，半日足夠，別排太滿。",
           tag: "Cafe",
           zone: "expedition",
+          mapsQuery: "Chifeng Street cafe Taipei",
         },
         {
           time: "16:00",
@@ -290,6 +328,7 @@
           detail: "傍晚前回永春，晚上在信義落樓解決晚餐。",
           tag: "漫步",
           zone: "expedition",
+          mapsQuery: "Zhongshan Linear Park Taipei",
         },
       ],
     },
@@ -304,6 +343,7 @@
           detail: "遠征隔天放慢，只走步行圈。",
           tag: "Cafe",
           zone: "near",
+          mapsQuery: "brunch cafe near Yongchun Taipei",
         },
         {
           time: "15:00",
@@ -311,6 +351,7 @@
           detail: "冷氣商場躲午後雷陣雨。",
           tag: "商場",
           zone: "near",
+          mapsQuery: "Breeze Nan Shan Taipei 101",
         },
       ],
     },
@@ -325,6 +366,7 @@
           detail: "約 2–3 站即到東區，不用轉車。",
           tag: "交通",
           zone: "expedition",
+          mapsQuery: "Zhongxiao Dunhua MRT Station Taipei",
         },
         {
           time: "12:00",
@@ -332,6 +374,7 @@
           detail: "敦化南路、忠孝東路四段百貨與獨立咖啡。",
           tag: "商圈",
           zone: "expedition",
+          mapsQuery: "Zhongxiao East Road Section 4 cafe Taipei",
         },
         {
           time: "16:30",
@@ -339,6 +382,7 @@
           detail: "有體力再往頂好商圈；累了就藍線回永春。",
           tag: "商場",
           zone: "expedition",
+          mapsQuery: "Zhongxiao Fuxing Station Taipei",
         },
       ],
     },
@@ -353,6 +397,7 @@
           detail: "展覽＋園區 Cafe，距離基地近。",
           tag: "文創",
           zone: "near",
+          mapsQuery: "Songshan Cultural and Creative Park Taipei",
         },
         {
           time: "16:00",
@@ -360,6 +405,7 @@
           detail: "補長住日用品，走連通館別不怕熱。",
           tag: "商場",
           zone: "near",
+          mapsQuery: "Shin Kong Mitsukoshi A11 Xinyi Taipei",
         },
       ],
     },
@@ -374,6 +420,7 @@
           detail: "藍線西行後接公車或轉站，安排半日至一日。",
           tag: "交通",
           zone: "expedition",
+          mapsQuery: "Dihua Street Taipei",
         },
         {
           time: "12:00",
@@ -381,6 +428,7 @@
           detail: "老屋咖啡、選物；中午避開最熱時段戶外曝曬。",
           tag: "Cafe",
           zone: "expedition",
+          mapsQuery: "Dadaocheng heritage cafe Taipei",
         },
         {
           time: "15:30",
@@ -388,6 +436,7 @@
           detail: "年貨街與河岸走一圈，傍晚前藍線／公車回永春。",
           tag: "文化",
           zone: "expedition",
+          mapsQuery: "Dadaocheng Wharf Taipei",
         },
       ],
     },
@@ -402,6 +451,7 @@
           detail: "列出想買的伴手禮，先勘查不急著結帳。",
           tag: "購物",
           zone: "near",
+          mapsQuery: "Breeze Xinyi Shin Kong Mitsukoshi Taipei",
         },
         {
           time: "15:00",
@@ -409,6 +459,7 @@
           detail: "坐下來消化一天，維持 95% 落樓節奏。",
           tag: "Cafe",
           zone: "near",
+          mapsQuery: "cafe near Yongchun MRT Taipei",
         },
       ],
     },
@@ -423,6 +474,7 @@
           detail: "新光三越、微風、101、遠百 A13 擇一主力戰場。",
           tag: "購物",
           zone: "near",
+          mapsQuery: "Xinyi shopping district Taipei 101",
         },
         {
           time: "15:00",
@@ -430,6 +482,7 @@
           detail: "檢查證件、充電器，落樓解決最後一餐。",
           tag: "生活",
           zone: "near",
+          mapsQuery: "Yongchun MRT Station Taipei",
         },
         {
           time: "19:00",
@@ -437,6 +490,7 @@
           detail: "回訪這個月最常去的那間巷弄店或 A4。",
           tag: "美食",
           zone: "near",
+          mapsQuery: "Shin Kong Mitsukoshi A4 restaurants Taipei",
         },
       ],
     },
@@ -451,6 +505,7 @@
           detail: "藍線轉機場捷運或預留計程車時間，旅途愉快。",
           tag: "交通",
           zone: "near",
+          mapsQuery: "Yongchun Station to Taoyuan Airport MRT",
         },
       ],
     },
@@ -502,36 +557,55 @@
     days: [],
     checklist: {},
     expenses: [],
+    cafes: [],
+    cafeRating: 0,
+    expenseCategoryId: null,
     rate: { ...DEFAULT_RATE },
   };
 
-  const els = {
-    panels: document.querySelectorAll(".tab-panel"),
-    navBtns: document.querySelectorAll(".nav-btn"),
-    weekTabs: document.querySelectorAll(".week-tab"),
-    placeFilters: document.querySelectorAll(".place-filter"),
-    placesRoot: document.getElementById("places-root"),
-    weekRange: document.getElementById("week-range"),
-    daySelect: document.getElementById("day-select"),
-    dayTimeline: document.getElementById("day-timeline"),
-    checklistRoot: document.getElementById("checklist-root"),
-    checklistProgressLabel: document.getElementById("checklist-progress-label"),
-    checklistProgressBar: document.getElementById("checklist-progress-bar"),
-    checklistReset: document.getElementById("checklist-reset"),
-    rateDisplay: document.getElementById("rate-display"),
-    rateMeta: document.getElementById("rate-meta"),
-    rateRefresh: document.getElementById("rate-refresh"),
-    rateInput: document.getElementById("rate-input"),
-    rateApply: document.getElementById("rate-apply"),
-    expenseForm: document.getElementById("expense-form"),
-    expenseAmount: document.getElementById("expense-amount"),
-    expenseNote: document.getElementById("expense-note"),
-    expensePreview: document.getElementById("expense-preview"),
-    expenseTotal: document.getElementById("expense-total"),
-    expenseTotalTwd: document.getElementById("expense-total-twd"),
-    expenseList: document.getElementById("expense-list"),
-    expenseClear: document.getElementById("expense-clear"),
-  };
+  const els = {};
+
+  function cacheEls() {
+    Object.assign(els, {
+      panels: document.querySelectorAll(".tab-panel"),
+      navBtns: document.querySelectorAll(".nav-btn"),
+      weekTabs: document.querySelectorAll(".week-tab"),
+      placeFilters: document.querySelectorAll(".place-filter"),
+      placesRoot: document.getElementById("places-root"),
+      weekRange: document.getElementById("week-range"),
+      daySelect: document.getElementById("day-select"),
+      dayTimeline: document.getElementById("day-timeline"),
+      checklistRoot: document.getElementById("checklist-root"),
+      checklistProgressLabel: document.getElementById("checklist-progress-label"),
+      checklistProgressBar: document.getElementById("checklist-progress-bar"),
+      checklistReset: document.getElementById("checklist-reset"),
+      cafeForm: document.getElementById("cafe-form"),
+      cafeName: document.getElementById("cafe-name"),
+      cafeArea: document.getElementById("cafe-area"),
+      cafeRating: document.getElementById("cafe-rating"),
+      cafeStars: document.getElementById("cafe-stars"),
+      cafeOutlets: document.getElementById("cafe-outlets"),
+      cafeQuiet: document.getElementById("cafe-quiet"),
+      cafeCoffee: document.getElementById("cafe-coffee"),
+      cafeCount: document.getElementById("cafe-count"),
+      cafeList: document.getElementById("cafe-list"),
+      rateDisplay: document.getElementById("rate-display"),
+      rateMeta: document.getElementById("rate-meta"),
+      rateRefresh: document.getElementById("rate-refresh"),
+      rateInput: document.getElementById("rate-input"),
+      rateApply: document.getElementById("rate-apply"),
+      expenseForm: document.getElementById("expense-form"),
+      expenseCategories: document.getElementById("expense-categories"),
+      expenseAmount: document.getElementById("expense-amount"),
+      expenseNote: document.getElementById("expense-note"),
+      expensePreview: document.getElementById("expense-preview"),
+      expenseAnalytics: document.getElementById("expense-analytics"),
+      expenseTotal: document.getElementById("expense-total"),
+      expenseTotalTwd: document.getElementById("expense-total-twd"),
+      expenseList: document.getElementById("expense-list"),
+      expenseClear: document.getElementById("expense-clear"),
+    });
+  }
 
   function pad(n) {
     return String(n).padStart(2, "0");
@@ -539,11 +613,6 @@
 
   function toDateId(date) {
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-  }
-
-  function parseDateId(id) {
-    const [y, m, d] = id.split("-").map(Number);
-    return new Date(y, m - 1, d);
   }
 
   function formatShort(date) {
@@ -555,25 +624,36 @@
   }
 
   function weekOf(date) {
-    const start = new Date(2026, 7, 7); // Aug 7
-    const diffDays = Math.floor((date - start) / 86400000);
+    const diffDays = Math.floor((date - TRIP_START) / 86400000);
     if (diffDays < 7) return 1;
     if (diffDays < 14) return 2;
     if (diffDays < 21) return 3;
     return 4;
   }
 
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function mapButton(query) {
+    if (!query) return "";
+    const href = mapsLink(query);
+    return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="mt-3 inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-jade-50 px-3 text-xs font-bold text-jade-700 active:scale-95 transition">
+      <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      在地圖查看
+    </a>`;
+  }
+
   function buildDays() {
     const days = [];
-    const cursor = new Date(2026, 7, 7);
-    const end = new Date(2026, 8, 6);
+    const cursor = new Date(TRIP_START);
     let index = 1;
-    const nearNames = PLACES.filter((p) => p.zone === "near")
-      .slice(0, 3)
-      .map((p) => p.name)
-      .join("、");
 
-    while (cursor <= end) {
+    while (cursor <= TRIP_END) {
       const id = toDateId(cursor);
       const sample = SAMPLE_BY_DATE[id];
       days.push({
@@ -588,9 +668,10 @@
           {
             time: "上午",
             title: "永春巷弄 Cafe 或信義商圈",
-            detail: `推薦：${nearNames}。以走路為主，維持長住節奏。`,
+            detail: "以走路為主，維持長住節奏。可開地圖找附近 Cafe。",
             tag: "彈性",
             zone: "near",
+            mapsQuery: "cafe near Yongchun MRT Station Taipei",
           },
           {
             time: "下午",
@@ -598,6 +679,7 @@
             detail: "午後雷陣雨就進商場；天氣好可去松山文創園區。",
             tag: "落樓即到",
             zone: "near",
+            mapsQuery: "Songshan Cultural and Creative Park Taipei",
           },
         ],
       });
@@ -613,33 +695,6 @@
 
   function zoneClass(zone) {
     return zone === "expedition" ? "zone-expedition" : "zone-near";
-  }
-
-  function setPlaceFilter(filter) {
-    state.placeFilter = filter;
-    els.placeFilters.forEach((btn) => {
-      btn.classList.toggle("is-active", btn.dataset.placeFilter === filter);
-    });
-    renderPlaces();
-  }
-
-  function renderPlaces() {
-    const list = PLACES.filter((p) => p.zone === state.placeFilter);
-    els.placesRoot.innerHTML = list
-      .map(
-        (place) => `
-      <article class="rounded-2xl bg-white/85 px-4 py-3 shadow-soft backdrop-blur">
-        <div class="mb-1 flex items-center justify-between gap-2">
-          <span class="rounded-full ${zoneClass(place.zone)} px-2.5 py-0.5 text-[10px] font-bold">
-            ${place.category}
-          </span>
-          <span class="text-[10px] font-semibold text-ink-faint">${place.transit}</span>
-        </div>
-        <h3 class="font-display text-[15px] font-bold text-ink">${place.name}</h3>
-        <p class="mt-1 text-sm leading-relaxed text-ink-soft">${place.detail}</p>
-      </article>`
-      )
-      .join("");
   }
 
   function readJSON(key, fallback) {
@@ -708,6 +763,34 @@
     });
   }
 
+  function setPlaceFilter(filter) {
+    state.placeFilter = filter;
+    els.placeFilters.forEach((btn) => {
+      btn.classList.toggle("is-active", btn.dataset.placeFilter === filter);
+    });
+    renderPlaces();
+  }
+
+  function renderPlaces() {
+    const list = PLACES.filter((p) => p.zone === state.placeFilter);
+    els.placesRoot.innerHTML = list
+      .map(
+        (place) => `
+      <article class="rounded-2xl bg-white/85 px-4 py-3 shadow-soft backdrop-blur">
+        <div class="mb-1 flex items-center justify-between gap-2">
+          <span class="rounded-full ${zoneClass(place.zone)} px-2.5 py-0.5 text-[10px] font-bold">
+            ${place.category}
+          </span>
+          <span class="text-[10px] font-semibold text-ink-faint">${place.transit}</span>
+        </div>
+        <h3 class="font-display text-[15px] font-bold text-ink">${escapeHtml(place.name)}</h3>
+        <p class="mt-1 text-sm leading-relaxed text-ink-soft">${escapeHtml(place.detail)}</p>
+        ${mapButton(place.mapsQuery)}
+      </article>`
+      )
+      .join("");
+  }
+
   function setWeek(week, { preserveDay = false } = {}) {
     state.week = week;
     writeJSON(STORAGE_KEYS.week, week);
@@ -761,13 +844,13 @@
           D${day.index}
         </div>
         <div class="min-w-0 flex-1">
-          <div class="mb-1 flex flex-wrap items-center gap-2">
+          <div class="mb-1">
             <span class="rounded-full ${zoneClass(mode)} px-2.5 py-0.5 text-[10px] font-bold">
               ${zoneLabel(mode)}
             </span>
           </div>
-          <h3 class="font-display text-lg font-bold text-ink">${day.title}</h3>
-          <p class="text-sm text-ink-soft">${formatShort(day.date)} · ${day.vibe}</p>
+          <h3 class="font-display text-lg font-bold text-ink">${escapeHtml(day.title)}</h3>
+          <p class="text-sm text-ink-soft">${formatShort(day.date)} · ${escapeHtml(day.vibe)}</p>
         </div>
       </div>
       <ol class="relative ml-5 space-y-4 border-l-2 border-jade-100 pl-6">
@@ -783,14 +866,15 @@
             </span>
             <div class="rounded-2xl bg-white/85 p-4 shadow-soft backdrop-blur">
               <div class="mb-1 flex flex-wrap items-center justify-between gap-2">
-                <time class="text-xs font-bold tracking-wide text-jade-600">${item.time}</time>
+                <time class="text-xs font-bold tracking-wide text-jade-600">${escapeHtml(item.time)}</time>
                 <div class="flex flex-wrap gap-1.5">
                   <span class="rounded-full ${zoneClass(z)} px-2 py-0.5 text-[10px] font-semibold">${zoneLabel(z)}</span>
-                  <span class="rounded-full bg-jade-50 px-2.5 py-0.5 text-[10px] font-semibold text-jade-700">${item.tag}</span>
+                  <span class="rounded-full bg-jade-50 px-2.5 py-0.5 text-[10px] font-semibold text-jade-700">${escapeHtml(item.tag)}</span>
                 </div>
               </div>
-              <h4 class="font-display text-base font-bold text-ink">${item.title}</h4>
-              <p class="mt-1 text-sm leading-relaxed text-ink-soft">${item.detail}</p>
+              <h4 class="font-display text-base font-bold text-ink">${escapeHtml(item.title)}</h4>
+              <p class="mt-1 text-sm leading-relaxed text-ink-soft">${escapeHtml(item.detail)}</p>
+              ${mapButton(item.mapsQuery)}
             </div>
           </li>`;
           })
@@ -845,7 +929,7 @@
                   <span class="check-box flex h-7 w-7 shrink-0 items-center justify-center rounded-xl border-2 border-jade-200 text-sm font-bold transition">
                     ${checked ? "✓" : ""}
                   </span>
-                  <span class="item-label text-[15px] font-medium text-ink">${item.label}</span>
+                  <span class="item-label text-[15px] font-medium text-ink">${escapeHtml(item.label)}</span>
                 </button>
               </li>`;
             })
@@ -867,6 +951,122 @@
     });
     saveChecklist();
     renderChecklist();
+  }
+
+  /* —— Cafe Log —— */
+  function setCafeRating(rating) {
+    state.cafeRating = rating;
+    els.cafeRating.value = String(rating);
+    els.cafeStars.querySelectorAll(".star-btn").forEach((btn) => {
+      const value = Number(btn.dataset.star);
+      const on = value <= rating;
+      btn.classList.toggle("is-on", on);
+      btn.classList.toggle("text-coral", on);
+      btn.classList.toggle("text-ink-faint", !on);
+      btn.classList.toggle("bg-coral-soft", on);
+      btn.classList.toggle("bg-mist", !on);
+    });
+  }
+
+  function saveCafes() {
+    writeJSON(STORAGE_KEYS.cafes, state.cafes);
+  }
+
+  function renderCafes() {
+    const sorted = [...state.cafes].sort((a, b) => b.rating - a.rating || b.createdAt - a.createdAt);
+    els.cafeCount.textContent = `${sorted.length} 間`;
+
+    if (!sorted.length) {
+      els.cafeList.innerHTML = `
+        <li class="rounded-2xl border border-dashed border-jade-100 bg-white/50 px-4 py-8 text-center text-sm text-ink-faint">
+          還沒有足跡，從永春第一杯開始記錄吧。
+        </li>`;
+      return;
+    }
+
+    els.cafeList.innerHTML = sorted
+      .map((cafe) => {
+        const tags = [];
+        if (cafe.hasOutlets) tags.push("有插座");
+        if (cafe.quiet) tags.push("安靜");
+        if (cafe.excellentCoffee) tags.push("咖啡極正");
+        const stars = "★".repeat(cafe.rating) + "☆".repeat(5 - cafe.rating);
+        return `
+        <li class="rounded-2xl bg-white/85 px-4 py-3 shadow-soft backdrop-blur">
+          <div class="flex items-start gap-3">
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <h3 class="font-display text-base font-bold text-ink">${escapeHtml(cafe.name)}</h3>
+                <span class="rounded-full bg-jade-50 px-2 py-0.5 text-[10px] font-semibold text-jade-700">${escapeHtml(cafe.area)}</span>
+              </div>
+              <p class="mt-1 text-sm font-semibold tracking-wide text-coral">${stars}</p>
+              ${
+                tags.length
+                  ? `<div class="mt-2 flex flex-wrap gap-1.5">${tags
+                      .map(
+                        (t) =>
+                          `<span class="rounded-full bg-mist px-2.5 py-0.5 text-[10px] font-semibold text-ink-soft">${t}</span>`
+                      )
+                      .join("")}</div>`
+                  : ""
+              }
+              <p class="mt-2 text-xs text-ink-faint">${formatDateTime(cafe.createdAt)}</p>
+            </div>
+            <button type="button" class="min-h-10 min-w-10 rounded-xl text-ink-faint hover:bg-jade-50 active:scale-95 transition" data-cafe-id="${cafe.id}" aria-label="刪除足跡">✕</button>
+          </div>
+        </li>`;
+      })
+      .join("");
+  }
+
+  function addCafe(entry) {
+    state.cafes = [entry, ...state.cafes];
+    saveCafes();
+    renderCafes();
+  }
+
+  function removeCafe(id) {
+    state.cafes = state.cafes.filter((c) => c.id !== id);
+    saveCafes();
+    renderCafes();
+  }
+
+  /* —— Expenses —— */
+  function migrateExpenses(raw) {
+    if (!Array.isArray(raw)) return [];
+    return raw.map((item) => ({
+      ...item,
+      categoryId: item.categoryId || guessCategoryId(item.note),
+      week: item.week || weekOf(new Date(item.createdAt || Date.now())),
+    }));
+  }
+
+  function guessCategoryId(note) {
+    const text = (note || "").toLowerCase();
+    const hit = EXPENSE_CATEGORIES.find((c) => text.includes(c.note.toLowerCase()));
+    return hit ? hit.id : "other";
+  }
+
+  function categoryLabel(id) {
+    return EXPENSE_CATEGORIES.find((c) => c.id === id)?.label || "其他";
+  }
+
+  function renderExpenseCategories() {
+    els.expenseCategories.innerHTML = EXPENSE_CATEGORIES.map(
+      (cat) => `
+      <button
+        type="button"
+        class="cat-btn ${state.expenseCategoryId === cat.id ? "is-active" : ""} min-h-10 rounded-2xl border border-jade-100 bg-mist px-3 text-xs font-bold text-ink-soft transition active:scale-95"
+        data-cat-id="${cat.id}"
+      >${escapeHtml(cat.label)}</button>`
+    ).join("");
+  }
+
+  function selectExpenseCategory(id) {
+    state.expenseCategoryId = id;
+    const cat = EXPENSE_CATEGORIES.find((c) => c.id === id);
+    if (cat) els.expenseNote.value = cat.note;
+    renderExpenseCategories();
   }
 
   function renderRate() {
@@ -893,17 +1093,130 @@
     els.expensePreview.textContent = `換算預覽：${formatTwd(twd)} ≈ ${formatHkd(twdToHkd(twd))}`;
   }
 
+  function expenseWeekTotals() {
+    const totals = { 1: 0, 2: 0, 3: 0, 4: 0 };
+    state.expenses.forEach((item) => {
+      const w = item.week || weekOf(new Date(item.createdAt));
+      totals[w] = (totals[w] || 0) + item.twd;
+    });
+    return totals;
+  }
+
+  function expenseCategoryTotals() {
+    const totals = {};
+    EXPENSE_CATEGORIES.forEach((c) => {
+      totals[c.id] = 0;
+    });
+    state.expenses.forEach((item) => {
+      const id = item.categoryId || "other";
+      totals[id] = (totals[id] || 0) + item.twd;
+    });
+    return totals;
+  }
+
+  function renderExpenseAnalytics() {
+    const weekTotals = expenseWeekTotals();
+    const catTotals = expenseCategoryTotals();
+    const monthTwd = Object.values(weekTotals).reduce((a, b) => a + b, 0);
+    const monthHkd = monthTwd * state.rate.hkdPerTwd;
+    const maxWeek = Math.max(...Object.values(weekTotals), 1);
+    const catEntries = EXPENSE_CATEGORIES.map((c) => ({
+      ...c,
+      total: catTotals[c.id] || 0,
+    })).sort((a, b) => b.total - a.total);
+    const maxCat = Math.max(...catEntries.map((c) => c.total), 1);
+    const topCat = catEntries[0]?.total ? catEntries[0] : null;
+    const topWeekEntry = Object.entries(weekTotals).sort((a, b) => b[1] - a[1])[0];
+    const topWeek = topWeekEntry && topWeekEntry[1] > 0 ? Number(topWeekEntry[0]) : null;
+
+    els.expenseAnalytics.innerHTML = `
+      <div class="rounded-3xl bg-gradient-to-br from-jade-800 via-jade-600 to-jade-500 p-4 text-white shadow-soft">
+        <p class="text-xs font-medium text-white/75">本月總開支 · Aug–Sep</p>
+        <p class="mt-1 font-display text-2xl font-bold">${formatHkd(monthHkd)}</p>
+        <p class="text-sm text-white/80">${formatTwd(monthTwd)}</p>
+        <p class="mt-2 text-xs text-white/70">
+          ${
+            topWeek || topCat
+              ? `最高：${topWeek ? `Week ${topWeek}` : ""}${topWeek && topCat ? " · " : ""}${
+                  topCat ? topCat.label : ""
+                }`
+              : "尚無開支紀錄"
+          }
+        </p>
+      </div>
+
+      <div class="rounded-3xl bg-white/85 p-4 shadow-soft backdrop-blur">
+        <div class="mb-3 flex items-center justify-between">
+          <h3 class="font-display text-sm font-bold text-ink">每週開支</h3>
+          <span class="text-[10px] font-semibold text-ink-faint">依旅程 Week 1–4</span>
+        </div>
+        <div class="space-y-3">
+          ${[1, 2, 3, 4]
+            .map((w) => {
+              const pct = Math.round((weekTotals[w] / maxWeek) * 100);
+              return `
+              <div>
+                <div class="mb-1 flex items-center justify-between text-xs">
+                  <span class="font-semibold text-ink">Week ${w}</span>
+                  <span class="text-ink-soft">${formatTwd(weekTotals[w])}</span>
+                </div>
+                <div class="h-2.5 overflow-hidden rounded-full bg-jade-50">
+                  <div class="h-full rounded-full bg-gradient-to-r from-jade-500 to-jade-600 transition-all duration-500" style="width:${pct}%"></div>
+                </div>
+              </div>`;
+            })
+            .join("")}
+        </div>
+        <div class="mt-4 flex h-16 items-end gap-2">
+          ${[1, 2, 3, 4]
+            .map((w) => {
+              const barH = Math.max(4, Math.round((weekTotals[w] / maxWeek) * 56));
+              return `<div class="flex flex-1 flex-col items-center justify-end gap-1">
+                <div class="w-full rounded-t-lg bg-jade-500/90" style="height:${barH}px"></div>
+                <span class="text-[10px] font-semibold text-ink-faint">W${w}</span>
+              </div>`;
+            })
+            .join("")}
+        </div>
+      </div>
+
+      <div class="rounded-3xl bg-white/85 p-4 shadow-soft backdrop-blur">
+        <h3 class="mb-3 font-display text-sm font-bold text-ink">分類佔比</h3>
+        <div class="space-y-2.5">
+          ${catEntries
+            .filter((c) => c.total > 0 || monthTwd === 0)
+            .slice(0, monthTwd === 0 ? 4 : 8)
+            .map((c) => {
+              const pct = monthTwd ? Math.round((c.total / maxCat) * 100) : 0;
+              return `
+              <div>
+                <div class="mb-1 flex items-center justify-between text-xs">
+                  <span class="font-semibold text-ink">${escapeHtml(c.label)}</span>
+                  <span class="text-ink-soft">${formatTwd(c.total)}</span>
+                </div>
+                <div class="h-2 overflow-hidden rounded-full bg-coral-soft">
+                  <div class="h-full rounded-full bg-coral transition-all duration-500" style="width:${pct}%"></div>
+                </div>
+              </div>`;
+            })
+            .join("")}
+        </div>
+      </div>
+    `;
+  }
+
   function renderExpenses() {
     const totalTwd = state.expenses.reduce((sum, item) => sum + item.twd, 0);
     const totalHkd = state.expenses.reduce((sum, item) => sum + item.hkd, 0);
 
     els.expenseTotal.textContent = formatHkd(totalHkd);
     els.expenseTotalTwd.textContent = formatTwd(totalTwd);
+    renderExpenseAnalytics();
 
     if (!state.expenses.length) {
       els.expenseList.innerHTML = `
         <li class="rounded-2xl border border-dashed border-jade-100 bg-white/50 px-4 py-8 text-center text-sm text-ink-faint">
-          還沒有開支紀錄，從第一杯手搖開始吧。
+          還沒有開支紀錄，點上方分類快速開始吧。
         </li>`;
       return;
     }
@@ -913,7 +1226,15 @@
         (item) => `
       <li class="flex items-center gap-3 rounded-2xl bg-white/85 px-4 py-3 shadow-soft backdrop-blur">
         <div class="min-w-0 flex-1">
-          <p class="truncate font-semibold text-ink">${item.note || "未命名開支"}</p>
+          <div class="flex flex-wrap items-center gap-2">
+            <p class="truncate font-semibold text-ink">${escapeHtml(item.note || "未命名開支")}</p>
+            <span class="rounded-full bg-jade-50 px-2 py-0.5 text-[10px] font-semibold text-jade-700">W${
+              item.week || weekOf(new Date(item.createdAt))
+            }</span>
+            <span class="rounded-full bg-mist px-2 py-0.5 text-[10px] font-semibold text-ink-soft">${escapeHtml(
+              categoryLabel(item.categoryId)
+            )}</span>
+          </div>
           <p class="text-xs text-ink-faint">${formatDateTime(item.createdAt)}</p>
         </div>
         <div class="text-right">
@@ -931,14 +1252,17 @@
       .join("");
   }
 
-  function addExpense(twd, note) {
+  function addExpense(twd, note, categoryId) {
+    const now = Date.now();
     const entry = {
       id: crypto.randomUUID(),
       twd,
       hkd: twdToHkd(twd),
       rateUsed: state.rate.hkdPerTwd,
       note: note.trim(),
-      createdAt: Date.now(),
+      categoryId: categoryId || guessCategoryId(note),
+      week: weekOf(new Date(now)),
+      createdAt: now,
     };
     state.expenses = [entry, ...state.expenses];
     writeJSON(STORAGE_KEYS.expenses, state.expenses);
@@ -966,6 +1290,7 @@
     writeJSON(STORAGE_KEYS.rate, state.rate);
     renderRate();
     updateExpensePreview();
+    renderExpenseAnalytics();
   }
 
   function loadRateFromStorage() {
@@ -983,9 +1308,8 @@
 
   function isRateFresh() {
     return (
-      (state.rate.source === "live" || state.rate.source === "manual") &&
-      typeof state.rate.updatedAt === "number" &&
       state.rate.source === "live" &&
+      typeof state.rate.updatedAt === "number" &&
       Date.now() - state.rate.updatedAt < RATE_TTL_MS
     );
   }
@@ -996,7 +1320,6 @@
       return;
     }
 
-    // Don't overwrite a freshly manual rate unless user forces refresh.
     if (
       !force &&
       state.rate.source === "manual" &&
@@ -1069,13 +1392,53 @@
       if (confirm("確定要重設所有勾選狀態嗎？")) resetChecklist();
     });
 
+    els.cafeStars.addEventListener("click", (event) => {
+      const btn = event.target.closest(".star-btn");
+      if (!btn) return;
+      setCafeRating(Number(btn.dataset.star));
+    });
+
+    els.cafeForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      if (!state.cafeRating) {
+        alert("請先選擇 1–5 星評分");
+        return;
+      }
+      addCafe({
+        id: crypto.randomUUID(),
+        name: els.cafeName.value.trim(),
+        area: els.cafeArea.value.trim(),
+        rating: state.cafeRating,
+        hasOutlets: els.cafeOutlets.checked,
+        quiet: els.cafeQuiet.checked,
+        excellentCoffee: els.cafeCoffee.checked,
+        createdAt: Date.now(),
+      });
+      els.cafeForm.reset();
+      setCafeRating(0);
+    });
+
+    els.cafeList.addEventListener("click", (event) => {
+      const btn = event.target.closest("[data-cafe-id]");
+      if (!btn) return;
+      removeCafe(btn.dataset.cafeId);
+    });
+
+    els.expenseCategories.addEventListener("click", (event) => {
+      const btn = event.target.closest("[data-cat-id]");
+      if (!btn) return;
+      selectExpenseCategory(btn.dataset.catId);
+    });
+
     els.expenseAmount.addEventListener("input", updateExpensePreview);
     els.expenseForm.addEventListener("submit", (event) => {
       event.preventDefault();
       const twd = Number(els.expenseAmount.value);
       if (!Number.isFinite(twd) || twd <= 0) return;
-      addExpense(twd, els.expenseNote.value);
+      addExpense(twd, els.expenseNote.value, state.expenseCategoryId);
       els.expenseForm.reset();
+      state.expenseCategoryId = null;
+      renderExpenseCategories();
       updateExpensePreview();
     });
 
@@ -1105,8 +1468,10 @@
   }
 
   function init() {
+    cacheEls();
     state.days = buildDays();
-    state.expenses = readJSON(STORAGE_KEYS.expenses, []);
+    state.expenses = migrateExpenses(readJSON(STORAGE_KEYS.expenses, readJSON("trip-companion:expenses-v1", [])));
+    state.cafes = readJSON(STORAGE_KEYS.cafes, []);
     ensureChecklistState();
     loadRateFromStorage();
 
@@ -1116,12 +1481,16 @@
 
     renderChecklist();
     renderPlaces();
+    renderCafes();
+    renderExpenseCategories();
     renderRate();
     renderExpenses();
     updateExpensePreview();
+    setCafeRating(0);
     bindEvents();
 
-    setTab(["itinerary", "checklist", "expense"].includes(savedTab) ? savedTab : "itinerary");
+    const validTabs = ["itinerary", "checklist", "cafelog", "expense"];
+    setTab(validTabs.includes(savedTab) ? savedTab : "itinerary");
 
     const week = [1, 2, 3, 4].includes(savedWeek) ? savedWeek : 1;
     state.dayId = savedDay;

@@ -58,6 +58,16 @@ body {
   color: #c2410c;
 }
 
+.cat-btn.is-active {
+  background: #0f766e;
+  color: #fff;
+  border-color: #0f766e;
+}
+
+.star-btn.is-on {
+  color: #f97316;
+}
+
 .checklist-item.is-checked .item-label {
   color: #6d848c;
   text-decoration: line-through;
