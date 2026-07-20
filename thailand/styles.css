@@ -1,0 +1,10 @@
+.thai-bg {
+  background:
+    radial-gradient(100% 80% at 0% 0%, rgba(254, 243, 199, 0.95), transparent 55%),
+    radial-gradient(90% 70% at 100% 30%, rgba(207, 250, 254, 0.75), transparent 50%),
+    linear-gradient(165deg, #fffbeb 0%, #f8fafc 100%);
+}
+
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}

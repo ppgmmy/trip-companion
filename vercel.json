@@ -1,5 +1,12 @@
 {
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
   "cleanUrls": true,
+  "redirects": [
+    { "source": "/taipei", "destination": "/taipei/", "permanent": true },
+    { "source": "/tokyo", "destination": "/tokyo/", "permanent": true },
+    { "source": "/thailand", "destination": "/thailand/", "permanent": true }
+  ],
   "headers": [
     {
       "source": "/(.*)",

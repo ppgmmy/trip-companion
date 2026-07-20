@@ -1,0 +1,12 @@
+{
+  "name": "trip-companion",
+  "private": true,
+  "version": "2.0.0",
+  "description": "Multi-trip companion hub: Taipei, Tokyo, Thailand",
+  "scripts": {
+    "dev": "node server.js",
+    "build:tokyo": "npm --prefix tokyo ci && npm --prefix tokyo run build",
+    "build": "npm run build:tokyo && node scripts/assemble.mjs",
+    "start": "node server.js"
+  }
+}

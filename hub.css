@@ -1,0 +1,22 @@
+.hub-bg {
+  background:
+    radial-gradient(120% 80% at 10% -10%, rgba(207, 240, 234, 0.95), transparent 55%),
+    radial-gradient(90% 70% at 100% 20%, rgba(255, 228, 230, 0.85), transparent 50%),
+    linear-gradient(165deg, #f7fbfa 0%, #fff8f1 48%, #f4f9f8 100%);
+}
+
+.trip-link {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.trip-link:hover {
+  transform: translateY(-2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trip-link,
+  .trip-link:hover {
+    transition: none;
+    transform: none;
+  }
+}

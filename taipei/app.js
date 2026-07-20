@@ -2,15 +2,15 @@
   "use strict";
 
   const STORAGE_KEYS = {
-    expenses: "tokyo-expenses",
-    itinerary: "tokyo-itinerary",
-    checklist: "tokyo-checklist",
-    cafes: "tokyo-cafe-log",
-    rate: "tokyo-fx-rate",
-    budget: "tokyo-budget",
-    tab: "tokyo-active-tab",
-    week: "tokyo-active-week",
-    day: "tokyo-active-day",
+    expenses: "taipei-expenses",
+    itinerary: "taipei-itinerary",
+    checklist: "taipei-checklist",
+    cafes: "taipei-cafe-log",
+    rate: "taipei-fx-rate",
+    budget: "taipei-budget",
+    tab: "taipei-active-tab",
+    week: "taipei-active-week",
+    day: "taipei-active-day",
   };
 
   /** Older keys — read once for migration, never wipe user data. */
@@ -31,11 +31,19 @@
       "trip-companion:cafes-v2",
       "trip-companion:cafes-v1",
     ],
-    rate: ["tokyo-fx-rate", "trip-companion:fx-rate-v1"],
-    budget: ["tokyo-budget", "trip-companion:budget-v1"],
-    tab: ["tokyo-active-tab", "trip-companion:active-tab-v1"],
-    week: ["tokyo-active-week", "trip-companion:active-week-v1"],
-    day: ["tokyo-active-day", "trip-companion:active-day-v1"],
+    rate: [
+      "tokyo-fx-rate",
+      "trip-companion:fx-rate-v1",
+      "trip-companion:rate",
+    ],
+    budget: ["tokyo-budget", "trip-companion:budget-v1", "trip-companion:budget"],
+    tab: ["tokyo-active-tab", "trip-companion:active-tab-v1", "trip-companion:tab"],
+    week: [
+      "tokyo-active-week",
+      "trip-companion:active-week-v1",
+      "trip-companion:week",
+    ],
+    day: ["tokyo-active-day", "trip-companion:active-day-v1", "trip-companion:day"],
   };
 
   const DEFAULT_RATE = { hkdPerTwd: 0.24, source: "manual", updatedAt: null };

@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#0F766E" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>Trip Companion · 台北</title>
+    <script src="../storage-migration.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              display: ['"Bricolage Grotesque"', "system-ui", "sans-serif"],
+              sans: ['"Figtree"', "system-ui", "sans-serif"],
+            },
+            colors: {
+              ink: {
+                DEFAULT: "#14262B",
+                soft: "#3E5A62",
+                faint: "#6D848C",
+              },
+              jade: {
+                50: "#E7F7F4",
+                100: "#CFF0EA",
+                500: "#14B8A6",
+                600: "#0F766E",
+                700: "#0B5B55",
+                800: "#084843",
+              },
+              coral: {
+                DEFAULT: "#F97316",
+                soft: "#FFF3E8",
+                deep: "#EA580C",
+              },
+              mist: {
+                DEFAULT: "#F4F9F8",
+                warm: "#FFF8F1",
+              },
+            },
+            boxShadow: {
+              soft: "0 10px 30px -12px rgba(15, 118, 110, 0.28)",
+              nav: "0 -8px 28px -12px rgba(20, 38, 43, 0.18)",
+            },
+            keyframes: {
+              "fade-up": {
+                "0%": { opacity: "0", transform: "translateY(10px)" },
+                "100%": { opacity: "1", transform: "translateY(0)" },
+              },
+            },
+            animation: {
+              "fade-up": "fade-up 0.4s ease-out both",
+            },
+          },
+        },
+      };
+    </script>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="font-sans text-ink bg-mist antialiased">
+    <div class="app-shell relative min-h-[100dvh] overflow-hidden">
+      <div class="pointer-events-none absolute inset-0 -z-10 bg-travel"></div>
+      <div class="pointer-events-none absolute -top-24 -right-16 h-64 w-64 rounded-full bg-jade-100/80 blur-3xl"></div>
+      <div class="pointer-events-none absolute top-48 -left-20 h-56 w-56 rounded-full bg-coral-soft/90 blur-3xl"></div>
+
+      <header class="safe-top px-5 pt-5 pb-3">
+        <div class="mx-auto max-w-lg">
+          <a
+            href="../"
+            class="inline-flex min-h-9 items-center text-xs font-semibold text-jade-700"
+          >
+            ← 全部行程
+          </a>
+          <p class="mt-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-jade-600">
+            Trip Companion · Taipei
+          </p>
+          <h1 class="mt-1 font-display text-[1.85rem] font-extrabold leading-tight text-ink">
+            台北長住
+          </h1>
+          <p class="mt-1 text-sm text-ink-soft">8/7 – 9/6 · 信義區 · 捷運永春站</p>
+        </div>
+      </header>
+
+      <main
+        id="tab-panels"
+        class="mx-auto max-w-lg px-4 pb-[calc(6.75rem+env(safe-area-inset-bottom))]"
+      >
+        <!-- Itinerary -->
+        <section
+          id="panel-itinerary"
+          class="tab-panel animate-fade-up"
+          data-tab="itinerary"
+          aria-label="行程"
+        >
+          <div
+            class="mb-4 overflow-hidden rounded-3xl bg-gradient-to-br from-jade-800 via-jade-600 to-jade-500 p-5 text-white shadow-soft"
+          >
+            <div class="flex items-end justify-between gap-3">
+              <div>
+                <p class="text-xs font-medium text-white/75">Base hotel</p>
+                <p class="font-display text-2xl font-bold tracking-tight">信義 · 永春站</p>
+                <p class="mt-1 text-sm text-white/80">台北市信義區 · 落樓即可逛</p>
+              </div>
+              <div class="rounded-2xl bg-white/15 px-3 py-2 text-right backdrop-blur-sm">
+                <p class="text-[10px] uppercase tracking-wider text-white/70">Nights</p>
+                <p class="font-display text-lg font-bold">31</p>
+              </div>
+            </div>
+            <div class="mt-4 grid grid-cols-2 gap-2 text-xs">
+              <div class="rounded-2xl bg-white/12 px-3 py-2 backdrop-blur-sm">
+                <p class="font-bold text-white">95% 落樓即到</p>
+                <p class="mt-0.5 text-white/75">走路／極近 · 信義商圈</p>
+              </div>
+              <div class="rounded-2xl bg-white/12 px-3 py-2 backdrop-blur-sm">
+                <p class="font-bold text-white">5% 遠征</p>
+                <p class="mt-0.5 text-white/75">貓空 · 淡水 · 北投 · 九份</p>
+              </div>
+            </div>
+          </div>
+
+          <section class="mb-5" aria-label="推薦列表">
+            <div class="mb-2">
+              <h2 class="font-display text-lg font-bold text-ink">附近推薦</h2>
+              <p class="text-xs text-ink-soft">依移動成本分類 · 以永春站為圓心</p>
+            </div>
+            <div
+              class="mb-3 grid grid-cols-2 gap-1 rounded-2xl bg-white/80 p-1 shadow-soft backdrop-blur"
+              role="tablist"
+              aria-label="推薦分類"
+            >
+              <button
+                type="button"
+                class="place-filter is-active min-h-11 rounded-xl px-2 text-xs font-bold transition"
+                data-place-filter="near"
+              >
+                落樓即到 · 95%
+              </button>
+              <button
+                type="button"
+                class="place-filter min-h-11 rounded-xl px-2 text-xs font-bold text-ink-faint transition"
+                data-place-filter="expedition"
+              >
+                遠征 · 5%
+              </button>
+            </div>
+            <div id="places-root" class="space-y-2"></div>
+          </section>
+
+          <div
+            class="mb-3 grid grid-cols-5 gap-1 rounded-2xl bg-white/80 p-1 shadow-soft backdrop-blur"
+            role="tablist"
+            aria-label="週次"
+          >
+            <button type="button" class="week-tab is-active min-h-11 rounded-xl text-[11px] font-bold transition" data-week="1">
+              W1
+            </button>
+            <button type="button" class="week-tab min-h-11 rounded-xl text-[11px] font-bold text-ink-faint transition" data-week="2">
+              W2
+            </button>
+            <button type="button" class="week-tab min-h-11 rounded-xl text-[11px] font-bold text-ink-faint transition" data-week="3">
+              W3
+            </button>
+            <button type="button" class="week-tab min-h-11 rounded-xl text-[11px] font-bold text-ink-faint transition" data-week="4">
+              W4
+            </button>
+            <button type="button" class="week-tab min-h-11 rounded-xl text-[11px] font-bold text-ink-faint transition" data-week="5">
+              W5
+            </button>
+          </div>
+
+          <p id="week-range" class="mb-3 px-1 text-xs font-medium text-ink-faint"></p>
+
+          <label class="mb-4 block">
+            <span class="mb-1.5 block text-sm font-semibold text-ink">選擇日期</span>
+            <div class="relative">
+              <select
+                id="day-select"
+                class="w-full min-h-12 appearance-none rounded-2xl border border-jade-100 bg-white/90 px-4 pr-10 text-base font-medium outline-none ring-jade-500 focus:ring-2"
+              ></select>
+              <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-ink-faint">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </span>
+            </div>
+          </label>
+
+          <div id="day-timeline" class="animate-fade-up"></div>
+        </section>
+
+        <!-- Checklist -->
+        <section
+          id="panel-checklist"
+          class="tab-panel hidden animate-fade-up"
+          data-tab="checklist"
+          aria-label="行李清單"
+        >
+          <div class="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <h2 class="font-display text-xl font-bold text-ink">行李清單</h2>
+              <p class="text-sm text-ink-soft">長住一個月，狀態會自動保存</p>
+            </div>
+            <button
+              id="checklist-reset"
+              type="button"
+              class="min-h-11 rounded-2xl border border-jade-100 bg-white/80 px-3 text-xs font-semibold text-jade-700 active:scale-95 transition"
+            >
+              重設
+            </button>
+          </div>
+
+          <div class="mb-4 rounded-2xl bg-white/80 px-4 py-3 shadow-soft backdrop-blur">
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-ink-soft">完成進度</span>
+              <span id="checklist-progress-label" class="font-semibold text-jade-700">0 / 0</span>
+            </div>
+            <div class="mt-2 h-2 overflow-hidden rounded-full bg-jade-50">
+              <div
+                id="checklist-progress-bar"
+                class="h-full rounded-full bg-gradient-to-r from-jade-500 to-coral transition-all duration-500"
+                style="width: 0%"
+              ></div>
+            </div>
+          </div>
+
+          <div id="checklist-root" class="space-y-5"></div>
+        </section>
+
+        <!-- Cafe Log -->
+        <section
+          id="panel-cafelog"
+          class="tab-panel hidden animate-fade-up"
+          data-tab="cafelog"
+          aria-label="咖啡店足跡"
+        >
+          <div class="mb-4">
+            <h2 class="font-display text-xl font-bold text-ink">咖啡店足跡</h2>
+            <p class="text-sm text-ink-soft">記錄去過的 Cafe · 依評分排序保存</p>
+          </div>
+
+          <form id="cafe-form" class="mb-5 space-y-3 rounded-3xl bg-white/85 p-4 shadow-soft backdrop-blur">
+            <label class="block">
+              <span class="mb-1.5 block text-sm font-semibold text-ink">店名</span>
+              <input
+                id="cafe-name"
+                type="text"
+                required
+                maxlength="40"
+                placeholder="例如：永春巷弄某間"
+                class="w-full min-h-12 rounded-2xl border border-jade-100 bg-mist px-4 text-base outline-none ring-jade-500 focus:ring-2"
+              />
+            </label>
+            <label class="block">
+              <span class="mb-1.5 block text-sm font-semibold text-ink">區域</span>
+              <input
+                id="cafe-area"
+                type="text"
+                required
+                maxlength="30"
+                list="cafe-area-suggestions"
+                placeholder="永春 / 信義 / 赤峰街…"
+                class="w-full min-h-12 rounded-2xl border border-jade-100 bg-mist px-4 text-base outline-none ring-jade-500 focus:ring-2"
+              />
+              <datalist id="cafe-area-suggestions">
+                <option value="永春"></option>
+                <option value="信義"></option>
+                <option value="松菸"></option>
+                <option value="赤峰街"></option>
+                <option value="中山"></option>
+                <option value="忠孝敦化"></option>
+                <option value="大稻埕"></option>
+              </datalist>
+            </label>
+
+            <fieldset>
+              <legend class="mb-1.5 text-sm font-semibold text-ink">星級評分</legend>
+              <div id="cafe-stars" class="flex gap-1.5" role="radiogroup" aria-label="星級">
+                <button type="button" class="star-btn min-h-11 min-w-11 rounded-2xl bg-mist text-lg text-ink-faint transition" data-star="1" aria-label="1 星">★</button>
+                <button type="button" class="star-btn min-h-11 min-w-11 rounded-2xl bg-mist text-lg text-ink-faint transition" data-star="2" aria-label="2 星">★</button>
+                <button type="button" class="star-btn min-h-11 min-w-11 rounded-2xl bg-mist text-lg text-ink-faint transition" data-star="3" aria-label="3 星">★</button>
+                <button type="button" class="star-btn min-h-11 min-w-11 rounded-2xl bg-mist text-lg text-ink-faint transition" data-star="4" aria-label="4 星">★</button>
+                <button type="button" class="star-btn min-h-11 min-w-11 rounded-2xl bg-mist text-lg text-ink-faint transition" data-star="5" aria-label="5 星">★</button>
+              </div>
+              <input type="hidden" id="cafe-rating" value="0" />
+            </fieldset>
+
+            <fieldset>
+              <legend class="mb-1.5 text-sm font-semibold text-ink">特色標籤</legend>
+              <div id="cafe-tags" class="flex flex-wrap gap-2"></div>
+            </fieldset>
+
+            <button
+              type="submit"
+              class="flex w-full min-h-12 items-center justify-center rounded-2xl bg-jade-600 text-base font-bold text-white shadow-soft active:scale-[0.98] transition"
+            >
+              加入足跡
+            </button>
+          </form>
+
+          <div class="mb-3 flex items-end justify-between gap-3">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wider text-ink-faint">已記錄</p>
+              <p id="cafe-count" class="font-display text-xl font-bold text-ink">0 間</p>
+            </div>
+          </div>
+          <ul id="cafe-list" class="space-y-2"></ul>
+        </section>
+
+        <!-- Expense -->
+        <section
+          id="panel-expense"
+          class="tab-panel hidden animate-fade-up"
+          data-tab="expense"
+          aria-label="開支"
+        >
+          <div class="mb-4">
+            <h2 class="font-display text-xl font-bold text-ink">開支儀表板</h2>
+            <p class="text-sm text-ink-soft">總額 · 預算 · 週／分類篩選</p>
+          </div>
+
+          <div id="expense-summary" class="mb-4 grid grid-cols-2 gap-2"></div>
+
+          <div class="mb-4 rounded-3xl bg-white/85 p-4 shadow-soft backdrop-blur">
+            <label class="block">
+              <span class="mb-1.5 block text-sm font-semibold text-ink">本月預算（TWD）</span>
+              <div class="flex gap-2">
+                <input
+                  id="budget-input"
+                  type="number"
+                  inputmode="decimal"
+                  min="0"
+                  step="100"
+                  class="w-full min-h-12 rounded-2xl border border-jade-100 bg-mist px-4 text-base outline-none ring-jade-500 focus:ring-2"
+                />
+                <button
+                  id="budget-apply"
+                  type="button"
+                  class="min-h-12 shrink-0 rounded-2xl bg-jade-600 px-4 text-sm font-bold text-white active:scale-95 transition"
+                >
+                  套用
+                </button>
+              </div>
+            </label>
+          </div>
+
+          <div id="expense-analytics" class="mb-5 space-y-3"></div>
+
+          <div class="mb-4 rounded-3xl bg-white/85 p-4 shadow-soft backdrop-blur">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0 flex-1">
+                <p class="text-xs font-semibold uppercase tracking-wider text-ink-faint">
+                  匯率 TWD → HKD
+                </p>
+                <p id="rate-display" class="mt-1 font-display text-2xl font-bold text-jade-700">
+                  1 TWD = 0.24 HKD
+                </p>
+                <p id="rate-meta" class="mt-1 text-xs text-ink-faint">可手動調整 · 每 12 小時自動更新</p>
+              </div>
+              <button
+                id="rate-refresh"
+                type="button"
+                class="min-h-11 min-w-11 shrink-0 rounded-2xl bg-jade-50 text-jade-700 active:scale-95 transition"
+                aria-label="立即更新匯率"
+              >
+                <svg class="mx-auto h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4 4v6h6M20 20v-6h-6M5 19A9 9 0 0119 5M19 5l-3 3M5 19l3-3"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <label class="mt-4 block">
+              <span class="mb-1.5 block text-sm font-semibold text-ink">自訂匯率（1 TWD = ? HKD）</span>
+              <div class="flex gap-2">
+                <input
+                  id="rate-input"
+                  type="number"
+                  inputmode="decimal"
+                  min="0.01"
+                  step="0.001"
+                  class="w-full min-h-12 rounded-2xl border border-jade-100 bg-mist px-4 text-base outline-none ring-jade-500 focus:ring-2"
+                />
+                <button
+                  id="rate-apply"
+                  type="button"
+                  class="min-h-12 shrink-0 rounded-2xl bg-jade-600 px-4 text-sm font-bold text-white active:scale-95 transition"
+                >
+                  套用
+                </button>
+              </div>
+            </label>
+          </div>
+
+          <form id="expense-form" class="mb-5 space-y-3 rounded-3xl bg-white/85 p-4 shadow-soft backdrop-blur">
+            <div>
+              <p class="mb-1.5 text-sm font-semibold text-ink">快速分類</p>
+              <div id="expense-categories" class="flex flex-wrap gap-2"></div>
+            </div>
+            <label class="block">
+              <span class="mb-1.5 block text-sm font-semibold text-ink">金額（TWD）</span>
+              <input
+                id="expense-amount"
+                type="number"
+                inputmode="decimal"
+                min="0"
+                step="any"
+                required
+                placeholder="例如 280"
+                class="w-full min-h-12 rounded-2xl border border-jade-100 bg-mist px-4 text-base outline-none ring-jade-500 focus:ring-2"
+              />
+            </label>
+            <label class="block">
+              <span class="mb-1.5 block text-sm font-semibold text-ink">項目／備註</span>
+              <input
+                id="expense-note"
+                type="text"
+                maxlength="60"
+                placeholder="點分類或自行輸入"
+                class="w-full min-h-12 rounded-2xl border border-jade-100 bg-mist px-4 text-base outline-none ring-jade-500 focus:ring-2"
+              />
+            </label>
+            <div
+              id="expense-preview"
+              class="rounded-2xl bg-coral-soft px-4 py-3 text-sm text-ink-soft"
+            >
+              換算預覽：—
+            </div>
+            <button
+              type="submit"
+              class="flex w-full min-h-12 items-center justify-center rounded-2xl bg-coral text-base font-bold text-white shadow-soft active:scale-[0.98] transition"
+            >
+              加入開支
+            </button>
+          </form>
+
+          <div class="mb-3 space-y-3">
+            <div>
+              <p class="mb-1.5 text-xs font-semibold uppercase tracking-wider text-ink-faint">依分類篩選</p>
+              <div id="filter-categories" class="flex flex-wrap gap-2"></div>
+            </div>
+            <div>
+              <p class="mb-1.5 text-xs font-semibold uppercase tracking-wider text-ink-faint">依週次篩選</p>
+              <div id="filter-weeks" class="flex flex-wrap gap-2"></div>
+            </div>
+          </div>
+
+          <div class="mb-3 flex items-end justify-between gap-3">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wider text-ink-faint">交易紀錄</p>
+              <p id="expense-list-meta" class="text-sm text-ink-soft">全部</p>
+            </div>
+            <button
+              id="expense-clear"
+              type="button"
+              class="min-h-11 rounded-2xl border border-jade-100 bg-white/80 px-3 text-xs font-semibold text-ink-soft active:scale-95 transition"
+            >
+              清空
+            </button>
+          </div>
+
+          <ul id="expense-list" class="space-y-2"></ul>
+        </section>
+      </main>
+
+      <nav
+        class="fixed bottom-0 inset-x-0 z-40 border-t border-white/60 bg-white/90 shadow-nav backdrop-blur-xl safe-bottom"
+        aria-label="主要導覽"
+      >
+        <div class="mx-auto grid max-w-lg grid-cols-4 gap-0.5 px-1.5 pt-2 pb-2">
+          <button
+            type="button"
+            class="nav-btn is-active group flex min-h-[3.5rem] flex-col items-center justify-center gap-0.5 rounded-2xl px-1 text-[10px] font-semibold text-ink-faint transition"
+            data-nav="itinerary"
+          >
+            <span class="nav-icon flex h-8 w-8 items-center justify-center rounded-xl transition group-[.is-active]:bg-jade-50 group-[.is-active]:text-jade-700">
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 01.553-.894L9 2m0 18l6-3m-6 3V2m6 15l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4" />
+              </svg>
+            </span>
+            <span class="group-[.is-active]:text-jade-700">行程</span>
+          </button>
+          <button
+            type="button"
+            class="nav-btn group flex min-h-[3.5rem] flex-col items-center justify-center gap-0.5 rounded-2xl px-1 text-[10px] font-semibold text-ink-faint transition"
+            data-nav="checklist"
+          >
+            <span class="nav-icon flex h-8 w-8 items-center justify-center rounded-xl transition group-[.is-active]:bg-jade-50 group-[.is-active]:text-jade-700">
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+            </span>
+            <span class="group-[.is-active]:text-jade-700">清單</span>
+          </button>
+          <button
+            type="button"
+            class="nav-btn group flex min-h-[3.5rem] flex-col items-center justify-center gap-0.5 rounded-2xl px-1 text-[10px] font-semibold text-ink-faint transition"
+            data-nav="cafelog"
+          >
+            <span class="nav-icon flex h-8 w-8 items-center justify-center rounded-xl transition group-[.is-active]:bg-jade-50 group-[.is-active]:text-jade-700">
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 3h7a3 3 0 010 6h-1v2a4 4 0 11-8 0V8H5a2 2 0 01-2-2V5a2 2 0 012-2h1m12 2h1a2 2 0 012 2v1a4 4 0 01-4 4h-1M8 21h6" />
+              </svg>
+            </span>
+            <span class="group-[.is-active]:text-jade-700">足跡</span>
+          </button>
+          <button
+            type="button"
+            class="nav-btn group flex min-h-[3.5rem] flex-col items-center justify-center gap-0.5 rounded-2xl px-1 text-[10px] font-semibold text-ink-faint transition"
+            data-nav="expense"
+          >
+            <span class="nav-icon flex h-8 w-8 items-center justify-center rounded-xl transition group-[.is-active]:bg-jade-50 group-[.is-active]:text-jade-700">
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V7m0 10v-1m8-5a8 8 0 11-16 0 8 8 0 0116 0z" />
+              </svg>
+            </span>
+            <span class="group-[.is-active]:text-jade-700">開支</span>
+          </button>
+        </div>
+      </nav>
+    </div>
+
+    <script src="./app.js" defer></script>
+  </body>
+</html>

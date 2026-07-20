@@ -1,7 +1,11 @@
+node_modules/
+dist/
+tokyo/node_modules/
+tokyo/dist/
+taipei/server.js
 .DS_Store
 Thumbs.db
 *.log
 .vercel
 .env
 .env.*
-node_modules/
