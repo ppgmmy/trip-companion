@@ -63,74 +63,130 @@
     return { time, title, detail, tag, zone, mapsQuery };
   }
 
+  const ITINERARY_VERSION = 2;
+
   const PLACES = [
-    { id: "factory-coffee", zone: "near", category: "Cafe", name: "Factory Coffee（Phaya Thai）", detail: "曼谷人氣精品咖啡；從 Phrom Phong 搭 BTS 轉 Airport Rail Link 可到。", transit: "BTS＋短程步行", mapsQuery: "Factory Coffee Bangkok" },
-    { id: "thonglo-cafes", zone: "near", category: "Cafe", name: "Thong Lo 巷弄咖啡", detail: "Sukhumvit 55 一帶有多間精品咖啡與早午餐店，適合慢慢試店。", transit: "BTS Thong Lo＋步行", mapsQuery: "cafes Thong Lo Bangkok" },
-    { id: "ekkamai-cafes", zone: "near", category: "Cafe", name: "Ekkamai 咖啡巡禮", detail: "Ekkamai 12／15 周邊咖啡、烘焙與設計小店集中。", transit: "BTS Ekkamai＋短程叫車", mapsQuery: "cafes Ekkamai Bangkok" },
-    { id: "emquartier", zone: "near", category: "商場", name: "EmQuartier", detail: "Phrom Phong 站直連，冷氣、餐飲與選品一次完成。", transit: "BTS Phrom Phong 直連", mapsQuery: "EmQuartier Bangkok" },
-    { id: "emsphere", zone: "near", category: "商場", name: "EmSphere", detail: "晚間餐飲、超市與新式商場空間。", transit: "Phrom Phong 步行約 8 分", mapsQuery: "EmSphere Bangkok" },
-    { id: "emporium", zone: "near", category: "商場", name: "Emporium", detail: "與 EmQuartier 相連的經典百貨，適合日用品與餐廳。", transit: "BTS Phrom Phong 直連", mapsQuery: "Emporium Bangkok" },
-    { id: "terminal21", zone: "near", category: "商場", name: "Terminal 21 Asok", detail: "每層不同城市主題，Food Court 適合平價午餐。", transit: "BTS Phrom Phong → Asok", mapsQuery: "Terminal 21 Asok Bangkok" },
-    { id: "gateway-ekkamai", zone: "near", category: "商場", name: "Gateway Ekamai", detail: "BTS Ekkamai 直連，日系超市、餐飲與避暑好去處。", transit: "BTS Ekkamai 直連", mapsQuery: "Gateway Ekamai Bangkok" },
-    { id: "benjakitti", zone: "near", category: "公園", name: "Benjakitti Park", detail: "傍晚走天空步道與湖畔，避開正午酷熱。", transit: "BTS Asok＋步行", mapsQuery: "Benjakitti Park Bangkok" },
-    { id: "sukhumvit-sois", zone: "near", category: "生活", name: "Sukhumvit Soi 咖啡與按摩", detail: "Phrom Phong 周邊巷弄適合找早餐、按摩與洗衣補給。", transit: "步行", mapsQuery: "Sukhumvit Phrom Phong cafes Bangkok" },
-    { id: "ayutthaya", zone: "expedition", category: "古都", name: "大城 Ayutthaya", detail: "古寺遺址與河畔午餐的一日遠征。", transit: "BTS＋火車", mapsQuery: "Ayutthaya Historical Park" },
-    { id: "amphawa", zone: "expedition", category: "水上市場", name: "安帕瓦 Amphawa", detail: "下午出發逛水上市場，傍晚可選螢火蟲船。", transit: "巴士／包車", mapsQuery: "Amphawa Floating Market" },
-    { id: "chatuchak", zone: "expedition", category: "市集", name: "札都扎週末市集", detail: "週末限定大型市集，早到、補水、分區逛。", transit: "BTS Mo Chit", mapsQuery: "Chatuchak Weekend Market Bangkok" },
-    { id: "ancient-city", zone: "expedition", category: "文化", name: "古城 Muang Boran", detail: "Samut Prakan 的露天泰國縮影博物館，適合租單車或電瓶車。", transit: "BTS＋叫車", mapsQuery: "Ancient City Muang Boran Samut Prakan" },
+    { id: "rama9-cafes", zone: "near", category: "Cafe", name: "Phra Ram 9 咖啡圈", detail: "Central Rama 9／G Tower 周邊精品咖啡與早午餐，適合落樓即坐。", transit: "MRT Phra Ram 9 步行", mapsQuery: "cafes near Phra Ram 9 MRT Bangkok" },
+    { id: "chong-nonsi-cafes", zone: "near", category: "Cafe", name: "Chong Nonsi／Sathon 咖啡", detail: "Sathon 辦公區與巷弄咖啡多，適合久坐或會議後轉換心情。", transit: "BTS Chong Nonsi 步行", mapsQuery: "cafes near Chong Nonsi BTS Bangkok" },
+    { id: "siam-cafes", zone: "near", category: "Cafe", name: "Siam 商場咖啡", detail: "Siam Paragon／Siam Center／Siam Square 冷氣咖啡集中，主力逛街日的補給站。", transit: "BTS Siam 直達", mapsQuery: "cafes Siam Paragon Bangkok" },
+    { id: "central-rama9", zone: "near", category: "商場", name: "Central Rama 9", detail: "住家生活圈核心商場：超市、餐飲、日用品與冷氣避暑。", transit: "MRT Phra Ram 9 直連", mapsQuery: "Central Rama 9 Bangkok" },
+    { id: "fortune-town", zone: "near", category: "商場", name: "Fortune Town", detail: "電子與配件好去處，補線材、轉插與小電器方便。", transit: "MRT Phra Ram 9 步行", mapsQuery: "Fortune Town Bangkok" },
+    { id: "siam-paragon", zone: "near", category: "商場", name: "Siam Paragon", detail: "主力逛街點：精品、餐飲、超市與冷氣一整天都夠用。", transit: "BTS Siam 直連", mapsQuery: "Siam Paragon Bangkok" },
+    { id: "siam-center", zone: "near", category: "商場", name: "Siam Center／Siam Discovery", detail: "設計感選品與潮牌較集中，適合慢慢比價。", transit: "BTS Siam 直連", mapsQuery: "Siam Center Bangkok" },
+    { id: "centralworld", zone: "near", category: "商場", name: "CentralWorld", detail: "從 Siam 天空步道可走到，餐飲樓層與大型櫃位齊全。", transit: "BTS Siam／Chit Lom", mapsQuery: "CentralWorld Bangkok" },
+    { id: "silom-complex", zone: "near", category: "商場", name: "Silom Complex", detail: "Chong Nonsi／Sala Daeng 生活圈商場，適合下班後補給。", transit: "BTS Sala Daeng／Chong Nonsi", mapsQuery: "Silom Complex Bangkok" },
+    { id: "mahanakhon", zone: "near", category: "景觀", name: "Mahanakhon SkyWalk", detail: "Chong Nonsi 旁觀景台與商場（非宗教）；傍晚光線較舒適。", transit: "BTS Chong Nonsi 步行", mapsQuery: "King Power Mahanakhon Bangkok" },
+    { id: "lumphini", zone: "near", category: "公園", name: "Lumphini Park", detail: "Silom／Sathon 旁城市綠地，傍晚散步避正午酷熱。", transit: "MRT Lumphini／Silom", mapsQuery: "Lumphini Park Bangkok" },
+    { id: "chatuchak", zone: "expedition", category: "市集", name: "札都扎週末市集", detail: "週末限定大型市集；從住家圈需跨線移動，建議早到。", transit: "BTS Mo Chit／MRT", mapsQuery: "Chatuchak Weekend Market Bangkok" },
+    { id: "iconsiam", zone: "expedition", category: "商場", name: "ICONSIAM", detail: "河岸大型商場與美食區；從 Chong Nonsi 可轉河船或叫車。", transit: "BTS＋河船／叫車", mapsQuery: "ICONSIAM Bangkok" },
+    { id: "asiatique", zone: "expedition", category: "河岸", name: "Asiatique", detail: "河岸夜市與商場混合區，適合傍晚出發、晚上回住。", transit: "河船／叫車", mapsQuery: "Asiatique The Riverfront Bangkok" },
   ];
 
-  function nearDay(title, vibe, cafe, cafeQuery, mall, mallQuery) {
+  function nearDay(title, vibe, cafe, cafeQuery, mall, mallQuery, home) {
+    const dinner =
+      home === "chong"
+        ? item("19:00", "Chong Nonsi／Sathon 晚餐", "晚間回 Chong Nonsi 或 Silom／Sathon 一帶吃飯，保留體力給長住節奏。", "美食", "near", "restaurants near Chong Nonsi Bangkok")
+        : item("19:00", "Phra Ram 9 晚餐／回住", "晚間回 Phra Ram 9 周邊吃飯，Central Rama 9 或巷弄餐廳都方便。", "美食", "near", "restaurants near Phra Ram 9 Bangkok");
     return {
-      title, vibe, mode: "near",
+      title,
+      vibe,
+      mode: "near",
       items: [
         item("10:30", cafe, "避開正午熱度，先喝咖啡、安排一段室內休息。", "Cafe", "near", cafeQuery),
-        item("14:30", mall, "以 BTS 短程移動，在冷氣商場逛街、吃午餐或補日用品。", "商場", "near", mallQuery),
-        item("19:00", "Sukhumvit 晚餐／回酒店", "晚間回 Phrom Phong 周邊吃飯，保留體力給長住節奏。", "美食", "near", "restaurants near Phrom Phong Bangkok"),
+        item("14:30", mall, "以 BTS／MRT 短程移動，在冷氣商場逛街、吃午餐或補日用品。", "商場", "near", mallQuery),
+        dinner,
       ],
     };
   }
 
-  /** Every day Aug 7 – Sep 6, 2026 — no free-day placeholders. */
+  /** Every day Aug 7 – Sep 6, 2026 — Bangkok only, no religious sites. */
   const SAMPLE_BY_DATE = {
-    "2026-08-07": nearDay("抵達曼谷 · Phrom Phong check-in", "安頓 Sukhumvit 基地", "Phrom Phong 巷弄早午餐", "cafes near Phrom Phong Bangkok", "EmQuartier", "EmQuartier Bangkok"),
-    "2026-08-08": nearDay("EmQuartier · Emporium 熟悉日", "BTS 直連商場", "Phrom Phong 精品咖啡", "cafes near Phrom Phong Bangkok", "Emporium", "Emporium Bangkok"),
-    "2026-08-09": nearDay("Thong Lo 咖啡巡禮", "近距離 Cafe 日", "Thong Lo 巷弄咖啡", "cafes Thong Lo Bangkok", "EmSphere", "EmSphere Bangkok"),
-    "2026-08-10": nearDay("Asok 商場與湖畔", "BTS 短程", "Factory Coffee", "Factory Coffee Bangkok", "Terminal 21 Asok", "Terminal 21 Asok Bangkok"),
-    "2026-08-11": nearDay("Ekkamai 慢逛", "Cafe＋日系商場", "Ekkamai 精品咖啡", "cafes Ekkamai Bangkok", "Gateway Ekamai", "Gateway Ekamai Bangkok"),
-    "2026-08-12": nearDay("EmSphere 美食探索", "Phrom Phong 步行圈", "Sukhumvit Soi 39 咖啡", "cafes Sukhumvit Soi 39 Bangkok", "EmSphere", "EmSphere Bangkok"),
-    "2026-08-13": nearDay("Sukhumvit 補給日", "遠征前放慢", "Phrom Phong 巷弄 Cafe", "cafes near Phrom Phong Bangkok", "EmQuartier", "EmQuartier Bangkok"),
-    "2026-08-14": { title: "遠征 · 大城 Ayutthaya", vibe: "BTS＋火車古都一日", mode: "expedition", items: [item("07:00", "Phrom Phong → Hua Lamphong", "從 BTS Phrom Phong 搭 Sukhumvit Line 往 Mo Chit，在 Asok 轉 MRT Blue Line 至 Hua Lamphong；步行至 Krung Thep Aphiwat / 依當日班次前往大城火車站。出發前確認 SRT 班次並預留轉乘時間。", "交通", "expedition", "Phrom Phong BTS Station to Ayutthaya train"), item("10:00", "抵達大城租單車／叫車", "火車站外租單車、嘟嘟車或叫車，先以歷史公園核心寺廟為主。", "交通", "expedition", "Ayutthaya Historical Park"), item("11:00", "Wat Mahathat · Wat Ratchaburana", "看樹根佛頭與紅磚遺址；正午注意防曬、補水並穿著適合寺廟的服裝。", "古都", "expedition", "Wat Mahathat Ayutthaya"), item("14:00", "河畔午餐與 Wat Chaiwatthanaram", "午餐後前往河畔寺廟拍夕陽前光線，回程搭火車或預約巴士回曼谷。", "景點", "expedition", "Wat Chaiwatthanaram Ayutthaya"), item("18:30", "回到 Phrom Phong", "從大城站搭火車回曼谷，接 MRT／BTS 回 Phrom Phong；晚餐只安排酒店附近。", "交通", "expedition", "Phrom Phong BTS Station Bangkok")] },
-    "2026-08-15": nearDay("遠征後恢復日", "冷氣商場＋按摩", "Thong Lo 咖啡", "cafes Thong Lo Bangkok", "Emporium", "Emporium Bangkok"),
-    "2026-08-16": nearDay("Benjakitti 傍晚散步", "白天室內、傍晚湖畔", "Asok 咖啡", "cafes Asok Bangkok", "Terminal 21 Asok", "Terminal 21 Asok Bangkok"),
-    "2026-08-17": nearDay("Ekkamai 設計小店", "BTS 短程", "Ekkamai 咖啡烘焙", "cafes Ekkamai Bangkok", "Gateway Ekamai", "Gateway Ekamai Bangkok"),
-    "2026-08-18": nearDay("Phrom Phong 工作日", "久坐與補給", "Sukhumvit Soi 31 Cafe", "cafes Sukhumvit Soi 31 Bangkok", "EmQuartier", "EmQuartier Bangkok"),
-    "2026-08-19": nearDay("Thong Lo 午後", "巷弄餐廳與咖啡", "Thong Lo 精品咖啡", "cafes Thong Lo Bangkok", "EmSphere", "EmSphere Bangkok"),
-    "2026-08-20": nearDay("週末前整理", "安帕瓦前輕鬆日", "Phrom Phong 巷弄 Cafe", "cafes near Phrom Phong Bangkok", "Emporium", "Emporium Bangkok"),
-    "2026-08-21": { title: "遠征 · 安帕瓦水上市場", vibe: "午後市場與河岸夜色", mode: "expedition", items: [item("11:30", "Phrom Phong 出發往安帕瓦", "建議預約包車或前往 Southern Bus Terminal 轉小巴；單程約 1.5–2 小時，市場午後才熱鬧。", "交通", "expedition", "Amphawa Floating Market"), item("14:30", "安帕瓦水上市場午餐", "沿運河選船麵、海鮮或甜點，先逛主市場再慢慢走到河岸。", "美食", "expedition", "Amphawa Floating Market"), item("17:30", "河岸夕陽／螢火蟲船", "傍晚可視天氣與營運選螢火蟲船；保留防蚊與現金。", "體驗", "expedition", "Amphawa firefly boat tour"), item("20:30", "回 Sukhumvit", "安排已確認的返程車輛，回 Phrom Phong 後直接休息。", "交通", "expedition", "Phrom Phong BTS Station Bangkok")] },
-    "2026-08-22": nearDay("安帕瓦後慢活", "按摩與商場", "EmQuartier Cafe", "EmQuartier cafes Bangkok", "EmSphere", "EmSphere Bangkok"),
-    "2026-08-23": nearDay("Factory Coffee 半日", "咖啡目的地", "Factory Coffee", "Factory Coffee Bangkok", "Terminal 21 Asok", "Terminal 21 Asok Bangkok"),
-    "2026-08-24": nearDay("Sukhumvit Soi 探索", "步行生活圈", "Soi 49 咖啡", "cafes Sukhumvit Soi 49 Bangkok", "Emporium", "Emporium Bangkok"),
-    "2026-08-25": nearDay("Thong Lo 美食日", "晚間餐廳探索", "Thong Lo Cafe", "cafes Thong Lo Bangkok", "EmSphere", "EmSphere Bangkok"),
-    "2026-08-26": nearDay("Ekkamai 咖啡二訪", "小店與補給", "Ekkamai Cafe", "cafes Ekkamai Bangkok", "Gateway Ekamai", "Gateway Ekamai Bangkok"),
-    "2026-08-27": nearDay("札都扎前準備", "早睡、帶現金", "Phrom Phong Cafe", "cafes near Phrom Phong Bangkok", "EmQuartier", "EmQuartier Bangkok"),
-    "2026-08-28": { title: "遠征 · 札都扎週末市集", vibe: "早到避熱 · 分區逛", mode: "expedition", items: [item("08:30", "Phrom Phong → Mo Chit", "搭 BTS Sukhumvit Line 北上至 Mo Chit，跟指標步行至市集入口；週末務必早到避開酷熱與人潮。", "交通", "expedition", "Chatuchak Weekend Market Bangkok"), item("09:30", "札都扎分區採買", "先逛想買的服飾、家飾與手作區，拍下店位；帶小鈔、飲水和環保袋。", "市集", "expedition", "Chatuchak Weekend Market Bangkok"), item("13:00", "JJ Mall／市集午餐", "正午進室內商場或有冷氣餐廳休息，整理戰利品再決定是否續逛。", "美食", "expedition", "JJ Mall Bangkok"), item("16:00", "BTS 回 Phrom Phong", "在熱度下降前離開，回酒店整理購物品與補水。", "交通", "expedition", "Phrom Phong BTS Station Bangkok")] },
-    "2026-08-29": nearDay("市集後整理日", "商場休息", "Sukhumvit Soi 39 Cafe", "cafes Sukhumvit Soi 39 Bangkok", "Emporium", "Emporium Bangkok"),
-    "2026-08-30": nearDay("週末 Thong Lo", "咖啡與晚餐", "Thong Lo 巷弄咖啡", "cafes Thong Lo Bangkok", "EmSphere", "EmSphere Bangkok"),
-    "2026-08-31": nearDay("Samut Prakan 前補給", "古城遠征前放慢", "Phrom Phong Cafe", "cafes near Phrom Phong Bangkok", "EmQuartier", "EmQuartier Bangkok"),
-    "2026-09-01": { title: "遠征 · 古城 Muang Boran／Samut Prakan", vibe: "泰國縮影露天博物館", mode: "expedition", items: [item("09:00", "Phrom Phong → Samut Prakan", "搭 BTS Sukhumvit Line 南下至 Kheha 站，再叫車前往 Muang Boran；先確認入園與租車方案。", "交通", "expedition", "Ancient City Muang Boran Samut Prakan"), item("10:30", "租單車／電瓶車逛古城", "園區面積大，依地圖選北、中、南幾個代表建築；正午多補水與防曬。", "文化", "expedition", "Ancient City Muang Boran Samut Prakan"), item("14:00", "園區午餐與泰式建築", "在園內午餐後續看水上市集、寺廟與宮殿複刻建築，不趕全園。", "景點", "expedition", "Ancient City Muang Boran Samut Prakan"), item("17:00", "回 Phrom Phong", "叫車回 Kheha 站，搭 BTS 回 Sukhumvit；晚上留給酒店附近晚餐。", "交通", "expedition", "Phrom Phong BTS Station Bangkok")] },
-    "2026-09-02": nearDay("古城後恢復日", "空調商場與按摩", "EmQuartier Cafe", "EmQuartier cafes Bangkok", "Emporium", "Emporium Bangkok"),
-    "2026-09-03": nearDay("Sukhumvit 伴手禮初選", "商場比價", "Thong Lo Coffee", "cafes Thong Lo Bangkok", "EmSphere", "EmSphere Bangkok"),
-    "2026-09-04": nearDay("採買結帳日", "Phrom Phong 最後補貨", "Sukhumvit Cafe", "cafes Sukhumvit Bangkok", "EmQuartier", "EmQuartier Bangkok"),
-    "2026-09-05": nearDay("告別曼谷", "最愛 Cafe 回訪", "最愛的 Thong Lo／Ekkamai Cafe", "cafes Thong Lo Bangkok", "EmSphere", "EmSphere Bangkok"),
-    "2026-09-06": { title: "返程 · Phrom Phong 出發", vibe: "一路順風", mode: "near", items: [item("出發前", "酒店 check-out", "確認護照、行李、退稅文件與充電器，向酒店確認前往機場的最佳時間。", "生活", "near", "Phrom Phong Bangkok"), item("依航班", "Phrom Phong 前往機場", "搭 BTS 至 Phaya Thai 轉 Airport Rail Link，或依行李量預約車輛；預留塞車與安檢時間。", "交通", "near", "Phrom Phong BTS Station to Suvarnabhumi Airport")] },
+    "2026-08-07": nearDay("抵達曼谷 · Phra Ram 9／Chong Nonsi", "安頓雙生活圈基地", "Phra Ram 9 巷弄早午餐", "cafes near Phra Ram 9 Bangkok", "Central Rama 9", "Central Rama 9 Bangkok", "rama9"),
+    "2026-08-08": nearDay("Chong Nonsi 熟悉日", "BTS 落樓生活圈", "Chong Nonsi 精品咖啡", "cafes near Chong Nonsi Bangkok", "Silom Complex", "Silom Complex Bangkok", "chong"),
+    "2026-08-09": nearDay("Siam 初訪 · Paragon", "主力商圈第一天", "Siam Paragon Cafe", "cafes Siam Paragon Bangkok", "Siam Paragon", "Siam Paragon Bangkok", "rama9"),
+    "2026-08-10": nearDay("Siam Center／Discovery", "設計選品日", "Siam Center Cafe", "cafes Siam Center Bangkok", "Siam Center", "Siam Center Bangkok", "chong"),
+    "2026-08-11": nearDay("Phra Ram 9 補給", "超市與電子", "G Tower／Rama 9 Cafe", "cafes G Tower Phra Ram 9 Bangkok", "Fortune Town", "Fortune Town Bangkok", "rama9"),
+    "2026-08-12": nearDay("CentralWorld 連通逛", "Siam 天空步道", "CentralWorld Cafe", "cafes CentralWorld Bangkok", "CentralWorld", "CentralWorld Bangkok", "chong"),
+    "2026-08-13": nearDay("Siam Square 慢逛", "戶外街舖＋冷氣穿梭", "Siam Square Cafe", "cafes Siam Square Bangkok", "Siam Paragon", "Siam Paragon Bangkok", "rama9"),
+    "2026-08-14": {
+      title: "遠一點 · Siam 終日商圈",
+      vibe: "Paragon → Center → CentralWorld",
+      mode: "expedition",
+      items: [
+        item("10:00", "往 Siam（BTS）", "從 Chong Nonsi 搭 Silom Line 直達 Siam；或從 Phra Ram 9 搭 MRT 轉 BTS。預留轉乘與人潮時間。", "交通", "expedition", "BTS Siam Station Bangkok"),
+        item("11:00", "Siam Paragon 上午場", "先逛想買的樓層與超市，避開正午室外熱浪。", "商場", "expedition", "Siam Paragon Bangkok"),
+        item("14:00", "Siam Center／Discovery", "午後轉設計選品與潮牌，穿梭冷氣連通。", "商場", "expedition", "Siam Center Bangkok"),
+        item("17:00", "CentralWorld 餐飲樓", "天空步道走到 CentralWorld，早晚餐或休息再決定是否續逛。", "美食", "expedition", "CentralWorld Bangkok"),
+        item("20:00", "回 Phra Ram 9／Chong Nonsi", "BTS／MRT 回住；晚餐也可留在 Siam 再走。", "交通", "expedition", "BTS Chong Nonsi Station Bangkok"),
+      ],
+    },
+    "2026-08-15": nearDay("Siam 後恢復日", "住家圈冷氣＋按摩", "Phra Ram 9 Cafe", "cafes near Phra Ram 9 Bangkok", "Central Rama 9", "Central Rama 9 Bangkok", "rama9"),
+    "2026-08-16": nearDay("Chong Nonsi · Mahanakhon", "觀景與 Sathon", "Chong Nonsi Cafe", "cafes near Chong Nonsi Bangkok", "King Power Mahanakhon", "King Power Mahanakhon Bangkok", "chong"),
+    "2026-08-17": nearDay("Siam Paragon 二訪", "鎖定想買清單", "Paragon Cafe", "cafes Siam Paragon Bangkok", "Siam Paragon", "Siam Paragon Bangkok", "rama9"),
+    "2026-08-18": nearDay("Phra Ram 9 工作日", "久坐與補給", "Rama 9 安靜 Cafe", "cafes near Phra Ram 9 Bangkok", "Central Rama 9", "Central Rama 9 Bangkok", "rama9"),
+    "2026-08-19": nearDay("Silom／Sala Daeng", "Chong Nonsi 延伸", "Silom Cafe", "cafes Silom Bangkok", "Silom Complex", "Silom Complex Bangkok", "chong"),
+    "2026-08-20": nearDay("ICONSIAM 前輕鬆日", "住家圈放慢", "Chong Nonsi Cafe", "cafes near Chong Nonsi Bangkok", "Central Rama 9", "Central Rama 9 Bangkok", "rama9"),
+    "2026-08-21": {
+      title: "遠一點 · ICONSIAM 河岸商場",
+      vibe: "河岸美食與大型商場",
+      mode: "expedition",
+      items: [
+        item("11:30", "出發往 ICONSIAM", "從 Chong Nonsi 可往 Saphan Taksin 轉河船，或直接叫車；正午熱，優先室內路線。", "交通", "expedition", "ICONSIAM Bangkok"),
+        item("13:00", "ICONSIAM 午餐＋逛", "美食區與各樓選品，不趕全館，鎖定 1–2 個目標區。", "商場", "expedition", "ICONSIAM Bangkok"),
+        item("17:00", "河岸散步／拍照", "傍晚較涼再出室外；之後決定河船或叫車回住。", "河岸", "expedition", "ICONSIAM riverside Bangkok"),
+        item("20:00", "回 Chong Nonsi／Phra Ram 9", "預留塞車時間；晚餐可在商場解決再走。", "交通", "expedition", "BTS Chong Nonsi Station Bangkok"),
+      ],
+    },
+    "2026-08-22": nearDay("河岸後慢活", "按摩與住家商場", "Phra Ram 9 Cafe", "cafes near Phra Ram 9 Bangkok", "Central Rama 9", "Central Rama 9 Bangkok", "rama9"),
+    "2026-08-23": nearDay("Siam Center 精選", "潮牌與設計", "Siam Center Cafe", "cafes Siam Center Bangkok", "Siam Discovery", "Siam Discovery Bangkok", "chong"),
+    "2026-08-24": nearDay("Lumphini 傍晚散步", "白天室內、傍晚公園", "Silom Cafe", "cafes near Lumphini Park Bangkok", "Silom Complex", "Silom Complex Bangkok", "chong"),
+    "2026-08-25": nearDay("Siam × CentralWorld", "連通商圈半日", "CentralWorld Cafe", "cafes CentralWorld Bangkok", "CentralWorld", "CentralWorld Bangkok", "rama9"),
+    "2026-08-26": nearDay("Fortune Town 電子日", "線材與配件", "Phra Ram 9 Cafe", "cafes near Phra Ram 9 Bangkok", "Fortune Town", "Fortune Town Bangkok", "rama9"),
+    "2026-08-27": nearDay("札都扎前準備", "早睡、帶現金與環保袋", "Chong Nonsi Cafe", "cafes near Chong Nonsi Bangkok", "Silom Complex", "Silom Complex Bangkok", "chong"),
+    "2026-08-28": {
+      title: "遠一點 · 札都扎週末市集",
+      vibe: "早到避熱 · 分區逛",
+      mode: "expedition",
+      items: [
+        item("08:00", "往 Mo Chit／Chatuchak", "從 Chong Nonsi 轉 Siam 再北上，或從 Phra Ram 9 搭 MRT 轉接；週末務必早到。", "交通", "expedition", "Chatuchak Weekend Market Bangkok"),
+        item("09:00", "札都扎分區採買", "先逛想買的服飾、家飾與手作區；帶小鈔、飲水和環保袋。", "市集", "expedition", "Chatuchak Weekend Market Bangkok"),
+        item("13:00", "JJ Mall／室內休息", "正午進冷氣商場或餐廳整理戰利品，再決定是否續逛。", "美食", "expedition", "JJ Mall Bangkok"),
+        item("16:00", "回住家圈", "熱度下降前離開，回 Phra Ram 9 或 Chong Nonsi 補水休息。", "交通", "expedition", "MRT Phra Ram 9 Station Bangkok"),
+      ],
+    },
+    "2026-08-29": nearDay("市集後整理日", "住家商場休息", "Phra Ram 9 Cafe", "cafes near Phra Ram 9 Bangkok", "Central Rama 9", "Central Rama 9 Bangkok", "rama9"),
+    "2026-08-30": nearDay("週末再逛 Siam", "補漏買清單", "Siam Paragon Cafe", "cafes Siam Paragon Bangkok", "Siam Paragon", "Siam Paragon Bangkok", "chong"),
+    "2026-08-31": nearDay("Asiatique 前輕鬆", "住家圈放慢", "Chong Nonsi Cafe", "cafes near Chong Nonsi Bangkok", "Central Rama 9", "Central Rama 9 Bangkok", "rama9"),
+    "2026-09-01": {
+      title: "遠一點 · Asiatique 河岸夜",
+      vibe: "傍晚出發 · 河岸商場",
+      mode: "expedition",
+      items: [
+        item("15:30", "往 Asiatique", "建議午後出發避開正午；叫車或河船皆可，確認回程方式。", "交通", "expedition", "Asiatique The Riverfront Bangkok"),
+        item("16:30", "河岸商場與餐飲", "逛攤位與室內店，先吃一頓再慢慢走。", "商場", "expedition", "Asiatique The Riverfront Bangkok"),
+        item("19:30", "夜景與回程", "夜燈較好看時再拍幾張，預留回 Chong Nonsi／Phra Ram 9 時間。", "河岸", "expedition", "Asiatique The Riverfront Bangkok"),
+      ],
+    },
+    "2026-09-02": nearDay("河岸後恢復日", "空調商場與按摩", "Phra Ram 9 Cafe", "cafes near Phra Ram 9 Bangkok", "Central Rama 9", "Central Rama 9 Bangkok", "rama9"),
+    "2026-09-03": nearDay("Siam 伴手禮初選", "商場比價", "Siam Center Cafe", "cafes Siam Center Bangkok", "Siam Paragon", "Siam Paragon Bangkok", "chong"),
+    "2026-09-04": nearDay("採買結帳日", "Phra Ram 9 最後補貨", "Rama 9 Cafe", "cafes near Phra Ram 9 Bangkok", "Central Rama 9", "Central Rama 9 Bangkok", "rama9"),
+    "2026-09-05": nearDay("告別曼谷", "最愛 Cafe／Siam 回訪", "最愛的 Siam／Chong Nonsi Cafe", "cafes Siam Bangkok", "Siam Paragon", "Siam Paragon Bangkok", "chong"),
+    "2026-09-06": {
+      title: "返程 · 住家圈出發",
+      vibe: "一路順風",
+      mode: "near",
+      items: [
+        item("出發前", "酒店 check-out", "確認護照、行李、充電器與伴手禮；向住宿確認前往機場的最佳時間。", "生活", "near", "Phra Ram 9 Bangkok"),
+        item("依航班", "前往機場", "Phra Ram 9 可轉 Airport Rail Link（如 Makkasan／Phaya Thai）；Chong Nonsi 可 BTS 至 Siam／Phaya Thai 再轉 ARL，行李多則直接叫車。預留塞車與安檢。", "交通", "near", "Suvarnabhumi Airport Bangkok"),
+      ],
+    },
   };
 
   const WEEK_META = {
-    1: { label: "Week 1", hint: "Phrom Phong 安頓 · 大城遠征" },
-    2: { label: "Week 2", hint: "Thong Lo／Ekkamai · 安帕瓦" },
-    3: { label: "Week 3", hint: "Sukhumvit 慢遊 · 札都扎" },
-    4: { label: "Week 4", hint: "古城 Samut Prakan · 採買" },
+    1: { label: "Week 1", hint: "安頓雙基地 · Siam 初訪" },
+    2: { label: "Week 2", hint: "Siam／住家圈 · ICONSIAM" },
+    3: { label: "Week 3", hint: "Siam 回訪 · 札都扎" },
+    4: { label: "Week 4", hint: "Asiatique · 伴手禮" },
     5: { label: "Week 5", hint: "告別曼谷 · 返程" },
   };
 
@@ -140,9 +196,9 @@
       items: [
         { id: "passport", label: "護照／身分證件" },
         { id: "tickets", label: "機票／登機證截圖" },
-        { id: "hotel-booking", label: "酒店訂單與地址（曼谷·Phrom Phong／Sukhumvit）" },
+        { id: "hotel-booking", label: "酒店訂單與地址（曼谷·Phra Ram 9／Chong Nonsi）" },
         { id: "insurance", label: "旅遊保險文件" },
-        { id: "easycard", label: "悠遊卡／一卡通" },
+        { id: "easycard", label: "BTS Rabbit／MRT 卡或 entourage 票" },
         { id: "cash-cards", label: "現金、信用卡、緊急聯絡人" },
         { id: "copies", label: "證件影本或雲端備份" },
       ],
@@ -156,7 +212,7 @@
         { id: "sleepwear", label: "睡衣／居家服" },
         { id: "light-jacket", label: "薄外套／空調房小外套" },
         { id: "rain-gear", label: "摺疊傘／輕便雨衣（午後雷陣雨）" },
-        { id: "walk-shoes", label: "好走的鞋 ×2（Sukhumvit 炎熱、常走路）" },
+        { id: "walk-shoes", label: "好走的鞋 ×2（曼谷炎熱、常走路／商場）" },
         { id: "slippers", label: "室內拖鞋" },
         { id: "laundry-bag", label: "洗衣袋／髒衣袋" },
       ],
@@ -358,16 +414,21 @@
   }
 
   function loadItineraryDays() {
-    const seeded = loadOrSeed(STORAGE_KEYS.itinerary, LEGACY_KEYS.itinerary, {
-      version: 1,
-      days: buildDaysFromSample(),
-    });
-    const hydrated = hydrateDays(seeded && seeded.days);
-    return hydrated && hydrated.length ? hydrated : buildDaysFromSample();
+    const fresh = { version: ITINERARY_VERSION, days: buildDaysFromSample() };
+    if (storageHas(STORAGE_KEYS.itinerary)) {
+      const seeded = safeParse(localStorage.getItem(STORAGE_KEYS.itinerary), null);
+      if (seeded && Number(seeded.version) === ITINERARY_VERSION) {
+        const hydrated = hydrateDays(seeded.days);
+        return hydrated && hydrated.length ? hydrated : buildDaysFromSample();
+      }
+    }
+    // Content bump (v2+): replace outdated seed so place changes ship to existing browsers.
+    writeJSON(STORAGE_KEYS.itinerary, fresh);
+    return buildDaysFromSample();
   }
 
   function zoneLabel(zone) {
-    return zone === "expedition" ? "遠征 5%" : "落樓即到";
+    return zone === "expedition" ? "跨區 5%" : "住家／Siam";
   }
 
   function zoneClass(zone) {
@@ -559,7 +620,7 @@
       .map((day) => {
         const selected = day.id === state.dayId ? "selected" : "";
         return `<option value="${day.id}" ${selected}>Day ${day.index} · ${formatShort(day.date)} · ${
-          day.mode === "expedition" ? "遠征 · " : ""
+          day.mode === "expedition" ? "跨區 · " : ""
         }${day.title}</option>`;
       })
       .join("");
@@ -776,7 +837,7 @@
     const sorted = [...state.cafes].sort((a, b) => b.rating - a.rating || b.createdAt - a.createdAt);
     els.cafeCount.textContent = `${sorted.length} 間`;
     if (!sorted.length) {
-      els.cafeList.innerHTML = `<li class="rounded-2xl border border-dashed border-jade-100 bg-white/50 px-4 py-8 text-center text-sm text-ink-faint">還沒有足跡，從 Thong Lo 或 Ekkamai 的咖啡店開始吧。</li>`;
+      els.cafeList.innerHTML = `<li class="rounded-2xl border border-dashed border-jade-100 bg-white/50 px-4 py-8 text-center text-sm text-ink-faint">還沒有足跡，從 Siam、Phra Ram 9 或 Chong Nonsi 的咖啡店開始吧。</li>`;
       return;
     }
     els.cafeList.innerHTML = sorted
