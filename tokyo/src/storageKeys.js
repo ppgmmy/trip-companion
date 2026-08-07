@@ -8,6 +8,7 @@ export const STORAGE_KEYS = {
   budget: "tokyo-budget",
   adapt: "tokyo-adapt-weather",
   feedback: "tokyo-feedback",
+  evolution: "tokyo-evolution",
   tab: "tokyo-tab",
 };
 
@@ -36,5 +37,6 @@ export const LEGACY_KEYS = {
   budget: ["tokyo-companion:budget"],
   adapt: [],
   feedback: [],
+  evolution: [],
   tab: ["tokyo-companion:tab"],
 };

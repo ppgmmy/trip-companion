@@ -10,6 +10,7 @@
     budget: "taipei-budget",
     adapt: "taipei-adapt-weather",
     feedback: "taipei-feedback",
+    evolution: "taipei-evolution",
     tab: "taipei-active-tab",
     week: "taipei-active-week",
     day: "taipei-active-day",
@@ -41,6 +42,7 @@
     budget: ["tokyo-budget", "trip-companion:budget-v1", "trip-companion:budget"],
     adapt: [],
     feedback: [],
+    evolution: [],
     tab: ["tokyo-active-tab", "trip-companion:active-tab-v1", "trip-companion:tab"],
     week: [
       "tokyo-active-week",
@@ -731,6 +733,7 @@
     rate: { ...DEFAULT_RATE },
     adapt: false,
     feedback: [],
+    evolution: [],
   };
 
   const els = {};
@@ -794,6 +797,12 @@
       feedbackPromptWrap: document.getElementById("feedback-prompt-wrap"),
       feedbackPrompt: document.getElementById("feedback-prompt"),
       feedbackCopy: document.getElementById("feedback-copy"),
+      evoBadge: document.getElementById("evo-badge"),
+      evoName: document.getElementById("evo-name"),
+      evoDesc: document.getElementById("evo-desc"),
+      evoCopy: document.getElementById("evo-copy"),
+      evoDone: document.getElementById("evo-done"),
+      evoHint: document.getElementById("evo-hint"),
     });
   }
 
@@ -1130,6 +1139,108 @@
     saveAdapt();
     renderIntel();
     renderDayTimeline();
+  }
+
+  /* ===== Daily Micro-Evolution Box ===== */
+
+  const EVOLUTION_POOL = [
+    { id: "phrase", name: "台語／國語點餐速查卡", desc: "夜市／Cafe 點餐常用句型，附注音，離線可用。" },
+    { id: "coins", name: "台幣硬幣辨識速查卡", desc: "1／5／10／50 元硬幣圖鑑＋悠遊卡找續攻略。" },
+    { id: "cafe-wheel", name: "今日隨機選 Cafe 轉盤", desc: "由已記錄嘅 Cafe 足跡隨機抽一間，選擇困難救星。" },
+    { id: "gacha-budget", name: "扭蛋式預算分配器", desc: "將今日剩餘預算隨機拆做「食／買／玩」三份，每日小驚喜。" },
+    { id: "night-market", name: "夜市小吃評分表", desc: "饒河／士林／寧夏小食逐款評分，儲低最強組合。" },
+    { id: "offline-map", name: "離線地圖下載提醒", desc: "出門前檢查：今日去嘅區域離線地圖下載咗未？" },
+    { id: "steps", name: "每日步數目標追蹤", desc: "記低目標同實際步數，回望成就感十足。" },
+    { id: "souvenir", name: "手信清單＋預算分配", desc: "鳳梨酥／茶葉／牛軋糖：邊個送邊份、買咗未，一頁睇晒。" },
+    { id: "easycard", name: "悠遊卡餘額追蹤", desc: "記低每次增值同餘額，唔使去到閘口先發現唔夠錢。" },
+    { id: "queue-log", name: "餐廳排隊時間記錄", desc: "記低阜杭豆漿／鼎泰豐等實際等候時間，下次有數得計。" },
+    { id: "fx-alert", name: "台幣匯率波動提醒", desc: "台幣兌港元升穿／跌穿自設門檻時提示，唱錢更精明。" },
+    { id: "luggage", name: "行李重量估算器", desc: "按已買手信估算回程行李重量，避免超重罰款。" },
+    { id: "wifi-notes", name: "免費 Wi-Fi 熱點筆記", desc: "記低商場／捷運站／Cafe 嘅免費 Wi-Fi 名同連線方法。" },
+    { id: "diary", name: "每日三行回顧日記", desc: "每晚三行：最正一刻／最伏一刻／聽日最期待。" },
+    { id: "photo-quest", name: "拍照打卡任務進度", desc: "預設 9 宮格任務（101／夜市／貓空…），儲齊召喚回憶。" },
+    { id: "timezone", name: "台港時差對照器", desc: "一眼睇到而家香港幾點，約人打電話啱時間。" },
+    { id: "emergency", name: "緊急聯絡卡", desc: "台灣報警 110／救護 119／保險 hotline 一頁收藏，離線可睇。" },
+    { id: "rainy-planb", name: "下雨天 Plan B 清單", desc: "預設落雨替代動線（信義商圈室內／誠品／Cafe），落雨唔使諗。" },
+  ];
+
+  function evoOrder() {
+    const arr = Array.from({ length: EVOLUTION_POOL.length }, (_, i) => i);
+    let seed = hashStr("taipei-evolution") || 1;
+    for (let i = arr.length - 1; i > 0; i--) {
+      seed = (seed * 9301 + 49297) % 233280;
+      const j = seed % (i + 1);
+      const tmp = arr[i];
+      arr[i] = arr[j];
+      arr[j] = tmp;
+    }
+    return arr;
+  }
+
+  function evoToday() {
+    const idx = todayIndex();
+    const order = evoOrder();
+    return { idx, idea: EVOLUTION_POOL[order[idx % order.length]] };
+  }
+
+  function buildEvoPrompt(idea) {
+    return `請在 trip-companion 的 taipei app 中實裝今日進化提案：「${idea.name}」。\n\n功能說明：${idea.desc}\n\n要求：\n- 保持現有 localStorage key 穩定（taipei-*），不要清掉使用者資料\n- UI 需與現有 mobile-first、Tailwind 風格一致\n- 新功能資料請用獨立 key 儲存，並支援離線使用\n- 完成後協助 assemble 並準備部署`;
+  }
+
+  function loadEvolution() {
+    const saved = loadOrSeed(STORAGE_KEYS.evolution, LEGACY_KEYS.evolution, []);
+    state.evolution = Array.isArray(saved) ? saved : [];
+  }
+
+  function saveEvolution() {
+    writeJSON(STORAGE_KEYS.evolution, state.evolution);
+  }
+
+  function renderEvolution() {
+    if (!els.evoBadge) return;
+    const { idx, idea } = evoToday();
+    const done = state.evolution.includes(idx);
+    els.evoBadge.textContent = `Day ${idx + 1} / ${TRIP_DAYS} Evolution`;
+    els.evoName.textContent = idea.name;
+    els.evoDesc.textContent = idea.desc;
+    els.evoDone.setAttribute("aria-pressed", done ? "true" : "false");
+    els.evoDone.textContent = done ? "✅ 已實裝" : "☐ 標記已實裝";
+    els.evoDone.classList.toggle("border-transparent", done);
+    els.evoDone.classList.toggle("bg-jade-600", done);
+    els.evoDone.classList.toggle("text-white", done);
+    els.evoDone.classList.toggle("border-[#a855f7]/30", !done);
+    els.evoDone.classList.toggle("bg-white", !done);
+    els.evoDone.classList.toggle("text-[#7c3aed]", !done);
+    els.evoHint.textContent =
+      (done
+        ? "已實裝！你嘅 App 又進化咗一步。"
+        : "夜晚返酒店貼俾 Cursor，10 秒將呢個功能永久寫入 App。") +
+      (state.evolution.length ? ` · 已收集 ${state.evolution.length} 個神級外掛` : "");
+  }
+
+  async function copyEvolution() {
+    const { idea } = evoToday();
+    try {
+      await navigator.clipboard.writeText(buildEvoPrompt(idea));
+      const prev = els.evoCopy.textContent;
+      els.evoCopy.textContent = "已複製 ✓";
+      setTimeout(() => {
+        els.evoCopy.textContent = prev;
+      }, 1600);
+    } catch {
+      alert("複製失敗，請手動選取");
+    }
+  }
+
+  function toggleEvolutionDone() {
+    const { idx } = evoToday();
+    if (state.evolution.includes(idx)) {
+      state.evolution = state.evolution.filter((d) => d !== idx);
+    } else {
+      state.evolution = [...state.evolution, idx];
+    }
+    saveEvolution();
+    renderEvolution();
   }
 
   function readJSON(key, fallback) {
@@ -2234,6 +2345,8 @@
     els.rateApply.addEventListener("click", applyManualRate);
 
     if (els.intelAdaptToggle) els.intelAdaptToggle.addEventListener("click", toggleAdapt);
+    if (els.evoCopy) els.evoCopy.addEventListener("click", copyEvolution);
+    if (els.evoDone) els.evoDone.addEventListener("click", toggleEvolutionDone);
 
     if (els.feedbackFab) els.feedbackFab.addEventListener("click", openFeedback);
     if (els.feedbackClose) els.feedbackClose.addEventListener("click", closeFeedback);
@@ -2310,6 +2423,7 @@
     loadBudget();
     loadAdapt();
     loadFeedback();
+    loadEvolution();
 
     const savedTab = loadExisting(STORAGE_KEYS.tab, LEGACY_KEYS.tab) || "itinerary";
     const savedWeekRaw = loadExisting(STORAGE_KEYS.week, LEGACY_KEYS.week);
@@ -2325,6 +2439,7 @@
     renderExpenses();
     updateExpensePreview();
     renderIntel();
+    renderEvolution();
     setCafeRating(0);
     bindEvents();
 

@@ -175,6 +175,46 @@
             <div id="budget-alert" class="hidden rounded-3xl border border-coral/30 bg-coral-soft px-4 py-3 shadow-soft"></div>
           </section>
 
+          <!-- Daily Micro-Evolution Box -->
+          <section class="mb-5" aria-label="每日隨機進化彩蛋">
+            <div class="overflow-hidden rounded-3xl bg-gradient-to-br from-[#7c3aed] via-[#a855f7] to-[#ec4899] p-[1.5px] shadow-[0_14px_36px_-12px_rgb(124_58_237/0.45)]">
+              <div class="rounded-[calc(1.5rem-1.5px)] bg-white/95 px-4 py-4 backdrop-blur">
+                <div class="flex items-center justify-between gap-3">
+                  <div class="flex items-center gap-2.5">
+                    <span class="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-[#7c3aed] to-[#ec4899] text-lg shadow-md" aria-hidden="true">🎁</span>
+                    <div>
+                      <h2 class="font-display text-base font-bold text-ink">今日隨機進化提案</h2>
+                      <p class="text-[10px] font-bold uppercase tracking-wider text-[#a855f7]">Daily Upgrade Box</p>
+                    </div>
+                  </div>
+                  <span id="evo-badge" class="shrink-0 rounded-full bg-[#f3e8ff] px-2.5 py-1 text-[10px] font-bold text-[#7c3aed]">Day – / –</span>
+                </div>
+                <div class="mt-3 rounded-2xl bg-gradient-to-br from-[#faf5ff] to-[#fdf2f8] px-4 py-3">
+                  <p id="evo-name" class="font-display text-[15px] font-bold text-ink">–</p>
+                  <p id="evo-desc" class="mt-1 text-[13px] leading-relaxed text-ink-soft">–</p>
+                </div>
+                <div class="mt-3 flex gap-2">
+                  <button
+                    id="evo-copy"
+                    type="button"
+                    class="min-h-11 flex-1 rounded-2xl bg-gradient-to-r from-[#7c3aed] to-[#a855f7] text-sm font-bold text-white shadow-md transition active:scale-[0.97]"
+                  >
+                    📋 一鍵複製 Cursor Prompt
+                  </button>
+                  <button
+                    id="evo-done"
+                    type="button"
+                    aria-pressed="false"
+                    class="flex min-h-11 shrink-0 items-center gap-1.5 rounded-2xl border border-[#a855f7]/30 bg-white px-3 text-xs font-bold text-[#7c3aed] transition active:scale-95"
+                  >
+                    ☐ 標記已實裝
+                  </button>
+                </div>
+                <p id="evo-hint" class="mt-2.5 px-1 text-[11px] text-ink-faint">夜晚返酒店貼俾 Cursor，10 秒將呢個功能永久寫入 App。</p>
+              </div>
+            </div>
+          </section>
+
           <section class="mb-5" aria-label="推薦列表">
             <div class="mb-2">
               <h2 class="font-display text-lg font-bold text-ink">附近推薦</h2>

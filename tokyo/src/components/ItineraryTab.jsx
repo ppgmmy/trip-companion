@@ -3,6 +3,7 @@ import { INDOOR_TAGS, ITINERARY, PLACES, WEEK_META, mapsLink } from "../data";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { STORAGE_KEYS } from "../storageKeys";
 import DailyIntel from "./DailyIntel";
+import DailyEvolution from "./DailyEvolution";
 
 function MapButton({ query }) {
   if (!query) return null;
@@ -65,6 +66,8 @@ export default function ItineraryTab({ dayId, setDayId, week, setWeek, expenses,
       </div>
 
       <DailyIntel expenses={expenses} budget={budget} />
+
+      <DailyEvolution />
 
       <section>
         <h2 className="font-display text-lg font-bold text-ink">附近推薦</h2>

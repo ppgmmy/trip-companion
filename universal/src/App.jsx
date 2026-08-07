@@ -10,6 +10,7 @@ import ChecklistTab from "./components/ChecklistTab";
 import SpotsTab from "./components/SpotsTab";
 import ExpenseTab from "./components/ExpenseTab";
 import DailyIntel from "./components/DailyIntel";
+import DailyEvolution from "./components/DailyEvolution";
 import FeedbackModal from "./components/FeedbackModal";
 
 function EmptyState({ onCreateClick }) {
@@ -91,6 +92,7 @@ export default function App() {
             {activeTab === "itinerary" && (
               <>
                 <DailyIntel trip={activeTrip} expenses={expenses} />
+                <DailyEvolution trip={activeTrip} />
                 <ItineraryTab trip={activeTrip} itinerary={itinerary} setItinerary={setItinerary} />
               </>
             )}
