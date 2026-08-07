@@ -1180,7 +1180,11 @@
   function evoToday() {
     const idx = todayIndex();
     const order = evoOrder();
-    return { idx, idea: EVOLUTION_POOL[order[idx % order.length]] };
+    const idea =
+      idx < order.length
+        ? EVOLUTION_POOL[order[idx]]
+        : EVOLUTION_POOL[hashStr(`taipei-evo-bonus-${idx}`) % EVOLUTION_POOL.length];
+    return { idx, idea };
   }
 
   function buildEvoPrompt(idea) {

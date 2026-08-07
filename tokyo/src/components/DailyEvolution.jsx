@@ -57,7 +57,10 @@ export default function DailyEvolution() {
 
   const dayIdx = todayIndex();
   const order = seededOrder("tokyo-evolution", POOL.length);
-  const idea = POOL[order[dayIdx % order.length]];
+  const idea =
+    dayIdx < order.length
+      ? POOL[order[dayIdx]]
+      : POOL[hashStr(`tokyo-evo-bonus-${dayIdx}`) % POOL.length];
   const done = implemented.includes(dayIdx);
 
   async function copy() {

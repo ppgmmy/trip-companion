@@ -25,7 +25,11 @@ export default function DailyEvolution({ trip }) {
   const dayIdx = todayIndex(trip);
   const days = tripDays(trip);
   const order = seededOrder(trip.id, EVOLUTION_POOL.length);
-  const idea = EVOLUTION_POOL[order[dayIdx % order.length]];
+  // First 18 days: unique shuffled reveal; after that: deterministic random per day.
+  const idea =
+    dayIdx < order.length
+      ? EVOLUTION_POOL[order[dayIdx]]
+      : EVOLUTION_POOL[hashStr(`${trip.id}-evo-bonus-${dayIdx}`) % EVOLUTION_POOL.length];
   const done = implemented.includes(dayIdx);
 
   async function copy() {
