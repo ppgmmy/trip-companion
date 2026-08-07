@@ -352,6 +352,9 @@
       evoCopy: document.getElementById("evo-copy"),
       evoDone: document.getElementById("evo-done"),
       evoHint: document.getElementById("evo-hint"),
+      evoHistoryWrap: document.getElementById("evo-history-wrap"),
+      evoHistorySummary: document.getElementById("evo-history-summary"),
+      evoHistory: document.getElementById("evo-history"),
     });
   }
 
@@ -731,23 +734,28 @@
     return arr;
   }
 
+  function evoIdeaFor(idx) {
+    const order = evoOrder();
+    return idx < order.length
+      ? EVOLUTION_POOL[order[idx]]
+      : EVOLUTION_POOL[hashStr(`thailand-evo-bonus-${idx}`) % EVOLUTION_POOL.length];
+  }
+
   function evoToday() {
     const idx = todayIndex();
-    const order = evoOrder();
-    const idea =
-      idx < order.length
-        ? EVOLUTION_POOL[order[idx]]
-        : EVOLUTION_POOL[hashStr(`thailand-evo-bonus-${idx}`) % EVOLUTION_POOL.length];
-    return { idx, idea };
+    return { idx, idea: evoIdeaFor(idx) };
   }
 
   function buildEvoPrompt(idea) {
     return `請在 trip-companion 的 thailand app 中實裝今日進化提案：「${idea.name}」。\n\n功能說明：${idea.desc}\n\n要求：\n- 保持現有 localStorage key 穩定（thailand-*），不要清掉使用者資料\n- UI 需與現有 mobile-first、Tailwind 風格一致\n- 新功能資料請用獨立 key 儲存，並支援離線使用\n- 完成後協助 assemble 並準備部署`;
   }
 
+  // Cumulative-only: migrate legacy numeric entries, never delete records.
   function loadEvolution() {
     const saved = loadOrSeed(STORAGE_KEYS.evolution, LEGACY_KEYS.evolution, []);
-    state.evolution = Array.isArray(saved) ? saved : [];
+    state.evolution = (Array.isArray(saved) ? saved : []).map((item) =>
+      typeof item === "number" ? { day: item, name: evoIdeaFor(item).name, date: null } : item
+    );
   }
 
   function saveEvolution() {
@@ -757,23 +765,43 @@
   function renderEvolution() {
     if (!els.evoBadge) return;
     const { idx, idea } = evoToday();
-    const done = state.evolution.includes(idx);
+    const done = state.evolution.some((e) => e.day === idx);
     els.evoBadge.textContent = `Day ${idx + 1} / ${TRIP_DAYS} Evolution`;
     els.evoName.textContent = idea.name;
     els.evoDesc.textContent = idea.desc;
     els.evoDone.setAttribute("aria-pressed", done ? "true" : "false");
+    els.evoDone.disabled = done;
     els.evoDone.textContent = done ? "✅ 已實裝" : "☐ 標記已實裝";
+    els.evoDone.classList.toggle("cursor-default", done);
     els.evoDone.classList.toggle("border-transparent", done);
     els.evoDone.classList.toggle("bg-jade-600", done);
     els.evoDone.classList.toggle("text-white", done);
     els.evoDone.classList.toggle("border-[#a855f7]/30", !done);
     els.evoDone.classList.toggle("bg-white", !done);
     els.evoDone.classList.toggle("text-[#7c3aed]", !done);
-    els.evoHint.textContent =
-      (done
-        ? "已實裝！你嘅 App 又進化咗一步。"
-        : "夜晚返酒店貼俾 Cursor，10 秒將呢個功能永久寫入 App。") +
-      (state.evolution.length ? ` · 已收集 ${state.evolution.length} 個神級外掛` : "");
+    els.evoHint.textContent = done
+      ? "已實裝！此記錄會永久保留，只會繼續累積。"
+      : "夜晚返酒店貼俾 Cursor，10 秒將呢個功能永久寫入 App。";
+
+    if (els.evoHistoryWrap) {
+      if (!state.evolution.length) {
+        els.evoHistoryWrap.classList.add("hidden");
+      } else {
+        els.evoHistoryWrap.classList.remove("hidden");
+        els.evoHistorySummary.textContent = `進化歷史 · 已收集 ${state.evolution.length} 個神級外掛`;
+        els.evoHistory.innerHTML = state.evolution
+          .slice()
+          .sort((a, b) => a.day - b.day)
+          .map(
+            (e) => `<li class="flex items-center gap-2 text-[12px] text-ink-soft">
+              <span class="shrink-0 rounded-full bg-[#f3e8ff] px-2 py-0.5 text-[10px] font-bold text-[#7c3aed]">Day ${e.day + 1}</span>
+              <span class="min-w-0 flex-1 truncate font-medium text-ink">${escapeHtml(e.name)}</span>
+              ${e.date ? `<span class="shrink-0 text-[10px] text-ink-faint">${e.date}</span>` : ""}
+            </li>`
+          )
+          .join("");
+      }
+    }
   }
 
   async function copyEvolution() {
@@ -790,13 +818,11 @@
     }
   }
 
+  // Cumulative only: once implemented, the record never disappears.
   function toggleEvolutionDone() {
-    const { idx } = evoToday();
-    if (state.evolution.includes(idx)) {
-      state.evolution = state.evolution.filter((d) => d !== idx);
-    } else {
-      state.evolution = [...state.evolution, idx];
-    }
+    const { idx, idea } = evoToday();
+    if (state.evolution.some((e) => e.day === idx)) return;
+    state.evolution = [...state.evolution, { day: idx, name: idea.name, date: toDateId(new Date()) }];
     saveEvolution();
     renderEvolution();
   }

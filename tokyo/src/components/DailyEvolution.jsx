@@ -36,6 +36,13 @@ function seededOrder(seedKey, length) {
   return arr;
 }
 
+function ideaForDay(dayIdx) {
+  const order = seededOrder("tokyo-evolution", POOL.length);
+  return dayIdx < order.length
+    ? POOL[order[dayIdx]]
+    : POOL[hashStr(`tokyo-evo-bonus-${dayIdx}`) % POOL.length];
+}
+
 function buildPrompt(idea) {
   return `請在 trip-companion 的 tokyo app 中實裝今日進化提案：「${idea.name}」。
 
@@ -51,17 +58,16 @@ function buildPrompt(idea) {
 export default function DailyEvolution() {
   const [implemented, setImplemented] = useLocalStorage(STORAGE_KEYS.evolution, [], {
     legacyKeys: [],
-    migrate: (v) => (Array.isArray(v) ? v : []),
+    migrate: (v) =>
+      (Array.isArray(v) ? v : []).map((item) =>
+        typeof item === "number" ? { day: item, name: ideaForDay(item).name, date: null } : item
+      ),
   });
   const [copied, setCopied] = useState(false);
 
   const dayIdx = todayIndex();
-  const order = seededOrder("tokyo-evolution", POOL.length);
-  const idea =
-    dayIdx < order.length
-      ? POOL[order[dayIdx]]
-      : POOL[hashStr(`tokyo-evo-bonus-${dayIdx}`) % POOL.length];
-  const done = implemented.includes(dayIdx);
+  const idea = ideaForDay(dayIdx);
+  const done = implemented.some((e) => e.day === dayIdx);
 
   async function copy() {
     try {
@@ -73,8 +79,13 @@ export default function DailyEvolution() {
     }
   }
 
-  function toggleDone() {
-    setImplemented((prev) => (prev.includes(dayIdx) ? prev.filter((d) => d !== dayIdx) : [...prev, dayIdx]));
+  // Cumulative only: once implemented, the record never disappears.
+  function markDone() {
+    if (done) return;
+    setImplemented((prev) => [
+      ...prev,
+      { day: dayIdx, name: idea.name, date: new Date().toISOString().slice(0, 10) },
+    ]);
   }
 
   return (
@@ -113,10 +124,11 @@ export default function DailyEvolution() {
           </button>
           <button
             type="button"
-            onClick={toggleDone}
+            onClick={markDone}
+            disabled={done}
             aria-pressed={done}
             className={`flex min-h-11 shrink-0 items-center gap-1.5 rounded-2xl border px-3 text-xs font-bold transition active:scale-95 ${
-              done ? "border-transparent bg-teal text-white" : "border-[#a855f7]/30 bg-white text-[#7c3aed]"
+              done ? "cursor-default border-transparent bg-teal text-white" : "border-[#a855f7]/30 bg-white text-[#7c3aed]"
             }`}
           >
             {done ? "✅ 已實裝" : "☐ 標記已實裝"}
@@ -125,10 +137,31 @@ export default function DailyEvolution() {
 
         <p className="mt-2.5 px-1 text-[11px] text-ink-faint">
           {done
-            ? "已實裝！你嘅 App 又進化咗一步。"
+            ? "已實裝！此記錄會永久保留，只會繼續累積。"
             : "夜晚返酒店貼俾 Cursor，10 秒將呢個功能永久寫入 App。"}
-          {implemented.length > 0 && ` · 已收集 ${implemented.length} 個神級外掛`}
         </p>
+
+        {implemented.length > 0 && (
+          <details className="mt-3 rounded-2xl bg-[#faf5ff] px-3 py-2.5">
+            <summary className="cursor-pointer text-xs font-bold text-[#7c3aed]">
+              進化歷史 · 已收集 {implemented.length} 個神級外掛
+            </summary>
+            <ul className="mt-2 space-y-1.5">
+              {implemented
+                .slice()
+                .sort((a, b) => a.day - b.day)
+                .map((e) => (
+                  <li key={e.day} className="flex items-center gap-2 text-[12px] text-ink-soft">
+                    <span className="shrink-0 rounded-full bg-[#f3e8ff] px-2 py-0.5 text-[10px] font-bold text-[#7c3aed]">
+                      Day {e.day + 1}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate font-medium text-ink">{e.name}</span>
+                    {e.date && <span className="shrink-0 text-[10px] text-ink-faint">{e.date}</span>}
+                  </li>
+                ))}
+            </ul>
+          </details>
+        )}
       </div>
     </section>
   );
