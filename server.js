@@ -40,6 +40,19 @@ function resolveFile(urlPath) {
     }
   }
 
+  // Serve built Universal app under /universal
+  if (pathname === "/universal" || pathname === "/universal/") {
+    pathname = "/universal/dist/index.html";
+  } else if (pathname.startsWith("/universal/") && !pathname.startsWith("/universal/dist/")) {
+    const rest = pathname.slice("/universal/".length);
+    const distCandidate = path.join(root, "universal", "dist", rest);
+    if (fs.existsSync(distCandidate) && fs.statSync(distCandidate).isFile()) {
+      pathname = `/universal/dist/${rest}`;
+    } else if (!rest.includes(".")) {
+      pathname = "/universal/dist/index.html";
+    }
+  }
+
   // Directory → index.html
   let filePath = path.normalize(path.join(root, pathname));
   if (!filePath.startsWith(root)) return null;
@@ -53,7 +66,7 @@ function resolveFile(urlPath) {
 
 const server = http.createServer((req, res) => {
   const pathname = decodeURIComponent((req.url || "/").split("?")[0]);
-  if (["/taipei", "/tokyo", "/thailand"].includes(pathname)) {
+  if (["/taipei", "/tokyo", "/thailand", "/universal"].includes(pathname)) {
     res.writeHead(308, { Location: `${pathname}/` });
     res.end();
     return;
@@ -77,7 +90,8 @@ const server = http.createServer((req, res) => {
 
 server.listen(port, () => {
   console.log(`Trip Companion hub at http://localhost:${port}`);
-  console.log(`  Taipei   → http://localhost:${port}/taipei/`);
-  console.log(`  Tokyo    → http://localhost:${port}/tokyo/`);
-  console.log(`  Thailand → http://localhost:${port}/thailand/`);
+  console.log(`  Universal → http://localhost:${port}/universal/`);
+  console.log(`  Taipei    → http://localhost:${port}/taipei/`);
+  console.log(`  Tokyo     → http://localhost:${port}/tokyo/`);
+  console.log(`  Thailand  → http://localhost:${port}/thailand/`);
 });
