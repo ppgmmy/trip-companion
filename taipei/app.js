@@ -8,6 +8,8 @@
     cafes: "taipei-cafe-log",
     rate: "taipei-fx-rate",
     budget: "taipei-budget",
+    adapt: "taipei-adapt-weather",
+    feedback: "taipei-feedback",
     tab: "taipei-active-tab",
     week: "taipei-active-week",
     day: "taipei-active-day",
@@ -37,6 +39,8 @@
       "trip-companion:rate",
     ],
     budget: ["tokyo-budget", "trip-companion:budget-v1", "trip-companion:budget"],
+    adapt: [],
+    feedback: [],
     tab: ["tokyo-active-tab", "trip-companion:active-tab-v1", "trip-companion:tab"],
     week: [
       "tokyo-active-week",
@@ -725,6 +729,8 @@
     filterWeek: "all",
     budgetTwd: DEFAULT_BUDGET_TWD,
     rate: { ...DEFAULT_RATE },
+    adapt: false,
+    feedback: [],
   };
 
   const els = {};
@@ -770,6 +776,24 @@
       expenseListMeta: document.getElementById("expense-list-meta"),
       expenseList: document.getElementById("expense-list"),
       expenseClear: document.getElementById("expense-clear"),
+      intelDate: document.getElementById("intel-date"),
+      intelWeatherIcon: document.getElementById("intel-weather-icon"),
+      intelTemp: document.getElementById("intel-temp"),
+      intelRain: document.getElementById("intel-rain"),
+      intelWeather: document.getElementById("intel-weather"),
+      intelTip: document.getElementById("intel-tip"),
+      intelAdaptToggle: document.getElementById("intel-adapt-toggle"),
+      intelAdaptHint: document.getElementById("intel-adapt-hint"),
+      budgetAlert: document.getElementById("budget-alert"),
+      feedbackFab: document.getElementById("feedback-fab"),
+      feedbackModal: document.getElementById("feedback-modal"),
+      feedbackClose: document.getElementById("feedback-close"),
+      feedbackForm: document.getElementById("feedback-form"),
+      feedbackText: document.getElementById("feedback-text"),
+      feedbackList: document.getElementById("feedback-list"),
+      feedbackPromptWrap: document.getElementById("feedback-prompt-wrap"),
+      feedbackPrompt: document.getElementById("feedback-prompt"),
+      feedbackCopy: document.getElementById("feedback-copy"),
     });
   }
 
@@ -879,6 +903,233 @@
 
   function zoneClass(zone) {
     return zone === "expedition" ? "zone-expedition" : "zone-near";
+  }
+
+  /* ===== Daily Intelligence & Smart Recommendation ===== */
+
+  const INDOOR_TAGS = ["商場", "Cafe", "購物", "美食", "生活"];
+  const WEATHER_POOL = [
+    { label: "多雲", icon: "⛅", hi: 33, lo: 27, rain: 30 },
+    { label: "午後雷陣雨", icon: "⛈️", hi: 32, lo: 26, rain: 70 },
+    { label: "晴朗炎熱", icon: "☀️", hi: 36, lo: 28, rain: 10 },
+    { label: "局部驟雨", icon: "🌦️", hi: 33, lo: 27, rain: 50 },
+    { label: "陰天微雨", icon: "🌧️", hi: 30, lo: 25, rain: 85 },
+  ];
+
+  function hashStr(str) {
+    let h = 0;
+    for (let i = 0; i < str.length; i++) {
+      h = (h * 31 + str.charCodeAt(i)) | 0;
+    }
+    return Math.abs(h);
+  }
+
+  function todayIndex() {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const diff = Math.floor((today - TRIP_START) / 86400000);
+    if (diff < 0) return 0;
+    if (diff > TRIP_DAYS - 1) return TRIP_DAYS - 1;
+    return diff;
+  }
+
+  function todayDay() {
+    return state.days[todayIndex()] || state.days[0] || null;
+  }
+
+  function weatherForDay(index) {
+    const h = hashStr(`taipei-${index}`);
+    const w = WEATHER_POOL[h % WEATHER_POOL.length];
+    return {
+      label: w.label,
+      icon: w.icon,
+      temp: `${w.lo + (h % 2)}–${w.hi}°C`,
+      rain: `${w.rain}%`,
+      rainValue: w.rain,
+      heatwave: w.hi >= 34,
+      rainy: w.rain >= 50,
+    };
+  }
+
+  function indoorNamesForDay(day) {
+    if (!day) return [];
+    return day.items
+      .filter((it) => INDOOR_TAGS.includes(it.tag))
+      .map((it) => it.title)
+      .slice(0, 3);
+  }
+
+  function buildTip(weather, day) {
+    const indoors = indoorNamesForDay(day);
+    const indoorText = indoors.length ? indoors.join("、") : "信義商圈室內動線";
+    if (weather.rainy) {
+      return `降雨機率 ${weather.rain}：已優先標亮室內動線（${indoorText}），建議帶摺疊傘。`;
+    }
+    if (weather.heatwave) {
+      return `高溫 ${weather.temp}：已標亮冷氣商場與 Cafe（${indoorText}），正午避免長時間室外步行。`;
+    }
+    return `天氣尚可：室內外交替最舒服，正午仍建議進商場休息。`;
+  }
+
+  function totalSpent() {
+    return state.expenses.reduce((sum, e) => sum + (e.twd || 0), 0);
+  }
+
+  function remainingDaysCount() {
+    const elapsed = todayIndex() + 1;
+    return Math.max(1, TRIP_DAYS - elapsed + 1);
+  }
+
+  function budgetPace() {
+    const remaining = Math.max(0, state.budgetTwd - totalSpent());
+    const perDay = remaining / remainingDaysCount();
+    return { remaining, perDay, spent: totalSpent() };
+  }
+
+  function loadAdapt() {
+    const saved = loadExisting(STORAGE_KEYS.adapt, LEGACY_KEYS.adapt);
+    state.adapt = saved === true || saved === "true" || saved === 1;
+  }
+
+  function saveAdapt() {
+    localStorage.setItem(STORAGE_KEYS.adapt, state.adapt ? "1" : "0");
+  }
+
+  function renderIntel() {
+    if (!els.intelDate) return;
+    const idx = todayIndex();
+    const day = todayDay();
+    const date = day ? day.date : new Date();
+    const weather = weatherForDay(idx);
+
+    els.intelDate.textContent = `${toDateId(date)}（${WEEKDAY_LABELS[date.getDay()]}）· Day ${idx + 1}/${TRIP_DAYS}`;
+    els.intelWeatherIcon.textContent = weather.icon;
+    els.intelTemp.textContent = weather.temp;
+    els.intelRain.textContent = weather.rain;
+    els.intelWeather.textContent = weather.label;
+    els.intelTip.textContent = buildTip(weather, day);
+
+    if (els.intelAdaptToggle) {
+      els.intelAdaptToggle.setAttribute("aria-pressed", state.adapt ? "true" : "false");
+      const pill = els.intelAdaptToggle.querySelector(".intel-pill");
+      if (pill) {
+        pill.textContent = state.adapt ? "開" : "關";
+        pill.classList.toggle("bg-jade-600", state.adapt);
+        pill.classList.toggle("text-white", state.adapt);
+        pill.classList.toggle("bg-white", !state.adapt);
+        pill.classList.toggle("text-ink-faint", !state.adapt);
+      }
+      els.intelAdaptToggle.classList.toggle("border-jade-500", state.adapt);
+      els.intelAdaptToggle.classList.toggle("bg-jade-50", state.adapt);
+      if (els.intelAdaptHint) {
+        els.intelAdaptHint.textContent = state.adapt
+          ? weather.rainy
+            ? "今日偏雨：時間軸已標亮室內／低熱暴露項目"
+            : "今日偏熱：時間軸已標亮冷氣／室內項目"
+          : "開啟後會標亮今日室內／低熱暴露項目";
+      }
+    }
+
+    renderBudgetAlert();
+  }
+
+  function renderBudgetAlert() {
+    if (!els.budgetAlert) return;
+    const { remaining, perDay, spent } = budgetPace();
+    const avgPlanned = state.budgetTwd / TRIP_DAYS;
+    const overPace = spent > avgPlanned * (todayIndex() + 1) * 1.1;
+
+    els.budgetAlert.classList.remove("hidden");
+    if (overPace) {
+      const lowCost = ["貓空纜車站外散步", "四四南村", "信義區公園", "安靜 Cafe 久坐"];
+      els.budgetAlert.innerHTML = `
+        <div class="flex items-start gap-2.5">
+          <span class="text-lg" aria-hidden="true">⚠️</span>
+          <div>
+            <p class="font-display text-sm font-bold text-ink">預算優化提示</p>
+            <p class="mt-0.5 text-[13px] leading-relaxed text-ink-soft">目前花費略超前；剩餘 ${formatTwd(remaining)}，日均建議 ${formatTwd(Math.round(perDay))}。今日可多排：${lowCost.join("、")}。</p>
+          </div>
+        </div>`;
+      els.budgetAlert.classList.add("border-coral/30", "bg-coral-soft");
+      els.budgetAlert.classList.remove("border-jade-100", "bg-jade-50/80");
+    } else {
+      els.budgetAlert.innerHTML = `
+        <div class="flex items-start gap-2.5">
+          <span class="text-lg" aria-hidden="true">✅</span>
+          <div>
+            <p class="font-display text-sm font-bold text-ink">預算節奏健康</p>
+            <p class="mt-0.5 text-[13px] text-ink-soft">已花 ${formatTwd(Math.round(spent))}／${formatTwd(state.budgetTwd)} · 日均可用 ${formatTwd(Math.round(perDay))}</p>
+          </div>
+        </div>`;
+      els.budgetAlert.classList.add("border-jade-100", "bg-jade-50/80");
+      els.budgetAlert.classList.remove("border-coral/30", "bg-coral-soft");
+    }
+  }
+
+  /* ===== Feedback / Wishlist ===== */
+
+  function loadFeedback() {
+    const saved = loadOrSeed(STORAGE_KEYS.feedback, LEGACY_KEYS.feedback, []);
+    state.feedback = Array.isArray(saved) ? saved : [];
+  }
+
+  function saveFeedback() {
+    writeJSON(STORAGE_KEYS.feedback, state.feedback);
+  }
+
+  function renderFeedbackList() {
+    if (!els.feedbackList) return;
+    if (!state.feedback.length) {
+      els.feedbackList.innerHTML = `<li class="rounded-2xl bg-mist px-3 py-2.5 text-center text-xs text-ink-faint">尚未記下任何想法</li>`;
+      return;
+    }
+    els.feedbackList.innerHTML = state.feedback
+      .slice()
+      .reverse()
+      .map(
+        (f) => `<li class="flex items-start justify-between gap-2 rounded-2xl bg-mist px-3 py-2">
+          <span class="min-w-0 flex-1 text-[13px] text-ink">${escapeHtml(f.text)}</span>
+          <span class="shrink-0 text-[10px] text-ink-faint">${f.date}</span>
+        </li>`
+      )
+      .join("");
+  }
+
+  function buildCursorPrompt() {
+    const lines = state.feedback.map((f, i) => `${i + 1}. ${f.text}`).join("\n");
+    return `請在 trip-companion 的 taipei app 中加入以下功能／調整：\n\n${lines}\n\n要求：\n- 保持現有 localStorage key 穩定（taipei-*），不要清掉使用者資料\n- UI 需與現有 mobile-first、Tailwind 風格一致\n- 完成後協助 assemble 並準備部署`;
+  }
+
+  function renderFeedbackPrompt() {
+    if (!els.feedbackPromptWrap || !els.feedbackPrompt) return;
+    if (!state.feedback.length) {
+      els.feedbackPromptWrap.classList.add("hidden");
+      return;
+    }
+    els.feedbackPrompt.textContent = buildCursorPrompt();
+    els.feedbackPromptWrap.classList.remove("hidden");
+  }
+
+  function openFeedback() {
+    if (!els.feedbackModal) return;
+    els.feedbackModal.classList.remove("hidden");
+    els.feedbackModal.classList.add("flex");
+    renderFeedbackList();
+    renderFeedbackPrompt();
+    if (els.feedbackText) els.feedbackText.focus();
+  }
+
+  function closeFeedback() {
+    if (!els.feedbackModal) return;
+    els.feedbackModal.classList.add("hidden");
+    els.feedbackModal.classList.remove("flex");
+  }
+
+  function toggleAdapt() {
+    state.adapt = !state.adapt;
+    saveAdapt();
+    renderIntel();
+    renderDayTimeline();
   }
 
   function readJSON(key, fallback) {
@@ -1092,12 +1343,15 @@
         ${day.items
           .map((entry, i) => {
             const z = entry.zone || mode;
+            const indoor = INDOOR_TAGS.includes(entry.tag);
+            const adaptOn = state.adapt && indoor;
             return `<li class="relative">
             <span class="absolute -left-[1.95rem] top-1.5 h-3.5 w-3.5 rounded-full border-[3px] border-white ${z === "expedition" ? "bg-coral" : "bg-jade-500"} shadow-sm ${i === 0 ? "ring-4 ring-jade-500/15" : ""}"></span>
-            <div class="rounded-2xl bg-white/85 p-4 shadow-soft backdrop-blur">
+            <div class="rounded-2xl ${adaptOn ? "bg-jade-50/95 ring-2 ring-jade-500/40" : "bg-white/85"} p-4 shadow-soft backdrop-blur transition">
               <div class="mb-1 flex flex-wrap items-center justify-between gap-2">
                 <time class="text-xs font-bold tracking-wide text-jade-600">${escapeHtml(entry.time)}</time>
                 <div class="flex flex-wrap gap-1.5">
+                  ${adaptOn ? `<span class="rounded-full bg-jade-600 px-2 py-0.5 text-[10px] font-bold text-white">室內推薦</span>` : ""}
                   <span class="rounded-full ${zoneClass(z)} px-2 py-0.5 text-[10px] font-semibold">${zoneLabel(z)}</span>
                   <span class="rounded-full bg-jade-50 px-2.5 py-0.5 text-[10px] font-semibold text-jade-700">${escapeHtml(entry.tag)}</span>
                 </div>
@@ -1701,6 +1955,7 @@
     renderExpenseSummary();
     renderExpenseAnalytics();
     renderFilterChips();
+    renderBudgetAlert();
 
     const list = filteredExpenses();
     const catLabel = state.filterCategory === "all" ? "全部分類" : categoryLabel(state.filterCategory);
@@ -1826,6 +2081,7 @@
     state.budgetTwd = value;
     writeJSON(STORAGE_KEYS.budget, value);
     renderExpenses();
+    renderBudgetAlert();
   }
 
   function isRateFresh() {
@@ -1976,6 +2232,45 @@
     els.budgetApply.addEventListener("click", applyBudget);
     els.rateRefresh.addEventListener("click", () => fetchLiveRate({ force: true }));
     els.rateApply.addEventListener("click", applyManualRate);
+
+    if (els.intelAdaptToggle) els.intelAdaptToggle.addEventListener("click", toggleAdapt);
+
+    if (els.feedbackFab) els.feedbackFab.addEventListener("click", openFeedback);
+    if (els.feedbackClose) els.feedbackClose.addEventListener("click", closeFeedback);
+    if (els.feedbackModal) {
+      els.feedbackModal.addEventListener("click", (e) => {
+        if (e.target === els.feedbackModal) closeFeedback();
+      });
+    }
+    if (els.feedbackForm) {
+      els.feedbackForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const text = (els.feedbackText.value || "").trim();
+        if (!text) return;
+        state.feedback.push({ text, date: toDateId(new Date()), id: `fb-${Date.now()}` });
+        saveFeedback();
+        els.feedbackText.value = "";
+        renderFeedbackList();
+        renderFeedbackPrompt();
+      });
+    }
+    if (els.feedbackCopy) {
+      els.feedbackCopy.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(els.feedbackPrompt.textContent);
+          els.feedbackCopy.textContent = "已複製 ✓";
+          setTimeout(() => {
+            els.feedbackCopy.textContent = "複製 Prompt";
+          }, 1600);
+        } catch {
+          alert("複製失敗，請手動選取文字");
+        }
+      });
+    }
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeFeedback();
+    });
+
     els.rateInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
         e.preventDefault();
@@ -2013,6 +2308,8 @@
 
     ensureChecklistState();
     loadBudget();
+    loadAdapt();
+    loadFeedback();
 
     const savedTab = loadExisting(STORAGE_KEYS.tab, LEGACY_KEYS.tab) || "itinerary";
     const savedWeekRaw = loadExisting(STORAGE_KEYS.week, LEGACY_KEYS.week);
@@ -2027,6 +2324,7 @@
     renderRate();
     renderExpenses();
     updateExpensePreview();
+    renderIntel();
     setCafeRating(0);
     bindEvents();
 

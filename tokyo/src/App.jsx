@@ -3,6 +3,7 @@ import BottomNav from "./components/BottomNav";
 import CafeLogTab from "./components/CafeLogTab";
 import ChecklistTab from "./components/ChecklistTab";
 import ExpenseTab from "./components/ExpenseTab";
+import FeedbackModal from "./components/FeedbackModal";
 import ItineraryTab from "./components/ItineraryTab";
 import {
   CHECKLIST,
@@ -223,7 +224,7 @@ export default function App() {
         );
       default:
         return (
-          <ItineraryTab dayId={dayId} setDayId={setDayId} week={week} setWeek={setWeek} />
+          <ItineraryTab dayId={dayId} setDayId={setDayId} week={week} setWeek={setWeek} expenses={expenses} budget={budget} />
         );
     }
   }, [
@@ -274,6 +275,7 @@ export default function App() {
         {panel}
       </main>
 
+      <FeedbackModal />
       <BottomNav tab={tab} setTab={setTab} />
     </div>
   );

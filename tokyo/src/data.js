@@ -13,6 +13,56 @@ export const DEFAULT_RATE = 0.051; // 100 JPY = 5.1 HKD
 export const DEFAULT_BUDGET_JPY = 350000;
 export const RATE_TTL_MS = 24 * 60 * 60 * 1000;
 
+export const WEEKDAY_LABELS = ["日", "一", "二", "三", "四", "五", "六"];
+export const INDOOR_TAGS = ["商場", "Cafe", "購物", "美食", "生活", "景點"];
+
+const WEATHER_POOL = [
+  { label: "多雲", icon: "⛅", hi: 33, lo: 26, rain: 30 },
+  { label: "午後雷陣雨", icon: "⛈️", hi: 32, lo: 25, rain: 70 },
+  { label: "晴朗炎熱", icon: "☀️", hi: 36, lo: 27, rain: 10 },
+  { label: "局部驟雨", icon: "🌦️", hi: 33, lo: 26, rain: 50 },
+  { label: "陰天微雨", icon: "🌧️", hi: 29, lo: 24, rain: 85 },
+];
+
+export function hashStr(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = (h * 31 + str.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h);
+}
+
+export function todayIndex() {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diff = Math.floor((today - TRIP_START) / 86400000);
+  if (diff < 0) return 0;
+  if (diff > TRIP_DAYS - 1) return TRIP_DAYS - 1;
+  return diff;
+}
+
+export function weatherForDay(index) {
+  const h = hashStr(`tokyo-${index}`);
+  const w = WEATHER_POOL[h % WEATHER_POOL.length];
+  return {
+    label: w.label,
+    icon: w.icon,
+    temp: `${w.lo + (h % 2)}–${w.hi}°C`,
+    rain: `${w.rain}%`,
+    rainValue: w.rain,
+    heatwave: w.hi >= 34,
+    rainy: w.rain >= 50,
+  };
+}
+
+export function formatJpy(n) {
+  return `¥ ${Math.round(n).toLocaleString("ja-JP")}`;
+}
+
+export function formatHkd(n) {
+  return `HK$ ${n.toLocaleString("en-HK", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
 export const WEEK_META = {
   1: { label: "W1", hint: "澀谷安頓 · 原宿暖身" },
   2: { label: "W2", hint: "PARCO 獵寶 · 秋葉遠征" },

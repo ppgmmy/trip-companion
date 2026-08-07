@@ -1,5 +1,8 @@
 import { useMemo, useState } from "react";
-import { ITINERARY, PLACES, WEEK_META, mapsLink } from "../data";
+import { INDOOR_TAGS, ITINERARY, PLACES, WEEK_META, mapsLink } from "../data";
+import { useLocalStorage } from "../hooks/useLocalStorage";
+import { STORAGE_KEYS } from "../storageKeys";
+import DailyIntel from "./DailyIntel";
 
 function MapButton({ query }) {
   if (!query) return null;
@@ -15,8 +18,12 @@ function MapButton({ query }) {
   );
 }
 
-export default function ItineraryTab({ dayId, setDayId, week, setWeek }) {
+export default function ItineraryTab({ dayId, setDayId, week, setWeek, expenses, budget }) {
   const [placeFilter, setPlaceFilter] = useState("near");
+  const [adapt] = useLocalStorage(STORAGE_KEYS.adapt, false, {
+    legacyKeys: [],
+    migrate: (v) => v === true || v === "true" || v === 1,
+  });
 
   const daysInWeek = useMemo(() => ITINERARY.filter((d) => d.week === week), [week]);
   const day = ITINERARY.find((d) => d.id === dayId) || daysInWeek[0] || ITINERARY[0];
@@ -56,6 +63,8 @@ export default function ItineraryTab({ dayId, setDayId, week, setWeek }) {
           </div>
         </div>
       </div>
+
+      <DailyIntel expenses={expenses} budget={budget} />
 
       <section>
         <h2 className="font-display text-lg font-bold text-ink">附近推薦</h2>
@@ -139,26 +148,35 @@ export default function ItineraryTab({ dayId, setDayId, week, setWeek }) {
           </div>
         </div>
         <ol className="relative ml-5 space-y-4 border-l-2 border-rose-soft pl-6">
-          {day.items.map((entry, i) => (
+          {day.items.map((entry, i) => {
+            const indoor = INDOOR_TAGS.includes(entry.tag);
+            const adaptOn = adapt && indoor;
+            return (
             <li key={`${day.id}-${i}`} className="relative">
               <span
                 className={`absolute -left-[1.95rem] top-1.5 h-3.5 w-3.5 rounded-full border-[3px] border-white shadow-sm ${
                   entry.zone === "expedition" ? "bg-rose-brand" : "bg-teal"
                 }`}
               />
-              <div className="rounded-2xl bg-white/85 p-4 shadow-[var(--shadow-soft)]">
+              <div className={`rounded-2xl p-4 shadow-[var(--shadow-soft)] transition ${adaptOn ? "bg-rose-soft ring-2 ring-rose-brand/40" : "bg-white/85"}`}>
                 <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
                   <time className="text-xs font-bold tracking-wide text-teal">{entry.time}</time>
-                  <span className="rounded-full bg-rose-soft px-2.5 py-0.5 text-[10px] font-semibold text-rose-deep">
-                    {entry.tag}
-                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {adaptOn && (
+                      <span className="rounded-full bg-rose-brand px-2 py-0.5 text-[10px] font-bold text-white">室內推薦</span>
+                    )}
+                    <span className="rounded-full bg-rose-soft px-2.5 py-0.5 text-[10px] font-semibold text-rose-deep">
+                      {entry.tag}
+                    </span>
+                  </div>
                 </div>
                 <h4 className="font-display text-base font-bold text-ink">{entry.title}</h4>
                 <p className="mt-1 text-sm leading-relaxed text-ink-soft">{entry.detail}</p>
                 <MapButton query={entry.mapsQuery} />
               </div>
             </li>
-          ))}
+            );
+          })}
         </ol>
       </div>
     </div>

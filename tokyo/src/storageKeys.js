@@ -6,6 +6,8 @@ export const STORAGE_KEYS = {
   cafeLog: "tokyo-cafe-log",
   rate: "tokyo-rate",
   budget: "tokyo-budget",
+  adapt: "tokyo-adapt-weather",
+  feedback: "tokyo-feedback",
   tab: "tokyo-tab",
 };
 
@@ -32,5 +34,7 @@ export const LEGACY_KEYS = {
   ],
   rate: ["tokyo-companion:rate-v2", "tokyo-companion:rate"],
   budget: ["tokyo-companion:budget"],
+  adapt: [],
+  feedback: [],
   tab: ["tokyo-companion:tab"],
 };

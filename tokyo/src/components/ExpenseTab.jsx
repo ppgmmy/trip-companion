@@ -1,14 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { BarChart, DoughnutChart } from "./Charts";
-import { EXPENSE_CATEGORIES, TRIP_DAYS, lockedHkd, weekOf } from "../data";
-
-function formatJpy(n) {
-  return `¥ ${Math.round(n).toLocaleString("ja-JP")}`;
-}
-
-function formatHkd(n) {
-  return `HK$ ${n.toLocaleString("en-HK", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
+import { EXPENSE_CATEGORIES, TRIP_DAYS, formatHkd, formatJpy, lockedHkd, weekOf } from "../data";
 
 function formatWhen(ts) {
   if (!ts) return "尚未更新";
