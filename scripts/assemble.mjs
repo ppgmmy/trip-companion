@@ -28,4 +28,8 @@ cpSync(resolve(root, "tokyo", "dist"), resolve(output, "tokyo"), {
   recursive: true,
 });
 
+cpSync(resolve(root, "universal", "dist"), resolve(output, "universal"), {
+  recursive: true,
+});
+
 console.log("Assembled Trip Companion → dist/");

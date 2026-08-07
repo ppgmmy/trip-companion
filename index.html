@@ -52,11 +52,21 @@
             Trip<br />Companion
           </h1>
           <p class="mt-3 max-w-[20rem] text-sm leading-relaxed text-ink-soft">
-            一個入口，三個行程。資料各自獨立保存在本機。
+            一個入口，全球行程。資料各自獨立保存在本機。
           </p>
         </header>
 
         <nav class="mt-8 flex flex-1 flex-col gap-3" aria-label="選擇行程">
+          <a
+            href="./universal/"
+            class="trip-link group relative overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-[#0d9488] via-jade to-[#2dd4bf] p-5 text-white shadow-lg shadow-jade/25 ring-1 ring-white/20 active:scale-[0.99]"
+          >
+            <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/70">Universal · 全新</p>
+            <h2 class="mt-1 font-display text-2xl font-bold">全球萬能旅行 Companion</h2>
+            <p class="mt-1 text-sm text-white/85">任何城市 · 任何幣種 · 多旅程切換</p>
+            <span class="mt-4 inline-flex text-sm font-bold text-white/95">進入 →</span>
+          </a>
+
           <a
             href="./taipei/"
             class="trip-link group relative overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-jade-deep via-jade to-[#14B8A6] p-5 text-white shadow-lg shadow-jade/25 active:scale-[0.99]"
@@ -89,7 +99,7 @@
         </nav>
 
         <p class="mt-8 text-center text-xs text-ink-faint">
-          台北 · 東京 · 泰國各自使用獨立 localStorage
+          全球萬能版 + 台北 · 東京 · 泰國各自使用獨立 localStorage
         </p>
       </main>
     </div>

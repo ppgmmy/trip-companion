@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "node server.js",
     "build:tokyo": "npm --prefix tokyo ci && npm --prefix tokyo run build",
-    "build": "npm run build:tokyo && node scripts/assemble.mjs",
+    "build:universal": "npm --prefix universal ci && npm --prefix universal run build",
+    "build": "npm run build:tokyo && npm run build:universal && node scripts/assemble.mjs",
     "start": "node server.js"
   }
 }

@@ -1,0 +1,95 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
+  --color-ink: #12211f;
+  --color-ink-soft: #3f5a55;
+  --color-ink-faint: #6d8580;
+  --color-jade: #0d9488;
+  --color-jade-deep: #0f766e;
+  --color-jade-soft: #ccfbf1;
+  --color-coral: #f97316;
+  --color-coral-soft: #ffedd5;
+  --color-amber: #f59e0b;
+  --color-sky: #0ea5e9;
+  --color-mist: #f2f8f6;
+  --color-cream: #fbf7f1;
+  --shadow-soft: 0 10px 30px -12px rgb(13 148 136 / 0.22);
+  --shadow-nav: 0 -8px 28px -12px rgb(18 33 31 / 0.16);
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  background: var(--color-mist);
+}
+
+.bg-travel {
+  background:
+    radial-gradient(ellipse 80% 50% at 12% -8%, rgb(13 148 136 / 0.16), transparent 55%),
+    radial-gradient(ellipse 70% 40% at 100% 0%, rgb(249 115 22 / 0.12), transparent 50%),
+    linear-gradient(165deg, #fbf7f1 0%, #f2f8f6 45%, #ecfeff 100%);
+}
+
+.safe-top {
+  padding-top: max(1.25rem, env(safe-area-inset-top));
+}
+
+.safe-bottom {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.nav-btn.is-active {
+  color: var(--color-jade-deep);
+}
+
+.nav-btn.is-active .nav-icon {
+  background: var(--color-jade-soft);
+}
+
+.tab-panel {
+  animation: fade-up 0.35s ease-out both;
+}
+
+@keyframes fade-up {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.badge {
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-active {
+  background: var(--color-jade-soft);
+  color: var(--color-jade-deep);
+  border-color: transparent;
+}
+
+.scroll-thin::-webkit-scrollbar {
+  height: 4px;
+  width: 4px;
+}
+.scroll-thin::-webkit-scrollbar-thumb {
+  background: rgb(13 148 136 / 0.3);
+  border-radius: 999px;
+}
