@@ -44,7 +44,9 @@ body {
 }
 
 .safe-top {
-  padding-top: max(2rem, calc(env(safe-area-inset-top, 0px) + 0.75rem));
+  /* Android Chrome 橫屏時 safe-area-inset-top 經常回報 0，但狀態列仍遮住畫面，
+     所以最少保留 2.75rem（44px），足以蓋過絕大部分手機狀態列。 */
+  padding-top: max(2.75rem, calc(env(safe-area-inset-top, 0px) + 1rem));
 }
 
 .safe-bottom {

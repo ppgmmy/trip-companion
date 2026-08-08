@@ -1,39 +1,9 @@
 import { useState } from "react";
-import { CURRENCIES, uid } from "../data";
+import TripForm from "./TripForm";
 
 export default function TripSwitcher({ trips, activeId, onSwitch, onCreate }) {
   const [open, setOpen] = useState(false);
   const active = trips.find((t) => t.id === activeId) || null;
-
-  const [form, setForm] = useState({
-    city: "",
-    country: "",
-    flag: "✈️",
-    startDate: "",
-    endDate: "",
-    targetCurrency: "JPY",
-    budget: 50000,
-  });
-
-  function submit(e) {
-    e.preventDefault();
-    if (!form.city || !form.startDate || !form.endDate) return;
-    const trip = {
-      id: uid("trip"),
-      city: form.city.trim(),
-      country: form.country.trim(),
-      flag: form.flag || "✈️",
-      startDate: form.startDate,
-      endDate: form.endDate,
-      targetCurrency: form.targetCurrency,
-      baseCurrency: "HKD",
-      budget: Number(form.budget) || 0,
-      createdAt: Date.now(),
-    };
-    onCreate(trip);
-    setOpen(false);
-    setForm({ city: "", country: "", flag: "✈️", startDate: "", endDate: "", targetCurrency: "JPY", budget: 50000 });
-  }
 
   return (
     <>
@@ -74,7 +44,7 @@ export default function TripSwitcher({ trips, activeId, onSwitch, onCreate }) {
 
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 p-4 backdrop-blur-sm sm:items-center"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 p-4 pt-[max(2.75rem,calc(env(safe-area-inset-top,0px)+1rem))] backdrop-blur-sm sm:items-center"
           role="dialog"
           aria-modal="true"
           aria-label="切換／新增旅程"
@@ -82,7 +52,7 @@ export default function TripSwitcher({ trips, activeId, onSwitch, onCreate }) {
             if (e.target === e.currentTarget) setOpen(false);
           }}
         >
-          <div className="max-h-[88dvh] w-full max-w-md overflow-y-auto rounded-3xl bg-white shadow-[var(--shadow-soft)] scroll-thin">
+          <div className="max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-3xl bg-white shadow-[var(--shadow-soft)] scroll-thin pb-[env(safe-area-inset-bottom,0px)] sm:max-w-2xl">
             <div className="sticky top-0 flex items-center justify-between border-b border-jade-soft/60 bg-white px-5 py-4">
               <h3 className="font-display text-lg font-bold text-ink">我的旅程</h3>
               <button
@@ -98,7 +68,7 @@ export default function TripSwitcher({ trips, activeId, onSwitch, onCreate }) {
             </div>
 
             {trips.length > 0 && (
-              <ul className="space-y-2 px-5 pt-4">
+              <ul className="space-y-2 px-5 pt-4 sm:grid sm:grid-cols-2 sm:gap-2 sm:space-y-0">
                 {trips.map((t) => (
                   <li key={t.id}>
                     <button
@@ -128,89 +98,9 @@ export default function TripSwitcher({ trips, activeId, onSwitch, onCreate }) {
               </ul>
             )}
 
-            <form onSubmit={submit} className="space-y-3 px-5 py-4">
-              <p className="text-xs font-bold uppercase tracking-wider text-ink-faint">新增旅程</p>
-              <div className="grid grid-cols-[3.5rem_1fr] gap-2">
-                <label className="block">
-                  <span className="sr-only">旗幟</span>
-                  <input
-                    value={form.flag}
-                    onChange={(e) => setForm((f) => ({ ...f, flag: e.target.value }))}
-                    maxLength={4}
-                    className="h-12 w-full rounded-2xl border border-jade/15 bg-mist text-center text-xl outline-none ring-jade focus:ring-2"
-                    placeholder="✈️"
-                  />
-                </label>
-                <label className="block">
-                  <span className="sr-only">城市</span>
-                  <input
-                    value={form.city}
-                    onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
-                    required
-                    placeholder="城市（例：倫敦／首爾／巴黎）"
-                    className="h-12 w-full rounded-2xl border border-jade/15 bg-mist px-4 outline-none ring-jade focus:ring-2"
-                  />
-                </label>
-              </div>
-              <input
-                value={form.country}
-                onChange={(e) => setForm((f) => ({ ...f, country: e.target.value }))}
-                placeholder="國家（可選）"
-                className="h-12 w-full rounded-2xl border border-jade/15 bg-mist px-4 outline-none ring-jade focus:ring-2"
-              />
-              <div className="grid grid-cols-2 gap-2">
-                <label className="block">
-                  <span className="mb-1 block text-[11px] font-semibold text-ink-faint">開始</span>
-                  <input
-                    type="date"
-                    value={form.startDate}
-                    onChange={(e) => setForm((f) => ({ ...f, startDate: e.target.value }))}
-                    required
-                    className="h-12 w-full rounded-2xl border border-jade/15 bg-mist px-3 outline-none ring-jade focus:ring-2"
-                  />
-                </label>
-                <label className="block">
-                  <span className="mb-1 block text-[11px] font-semibold text-ink-faint">結束</span>
-                  <input
-                    type="date"
-                    value={form.endDate}
-                    onChange={(e) => setForm((f) => ({ ...f, endDate: e.target.value }))}
-                    required
-                    className="h-12 w-full rounded-2xl border border-jade/15 bg-mist px-3 outline-none ring-jade focus:ring-2"
-                  />
-                </label>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <label className="block">
-                  <span className="mb-1 block text-[11px] font-semibold text-ink-faint">當地幣種</span>
-                  <select
-                    value={form.targetCurrency}
-                    onChange={(e) => setForm((f) => ({ ...f, targetCurrency: e.target.value }))}
-                    className="h-12 w-full rounded-2xl border border-jade/15 bg-mist px-3 outline-none ring-jade focus:ring-2"
-                  >
-                    {CURRENCIES.filter((c) => c.code !== "HKD").map((c) => (
-                      <option key={c.code} value={c.code}>
-                        {c.code} · {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="block">
-                  <span className="mb-1 block text-[11px] font-semibold text-ink-faint">總預算（當地幣）</span>
-                  <input
-                    type="number"
-                    min="0"
-                    step="100"
-                    value={form.budget}
-                    onChange={(e) => setForm((f) => ({ ...f, budget: e.target.value }))}
-                    className="h-12 w-full rounded-2xl border border-jade/15 bg-mist px-3 outline-none ring-jade focus:ring-2"
-                  />
-                </label>
-              </div>
-              <button type="submit" className="min-h-12 w-full rounded-2xl bg-jade font-bold text-white shadow-[var(--shadow-soft)] transition active:scale-[0.98]">
-                建立並切換到此旅程
-              </button>
-            </form>
+            <div className="px-5 py-4">
+              <TripForm heading="新增旅程" onCreate={(trip) => { onCreate(trip); setOpen(false); }} />
+            </div>
           </div>
         </div>
       )}

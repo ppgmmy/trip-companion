@@ -4,6 +4,7 @@ import { useLocalStorage } from "./hooks/useLocalStorage";
 import { useExchangeRate } from "./hooks/useExchangeRate";
 import { uid } from "./data";
 import TripSwitcher from "./components/TripSwitcher";
+import TripForm from "./components/TripForm";
 import BottomNav from "./components/BottomNav";
 import ItineraryTab from "./components/ItineraryTab";
 import ChecklistTab from "./components/ChecklistTab";
@@ -14,23 +15,19 @@ import DailyEvolution from "./components/DailyEvolution";
 import ToolkitTab from "./components/ToolkitTab";
 import FeedbackModal from "./components/FeedbackModal";
 
-function EmptyState({ onCreateClick }) {
+function EmptyState({ onCreate }) {
   return (
-    <div className="flex min-h-[60dvh] flex-col items-center justify-center px-6 text-center">
-      <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-jade text-4xl text-white shadow-[var(--shadow-soft)]">
+    <div className="flex min-h-[60dvh] flex-col items-center justify-center py-6 text-center">
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-jade text-3xl text-white shadow-[var(--shadow-soft)]">
         🌍
       </div>
-      <h1 className="mt-5 font-display text-2xl font-bold text-ink">全球萬能旅行 Companion</h1>
+      <h1 className="mt-4 font-display text-2xl font-bold text-ink">全球萬能旅行 Companion</h1>
       <p className="mt-2 max-w-sm text-sm leading-relaxed text-ink-soft">
         一次支援全世界任何城市——建立旅程後，行程、記帳、足跡、清單都會依該旅程獨立儲存，永不互相覆蓋。
       </p>
-      <button
-        type="button"
-        onClick={onCreateClick}
-        className="mt-6 min-h-12 rounded-2xl bg-jade px-6 font-bold text-white shadow-[var(--shadow-soft)] transition active:scale-[0.98]"
-      >
-        ➕ 建立第一個旅程
-      </button>
+      <div className="mt-6 w-full max-w-md rounded-3xl border border-jade/15 bg-white p-5 text-left shadow-[var(--shadow-soft)] sm:max-w-2xl">
+        <TripForm heading="建立第一個旅程" onCreate={onCreate} />
+      </div>
     </div>
   );
 }
@@ -93,7 +90,7 @@ export default function App() {
 
       <main className="mx-auto max-w-lg px-4 pb-32 pt-4">
         {!activeTrip ? (
-          <EmptyState onCreateClick={() => {}} />
+          <EmptyState onCreate={createTrip} />
         ) : (
           <div className="tab-panel space-y-4">
             {activeTab === "itinerary" && (
