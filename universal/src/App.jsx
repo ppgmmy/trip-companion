@@ -14,6 +14,7 @@ import DailyIntel from "./components/DailyIntel";
 import DailyEvolution from "./components/DailyEvolution";
 import ToolkitTab from "./components/ToolkitTab";
 import FeedbackModal from "./components/FeedbackModal";
+import QuickAddExpense from "./components/QuickAddExpense";
 
 function EmptyState({ onCreate }) {
   return (
@@ -37,6 +38,16 @@ export default function App() {
   const [activeId, setActiveId] = useLocalStorage(REGISTRY_KEYS.active, null, { migrate: (v) => (typeof v === "string" ? v : null) });
   const [activeTab, setActiveTab] = useState("itinerary");
   const [expandedTool, setExpandedTool] = useState(null);
+  const [quickAdd, setQuickAdd] = useState(false);
+
+  // PWA 捷徑（長撳 App 圖示 → 快速記帳）會帶 ?quick=add 入嚟
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("quick") === "add") {
+      setQuickAdd(true);
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
 
   function openTool(toolId) {
     setExpandedTool(toolId);
@@ -134,6 +145,24 @@ export default function App() {
       </main>
 
       {activeTrip && <BottomNav active={activeTab} onSelect={setActiveTab} />}
+      {activeTrip && (
+        <button
+          type="button"
+          onClick={() => setQuickAdd(true)}
+          aria-label="快速記帳"
+          className="fixed bottom-24 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-jade text-2xl text-white shadow-[var(--shadow-soft)] transition active:scale-90"
+        >
+          ⚡
+        </button>
+      )}
+      {activeTrip && quickAdd && (
+        <QuickAddExpense
+          trip={activeTrip}
+          rate={rateState?.rate || 0}
+          onSave={(entry) => setExpenses((prev) => [...prev, entry])}
+          onClose={() => setQuickAdd(false)}
+        />
+      )}
       {activeTrip && <FeedbackModal trip={activeTrip} feedback={feedback} setFeedback={setFeedback} />}
     </div>
   );
