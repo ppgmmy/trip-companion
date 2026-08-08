@@ -3,23 +3,38 @@ import { CURRENCIES, uid } from "../data";
 
 const INITIAL = { city: "", country: "", flag: "✈️", startDate: "", endDate: "", targetCurrency: "JPY", budget: 50000 };
 
-export default function TripForm({ onCreate, heading }) {
-  const [form, setForm] = useState(INITIAL);
+export default function TripForm({ onCreate, heading, initial = null, submitLabel = "建立並切換到此旅程" }) {
+  const [form, setForm] = useState(() =>
+    initial
+      ? {
+          city: initial.city || "",
+          country: initial.country || "",
+          flag: initial.flag || "✈️",
+          startDate: initial.startDate || "",
+          endDate: initial.endDate || "",
+          targetCurrency: initial.targetCurrency || "JPY",
+          budget: initial.budget ?? 50000,
+        }
+      : INITIAL
+  );
 
   function submit(e) {
     e.preventDefault();
     if (!form.city || !form.startDate || !form.endDate) return;
+    // 回程早過出發（或調轉咗）會令日數計錯——自動對調修正
+    let { startDate, endDate } = form;
+    if (endDate < startDate) [startDate, endDate] = [endDate, startDate];
     onCreate({
-      id: uid("trip"),
+      id: initial?.id || uid("trip"),
       city: form.city.trim(),
       country: form.country.trim(),
       flag: form.flag || "✈️",
-      startDate: form.startDate,
-      endDate: form.endDate,
+      startDate,
+      endDate,
       targetCurrency: form.targetCurrency,
-      baseCurrency: "HKD",
+      baseCurrency: initial?.baseCurrency || "HKD",
       budget: Number(form.budget) || 0,
-      createdAt: Date.now(),
+      createdAt: initial?.createdAt || Date.now(),
     });
     setForm(INITIAL);
   }
@@ -108,7 +123,7 @@ export default function TripForm({ onCreate, heading }) {
         type="submit"
         className="min-h-12 w-full rounded-2xl bg-jade font-bold text-white shadow-[var(--shadow-soft)] transition active:scale-[0.98] sm:col-span-2"
       >
-        建立並切換到此旅程
+        {submitLabel}
       </button>
     </form>
   );

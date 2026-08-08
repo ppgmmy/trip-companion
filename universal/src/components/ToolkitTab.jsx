@@ -455,6 +455,113 @@ function EmergencyTool({ trip }) {
   );
 }
 
+function SplitBillTool({ trip }) {
+  const [entries, setEntries] = useTool(trip.id, "split-bill", []);
+  const [name, setName] = useState("");
+  const [amount, setAmount] = useState("");
+
+  function add(e) {
+    e.preventDefault();
+    const v = Number(amount);
+    if (!name.trim() || !Number.isFinite(v) || v <= 0) return;
+    setEntries((p) => [...p, { id: `sb-${Date.now()}`, name: name.trim(), amount: v }]);
+    setName("");
+    setAmount("");
+  }
+
+  const summary = useMemo(() => {
+    const paid = {};
+    entries.forEach((e) => {
+      paid[e.name] = (paid[e.name] || 0) + e.amount;
+    });
+    const names = Object.keys(paid);
+    const total = names.reduce((s, n) => s + paid[n], 0);
+    const share = names.length ? total / names.length : 0;
+    return { names, paid, total, share };
+  }, [entries]);
+
+  const settlements = useMemo(() => {
+    const debtors = summary.names
+      .map((n) => ({ n, amt: summary.share - summary.paid[n] }))
+      .filter((x) => x.amt > 0.01)
+      .sort((a, b) => b.amt - a.amt);
+    const creditors = summary.names
+      .map((n) => ({ n, amt: summary.paid[n] - summary.share }))
+      .filter((x) => x.amt > 0.01)
+      .sort((a, b) => b.amt - a.amt);
+    const res = [];
+    let i = 0;
+    let j = 0;
+    while (i < debtors.length && j < creditors.length) {
+      const pay = Math.min(debtors[i].amt, creditors[j].amt);
+      res.push({ from: debtors[i].n, to: creditors[j].n, amt: pay });
+      debtors[i].amt -= pay;
+      creditors[j].amt -= pay;
+      if (debtors[i].amt <= 0.01) i++;
+      if (creditors[j].amt <= 0.01) j++;
+    }
+    return res;
+  }, [summary]);
+
+  const money = (v) => formatMoney(Math.round(v), trip.targetCurrency);
+
+  return (
+    <div className="space-y-2">
+      <form onSubmit={add} className="flex flex-wrap gap-2">
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="邊個墊（例：阿明）" className={`${INPUT} min-w-0 flex-1`} style={{ flexBasis: "45%" }} />
+        <input type="number" min="0" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={`墊咗幾多（${trip.targetCurrency}）`} className={`${INPUT} min-w-0 flex-1`} style={{ flexBasis: "45%" }} />
+        <button type="submit" className={BTN}>加</button>
+      </form>
+
+      {entries.length > 0 && (
+        <ul className="space-y-1.5">
+          {entries.map((it) => (
+            <li key={it.id} className="flex items-center gap-2 rounded-2xl bg-mist px-3 py-2 text-[13px]">
+              <span className="min-w-0 flex-1 text-ink">{it.name}</span>
+              <span className="shrink-0 text-xs text-ink-soft">{money(it.amount)}</span>
+              <button type="button" onClick={() => setEntries((p) => p.filter((x) => x.id !== it.id))} className={DEL} aria-label="刪除"><XIcon /></button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {summary.names.length > 0 && (
+        <div className="space-y-2 rounded-2xl border border-jade/15 bg-white p-3">
+          <p className="text-[11px] font-semibold text-ink-faint">
+            合共 {money(summary.total)} · {summary.names.length} 人 · 每人應付 {money(summary.share)}
+          </p>
+          <ul className="space-y-1">
+            {summary.names.map((n) => {
+              const net = summary.paid[n] - summary.share;
+              return (
+                <li key={n} className="flex items-center justify-between text-[13px]">
+                  <span className="text-ink">{n}（墊咗 {money(summary.paid[n])}）</span>
+                  <span className={`font-bold ${net >= 0 ? "text-jade-deep" : "text-coral"}`}>
+                    {net >= 0 ? `應收 ${money(net)}` : `應找 ${money(-net)}`}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+          {settlements.length > 0 && (
+            <div className="border-t border-jade-soft/60 pt-2">
+              <p className="mb-1 text-[11px] font-semibold text-ink-faint">最少找數方案（{settlements.length} 次搞掂）</p>
+              <ul className="space-y-1">
+                {settlements.map((s, i) => (
+                  <li key={i} className="text-[13px] text-ink">
+                    💸 {s.from} → {s.to}：{money(s.amt)}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+      {entries.length === 0 && <p className="px-1 text-xs text-ink-faint">每次有人墊錢就記一筆，完 trip 自動計好邊個找邊個。</p>}
+    </div>
+  );
+}
+
 /* ---------- registry ---------- */
 
 const TOOL_COMPONENTS = {
@@ -476,6 +583,7 @@ const TOOL_COMPONENTS = {
   timezone: TimezoneTool,
   emergency: EmergencyTool,
   "rainy-planb": (props) => <ListTool {...props} toolId="rainy-planb" fields={[{ key: "plan", label: "落雨替代行程（例：室內商場 Cafe）" }]} />,
+  "split-bill": SplitBillTool,
 };
 
 export default function ToolkitTab({ trip, spots, expenses, rateState, expandedTool }) {
@@ -495,7 +603,7 @@ export default function ToolkitTab({ trip, spots, expenses, rateState, expandedT
     <div className="space-y-3" ref={listRef}>
       <div>
         <h2 className="font-display text-xl font-bold text-ink">🧰 外掛工具箱</h2>
-        <p className="text-sm text-ink-soft">18 個神級外掛已全部實裝 · 資料按旅程獨立累積保存</p>
+        <p className="text-sm text-ink-soft">{EVOLUTION_POOL.length} 個神級外掛已全部實裝 · 資料按旅程獨立累積保存</p>
       </div>
       {EVOLUTION_POOL.map((tool) => {
         const Comp = TOOL_COMPONENTS[tool.id];

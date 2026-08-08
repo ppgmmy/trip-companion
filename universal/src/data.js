@@ -57,9 +57,10 @@ export function hashStr(str) {
 }
 
 export function tripDays(trip) {
-  const start = new Date(trip.startDate);
-  const end = new Date(trip.endDate);
-  const diff = Math.max(1, Math.round((end - start) / 86400000) + 1);
+  const start = new Date(trip?.startDate);
+  const end = new Date(trip?.endDate);
+  const diff = Math.round((end - start) / 86400000) + 1;
+  if (!Number.isFinite(diff) || diff < 1) return 1;
   return diff;
 }
 

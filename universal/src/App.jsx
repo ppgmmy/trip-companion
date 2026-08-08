@@ -76,6 +76,20 @@ export default function App() {
     setActiveId(trip.id);
   }
 
+  function updateTrip(trip) {
+    setTrips((prev) => prev.map((t) => (t.id === trip.id ? trip : t)));
+  }
+
+  function deleteTrip(id) {
+    setTrips((prev) => prev.filter((t) => t.id !== id));
+    if (activeId === id) setActiveId(null);
+    try {
+      Object.keys(localStorage)
+        .filter((k) => k.startsWith(`universal_trip_${id}_`))
+        .forEach((k) => localStorage.removeItem(k));
+    } catch {}
+  }
+
   function switchTrip(id) {
     setActiveId(id);
   }
@@ -85,7 +99,7 @@ export default function App() {
       <main className="safe-top mx-auto max-w-lg px-4 pb-32">
         {activeTrip && (
           <div className="mb-4">
-            <TripSwitcher variant="banner" trips={trips} activeId={activeTrip?.id} onSwitch={switchTrip} onCreate={createTrip} />
+            <TripSwitcher variant="banner" trips={trips} activeId={activeTrip?.id} onSwitch={switchTrip} onCreate={createTrip} onUpdate={updateTrip} onDelete={deleteTrip} />
           </div>
         )}
         {!activeTrip ? (

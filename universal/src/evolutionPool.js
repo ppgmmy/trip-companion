@@ -93,6 +93,11 @@ export const EVOLUTION_POOL = [
     name: "下雨天 Plan B 清單",
     desc: "預設落雨替代動線（室內商場／博物館／Cafe），落雨唔使諗。",
   },
+  {
+    id: "split-bill",
+    name: "同行拆賬神器",
+    desc: "記低邊個墊咗幾多錢，自動計出每人應找／應收同最少找數次數。",
+  },
 ];
 
 export function buildEvolutionPrompt(idea, appLabel, keyPrefix) {

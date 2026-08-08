@@ -1,8 +1,9 @@
 import { useState } from "react";
 import TripForm from "./TripForm";
 
-export default function TripSwitcher({ trips, activeId, onSwitch, onCreate, variant = "header" }) {
+export default function TripSwitcher({ trips, activeId, onSwitch, onCreate, onUpdate, onDelete, variant = "header" }) {
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState(null);
   const active = trips.find((t) => t.id === activeId) || null;
 
   return (
@@ -93,14 +94,14 @@ export default function TripSwitcher({ trips, activeId, onSwitch, onCreate, vari
             {trips.length > 0 && (
               <ul className="space-y-2 px-5 pt-4 sm:grid sm:grid-cols-2 sm:gap-2 sm:space-y-0">
                 {trips.map((t) => (
-                  <li key={t.id}>
+                  <li key={t.id} className="flex items-stretch gap-1.5">
                     <button
                       type="button"
                       onClick={() => {
                         onSwitch(t.id);
                         setOpen(false);
                       }}
-                      className={`flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left transition active:scale-[0.99] ${
+                      className={`flex min-w-0 flex-1 items-center gap-3 rounded-2xl border px-4 py-3 text-left transition active:scale-[0.99] ${
                         t.id === activeId ? "border-jade bg-jade-soft/60" : "border-jade/15 bg-mist"
                       }`}
                     >
@@ -116,9 +117,54 @@ export default function TripSwitcher({ trips, activeId, onSwitch, onCreate, vari
                       </span>
                       {t.id === activeId && <span className="text-jade-deep text-lg">✓</span>}
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditing(t)}
+                      aria-label={`編輯${t.city}`}
+                      className="flex w-10 shrink-0 items-center justify-center rounded-2xl border border-jade/15 bg-white text-ink-soft transition active:scale-90"
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (window.confirm(`確定刪除「${t.city}」？\n該旅程嘅行程、記帳、足跡、清單等所有資料會一併刪除，無法還原。`)) {
+                          onDelete?.(t.id);
+                          if (editing?.id === t.id) setEditing(null);
+                        }
+                      }}
+                      aria-label={`刪除${t.city}`}
+                      className="flex w-10 shrink-0 items-center justify-center rounded-2xl border border-coral/20 bg-white text-coral transition active:scale-90"
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                      </svg>
+                    </button>
                   </li>
                 ))}
               </ul>
+            )}
+
+            {editing && (
+              <div className="px-5 pt-4">
+                <div className="rounded-2xl border border-jade/20 bg-jade-soft/40 p-4">
+                  <TripForm
+                    key={editing.id}
+                    heading={`編輯旅程：${editing.city}`}
+                    initial={editing}
+                    submitLabel="儲存修改"
+                    onCreate={(trip) => {
+                      onUpdate?.(trip);
+                      setEditing(null);
+                    }}
+                  />
+                  <button type="button" onClick={() => setEditing(null)} className="mt-2 w-full text-center text-xs font-semibold text-ink-faint underline">
+                    取消編輯
+                  </button>
+                </div>
+              </div>
             )}
 
             <div className="px-5 py-4">
