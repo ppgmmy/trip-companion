@@ -1,0 +1,14 @@
+{
+  "name": "東京行程 Companion",
+  "short_name": "東京行程",
+  "description": "8/7 – 9/6 · 原宿 · 澀谷一個月長住",
+  "start_url": "/tokyo/",
+  "scope": "/tokyo/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fff1f2",
+  "theme_color": "#E11D48",
+  "icons": [
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

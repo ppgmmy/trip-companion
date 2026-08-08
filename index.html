@@ -8,6 +8,9 @@
     />
     <meta name="theme-color" content="#0F766E" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="./icon-512.png" />
     <title>Trip Companion · 選擇行程</title>
     <script src="./storage-migration.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -36,6 +39,11 @@
       };
     </script>
     <link rel="stylesheet" href="./hub.css" />
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
+      }
+    </script>
   </head>
   <body class="font-sans text-ink antialiased">
     <div class="relative min-h-[100dvh] overflow-hidden">

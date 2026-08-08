@@ -13,7 +13,7 @@ const output = resolve(root, "dist");
 rmSync(output, { recursive: true, force: true });
 mkdirSync(output, { recursive: true });
 
-for (const file of ["index.html", "hub.css", "storage-migration.js"]) {
+for (const file of ["index.html", "hub.css", "storage-migration.js", "sw.js", "manifest.webmanifest", "icon-512.png"]) {
   copyFileSync(resolve(root, file), resolve(output, file));
 }
 

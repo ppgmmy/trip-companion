@@ -1,0 +1,14 @@
+{
+  "name": "台北長住 Companion",
+  "short_name": "台北長住",
+  "description": "8/7 – 9/6 · 信義 · 永春站",
+  "start_url": "/taipei/",
+  "scope": "/taipei/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f2f8f6",
+  "theme_color": "#0F766E",
+  "icons": [
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

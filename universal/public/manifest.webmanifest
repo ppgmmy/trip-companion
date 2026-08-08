@@ -1,0 +1,14 @@
+{
+  "name": "全球萬能旅行 Companion",
+  "short_name": "萬能旅行",
+  "description": "任何城市 · 任何幣種 · 多旅程切換 · 18 個神級外掛",
+  "start_url": "/universal/",
+  "scope": "/universal/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f2f8f6",
+  "theme_color": "#0d9488",
+  "icons": [
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

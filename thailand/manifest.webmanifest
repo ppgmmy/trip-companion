@@ -1,0 +1,14 @@
+{
+  "name": "泰國行程 Companion",
+  "short_name": "泰國行程",
+  "description": "8/7 – 9/6 · Siam · Rama 9／Chong Nonsi",
+  "start_url": "/thailand/",
+  "scope": "/thailand/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fffbeb",
+  "theme_color": "#D97706",
+  "icons": [
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
