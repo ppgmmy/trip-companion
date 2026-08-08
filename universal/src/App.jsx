@@ -89,6 +89,11 @@ export default function App() {
       </header>
 
       <main className="mx-auto max-w-lg px-4 pb-32 pt-4">
+        {activeTrip && (
+          <div className="mb-4">
+            <TripSwitcher variant="banner" trips={trips} activeId={activeTrip?.id} onSwitch={switchTrip} onCreate={createTrip} />
+          </div>
+        )}
         {!activeTrip ? (
           <EmptyState onCreate={createTrip} />
         ) : (

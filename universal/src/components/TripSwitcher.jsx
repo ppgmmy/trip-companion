@@ -1,12 +1,34 @@
 import { useState } from "react";
 import TripForm from "./TripForm";
 
-export default function TripSwitcher({ trips, activeId, onSwitch, onCreate }) {
+export default function TripSwitcher({ trips, activeId, onSwitch, onCreate, variant = "header" }) {
   const [open, setOpen] = useState(false);
   const active = trips.find((t) => t.id === activeId) || null;
 
   return (
     <>
+      {variant === "banner" ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="flex w-full items-center justify-between gap-2 rounded-2xl border border-jade/15 bg-white/80 px-4 py-2.5 text-left shadow-[var(--shadow-soft)] transition active:scale-[0.99]"
+        >
+          <span className="flex min-w-0 items-center gap-2">
+            <span className="text-lg">{active?.flag || "🌍"}</span>
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-bold text-ink">
+                {active ? `${active.city}${active.country ? ` · ${active.country}` : ""}` : "選擇／建立旅程"}
+              </span>
+              {active && (
+                <span className="block text-[11px] text-ink-faint">
+                  {active.startDate} → {active.endDate} · {active.targetCurrency}
+                </span>
+              )}
+            </span>
+          </span>
+          <span className="shrink-0 text-xs font-bold text-jade-deep">切換 ›</span>
+        </button>
+      ) : (
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
           <button
@@ -41,10 +63,11 @@ export default function TripSwitcher({ trips, activeId, onSwitch, onCreate }) {
           </svg>
         </button>
       </div>
+      )}
 
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 p-4 pt-[max(2.75rem,calc(env(safe-area-inset-top,0px)+1rem))] backdrop-blur-sm sm:items-center"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4 backdrop-blur-sm"
           role="dialog"
           aria-modal="true"
           aria-label="切換／新增旅程"
@@ -52,7 +75,7 @@ export default function TripSwitcher({ trips, activeId, onSwitch, onCreate }) {
             if (e.target === e.currentTarget) setOpen(false);
           }}
         >
-          <div className="max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-3xl bg-white shadow-[var(--shadow-soft)] scroll-thin pb-[env(safe-area-inset-bottom,0px)] sm:max-w-2xl">
+          <div className="max-h-[80dvh] w-full max-w-md overflow-y-auto rounded-3xl bg-white shadow-[var(--shadow-soft)] scroll-thin pb-[env(safe-area-inset-bottom,0px)] sm:max-w-2xl">
             <div className="sticky top-0 flex items-center justify-between border-b border-jade-soft/60 bg-white px-5 py-4">
               <h3 className="font-display text-lg font-bold text-ink">我的旅程</h3>
               <button
