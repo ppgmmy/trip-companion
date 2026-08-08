@@ -82,13 +82,7 @@ export default function App() {
 
   return (
     <div className="bg-travel min-h-dvh">
-      <header className="safe-top sticky top-0 z-20 border-b border-jade/10 bg-white/70 backdrop-blur">
-        <div className="mx-auto max-w-lg px-4 pb-3">
-          <TripSwitcher trips={trips} activeId={activeTrip?.id} onSwitch={switchTrip} onCreate={createTrip} />
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-lg px-4 pb-32 pt-4">
+      <main className="safe-top mx-auto max-w-lg px-4 pb-32">
         {activeTrip && (
           <div className="mb-4">
             <TripSwitcher variant="banner" trips={trips} activeId={activeTrip?.id} onSwitch={switchTrip} onCreate={createTrip} />
