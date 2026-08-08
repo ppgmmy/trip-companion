@@ -1,10 +1,9 @@
-import { useState } from "react";
-import { EVOLUTION_POOL, buildEvolutionPrompt } from "../evolutionPool";
+import { EVOLUTION_POOL } from "../evolutionPool";
 import { hashStr, todayIndex, tripDays } from "../data";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { tripKey } from "../storage";
 
-/** Deterministic per-trip shuffle so the first N days each reveal a unique idea. */
+/** Deterministic per-trip shuffle so the first N days each reveal a unique tool. */
 function seededOrder(tripId, length) {
   const arr = Array.from({ length }, (_, i) => i);
   let seed = hashStr(tripId) || 1;
@@ -23,42 +22,26 @@ function ideaForDay(trip, dayIdx) {
     : EVOLUTION_POOL[hashStr(`${trip.id}-evo-bonus-${dayIdx}`) % EVOLUTION_POOL.length];
 }
 
-export default function DailyEvolution({ trip }) {
-  const [implemented, setImplemented] = useLocalStorage(tripKey(trip.id, "evolution"), [], {
+/**
+ * All 18 upgrades are pre-implemented in the Toolkit tab.
+ * This card now acts as a daily spotlight that deep-links to today's tool.
+ * Past "marked as implemented" records are preserved and shown as history.
+ */
+export default function DailyEvolution({ trip, onOpenTool }) {
+  const [implemented] = useLocalStorage(tripKey(trip.id, "evolution"), [], {
     migrate: (v) =>
       (Array.isArray(v) ? v : []).map((item) =>
         typeof item === "number" ? { day: item, name: ideaForDay(trip, item).name, date: null } : item
       ),
   });
-  const [copied, setCopied] = useState(false);
 
   const dayIdx = todayIndex(trip);
   const days = tripDays(trip);
   const idea = ideaForDay(trip, dayIdx);
-  const done = implemented.some((e) => e.day === dayIdx);
-
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(buildEvolutionPrompt(idea, "universal", "universal_"));
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1600);
-    } catch {
-      alert("複製失敗，請手動選取");
-    }
-  }
-
-  // Cumulative only: once implemented, the record never disappears.
-  function markDone() {
-    if (done) return;
-    setImplemented((prev) => [
-      ...prev,
-      { day: dayIdx, name: idea.name, date: new Date().toISOString().slice(0, 10) },
-    ]);
-  }
 
   return (
     <section
-      aria-label="每日隨機進化彩蛋"
+      aria-label="今日工具推介"
       className="overflow-hidden rounded-3xl bg-gradient-to-br from-[#7c3aed] via-[#a855f7] to-[#ec4899] p-[1.5px] shadow-[0_14px_36px_-12px_rgb(124_58_237/0.45)]"
     >
       <div className="rounded-[calc(1.5rem-1.5px)] bg-white/95 px-4 py-4 backdrop-blur">
@@ -68,12 +51,12 @@ export default function DailyEvolution({ trip }) {
               🎁
             </span>
             <div>
-              <h2 className="font-display text-base font-bold text-ink">今日隨機進化提案</h2>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[#a855f7]">Daily Upgrade Box</p>
+              <h2 className="font-display text-base font-bold text-ink">今日進化工具</h2>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-[#a855f7]">Daily Upgrade · 已實裝</p>
             </div>
           </div>
           <span className="shrink-0 rounded-full bg-[#f3e8ff] px-2.5 py-1 text-[10px] font-bold text-[#7c3aed]">
-            Day {dayIdx + 1} / {days} Evolution
+            Day {dayIdx + 1} / {days}
           </span>
         </div>
 
@@ -82,33 +65,16 @@ export default function DailyEvolution({ trip }) {
           <p className="mt-1 text-[13px] leading-relaxed text-ink-soft">{idea.desc}</p>
         </div>
 
-        <div className="mt-3 flex gap-2">
-          <button
-            type="button"
-            onClick={copy}
-            className="min-h-11 flex-1 rounded-2xl bg-gradient-to-r from-[#7c3aed] to-[#a855f7] text-sm font-bold text-white shadow-md transition active:scale-[0.97]"
-          >
-            {copied ? "已複製 ✓" : "📋 一鍵複製 Cursor Prompt"}
-          </button>
-          <button
-            type="button"
-            onClick={markDone}
-            disabled={done}
-            aria-pressed={done}
-            className={`flex min-h-11 shrink-0 items-center gap-1.5 rounded-2xl border px-3 text-xs font-bold transition active:scale-95 ${
-              done
-                ? "cursor-default border-transparent bg-jade text-white"
-                : "border-[#a855f7]/30 bg-white text-[#7c3aed]"
-            }`}
-          >
-            {done ? "✅ 已實裝" : "☐ 標記已實裝"}
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => onOpenTool(idea.id)}
+          className="mt-3 min-h-11 w-full rounded-2xl bg-gradient-to-r from-[#7c3aed] to-[#a855f7] text-sm font-bold text-white shadow-md transition active:scale-[0.97]"
+        >
+          🧰 打開今日工具
+        </button>
 
         <p className="mt-2.5 px-1 text-[11px] text-ink-faint">
-          {done
-            ? "已實裝！此記錄會永久保留，只會繼續累積。"
-            : "夜晚返酒店貼俾 Cursor，10 秒將呢個功能永久寫入 App。"}
+          全部 {EVOLUTION_POOL.length} 個神級外掛已直接實裝，每日為你重點推介一個。
         </p>
 
         {implemented.length > 0 && (

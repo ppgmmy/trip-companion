@@ -11,6 +11,7 @@ import SpotsTab from "./components/SpotsTab";
 import ExpenseTab from "./components/ExpenseTab";
 import DailyIntel from "./components/DailyIntel";
 import DailyEvolution from "./components/DailyEvolution";
+import ToolkitTab from "./components/ToolkitTab";
 import FeedbackModal from "./components/FeedbackModal";
 
 function EmptyState({ onCreateClick }) {
@@ -38,6 +39,12 @@ export default function App() {
   const [trips, setTrips] = useLocalStorage(REGISTRY_KEYS.trips, [], { migrate: (v) => (Array.isArray(v) ? v : []) });
   const [activeId, setActiveId] = useLocalStorage(REGISTRY_KEYS.active, null, { migrate: (v) => (typeof v === "string" ? v : null) });
   const [activeTab, setActiveTab] = useState("itinerary");
+  const [expandedTool, setExpandedTool] = useState(null);
+
+  function openTool(toolId) {
+    setExpandedTool(toolId);
+    setActiveTab("tools");
+  }
 
   const activeTrip = useMemo(() => trips.find((t) => t.id === activeId) || trips[0] || null, [trips, activeId]);
   const tripId = activeTrip?.id;
@@ -92,7 +99,7 @@ export default function App() {
             {activeTab === "itinerary" && (
               <>
                 <DailyIntel trip={activeTrip} expenses={expenses} />
-                <DailyEvolution trip={activeTrip} />
+                <DailyEvolution trip={activeTrip} onOpenTool={openTool} />
                 <ItineraryTab trip={activeTrip} itinerary={itinerary} setItinerary={setItinerary} />
               </>
             )}
@@ -108,6 +115,9 @@ export default function App() {
                 onRefreshRate={refreshRate}
                 onApplyManualRate={applyManualRate}
               />
+            )}
+            {activeTab === "tools" && (
+              <ToolkitTab trip={activeTrip} spots={spots} expenses={expenses} rateState={rateState} expandedTool={expandedTool} />
             )}
           </div>
         )}
