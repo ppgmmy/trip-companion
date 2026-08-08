@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 function resolveInitial(initialValue) {
   return typeof initialValue === "function" ? initialValue() : initialValue;
@@ -54,8 +54,16 @@ export function useLocalStorage(key, initialValue, options = {}) {
   optionsRef.current = options;
   const keyRef = useRef(key);
   keyRef.current = key;
+  const initialRef = useRef(initialValue);
+  initialRef.current = initialValue;
 
-  const [value, setValue] = useState(() => readLocalStorage(keyRef.current, initialValue, optionsRef.current));
+  const [value, setValue] = useState(() => readLocalStorage(keyRef.current, initialRef.current, optionsRef.current));
+
+  // 切換旅程時 key 會變——必須重新讀取新 key 嘅資料，
+  // 否則上一個旅程嘅 state 會留低，寫入時就會污染新旅程嘅 storage。
+  useEffect(() => {
+    setValue(readLocalStorage(key, initialRef.current, optionsRef.current));
+  }, [key]);
 
   const setAndPersist = useCallback((updater) => {
     setValue((prev) => {
