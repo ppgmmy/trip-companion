@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { WEEKDAY_LABELS, formatMoney, toDateId, tripDays } from "../data";
+import PlacesPanel from "./PlacesPanel";
 
 function pad(n) {
   return String(n).padStart(2, "0");
@@ -117,6 +118,8 @@ export default function ItineraryTab({ trip, itinerary, setItinerary }) {
           ))
         )}
       </ol>
+
+      <PlacesPanel trip={trip} />
     </div>
   );
 }
