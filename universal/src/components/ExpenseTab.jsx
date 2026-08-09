@@ -1,8 +1,11 @@
 import { useMemo, useState } from "react";
-import { EXPENSE_CATEGORIES, formatHkd, formatMoney, tripDays } from "../data";
+import { EXPENSE_CATEGORIES, formatHkd, formatMoney, hashStr, toDateId, tripDays } from "../data";
+import { EXPENSE_OPT_POOL } from "../expenseOptPool";
+import { useLocalStorage } from "../hooks/useLocalStorage";
+import { tripKey } from "../storage";
 import { BarChart, DoughnutChart } from "./Charts";
 
-export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxStatus, onRefreshRate, onApplyManualRate }) {
+export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxStatus, onRefreshRate, onApplyManualRate, onOpenTool }) {
   const [categoryId, setCategoryId] = useState("food");
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
@@ -14,6 +17,15 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
   const totalHkd = useMemo(() => expenses.reduce((s, e) => s + (Number(e.baseAmount) || 0), 0), [expenses]);
   const avgDaily = totalSpent / days;
   const remaining = trip.budget - totalSpent;
+
+  // 每日優化：以旅程 + 日期做種子，當日固定、逐日輪換
+  const todayId = toDateId(new Date());
+  const opt = EXPENSE_OPT_POOL[hashStr(`${trip.id}-expopt-${todayId}`) % EXPENSE_OPT_POOL.length];
+  const [optLog, setOptLog] = useLocalStorage(tripKey(trip.id, "exp_opt"), {}, {
+    migrate: (v) => (v && typeof v === "object" && !Array.isArray(v) ? v : {}),
+  });
+  const optDone = !!optLog[todayId];
+  const optDoneCount = Object.values(optLog).filter(Boolean).length;
 
   const catTotals = useMemo(() => {
     const map = {};
@@ -69,6 +81,33 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
       <div>
         <h2 className="font-display text-xl font-bold text-ink">開支儀表板</h2>
         <p className="text-sm text-ink-soft">{trip.targetCurrency} → HKD 以記入當下匯率鎖定</p>
+      </div>
+
+      <div className="rounded-3xl bg-gradient-to-br from-[#fff7ed] to-[#ffedd5] p-4 shadow-[var(--shadow-soft)]">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-coral">💡 每日優化 · {todayId}</p>
+          <span className="shrink-0 rounded-full bg-white/70 px-2.5 py-1 text-[11px] font-bold text-ink-faint">已累積做到 {optDoneCount} 日</span>
+        </div>
+        <p className="mt-2 text-sm leading-relaxed text-ink">{opt.text}</p>
+        <div className="mt-3 flex gap-2">
+          <button
+            type="button"
+            onClick={() => setOptLog((p) => ({ ...p, [todayId]: !p[todayId] }))}
+            aria-pressed={optDone}
+            className={`min-h-11 flex-1 rounded-2xl text-sm font-bold transition active:scale-[0.97] ${optDone ? "bg-jade text-white" : "border border-coral/30 bg-white/80 text-ink"}`}
+          >
+            {optDone ? "✅ 今日已做到" : "☐ 我今日會做"}
+          </button>
+          {opt.tool && onOpenTool && (
+            <button
+              type="button"
+              onClick={() => onOpenTool(opt.tool)}
+              className="min-h-11 shrink-0 rounded-2xl bg-gradient-to-r from-[#7c3aed] to-[#a855f7] px-4 text-sm font-bold text-white shadow-md transition active:scale-95"
+            >
+              🧰 工具
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-2">
