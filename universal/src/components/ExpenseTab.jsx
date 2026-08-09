@@ -27,6 +27,24 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
   const optDone = !!optLog[todayId];
   const optDoneCount = Object.values(optLog).filter(Boolean).length;
 
+  // 預算消耗儀表：進度 + 速度預測（由 0 到 1 新功能）
+  const budget = Number(trip.budget) || 0;
+  const startMs = new Date(trip.startDate).getTime();
+  const elapsedDays = Number.isFinite(startMs)
+    ? Math.min(days, Math.max(1, Math.floor((Date.now() - startMs) / 86400000) + 1))
+    : 1;
+  const remainingDays = Math.max(1, days - elapsedDays + 1);
+  const pace = totalSpent / elapsedDays;
+  const projectedTotal = pace * days;
+  const budgetPct = budget > 0 ? (totalSpent / budget) * 100 : 0;
+  const dailyAllowance = budget > 0 ? Math.max(0, remaining) / remainingDays : 0;
+  const burnColor = budgetPct >= 85 ? "text-coral" : budgetPct >= 60 ? "text-[#b45309]" : "text-jade";
+  const burnBar = budgetPct >= 85
+    ? "bg-gradient-to-r from-[#f59e0b] to-coral"
+    : budgetPct >= 60
+      ? "bg-gradient-to-r from-jade to-[#f59e0b]"
+      : "bg-gradient-to-r from-[#34d399] to-jade";
+
   const catTotals = useMemo(() => {
     const map = {};
     expenses.forEach((e) => {
@@ -109,6 +127,37 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
           )}
         </div>
       </div>
+
+      {budget > 0 && (
+        <div className="rounded-3xl bg-white p-4 shadow-[var(--shadow-soft)]">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-bold uppercase tracking-wider text-ink-soft">💰 預算消耗儀表</p>
+            <span className={`text-sm font-black ${burnColor}`}>{budgetPct.toFixed(0)}%</span>
+          </div>
+          <div className="mt-2 h-3.5 overflow-hidden rounded-full bg-[#efe9e0]">
+            <div className={`h-full rounded-full transition-all duration-700 ${burnBar}`} style={{ width: `${Math.min(100, budgetPct)}%` }} />
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2 text-center">
+            <div className="rounded-2xl bg-shell px-2 py-2.5">
+              <p className="text-[11px] font-semibold text-ink-faint">照而家速度全程預計</p>
+              <p className={`mt-0.5 text-sm font-black ${projectedTotal > budget ? "text-coral" : "text-ink"}`}>
+                {formatMoney(projectedTotal, trip.targetCurrency)}
+              </p>
+            </div>
+            <div className="rounded-2xl bg-shell px-2 py-2.5">
+              <p className="text-[11px] font-semibold text-ink-faint">剩餘 {remainingDays} 日每日可用</p>
+              <p className="mt-0.5 text-sm font-black text-ink">{formatMoney(dailyAllowance, trip.targetCurrency)}</p>
+            </div>
+          </div>
+          <p className={`mt-2.5 text-center text-xs font-semibold ${totalSpent > budget || projectedTotal > budget ? "text-coral" : "text-jade"}`}>
+            {totalSpent > budget
+              ? `⚠️ 已爆 budget ${formatMoney(totalSpent - budget, trip.targetCurrency)}！`
+              : projectedTotal > budget
+                ? `⚠️ 照而家速度預計超支 ${formatMoney(projectedTotal - budget, trip.targetCurrency)}，要開始收油`
+                : `✅ 進度健康，預計全程慳返 ${formatMoney(budget - projectedTotal, trip.targetCurrency)}`}
+          </p>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-2">
         <div className="col-span-2 rounded-2xl bg-white/85 p-3 shadow-[var(--shadow-soft)]">
