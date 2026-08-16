@@ -6,7 +6,7 @@
 # 3. GitHub schedule：02:07 / 02:23 / 02:41 UTC ≈ HKT 10:07/10:23/10:41
 # 4. workflow_dispatch（手動）
 #
-# 終止日：2027-12-31
+# 無限期運作：無終止日；backlog 用盡時當日 skip，之後追加項目即可繼續啟用。
 
 name: Daily Optimization
 
@@ -28,34 +28,17 @@ jobs:
   enable-next-feature:
     runs-on: ubuntu-latest
     steps:
-      - name: Check end date (until 2027-12-31, HKT)
-        id: gate
-        run: |
-          TODAY=$(TZ=Asia/Hong_Kong date +%F)
-          END=2027-12-31
-          echo "today=$TODAY"
-          echo "end=$END"
-          if [[ "$TODAY" > "$END" ]]; then
-            echo "Past end date — skipping."
-            echo "continue=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "continue=true" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Checkout
-        if: steps.gate.outputs.continue == 'true'
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node
-        if: steps.gate.outputs.continue == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: "22"
 
       - name: Run daily optimization script
-        if: steps.gate.outputs.continue == 'true'
         id: opt
         run: |
           node scripts/daily-optimization/run.mjs
@@ -73,7 +56,7 @@ jobs:
           fi
 
       - name: Commit and push
-        if: steps.gate.outputs.continue == 'true' && steps.opt.outputs.skip == 'false'
+        if: steps.opt.outputs.skip == 'false'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

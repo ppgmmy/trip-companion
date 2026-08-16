@@ -13,7 +13,6 @@ import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, "../..");
 
-const END_DATE = "2027-12-31";
 const HISTORY_PATH = join(ROOT, "optimization_history.json");
 const ENABLED_PATH = join(ROOT, "universal/src/data/enabledExpenseFeatures.json");
 const BACKLOG_PATH = join(ROOT, "universal/src/data/expenseDailyBacklog.js");
@@ -55,13 +54,7 @@ function writeJson(path, data) {
 
 function main() {
   const today = todayHktYmd();
-  console.log(`[daily-opt] today(HKT)=${today} endDate=${END_DATE} dryRun=${dryRun}`);
-
-  if (today > END_DATE) {
-    console.log(`[daily-opt] 已超過終止日 ${END_DATE}，跳過。`);
-    writeFileSync(join(ROOT, ".daily-opt-skip"), "past_end\n", "utf8");
-    process.exit(0);
-  }
+  console.log(`[daily-opt] today(HKT)=${today} dryRun=${dryRun}`);
 
   const history = readJson(HISTORY_PATH, { entries: [] });
   const doneToday = history.entries.find((e) => e.date === today);

@@ -4,7 +4,6 @@
  * Auth: Authorization: Bearer $CRON_SECRET
  * Env: CRON_SECRET, GH_WORKFLOW_TOKEN
  */
-const END_DATE = "2027-12-31";
 const OWNER = "ppgmmy";
 const REPO = "trip-companion";
 const BRANCH = "main";
@@ -37,8 +36,6 @@ function parseBacklog(source) {
 }
 
 function planDailyOptimization({ today, backlogSrc, history, enabled }) {
-  if (today > END_DATE) return { status: "past_end", today };
-
   const doneToday = history.entries.find((e) => e.date === today);
   if (doneToday) {
     return {
@@ -269,7 +266,7 @@ export default async function handler(req, res) {
         title: plan.title,
       });
     }
-    if (plan.status === "past_end" || plan.status === "exhausted") {
+    if (plan.status === "exhausted") {
       return res.status(200).json({
         ok: true,
         skipped: true,
