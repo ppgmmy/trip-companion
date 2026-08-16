@@ -1,15 +1,28 @@
 import { useMemo, useState } from "react";
 import { EXPENSE_CATEGORIES, formatHkd, formatMoney, hashStr, toDateId, tripDays } from "../data";
+import { isFeatureEnabled } from "../data/featureFlags";
 import { EXPENSE_OPT_POOL } from "../expenseOptPool";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { tripKey } from "../storage";
 import { BarChart, DoughnutChart } from "./Charts";
+import {
+  CategoryRanking,
+  DailyOptBanner,
+  EmptyStateTip,
+  ExpenseInsightCards,
+  ExpenseListExtras,
+  PinnedBudgetAlert,
+  QuickAddHelpers,
+} from "./ExpenseDailyExtras";
 
 export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxStatus, onRefreshRate, onApplyManualRate, onOpenTool }) {
   const [categoryId, setCategoryId] = useState("food");
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
   const [manualRate, setManualRate] = useState("");
+  const [filterCategory, setFilterCategory] = useState("all");
+  const [search, setSearch] = useState("");
+  const [showHkd, setShowHkd] = useState(false);
 
   const days = tripDays(trip);
   const rate = rateState?.rate || 0;
@@ -18,7 +31,6 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
   const avgDaily = totalSpent / days;
   const remaining = trip.budget - totalSpent;
 
-  // 每日優化：以旅程 + 日期做種子，當日固定、逐日輪換
   const todayId = toDateId(new Date());
   const opt = EXPENSE_OPT_POOL[hashStr(`${trip.id}-expopt-${todayId}`) % EXPENSE_OPT_POOL.length];
   const [optLog, setOptLog] = useLocalStorage(tripKey(trip.id, "exp_opt"), {}, {
@@ -27,7 +39,6 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
   const optDone = !!optLog[todayId];
   const optDoneCount = Object.values(optLog).filter(Boolean).length;
 
-  // 預算消耗儀表：進度 + 速度預測（由 0 到 1 新功能）
   const budget = Number(trip.budget) || 0;
   const startMs = new Date(trip.startDate).getTime();
   const elapsedDays = Number.isFinite(startMs)
@@ -63,6 +74,18 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
     return ["W1", "W2", "W3", "W4", "W5"].map((id) => ({ id, label: id, value: weeks[id] || 0 }));
   }, [expenses, trip.startDate]);
 
+  const visibleExpenses = useMemo(() => {
+    let list = expenses.slice().reverse();
+    if (isFeatureEnabled("category-filter") && filterCategory !== "all") {
+      list = list.filter((e) => e.categoryId === filterCategory);
+    }
+    if (isFeatureEnabled("expense-search") && search.trim()) {
+      const q = search.trim().toLowerCase();
+      list = list.filter((e) => (e.note || "").toLowerCase().includes(q));
+    }
+    return list;
+  }, [expenses, filterCategory, search]);
+
   function addExpense(e) {
     e.preventDefault();
     const value = Number(amount);
@@ -86,6 +109,14 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
     setExpenses((prev) => prev.filter((e) => e.id !== id));
   }
 
+  function duplicateLast() {
+    const last = expenses[expenses.length - 1];
+    if (!last) return;
+    setCategoryId(last.categoryId);
+    setAmount(String(last.amount));
+    setNote(last.note || "");
+  }
+
   const statusLabel = {
     idle: "同步中…",
     loading: "更新中…",
@@ -96,14 +127,25 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
 
   return (
     <div className="space-y-4">
-      <div>
-        <h2 className="font-display text-xl font-bold text-ink">開支儀表板</h2>
-        <p className="text-sm text-ink-soft">{trip.targetCurrency} → HKD 以記入當下匯率鎖定</p>
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <h2 className="font-display text-xl font-bold text-ink">開支儀表板</h2>
+          <p className="text-sm text-ink-soft">{trip.targetCurrency} → HKD 以記入當下匯率鎖定</p>
+        </div>
+        {isFeatureEnabled("remaining-days-chip") && (
+          <span className="shrink-0 rounded-full bg-jade-soft px-3 py-1.5 text-xs font-bold text-jade-deep">
+            剩 {remainingDays} 日
+          </span>
+        )}
       </div>
+
+      <DailyOptBanner />
+
+      <PinnedBudgetAlert budgetPct={budgetPct} remaining={remaining} currency={trip.targetCurrency} />
 
       <div className="rounded-3xl bg-gradient-to-br from-[#fff7ed] to-[#ffedd5] p-4 shadow-[var(--shadow-soft)]">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-coral">💡 每日優化 · {todayId}</p>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-coral">💡 每日行動 · {todayId}</p>
           <span className="shrink-0 rounded-full bg-white/70 px-2.5 py-1 text-[11px] font-bold text-ink-faint">已累積做到 {optDoneCount} 日</span>
         </div>
         <p className="mt-2 text-sm leading-relaxed text-ink">{opt.text}</p>
@@ -177,10 +219,21 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
         </div>
       </div>
 
+      <ExpenseInsightCards
+        trip={trip}
+        expenses={expenses}
+        days={days}
+        totalSpent={totalSpent}
+        budget={budget}
+        remainingDays={remainingDays}
+      />
+
       <div className="rounded-3xl bg-white/85 p-4 shadow-[var(--shadow-soft)]">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-ink-faint">分類分佈（HKD）</p>
         <DoughnutChart segments={catTotals} formatValue={(v) => formatHkd(v)} />
       </div>
+
+      <CategoryRanking trip={trip} catTotals={catTotals} showPct />
 
       <div className="rounded-3xl bg-white/85 p-4 shadow-[var(--shadow-soft)]">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-ink-faint">每週支出（HKD）</p>
@@ -235,6 +288,7 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
             </button>
           ))}
         </div>
+        <QuickAddHelpers amount={amount} setAmount={setAmount} note={note} setNote={setNote} currency={trip.targetCurrency} />
         <div className="grid grid-cols-[1fr_1.2fr] gap-2">
           <input
             type="number"
@@ -260,34 +314,63 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
         </button>
       </form>
 
+      <ExpenseListExtras
+        trip={trip}
+        expenses={expenses}
+        filterCategory={filterCategory}
+        setFilterCategory={setFilterCategory}
+        search={search}
+        setSearch={setSearch}
+        showHkd={showHkd}
+        setShowHkd={setShowHkd}
+        onDuplicateLast={duplicateLast}
+      />
+
       <ul className="space-y-2">
         {expenses.length === 0 ? (
-          <li className="rounded-2xl border border-dashed border-jade/20 bg-white/50 px-4 py-8 text-center text-sm text-ink-faint">尚未記帳</li>
+          isFeatureEnabled("empty-state-tips") ? (
+            <EmptyStateTip hasExpenses={false} />
+          ) : (
+            <li className="rounded-2xl border border-dashed border-jade/20 bg-white/50 px-4 py-8 text-center text-sm text-ink-faint">尚未記帳</li>
+          )
+        ) : visibleExpenses.length === 0 ? (
+          <li className="rounded-2xl border border-dashed border-jade/20 bg-white/50 px-4 py-8 text-center text-sm text-ink-faint">無符合條件嘅支出</li>
         ) : (
-          expenses
-            .slice()
-            .reverse()
-            .map((entry) => {
-              const cat = EXPENSE_CATEGORIES.find((c) => c.id === entry.categoryId);
-              return (
-                <li key={entry.id} className="flex items-center gap-3 rounded-2xl bg-white/85 px-4 py-3 shadow-[var(--shadow-soft)]">
-                  <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: cat?.color || "#64748b" }} />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-ink">{entry.note}</p>
-                    <p className="text-[11px] text-ink-faint">{entry.date} · {cat?.label || entry.categoryId}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-display text-sm font-bold text-jade-deep">{formatHkd(entry.baseAmount)}</p>
-                    <p className="text-xs text-ink-soft">{formatMoney(entry.amount, trip.targetCurrency)}</p>
-                  </div>
-                  <button type="button" onClick={() => removeExpense(entry.id)} className="shrink-0 text-ink-faint transition active:scale-90" aria-label="刪除">
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </li>
-              );
-            })
+          visibleExpenses.map((entry) => {
+            const cat = EXPENSE_CATEGORIES.find((c) => c.id === entry.categoryId);
+            return (
+              <li key={entry.id} className="flex items-center gap-3 rounded-2xl bg-white/85 px-4 py-3 shadow-[var(--shadow-soft)]">
+                <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: cat?.color || "#64748b" }} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-ink">{entry.note}</p>
+                  <p className="text-[11px] text-ink-faint">{entry.date} · {cat?.label || entry.categoryId}</p>
+                </div>
+                <div className="text-right">
+                  {isFeatureEnabled("hkd-list-toggle") && showHkd ? (
+                    <>
+                      <p className="font-display text-sm font-bold text-jade-deep">{formatHkd(entry.baseAmount)}</p>
+                      <p className="text-xs text-ink-soft">{formatMoney(entry.amount, trip.targetCurrency)}</p>
+                    </>
+                  ) : isFeatureEnabled("hkd-list-toggle") ? (
+                    <>
+                      <p className="font-display text-sm font-bold text-jade-deep">{formatMoney(entry.amount, trip.targetCurrency)}</p>
+                      <p className="text-xs text-ink-soft">{formatHkd(entry.baseAmount)}</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="font-display text-sm font-bold text-jade-deep">{formatHkd(entry.baseAmount)}</p>
+                      <p className="text-xs text-ink-soft">{formatMoney(entry.amount, trip.targetCurrency)}</p>
+                    </>
+                  )}
+                </div>
+                <button type="button" onClick={() => removeExpense(entry.id)} className="shrink-0 text-ink-faint transition active:scale-90" aria-label="刪除">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </li>
+            );
+          })
         )}
       </ul>
     </div>

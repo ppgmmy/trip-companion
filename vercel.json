@@ -17,5 +17,15 @@
         }
       ]
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/daily-opt-cron",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/daily-opt-cron",
+      "schedule": "0 3 * * *"
+    }
   ]
 }
