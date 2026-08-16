@@ -1,5 +1,5 @@
 /* Trip Companion service worker — offline-first runtime cache for all sub-apps. */
-const CACHE = "trip-companion-v4";
+const CACHE = "trip-companion-v5";
 const CORE = ["/manifest.webmanifest", "/icon-512.png"];
 
 self.addEventListener("install", (event) => {

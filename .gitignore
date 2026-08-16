@@ -11,5 +11,6 @@ Thumbs.db
 .vercel
 .env
 .env.*
+!.env.example
 .daily-opt-skip
 .daily-opt-result.json
