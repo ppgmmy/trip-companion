@@ -1,8 +1,9 @@
 {
   "enabled": [
-    "daily-opt-banner"
+    "daily-opt-banner",
+    "today-vs-yesterday"
   ],
-  "updatedAt": "2026-08-16T08:50:57.239Z",
-  "lastFeatureId": "daily-opt-banner",
-  "lastTitle": "每日優化公告"
+  "updatedAt": "2026-08-17T02:19:18.442Z",
+  "lastFeatureId": "today-vs-yesterday",
+  "lastTitle": "今日 vs 昨日使費"
 }

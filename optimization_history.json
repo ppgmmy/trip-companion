@@ -5,6 +5,12 @@
       "id": "daily-opt-banner",
       "title": "每日優化公告",
       "description": "開支儀表板頂部顯示今日自動啟用的優化說明，方便追蹤成長。"
+    },
+    {
+      "date": "2026-08-17",
+      "id": "today-vs-yesterday",
+      "title": "今日 vs 昨日使費",
+      "description": "一眼對比今日與昨日支出，即時察覺消費節奏。"
     }
   ]
 }
