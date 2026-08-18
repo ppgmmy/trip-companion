@@ -1,9 +1,10 @@
 {
   "enabled": [
     "daily-opt-banner",
-    "today-vs-yesterday"
+    "today-vs-yesterday",
+    "logging-streak"
   ],
-  "updatedAt": "2026-08-17T02:19:18.442Z",
-  "lastFeatureId": "today-vs-yesterday",
-  "lastTitle": "今日 vs 昨日使費"
+  "updatedAt": "2026-08-18T02:18:58.993Z",
+  "lastFeatureId": "logging-streak",
+  "lastTitle": "記帳連續日數"
 }

@@ -11,6 +11,12 @@
       "id": "today-vs-yesterday",
       "title": "今日 vs 昨日使費",
       "description": "一眼對比今日與昨日支出，即時察覺消費節奏。"
+    },
+    {
+      "date": "2026-08-18",
+      "id": "logging-streak",
+      "title": "記帳連續日數",
+      "description": "顯示連續有記帳嘅日數，養成每日記帳習慣。"
     }
   ]
 }
