@@ -2,9 +2,10 @@
   "enabled": [
     "daily-opt-banner",
     "today-vs-yesterday",
-    "logging-streak"
+    "logging-streak",
+    "biggest-expense"
   ],
-  "updatedAt": "2026-08-18T02:18:58.993Z",
-  "lastFeatureId": "logging-streak",
-  "lastTitle": "記帳連續日數"
+  "updatedAt": "2026-08-19T02:09:30.998Z",
+  "lastFeatureId": "biggest-expense",
+  "lastTitle": "單筆最高消費"
 }

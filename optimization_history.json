@@ -17,6 +17,12 @@
       "id": "logging-streak",
       "title": "記帳連續日數",
       "description": "顯示連續有記帳嘅日數，養成每日記帳習慣。"
+    },
+    {
+      "date": "2026-08-19",
+      "id": "biggest-expense",
+      "title": "單筆最高消費",
+      "description": "突出本旅程最大一筆開支，方便回顧大手消費。"
     }
   ]
 }
