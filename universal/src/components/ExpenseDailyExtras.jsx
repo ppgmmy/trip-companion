@@ -43,24 +43,86 @@ function inRange(dateId, start, end) {
   return dateId >= start && dateId <= end;
 }
 
-function Sparkline({ values, currency, formatValue }) {
+function Sparkline({ values, dateIds, formatValue }) {
+  const [activeIdx, setActiveIdx] = useState(null);
   const max = Math.max(...values, 1);
+  const avg = values.reduce((s, v) => s + v, 0) / values.length;
+  const todayVal = values[values.length - 1] ?? 0;
+  const vsAvg = todayVal - avg;
   const w = 280;
-  const h = 56;
-  const pts = values.map((v, i) => {
-    const x = values.length <= 1 ? 0 : (i / (values.length - 1)) * w;
-    const y = h - (v / max) * (h - 8) - 4;
-    return `${x},${y}`;
+  const h = 64;
+  const pad = 6;
+
+  const coords = values.map((v, i) => {
+    const x = values.length <= 1 ? w / 2 : pad + (i / (values.length - 1)) * (w - pad * 2);
+    const y = h - pad - (v / max) * (h - pad * 2);
+    return { x, y, v };
   });
+  const linePts = coords.map((c) => `${c.x},${c.y}`).join(" ");
+  const areaPts = `${pad},${h - pad} ${linePts} ${w - pad},${h - pad}`;
+  const avgY = h - pad - (avg / max) * (h - pad * 2);
+  const peakIdx = values.indexOf(max);
+  const focusIdx = activeIdx ?? values.length - 1;
+
+  function shortLabel(dateId) {
+    if (!dateId) return "—";
+    const [, m, d] = dateId.split("-");
+    return `${Number(m)}/${Number(d)}`;
+  }
+
   return (
     <div>
-      <svg viewBox={`0 0 ${w} ${h}`} className="h-14 w-full" aria-hidden>
-        <polyline fill="none" stroke="#0d9488" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" points={pts.join(" ")} />
-      </svg>
-      <div className="mt-1 flex justify-between text-[10px] text-ink-faint">
-        <span>6日前</span>
-        <span>今日 · 最高 {formatValue(max)}</span>
+      <div className="mb-2 flex items-baseline justify-between gap-2">
+        <p className="text-sm font-bold text-ink">
+          {formatValue(coords[focusIdx]?.v ?? 0)}
+          <span className="ml-1.5 text-[11px] font-semibold text-ink-faint">
+            {focusIdx === values.length - 1 ? "今日" : shortLabel(dateIds[focusIdx])}
+          </span>
+        </p>
+        <p className={`text-[11px] font-semibold ${vsAvg > 0 ? "text-coral" : vsAvg < 0 ? "text-jade" : "text-ink-faint"}`}>
+          {vsAvg === 0 ? "同 7 日平均" : vsAvg > 0 ? `高於平均 ${formatValue(vsAvg)}` : `低於平均 ${formatValue(-vsAvg)}`}
+        </p>
       </div>
+      <svg viewBox={`0 0 ${w} ${h}`} className="h-16 w-full touch-manipulation" role="img" aria-label="近 7 日支出趨勢">
+        <defs>
+          <linearGradient id="spark-fill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#0d9488" stopOpacity="0.25" />
+            <stop offset="100%" stopColor="#0d9488" stopOpacity="0.02" />
+          </linearGradient>
+        </defs>
+        <line x1={pad} y1={avgY} x2={w - pad} y2={avgY} stroke="#94a3b8" strokeWidth="1.5" strokeDasharray="4 3" />
+        <polygon points={areaPts} fill="url(#spark-fill)" />
+        <polyline fill="none" stroke="#0d9488" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" points={linePts} />
+        {coords.map((c, i) => (
+          <circle
+            key={i}
+            cx={c.x}
+            cy={c.y}
+            r={i === focusIdx ? 5 : i === peakIdx ? 4 : 3}
+            fill={i === focusIdx ? "#0d9488" : i === peakIdx ? "#f97316" : "#fff"}
+            stroke={i === focusIdx || i === peakIdx ? (i === peakIdx && i !== focusIdx ? "#f97316" : "#0d9488") : "#0d9488"}
+            strokeWidth="2"
+            className="cursor-pointer"
+            onClick={() => setActiveIdx(i === activeIdx ? null : i)}
+          />
+        ))}
+      </svg>
+      <div className="mt-1.5 grid grid-cols-7 gap-0.5 text-center text-[9px] text-ink-faint">
+        {dateIds.map((id, i) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setActiveIdx(i === activeIdx ? null : i)}
+            className={`min-h-8 rounded-lg py-0.5 transition ${i === focusIdx ? "bg-jade-soft font-bold text-jade-deep" : "hover:bg-shell"}`}
+          >
+            <span className="block">{i === values.length - 1 ? "今" : shortLabel(id)}</span>
+            <span className="block truncate text-[8px] opacity-80">{values[i] > 0 ? formatValue(values[i]).replace(/[^\d.,]/g, "").slice(0, 6) : "—"}</span>
+          </button>
+        ))}
+      </div>
+      <p className="mt-2 text-center text-[10px] text-ink-faint">
+        虛線 = 7 日平均 {formatValue(avg)} · 橙點 = 最高日
+      </p>
     </div>
   );
 }
@@ -118,9 +180,14 @@ export function ExpenseInsightCards({ trip, expenses, days, totalSpent, budget, 
     [expenses],
   );
 
-  const sparkValues = useMemo(() => {
-    return Array.from({ length: 7 }, (_, i) => sumByDate(expenses, shiftDateId(todayId, i - 6)));
+  const sparkDays = useMemo(() => {
+    return Array.from({ length: 7 }, (_, i) => {
+      const dateId = shiftDateId(todayId, i - 6);
+      return { dateId, value: sumByDate(expenses, dateId) };
+    });
   }, [expenses, todayId]);
+  const sparkValues = useMemo(() => sparkDays.map((d) => d.value), [sparkDays]);
+  const sparkDateIds = useMemo(() => sparkDays.map((d) => d.dateId), [sparkDays]);
 
   const thisWeek = weekBounds(0);
   const lastWeek = weekBounds(1);
@@ -216,8 +283,17 @@ export function ExpenseInsightCards({ trip, expenses, days, totalSpent, budget, 
 
       {isFeatureEnabled("seven-day-sparkline") && (
         <div className="rounded-3xl bg-white/85 p-4 shadow-[var(--shadow-soft)]">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-ink-faint">近 7 日趨勢</p>
-          <Sparkline values={sparkValues} currency={trip.targetCurrency} formatValue={(v) => formatMoney(v, trip.targetCurrency)} />
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <p className="text-xs font-semibold uppercase tracking-wider text-ink-faint">近 7 日趨勢</p>
+            {sparkValues.every((v) => v === 0) && (
+              <span className="text-[10px] font-semibold text-ink-faint">記一筆就會顯示走勢</span>
+            )}
+          </div>
+          <Sparkline
+            values={sparkValues}
+            dateIds={sparkDateIds}
+            formatValue={(v) => formatMoney(v, trip.targetCurrency)}
+          />
         </div>
       )}
     </>

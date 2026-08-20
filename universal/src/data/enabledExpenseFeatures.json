@@ -3,9 +3,10 @@
     "daily-opt-banner",
     "today-vs-yesterday",
     "logging-streak",
-    "biggest-expense"
+    "biggest-expense",
+    "seven-day-sparkline"
   ],
-  "updatedAt": "2026-08-19T02:09:30.998Z",
-  "lastFeatureId": "biggest-expense",
-  "lastTitle": "單筆最高消費"
+  "updatedAt": "2026-08-20T02:04:16.660Z",
+  "lastFeatureId": "seven-day-sparkline",
+  "lastTitle": "近 7 日趨勢"
 }

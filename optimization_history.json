@@ -23,6 +23,12 @@
       "id": "biggest-expense",
       "title": "單筆最高消費",
       "description": "突出本旅程最大一筆開支，方便回顧大手消費。"
+    },
+    {
+      "date": "2026-08-20",
+      "id": "seven-day-sparkline",
+      "title": "近 7 日趨勢",
+      "description": "迷你折線圖顯示最近一星期每日使費走勢。"
     }
   ]
 }
