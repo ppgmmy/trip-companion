@@ -29,6 +29,12 @@
       "id": "seven-day-sparkline",
       "title": "近 7 日趨勢",
       "description": "迷你折線圖顯示最近一星期每日使費走勢。"
+    },
+    {
+      "date": "2026-08-21",
+      "id": "category-ranking",
+      "title": "分類排行榜",
+      "description": "按金額列出 Top 分類，快速搵到最大使費類別。"
     }
   ]
 }

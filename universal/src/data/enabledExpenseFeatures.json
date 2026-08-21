@@ -4,9 +4,10 @@
     "today-vs-yesterday",
     "logging-streak",
     "biggest-expense",
-    "seven-day-sparkline"
+    "seven-day-sparkline",
+    "category-ranking"
   ],
-  "updatedAt": "2026-08-20T02:04:16.660Z",
-  "lastFeatureId": "seven-day-sparkline",
-  "lastTitle": "近 7 日趨勢"
+  "updatedAt": "2026-08-21T02:05:41.209Z",
+  "lastFeatureId": "category-ranking",
+  "lastTitle": "分類排行榜"
 }

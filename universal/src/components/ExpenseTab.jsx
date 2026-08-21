@@ -233,7 +233,13 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
         <DoughnutChart segments={catTotals} formatValue={(v) => formatHkd(v)} />
       </div>
 
-      <CategoryRanking trip={trip} catTotals={catTotals} showPct />
+      <CategoryRanking
+        catTotals={catTotals}
+        expenses={expenses}
+        showPct
+        filterCategory={filterCategory}
+        setFilterCategory={setFilterCategory}
+      />
 
       <div className="rounded-3xl bg-white/85 p-4 shadow-[var(--shadow-soft)]">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-ink-faint">每週支出（HKD）</p>

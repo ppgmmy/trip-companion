@@ -300,27 +300,105 @@ export function ExpenseInsightCards({ trip, expenses, days, totalSpent, budget, 
   );
 }
 
-export function CategoryRanking({ trip, catTotals, showPct }) {
+export function CategoryRanking({ catTotals, expenses, showPct, filterCategory, setFilterCategory }) {
+  const [focusId, setFocusId] = useState(null);
+
+  const countByCat = useMemo(() => {
+    const map = {};
+    (expenses || []).forEach((e) => {
+      map[e.categoryId] = (map[e.categoryId] || 0) + 1;
+    });
+    return map;
+  }, [expenses]);
+
   if (!isFeatureEnabled("category-ranking")) return null;
+
   const ranked = [...catTotals].filter((c) => c.value > 0).sort((a, b) => b.value - a.value).slice(0, 5);
   if (!ranked.length) return null;
-  const total = ranked.reduce((s, c) => s + c.value, 0) || 1;
+
+  const grandTotal = catTotals.reduce((s, c) => s + c.value, 0) || 1;
+  const maxValue = ranked[0]?.value || 1;
+  const medals = ["🥇", "🥈", "🥉"];
+  const canFilter = isFeatureEnabled("category-filter") && typeof setFilterCategory === "function";
+  const topShare = Math.round((ranked[0].value / grandTotal) * 100);
+
+  function handleRowClick(catId) {
+    setFocusId((prev) => (prev === catId ? null : catId));
+    if (canFilter) {
+      setFilterCategory((prev) => (prev === catId ? "all" : catId));
+    }
+  }
+
   return (
     <div className="rounded-3xl bg-white/85 p-4 shadow-[var(--shadow-soft)]">
-      <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-ink-faint">分類排行榜（HKD）</p>
-      <ul className="space-y-2">
-        {ranked.map((c, i) => (
-          <li key={c.id} className="flex items-center gap-2">
-            <span className="w-5 text-xs font-bold text-ink-faint">{i + 1}</span>
-            <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: c.color }} />
-            <span className="min-w-0 flex-1 truncate text-sm font-semibold">{c.label}</span>
-            <span className="text-sm font-bold text-jade-deep">{formatHkd(c.value)}</span>
-            {showPct && isFeatureEnabled("category-pct-labels") && (
-              <span className="w-10 text-right text-[11px] text-ink-faint">{Math.round((c.value / total) * 100)}%</span>
-            )}
-          </li>
-        ))}
+      <div className="mb-3 flex items-start justify-between gap-2">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-ink-faint">分類排行榜（HKD）</p>
+          <p className="mt-1 text-[11px] text-ink-faint">
+            {ranked[0].label} 佔 {topShare}% · Top {ranked.length}
+          </p>
+        </div>
+        {canFilter && filterCategory !== "all" && (
+          <button
+            type="button"
+            onClick={() => {
+              setFilterCategory("all");
+              setFocusId(null);
+            }}
+            className="shrink-0 rounded-full bg-jade-soft px-2.5 py-1 text-[10px] font-bold text-jade-deep"
+          >
+            清除篩選
+          </button>
+        )}
+      </div>
+      <ul className="space-y-3">
+        {ranked.map((c, i) => {
+          const pct = Math.round((c.value / grandTotal) * 100);
+          const barPct = Math.max(6, Math.round((c.value / maxValue) * 100));
+          const txCount = countByCat[c.id] || 0;
+          const avgPerTx = txCount > 0 ? c.value / txCount : 0;
+          const isActive = focusId === c.id || filterCategory === c.id;
+          return (
+            <li key={c.id}>
+              <button
+                type="button"
+                onClick={() => handleRowClick(c.id)}
+                className={`w-full rounded-2xl px-2 py-2 text-left transition active:scale-[0.99] ${isActive ? "bg-jade-soft/60 ring-1 ring-jade/20" : "hover:bg-shell/80"}`}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="w-5 shrink-0 text-center text-xs font-bold text-ink-faint">
+                    {i < 3 ? medals[i] : i + 1}
+                  </span>
+                  <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: c.color }} />
+                  <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">{c.label}</span>
+                  <span className="text-sm font-bold text-jade-deep">{formatHkd(c.value)}</span>
+                  {(showPct || isFeatureEnabled("category-pct-labels")) && (
+                    <span className="w-9 shrink-0 text-right text-[11px] font-semibold text-ink-faint">{pct}%</span>
+                  )}
+                </div>
+                <div className="mt-2 ml-7 h-2 overflow-hidden rounded-full bg-[#efe9e0]">
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{
+                      width: `${barPct}%`,
+                      background: `linear-gradient(90deg, ${c.color}cc, ${c.color})`,
+                    }}
+                  />
+                </div>
+                {isActive && (
+                  <p className="mt-2 ml-7 text-[11px] font-semibold text-ink-soft">
+                    {txCount} 筆 · 平均每筆 {formatHkd(avgPerTx)}
+                    {canFilter ? " · 已篩選列表" : " · 點擊展開"}
+                  </p>
+                )}
+              </button>
+            </li>
+          );
+        })}
       </ul>
+      {canFilter && (
+        <p className="mt-3 text-center text-[10px] text-ink-faint">點擊分類可篩選下方支出列表</p>
+      )}
       {isFeatureEnabled("avg-per-category") && (
         <p className="mt-3 text-[11px] text-ink-faint">提示：排行以本旅程累計計算，日均可按旅程日數自行估算。</p>
       )}
