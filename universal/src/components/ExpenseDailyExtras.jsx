@@ -417,6 +417,48 @@ export function PinnedBudgetAlert({ budgetPct, remaining, currency }) {
   );
 }
 
+export function FilteredCategorySummary({ trip, expenses, filterCategory, totalSpent }) {
+  if (!isFeatureEnabled("category-filter") || filterCategory === "all") return null;
+
+  const cat = EXPENSE_CATEGORIES.find((c) => c.id === filterCategory);
+  const filtered = expenses.filter((e) => e.categoryId === filterCategory);
+  if (!filtered.length) return null;
+
+  const sum = filtered.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+  const sumHkd = filtered.reduce((s, e) => s + (Number(e.baseAmount) || 0), 0);
+  const pct = totalSpent > 0 ? Math.round((sum / totalSpent) * 100) : 0;
+
+  return (
+    <div
+      className="rounded-2xl border border-jade/20 bg-jade-soft/50 px-4 py-3 shadow-[var(--shadow-soft)]"
+      style={{ borderLeftColor: cat?.color || "#0d9488", borderLeftWidth: 4 }}
+    >
+      <div className="flex items-center gap-2">
+        <span className="h-3 w-3 shrink-0 rounded-full" style={{ background: cat?.color || "#64748b" }} />
+        <p className="text-sm font-bold text-ink">{cat?.label || filterCategory}</p>
+        <span className="ml-auto rounded-full bg-white/80 px-2 py-0.5 text-[10px] font-bold text-jade-deep">
+          篩選中
+        </span>
+      </div>
+      <div className="mt-2 grid grid-cols-3 gap-2 text-center">
+        <div>
+          <p className="text-[10px] font-semibold text-ink-faint">筆數</p>
+          <p className="text-sm font-black text-ink">{filtered.length}</p>
+        </div>
+        <div>
+          <p className="text-[10px] font-semibold text-ink-faint">小計</p>
+          <p className="text-sm font-black text-ink">{formatMoney(sum, trip.targetCurrency)}</p>
+        </div>
+        <div>
+          <p className="text-[10px] font-semibold text-ink-faint">佔總支出</p>
+          <p className="text-sm font-black text-jade-deep">{pct}%</p>
+        </div>
+      </div>
+      <p className="mt-1.5 text-center text-[10px] text-ink-faint">{formatHkd(sumHkd)}</p>
+    </div>
+  );
+}
+
 export function ExpenseListExtras({
   trip,
   expenses,
@@ -433,6 +475,14 @@ export function ExpenseListExtras({
   const showToggle = isFeatureEnabled("hkd-list-toggle");
   const showDup = isFeatureEnabled("duplicate-last");
   const showExport = isFeatureEnabled("export-csv");
+
+  const countByCat = useMemo(() => {
+    const map = {};
+    expenses.forEach((e) => {
+      map[e.categoryId] = (map[e.categoryId] || 0) + 1;
+    });
+    return map;
+  }, [expenses]);
 
   if (!showFilter && !showSearch && !showToggle && !showDup && !showExport) return null;
 
@@ -491,24 +541,36 @@ export function ExpenseListExtras({
         />
       )}
       {showFilter && (
-        <div className="flex flex-wrap gap-1.5">
-          <button
-            type="button"
-            onClick={() => setFilterCategory("all")}
-            className={`min-h-9 rounded-2xl border px-3 text-xs font-bold ${filterCategory === "all" ? "badge-active border-transparent" : "border-jade/15 bg-mist text-ink-soft"}`}
-          >
-            全部
-          </button>
-          {EXPENSE_CATEGORIES.map((c) => (
+        <div>
+          <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-ink-faint">分類篩選</p>
+          <div className="flex flex-wrap gap-1.5">
             <button
-              key={c.id}
               type="button"
-              onClick={() => setFilterCategory(c.id)}
-              className={`min-h-9 rounded-2xl border px-3 text-xs font-bold ${filterCategory === c.id ? "badge-active border-transparent" : "border-jade/15 bg-mist text-ink-soft"}`}
+              onClick={() => setFilterCategory("all")}
+              className={`min-h-9 rounded-2xl border px-3 text-xs font-bold ${filterCategory === "all" ? "badge-active border-transparent" : "border-jade/15 bg-mist text-ink-soft"}`}
             >
-              {c.label}
+              全部
+              <span className="ml-1 opacity-70">({expenses.length})</span>
             </button>
-          ))}
+            {EXPENSE_CATEGORIES.map((c) => {
+              const cnt = countByCat[c.id] || 0;
+              if (cnt === 0) return null;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setFilterCategory(c.id)}
+                  className={`min-h-9 rounded-2xl border px-3 text-xs font-bold ${filterCategory === c.id ? "badge-active border-transparent" : "border-jade/15 bg-mist text-ink-soft"}`}
+                >
+                  <span className="inline-flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full" style={{ background: c.color }} />
+                    {c.label}
+                    <span className="opacity-70">({cnt})</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

@@ -35,6 +35,12 @@
       "id": "category-ranking",
       "title": "分類排行榜",
       "description": "按金額列出 Top 分類，快速搵到最大使費類別。"
+    },
+    {
+      "date": "2026-08-22",
+      "id": "category-filter",
+      "title": "分類快速篩選",
+      "description": "支出列表可按分類過濾，翻舊帳更快。"
     }
   ]
 }

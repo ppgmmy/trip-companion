@@ -11,6 +11,7 @@ import {
   EmptyStateTip,
   ExpenseInsightCards,
   ExpenseListExtras,
+  FilteredCategorySummary,
   PinnedBudgetAlert,
   QuickAddHelpers,
 } from "./ExpenseDailyExtras";
@@ -330,6 +331,13 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
         showHkd={showHkd}
         setShowHkd={setShowHkd}
         onDuplicateLast={duplicateLast}
+      />
+
+      <FilteredCategorySummary
+        trip={trip}
+        expenses={expenses}
+        filterCategory={filterCategory}
+        totalSpent={totalSpent}
       />
 
       <ul className="space-y-2">
