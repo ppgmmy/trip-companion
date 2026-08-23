@@ -41,6 +41,12 @@
       "id": "category-filter",
       "title": "分類快速篩選",
       "description": "支出列表可按分類過濾，翻舊帳更快。"
+    },
+    {
+      "date": "2026-08-23",
+      "id": "week-over-week",
+      "title": "本週 vs 上週",
+      "description": "對比本週同上一週總支出，睇消費有冇升溫。"
     }
   ]
 }

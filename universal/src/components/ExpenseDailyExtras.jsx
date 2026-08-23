@@ -43,6 +43,108 @@ function inRange(dateId, start, end) {
   return dateId >= start && dateId <= end;
 }
 
+function formatWeekRange(bounds) {
+  const [, m1, d1] = bounds.start.split("-");
+  const [, m2, d2] = bounds.end.split("-");
+  return `${Number(m1)}/${Number(d1)}–${Number(m2)}/${Number(d2)}`;
+}
+
+function WeekOverWeekCompare({ trip, expenses }) {
+  const thisWeek = weekBounds(0);
+  const lastWeek = weekBounds(1);
+
+  const thisWeekExpenses = expenses.filter((e) => inRange(e.date, thisWeek.start, thisWeek.end));
+  const lastWeekExpenses = expenses.filter((e) => inRange(e.date, lastWeek.start, lastWeek.end));
+
+  const thisWeekSum = thisWeekExpenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+  const lastWeekSum = lastWeekExpenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+  const wod = thisWeekSum - lastWeekSum;
+  const pctChange = lastWeekSum > 0 ? Math.round((wod / lastWeekSum) * 100) : null;
+
+  const thisWeekDays = new Set(thisWeekExpenses.map((e) => e.date)).size;
+  const lastWeekDays = new Set(lastWeekExpenses.map((e) => e.date)).size;
+  const thisDailyAvg = thisWeekDays > 0 ? thisWeekSum / thisWeekDays : 0;
+  const lastDailyAvg = lastWeekDays > 0 ? lastWeekSum / lastWeekDays : 0;
+
+  const max = Math.max(thisWeekSum, lastWeekSum, 1);
+  const thisBar = Math.max(8, Math.round((thisWeekSum / max) * 100));
+  const lastBar = Math.max(8, Math.round((lastWeekSum / max) * 100));
+
+  const hasAny = thisWeekSum > 0 || lastWeekSum > 0;
+
+  let insight = "記一筆就會開始週對週比較";
+  if (hasAny) {
+    if (lastWeekSum === 0 && thisWeekSum > 0) insight = "上週未有記帳，本週係起點";
+    else if (wod > 0) insight = pctChange !== null && pctChange >= 20 ? "消費升溫，留意剩餘預算" : "本週比上週使費多";
+    else if (wod < 0) insight = pctChange !== null && pctChange <= -20 ? "本週明顯收油，做得好" : "本週比上週慳咗";
+    else insight = "兩週使費持平";
+  }
+
+  return (
+    <div className="rounded-3xl bg-white/85 p-4 shadow-[var(--shadow-soft)]">
+      <div className="mb-3 flex items-start justify-between gap-2">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-ink-faint">本週 vs 上週</p>
+          <p className="mt-1 text-[11px] text-ink-faint">
+            本週 {formatWeekRange(thisWeek)} · 上週 {formatWeekRange(lastWeek)}
+          </p>
+        </div>
+        {hasAny && wod !== 0 && (
+          <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${wod > 0 ? "bg-coral/15 text-coral" : "bg-jade-soft text-jade-deep"}`}>
+            {wod > 0 ? "↑" : "↓"} {pctChange !== null ? `${Math.abs(pctChange)}%` : formatMoney(Math.abs(wod), trip.targetCurrency)}
+          </span>
+        )}
+      </div>
+
+      <div className="space-y-3">
+        <div>
+          <div className="mb-1 flex items-baseline justify-between gap-2">
+            <p className="text-[11px] font-semibold text-ink-soft">本週</p>
+            <p className="font-display text-sm font-bold text-ink">{formatMoney(thisWeekSum, trip.targetCurrency)}</p>
+          </div>
+          <div className="h-3 overflow-hidden rounded-full bg-[#efe9e0]">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-jade to-[#34d399] transition-all duration-700"
+              style={{ width: `${thisBar}%` }}
+            />
+          </div>
+          {thisWeekDays > 0 && (
+            <p className="mt-1 text-[10px] text-ink-faint">
+              {thisWeekDays} 日有記帳 · 日均 {formatMoney(thisDailyAvg, trip.targetCurrency)}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <div className="mb-1 flex items-baseline justify-between gap-2">
+            <p className="text-[11px] font-semibold text-ink-soft">上週</p>
+            <p className="font-display text-sm font-bold text-ink-faint">{formatMoney(lastWeekSum, trip.targetCurrency)}</p>
+          </div>
+          <div className="h-3 overflow-hidden rounded-full bg-[#efe9e0]">
+            <div
+              className="h-full rounded-full bg-[#94a3b8] transition-all duration-700"
+              style={{ width: `${lastBar}%` }}
+            />
+          </div>
+          {lastWeekDays > 0 && (
+            <p className="mt-1 text-[10px] text-ink-faint">
+              {lastWeekDays} 日有記帳 · 日均 {formatMoney(lastDailyAvg, trip.targetCurrency)}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <p className={`mt-3 text-center text-xs font-semibold ${wod > 0 ? "text-coral" : wod < 0 ? "text-jade" : "text-ink-faint"}`}>
+        {hasAny && wod !== 0
+          ? wod > 0
+            ? `比上週多 ${formatMoney(wod, trip.targetCurrency)}${pctChange !== null ? `（+${pctChange}%）` : ""}`
+            : `比上週少 ${formatMoney(-wod, trip.targetCurrency)}${pctChange !== null ? `（${pctChange}%）` : ""}`
+          : insight}
+      </p>
+    </div>
+  );
+}
+
 function Sparkline({ values, dateIds, formatValue }) {
   const [activeIdx, setActiveIdx] = useState(null);
   const max = Math.max(...values, 1);
@@ -189,11 +291,6 @@ export function ExpenseInsightCards({ trip, expenses, days, totalSpent, budget, 
   const sparkValues = useMemo(() => sparkDays.map((d) => d.value), [sparkDays]);
   const sparkDateIds = useMemo(() => sparkDays.map((d) => d.dateId), [sparkDays]);
 
-  const thisWeek = weekBounds(0);
-  const lastWeek = weekBounds(1);
-  const thisWeekSum = expenses.filter((e) => inRange(e.date, thisWeek.start, thisWeek.end)).reduce((s, e) => s + (Number(e.amount) || 0), 0);
-  const lastWeekSum = expenses.filter((e) => inRange(e.date, lastWeek.start, lastWeek.end)).reduce((s, e) => s + (Number(e.amount) || 0), 0);
-
   const idealDaily = budget > 0 ? budget / Math.max(1, days) : 0;
   const actualDaily = totalSpent / Math.max(1, days);
 
@@ -242,19 +339,6 @@ export function ExpenseInsightCards({ trip, expenses, days, totalSpent, budget, 
     );
   }
 
-  if (isFeatureEnabled("week-over-week")) {
-    const wod = thisWeekSum - lastWeekSum;
-    cards.push(
-      <div key="wow" className="rounded-2xl bg-white/85 p-3 shadow-[var(--shadow-soft)]">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-faint">本週 vs 上週</p>
-        <p className="mt-1 font-display text-lg font-bold">{formatMoney(thisWeekSum, trip.targetCurrency)}</p>
-        <p className={`text-xs font-semibold ${wod > 0 ? "text-coral" : wod < 0 ? "text-jade" : "text-ink-faint"}`}>
-          {wod === 0 ? "同上週持平" : wod > 0 ? `多 ${formatMoney(wod, trip.targetCurrency)}` : `少 ${formatMoney(-wod, trip.targetCurrency)}`}
-        </p>
-      </div>,
-    );
-  }
-
   if (isFeatureEnabled("pace-vs-ideal") && budget > 0) {
     cards.push(
       <div key="pace" className="rounded-2xl bg-white/85 p-3 shadow-[var(--shadow-soft)]">
@@ -280,6 +364,10 @@ export function ExpenseInsightCards({ trip, expenses, days, totalSpent, budget, 
   return (
     <>
       {cards.length > 0 && <div className="grid grid-cols-2 gap-2">{cards}</div>}
+
+      {isFeatureEnabled("week-over-week") && (
+        <WeekOverWeekCompare trip={trip} expenses={expenses} />
+      )}
 
       {isFeatureEnabled("seven-day-sparkline") && (
         <div className="rounded-3xl bg-white/85 p-4 shadow-[var(--shadow-soft)]">
