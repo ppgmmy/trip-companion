@@ -665,28 +665,139 @@ export function ExpenseListExtras({
   );
 }
 
-export function QuickAddHelpers({ amount, setAmount, note, setNote, currency }) {
+const QUICK_AMOUNT_PRESETS = {
+  JPY: [
+    { n: 500, label: "小食" },
+    { n: 1000, label: "午餐" },
+    { n: 2000, label: "晚餐" },
+    { n: 5000, label: "交通" },
+  ],
+  THB: [
+    { n: 50, label: "小食" },
+    { n: 100, label: "午餐" },
+    { n: 200, label: "晚餐" },
+    { n: 500, label: "購物" },
+  ],
+  TWD: [
+    { n: 100, label: "小食" },
+    { n: 200, label: "午餐" },
+    { n: 500, label: "晚餐" },
+    { n: 1000, label: "購物" },
+  ],
+  KRW: [
+    { n: 5000, label: "小食" },
+    { n: 10000, label: "午餐" },
+    { n: 20000, label: "晚餐" },
+    { n: 50000, label: "購物" },
+  ],
+  default: [
+    { n: 10, label: "小食" },
+    { n: 20, label: "午餐" },
+    { n: 50, label: "晚餐" },
+    { n: 100, label: "購物" },
+  ],
+};
+
+function AmountChip({ n, label, currency, rate, active, onPick }) {
+  const hkdHint = rate > 0 ? formatHkd(n * rate).replace("HK$", "") : null;
+  return (
+    <button
+      type="button"
+      onClick={() => onPick(n)}
+      className={`flex min-h-11 min-w-[4.5rem] flex-col items-center justify-center rounded-2xl border px-2.5 py-1.5 text-xs font-bold transition active:scale-95 ${active ? "badge-active border-transparent shadow-sm" : "border-jade/15 bg-mist text-ink-soft"}`}
+    >
+      <span className="font-display text-sm leading-tight">{formatMoney(n, currency).replace(/\s/g, "")}</span>
+      {label && <span className="mt-0.5 text-[9px] font-semibold opacity-80">{label}</span>}
+      {hkdHint && !active && <span className="mt-0.5 text-[8px] font-normal opacity-60">≈{hkdHint}</span>}
+    </button>
+  );
+}
+
+export function QuickAddHelpers({ amount, setAmount, note, setNote, currency, expenses = [], rate = 0 }) {
   const chips = isFeatureEnabled("quick-amount-chips");
   const templates = isFeatureEnabled("note-templates");
+  const [addMode, setAddMode] = useState(false);
+
+  const presets = QUICK_AMOUNT_PRESETS[currency] || QUICK_AMOUNT_PRESETS.default;
+  const notes = ["午餐", "晚餐", "咖啡", "交通", "超市", "手信"];
+
+  const recentAmounts = useMemo(() => {
+    const seen = new Set();
+    const result = [];
+    for (let i = expenses.length - 1; i >= 0 && result.length < 4; i -= 1) {
+      const n = Number(expenses[i].amount);
+      if (Number.isFinite(n) && n > 0 && !seen.has(n)) {
+        seen.add(n);
+        result.push(n);
+      }
+    }
+    return result;
+  }, [expenses]);
+
+  function pickAmount(n) {
+    if (addMode) {
+      const current = Number(amount) || 0;
+      setAmount(String(Math.round((current + n) * 100) / 100));
+    } else {
+      setAmount(String(n));
+    }
+  }
+
   if (!chips && !templates) return null;
 
-  const amounts = currency === "JPY" ? [500, 1000, 2000, 5000] : currency === "THB" ? [50, 100, 200, 500] : currency === "TWD" ? [100, 200, 500, 1000] : [10, 20, 50, 100];
-  const notes = ["午餐", "晚餐", "咖啡", "交通", "超市", "手信"];
+  const currentNum = Number(amount) || 0;
 
   return (
     <div className="space-y-2">
       {chips && (
-        <div className="flex flex-wrap gap-1.5">
-          {amounts.map((n) => (
+        <div className="rounded-2xl border border-jade/10 bg-shell/60 p-3">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-faint">快速金額</p>
             <button
-              key={n}
               type="button"
-              onClick={() => setAmount(String(n))}
-              className={`min-h-9 rounded-2xl border px-3 text-xs font-bold ${String(amount) === String(n) ? "badge-active border-transparent" : "border-jade/15 bg-mist text-ink-soft"}`}
+              onClick={() => setAddMode((v) => !v)}
+              aria-pressed={addMode}
+              className={`min-h-8 rounded-xl px-2.5 text-[10px] font-bold transition ${addMode ? "bg-jade text-white" : "bg-white text-ink-soft ring-1 ring-jade/15"}`}
             >
-              {n}
+              {addMode ? "＋累加中" : "累加模式"}
             </button>
-          ))}
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {presets.map(({ n, label }) => (
+              <AmountChip
+                key={`preset-${n}`}
+                n={n}
+                label={label}
+                currency={currency}
+                rate={rate}
+                active={!addMode && String(amount) === String(n)}
+                onPick={pickAmount}
+              />
+            ))}
+          </div>
+          {recentAmounts.length > 0 && (
+            <>
+              <p className="mb-1.5 mt-2.5 text-[10px] font-semibold text-ink-faint">最近用過</p>
+              <div className="flex flex-wrap gap-1.5">
+                {recentAmounts.map((n) => (
+                  <AmountChip
+                    key={`recent-${n}`}
+                    n={n}
+                    label={null}
+                    currency={currency}
+                    rate={rate}
+                    active={!addMode && String(amount) === String(n)}
+                    onPick={pickAmount}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+          {addMode && currentNum > 0 && (
+            <p className="mt-2 text-center text-[10px] font-semibold text-jade-deep">
+              再撳金額會加到 {formatMoney(currentNum, currency)}
+            </p>
+          )}
         </div>
       )}
       {templates && (

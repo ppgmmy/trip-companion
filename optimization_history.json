@@ -47,6 +47,12 @@
       "id": "week-over-week",
       "title": "本週 vs 上週",
       "description": "對比本週同上一週總支出，睇消費有冇升溫。"
+    },
+    {
+      "date": "2026-08-24",
+      "id": "quick-amount-chips",
+      "title": "快速金額按鈕",
+      "description": "新增開支時一撳常用金額，少打字。"
     }
   ]
 }

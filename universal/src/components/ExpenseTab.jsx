@@ -295,7 +295,15 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
             </button>
           ))}
         </div>
-        <QuickAddHelpers amount={amount} setAmount={setAmount} note={note} setNote={setNote} currency={trip.targetCurrency} />
+        <QuickAddHelpers
+          amount={amount}
+          setAmount={setAmount}
+          note={note}
+          setNote={setNote}
+          currency={trip.targetCurrency}
+          expenses={expenses}
+          rate={rate}
+        />
         <div className="grid grid-cols-[1fr_1.2fr] gap-2">
           <input
             type="number"
