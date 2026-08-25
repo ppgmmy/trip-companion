@@ -22,6 +22,12 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(req.url);
   if (url.origin !== location.origin) return;
 
+  // Stock dashboard is proxied; never cache it.
+  if (url.pathname === "/market" || url.pathname.startsWith("/market/")) {
+    event.respondWith(fetch(req));
+    return;
+  }
+
   // Network-first for pages so updates land quickly; fall back to cache offline.
   if (req.mode === "navigate" || url.pathname.endsWith(".html") || url.pathname.endsWith("/")) {
     event.respondWith(

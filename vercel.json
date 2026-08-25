@@ -5,7 +5,18 @@
   "redirects": [
     { "source": "/taipei", "destination": "/taipei/", "permanent": true },
     { "source": "/tokyo", "destination": "/tokyo/", "permanent": true },
-    { "source": "/thailand", "destination": "/thailand/", "permanent": true }
+    { "source": "/thailand", "destination": "/thailand/", "permanent": true },
+    { "source": "/market", "destination": "/market/", "permanent": false }
+  ],
+  "rewrites": [
+    {
+      "source": "/market/",
+      "destination": "https://hk-stock-dashboard.vercel.app/"
+    },
+    {
+      "source": "/market/:path*",
+      "destination": "https://hk-stock-dashboard.vercel.app/:path*"
+    }
   ],
   "headers": [
     {
