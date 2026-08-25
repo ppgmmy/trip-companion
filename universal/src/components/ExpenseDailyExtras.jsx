@@ -554,6 +554,8 @@ export function ExpenseListExtras({
   setFilterCategory,
   search,
   setSearch,
+  searchMatchCount = 0,
+  searchPoolCount = 0,
   showHkd,
   setShowHkd,
   onDuplicateLast,
@@ -621,12 +623,36 @@ export function ExpenseListExtras({
         )}
       </div>
       {showSearch && (
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="搜尋備註…"
-          className="h-11 w-full rounded-2xl border border-jade/15 bg-mist px-3 text-sm outline-none ring-jade focus:ring-2"
-        />
+        <div className="space-y-1.5">
+          <div className="relative">
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-ink-faint" aria-hidden="true">
+              🔍
+            </span>
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="搜尋備註、分類或金額…"
+              className="h-11 w-full rounded-2xl border border-jade/15 bg-mist pl-9 pr-10 text-sm outline-none ring-jade focus:ring-2"
+            />
+            {search.trim() && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-xl text-ink-faint transition active:scale-90"
+                aria-label="清除搜尋"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+          {search.trim() && (
+            <p className="px-1 text-[11px] font-semibold text-ink-soft">
+              {searchMatchCount > 0
+                ? `找到 ${searchMatchCount} 筆${searchPoolCount !== searchMatchCount ? `（共 ${searchPoolCount} 筆可搜）` : ""}`
+                : `搵唔到「${search.trim()}」— 試分類名或金額`}
+            </p>
+          )}
+        </div>
       )}
       {showFilter && (
         <div>

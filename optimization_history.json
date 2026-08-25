@@ -53,6 +53,12 @@
       "id": "quick-amount-chips",
       "title": "快速金額按鈕",
       "description": "新增開支時一撳常用金額，少打字。"
+    },
+    {
+      "date": "2026-08-25",
+      "id": "expense-search",
+      "title": "備註搜尋",
+      "description": "用關鍵字搜尋備註，即刻搵到特定消費。"
     }
   ]
 }

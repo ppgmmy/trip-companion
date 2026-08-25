@@ -75,17 +75,25 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
     return ["W1", "W2", "W3", "W4", "W5"].map((id) => ({ id, label: id, value: weeks[id] || 0 }));
   }, [expenses, trip.startDate]);
 
-  const visibleExpenses = useMemo(() => {
+  const categoryFilteredExpenses = useMemo(() => {
     let list = expenses.slice().reverse();
     if (isFeatureEnabled("category-filter") && filterCategory !== "all") {
       list = list.filter((e) => e.categoryId === filterCategory);
     }
-    if (isFeatureEnabled("expense-search") && search.trim()) {
-      const q = search.trim().toLowerCase();
-      list = list.filter((e) => (e.note || "").toLowerCase().includes(q));
-    }
     return list;
-  }, [expenses, filterCategory, search]);
+  }, [expenses, filterCategory]);
+
+  const visibleExpenses = useMemo(() => {
+    if (!isFeatureEnabled("expense-search") || !search.trim()) return categoryFilteredExpenses;
+    const q = search.trim().toLowerCase();
+    return categoryFilteredExpenses.filter((e) => {
+      const cat = EXPENSE_CATEGORIES.find((c) => c.id === e.categoryId);
+      const noteMatch = (e.note || "").toLowerCase().includes(q);
+      const catMatch = (cat?.label || e.categoryId || "").toLowerCase().includes(q);
+      const amountMatch = String(e.amount).includes(q) || String(Math.round(e.baseAmount || 0)).includes(q);
+      return noteMatch || catMatch || amountMatch;
+    });
+  }, [categoryFilteredExpenses, search]);
 
   function addExpense(e) {
     e.preventDefault();
@@ -336,6 +344,8 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
         setFilterCategory={setFilterCategory}
         search={search}
         setSearch={setSearch}
+        searchMatchCount={visibleExpenses.length}
+        searchPoolCount={categoryFilteredExpenses.length}
         showHkd={showHkd}
         setShowHkd={setShowHkd}
         onDuplicateLast={duplicateLast}

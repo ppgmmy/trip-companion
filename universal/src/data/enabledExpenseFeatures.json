@@ -8,9 +8,10 @@
     "category-ranking",
     "category-filter",
     "week-over-week",
-    "quick-amount-chips"
+    "quick-amount-chips",
+    "expense-search"
   ],
-  "updatedAt": "2026-08-24T02:01:27.855Z",
-  "lastFeatureId": "quick-amount-chips",
-  "lastTitle": "快速金額按鈕"
+  "updatedAt": "2026-08-25T02:03:53.725Z",
+  "lastFeatureId": "expense-search",
+  "lastTitle": "備註搜尋"
 }
