@@ -59,6 +59,12 @@
       "id": "expense-search",
       "title": "備註搜尋",
       "description": "用關鍵字搜尋備註，即刻搵到特定消費。"
+    },
+    {
+      "date": "2026-08-26",
+      "id": "pace-vs-ideal",
+      "title": "理想日均對比",
+      "description": "實際日均 vs 預算理想日均，清楚知超前定落後。"
     }
   ]
 }

@@ -269,7 +269,104 @@ export function DailyOptBanner() {
   );
 }
 
-export function ExpenseInsightCards({ trip, expenses, days, totalSpent, budget, remainingDays }) {
+function PaceVsIdealPanel({ trip, totalSpent, budget, days, elapsedDays, remainingDays }) {
+  if (!isFeatureEnabled("pace-vs-ideal") || budget <= 0) return null;
+
+  const idealDaily = budget / Math.max(1, days);
+  const actualPace = totalSpent / Math.max(1, elapsedDays);
+  const expectedByNow = idealDaily * elapsedDays;
+  const delta = totalSpent - expectedByNow;
+  const paceRatio = idealDaily > 0 ? actualPace / idealDaily : 0;
+  const pacePct = Math.round(paceRatio * 100);
+  const maxBar = Math.max(actualPace, idealDaily, 1);
+  const actualBar = Math.max(8, Math.round((actualPace / maxBar) * 100));
+  const idealBar = Math.max(8, Math.round((idealDaily / maxBar) * 100));
+
+  let statusLabel = "節奏健康";
+  let statusClass = "bg-jade-soft text-jade-deep";
+  let insight = "消費節奏同預算理想日均一致，繼續保持";
+  let insightClass = "text-jade";
+
+  if (paceRatio < 0.85) {
+    statusLabel = "慳油中";
+    statusClass = "bg-jade-soft text-jade-deep";
+    insight = `比理想節奏慳咗 ${formatMoney(-delta, trip.targetCurrency)}，仲有餘力`;
+    insightClass = "text-jade";
+  } else if (paceRatio > 1.2) {
+    statusLabel = "消費偏快";
+    statusClass = "bg-coral/15 text-coral";
+    insight = `已超前理想 ${formatMoney(delta, trip.targetCurrency)}，剩 ${remainingDays} 日要收油`;
+    insightClass = "text-coral";
+  } else if (paceRatio > 1.05) {
+    statusLabel = "略為超前";
+    statusClass = "bg-[#fef3c7] text-[#b45309]";
+    insight = `比理想多 ${formatMoney(delta, trip.targetCurrency)}，留意後半段預算`;
+    insightClass = "text-[#b45309]";
+  }
+
+  return (
+    <div className="rounded-3xl bg-white/85 p-4 shadow-[var(--shadow-soft)]">
+      <div className="mb-3 flex items-start justify-between gap-2">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-ink-faint">理想日均對比</p>
+          <p className="mt-1 text-[11px] text-ink-faint">
+            第 {elapsedDays}/{days} 日 · 理想 {formatMoney(idealDaily, trip.targetCurrency)}/日
+          </p>
+        </div>
+        <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${statusClass}`}>
+          {statusLabel} · {pacePct}%
+        </span>
+      </div>
+
+      <div className="space-y-3">
+        <div>
+          <div className="mb-1 flex items-baseline justify-between gap-2">
+            <p className="text-[11px] font-semibold text-ink-soft">實際日均（已過 {elapsedDays} 日）</p>
+            <p className={`font-display text-sm font-bold ${paceRatio > 1.05 ? "text-coral" : paceRatio < 0.85 ? "text-jade" : "text-ink"}`}>
+              {formatMoney(actualPace, trip.targetCurrency)}
+            </p>
+          </div>
+          <div className="h-3 overflow-hidden rounded-full bg-[#efe9e0]">
+            <div
+              className={`h-full rounded-full transition-all duration-700 ${paceRatio > 1.05 ? "bg-gradient-to-r from-[#f59e0b] to-coral" : "bg-gradient-to-r from-jade to-[#34d399]"}`}
+              style={{ width: `${actualBar}%` }}
+            />
+          </div>
+        </div>
+
+        <div>
+          <div className="mb-1 flex items-baseline justify-between gap-2">
+            <p className="text-[11px] font-semibold text-ink-soft">理想日均（全程平均）</p>
+            <p className="font-display text-sm font-bold text-ink-faint">{formatMoney(idealDaily, trip.targetCurrency)}</p>
+          </div>
+          <div className="h-3 overflow-hidden rounded-full bg-[#efe9e0]">
+            <div
+              className="h-full rounded-full bg-[#94a3b8] transition-all duration-700"
+              style={{ width: `${idealBar}%` }}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-2 text-center">
+        <div className="rounded-2xl bg-shell px-2 py-2.5">
+          <p className="text-[10px] font-semibold text-ink-faint">至今應使</p>
+          <p className="mt-0.5 text-sm font-black text-ink">{formatMoney(expectedByNow, trip.targetCurrency)}</p>
+        </div>
+        <div className="rounded-2xl bg-shell px-2 py-2.5">
+          <p className="text-[10px] font-semibold text-ink-faint">實際已使</p>
+          <p className={`mt-0.5 text-sm font-black ${delta > 0 ? "text-coral" : delta < 0 ? "text-jade" : "text-ink"}`}>
+            {formatMoney(totalSpent, trip.targetCurrency)}
+          </p>
+        </div>
+      </div>
+
+      <p className={`mt-3 text-center text-xs font-semibold ${insightClass}`}>{insight}</p>
+    </div>
+  );
+}
+
+export function ExpenseInsightCards({ trip, expenses, days, totalSpent, budget, elapsedDays = 1, remainingDays }) {
   const todayId = toDateId(new Date());
   const yesterdayId = shiftDateId(todayId, -1);
   const todaySum = sumByDate(expenses, todayId);
@@ -290,9 +387,6 @@ export function ExpenseInsightCards({ trip, expenses, days, totalSpent, budget, 
   }, [expenses, todayId]);
   const sparkValues = useMemo(() => sparkDays.map((d) => d.value), [sparkDays]);
   const sparkDateIds = useMemo(() => sparkDays.map((d) => d.dateId), [sparkDays]);
-
-  const idealDaily = budget > 0 ? budget / Math.max(1, days) : 0;
-  const actualDaily = totalSpent / Math.max(1, days);
 
   const topDay = useMemo(() => {
     const map = {};
@@ -339,18 +433,6 @@ export function ExpenseInsightCards({ trip, expenses, days, totalSpent, budget, 
     );
   }
 
-  if (isFeatureEnabled("pace-vs-ideal") && budget > 0) {
-    cards.push(
-      <div key="pace" className="rounded-2xl bg-white/85 p-3 shadow-[var(--shadow-soft)]">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-faint">實際日均 vs 理想</p>
-        <p className="mt-1 font-display text-lg font-bold">{formatMoney(actualDaily, trip.targetCurrency)}</p>
-        <p className={`text-xs font-semibold ${actualDaily > idealDaily ? "text-coral" : "text-jade"}`}>
-          理想 {formatMoney(idealDaily, trip.targetCurrency)}／日 · 剩 {remainingDays} 日
-        </p>
-      </div>,
-    );
-  }
-
   if (isFeatureEnabled("top-spender-day") && topDay) {
     cards.push(
       <div key="topday" className="rounded-2xl bg-white/85 p-3 shadow-[var(--shadow-soft)]">
@@ -364,6 +446,15 @@ export function ExpenseInsightCards({ trip, expenses, days, totalSpent, budget, 
   return (
     <>
       {cards.length > 0 && <div className="grid grid-cols-2 gap-2">{cards}</div>}
+
+      <PaceVsIdealPanel
+        trip={trip}
+        totalSpent={totalSpent}
+        budget={budget}
+        days={days}
+        elapsedDays={elapsedDays}
+        remainingDays={remainingDays}
+      />
 
       {isFeatureEnabled("week-over-week") && (
         <WeekOverWeekCompare trip={trip} expenses={expenses} />

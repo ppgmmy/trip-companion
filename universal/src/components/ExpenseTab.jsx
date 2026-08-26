@@ -234,6 +234,7 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
         days={days}
         totalSpent={totalSpent}
         budget={budget}
+        elapsedDays={elapsedDays}
         remainingDays={remainingDays}
       />
 

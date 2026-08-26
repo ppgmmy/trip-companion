@@ -9,9 +9,10 @@
     "category-filter",
     "week-over-week",
     "quick-amount-chips",
-    "expense-search"
+    "expense-search",
+    "pace-vs-ideal"
   ],
-  "updatedAt": "2026-08-25T02:03:53.725Z",
-  "lastFeatureId": "expense-search",
-  "lastTitle": "備註搜尋"
+  "updatedAt": "2026-08-26T02:02:55.004Z",
+  "lastFeatureId": "pace-vs-ideal",
+  "lastTitle": "理想日均對比"
 }
