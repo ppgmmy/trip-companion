@@ -49,6 +49,208 @@ function formatWeekRange(bounds) {
   return `${Number(m1)}/${Number(d1)}–${Number(m2)}/${Number(d2)}`;
 }
 
+function formatShortDate(dateId) {
+  if (!dateId) return "—";
+  const [, m, d] = dateId.split("-");
+  return `${Number(m)}/${Number(d)}`;
+}
+
+function tripDayNumber(tripStartDate, dateId) {
+  const start = new Date(`${tripStartDate}T12:00:00`).getTime();
+  const target = new Date(`${dateId}T12:00:00`).getTime();
+  if (!Number.isFinite(start) || !Number.isFinite(target)) return null;
+  return Math.max(1, Math.floor((target - start) / 86400000) + 1);
+}
+
+function TopSpenderDayPanel({ trip, expenses }) {
+  const analysis = useMemo(() => {
+    const byDate = {};
+    expenses.forEach((e) => {
+      if (!e.date) return;
+      if (!byDate[e.date]) byDate[e.date] = { amount: 0, hkd: 0, items: [] };
+      byDate[e.date].amount += Number(e.amount) || 0;
+      byDate[e.date].hkd += Number(e.baseAmount) || 0;
+      byDate[e.date].items.push(e);
+    });
+
+    const entries = Object.entries(byDate).map(([date, data]) => ({ date, ...data }));
+    if (!entries.length) return null;
+
+    entries.sort((a, b) => b.amount - a.amount);
+    const top = entries[0];
+    const second = entries[1] || null;
+    const activeDays = entries.length;
+    const totalAmount = entries.reduce((s, e) => s + e.amount, 0);
+    const avgActiveDay = totalAmount / activeDays;
+    const aboveAvg = top.amount - avgActiveDay;
+    const pctAboveAvg = avgActiveDay > 0 ? Math.round((aboveAvg / avgActiveDay) * 100) : 0;
+    const shareOfTrip = totalAmount > 0 ? Math.round((top.amount / totalAmount) * 100) : 0;
+
+    const catMap = {};
+    top.items.forEach((e) => {
+      catMap[e.categoryId] = (catMap[e.categoryId] || 0) + (Number(e.amount) || 0);
+    });
+    const topCats = Object.entries(catMap)
+      .map(([id, amt]) => ({
+        id,
+        label: EXPENSE_CATEGORIES.find((c) => c.id === id)?.label || id,
+        color: EXPENSE_CATEGORIES.find((c) => c.id === id)?.color || "#64748b",
+        amount: amt,
+      }))
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 3);
+
+    const top5 = entries.slice(0, 5);
+    const maxBar = top.amount || 1;
+    const dayNum = tripDayNumber(trip.startDate, top.date);
+
+    let insight = "留意呢日消費模式，之後可以提早收油";
+    if (pctAboveAvg >= 80) insight = `比平均日高出 ${pctAboveAvg}%，值得檢視當日大額消費`;
+    else if (pctAboveAvg >= 40) insight = "明顯高於平均，睇吓係咪一次性大買";
+    else if (shareOfTrip >= 35) insight = `單日佔全程 ${shareOfTrip}%，集中消費日`;
+    else if (second && top.amount - second.amount < top.amount * 0.1) insight = "同第二高日差唔多，消費較平均分散";
+
+    return {
+      top,
+      second,
+      avgActiveDay,
+      aboveAvg,
+      pctAboveAvg,
+      shareOfTrip,
+      topCats,
+      top5,
+      maxBar,
+      dayNum,
+      activeDays,
+      insight,
+    };
+  }, [expenses, trip.startDate]);
+
+  if (!isFeatureEnabled("top-spender-day") || !analysis) return null;
+
+  const { top, second, avgActiveDay, aboveAvg, pctAboveAvg, shareOfTrip, topCats, top5, maxBar, dayNum, activeDays, insight } = analysis;
+  const topBar = Math.max(12, Math.round((top.amount / maxBar) * 100));
+  const avgBar = Math.max(8, Math.round((avgActiveDay / maxBar) * 100));
+
+  return (
+    <div className="rounded-3xl bg-white/85 p-4 shadow-[var(--shadow-soft)]">
+      <div className="mb-3 flex items-start justify-between gap-2">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-ink-faint">爆煲日提示</p>
+          <p className="mt-1 text-[11px] text-ink-faint">
+            {formatShortDate(top.date)}
+            {dayNum ? ` · 旅程第 ${dayNum} 日` : ""}
+            {` · ${top.items.length} 筆`}
+          </p>
+        </div>
+        <span className="shrink-0 rounded-full bg-coral/15 px-2.5 py-1 text-[11px] font-bold text-coral">
+          最高日
+        </span>
+      </div>
+
+      <div className="mb-3 text-center">
+        <p className="font-display text-2xl font-black text-coral">{formatMoney(top.amount, trip.targetCurrency)}</p>
+        <p className="mt-0.5 text-[11px] font-semibold text-ink-faint">{formatHkd(top.hkd)}</p>
+      </div>
+
+      <div className="space-y-3">
+        <div>
+          <div className="mb-1 flex items-baseline justify-between gap-2">
+            <p className="text-[11px] font-semibold text-ink-soft">爆煲日</p>
+            <p className="font-display text-sm font-bold text-coral">{formatMoney(top.amount, trip.targetCurrency)}</p>
+          </div>
+          <div className="h-3 overflow-hidden rounded-full bg-[#efe9e0]">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-[#f59e0b] to-coral transition-all duration-700"
+              style={{ width: `${topBar}%` }}
+            />
+          </div>
+        </div>
+
+        <div>
+          <div className="mb-1 flex items-baseline justify-between gap-2">
+            <p className="text-[11px] font-semibold text-ink-soft">有記帳日平均（{activeDays} 日）</p>
+            <p className="font-display text-sm font-bold text-ink-faint">{formatMoney(avgActiveDay, trip.targetCurrency)}</p>
+          </div>
+          <div className="h-3 overflow-hidden rounded-full bg-[#efe9e0]">
+            <div
+              className="h-full rounded-full bg-[#94a3b8] transition-all duration-700"
+              style={{ width: `${avgBar}%` }}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+        <div className="rounded-2xl bg-shell px-2 py-2.5">
+          <p className="text-[10px] font-semibold text-ink-faint">高出平均</p>
+          <p className="mt-0.5 text-sm font-black text-coral">
+            {aboveAvg > 0 ? `+${formatMoney(aboveAvg, trip.targetCurrency)}` : "—"}
+          </p>
+        </div>
+        <div className="rounded-2xl bg-shell px-2 py-2.5">
+          <p className="text-[10px] font-semibold text-ink-faint">高出 %</p>
+          <p className="mt-0.5 text-sm font-black text-coral">{pctAboveAvg > 0 ? `+${pctAboveAvg}%` : "—"}</p>
+        </div>
+        <div className="rounded-2xl bg-shell px-2 py-2.5">
+          <p className="text-[10px] font-semibold text-ink-faint">佔全程</p>
+          <p className="mt-0.5 text-sm font-black text-ink">{shareOfTrip}%</p>
+        </div>
+      </div>
+
+      {topCats.length > 0 && (
+        <div className="mt-3 rounded-2xl bg-shell/80 px-3 py-2.5">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-faint">當日 Top 分類</p>
+          <ul className="mt-2 space-y-1.5">
+            {topCats.map((c, i) => (
+              <li key={c.id} className="flex items-center gap-2 text-xs">
+                <span className="w-4 shrink-0 text-center font-bold text-ink-faint">{i + 1}</span>
+                <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: c.color }} />
+                <span className="min-w-0 flex-1 truncate font-semibold text-ink">{c.label}</span>
+                <span className="font-bold text-ink-soft">{formatMoney(c.amount, trip.targetCurrency)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {top5.length > 1 && (
+        <div className="mt-3">
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-ink-faint">支出最高 5 日</p>
+          <div className="flex items-end justify-between gap-1">
+            {top5.map((d, i) => {
+              const h = Math.max(16, Math.round((d.amount / maxBar) * 48));
+              const isTop = i === 0;
+              return (
+                <div key={d.date} className="flex min-w-0 flex-1 flex-col items-center gap-1">
+                  <span className={`text-[8px] font-bold ${isTop ? "text-coral" : "text-ink-faint"}`}>
+                    {formatMoney(d.amount, trip.targetCurrency).replace(/[^\d.,]/g, "").slice(0, 5)}
+                  </span>
+                  <div
+                    className={`w-full max-w-[2.5rem] rounded-t-lg transition-all duration-500 ${isTop ? "bg-gradient-to-t from-coral to-[#f59e0b]" : "bg-[#cbd5e1]"}`}
+                    style={{ height: `${h}px` }}
+                  />
+                  <span className={`text-[9px] ${isTop ? "font-bold text-coral" : "text-ink-faint"}`}>
+                    {formatShortDate(d.date)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {second && (
+        <p className="mt-2 text-center text-[10px] text-ink-faint">
+          第二高：{formatShortDate(second.date)} · {formatMoney(second.amount, trip.targetCurrency)}
+        </p>
+      )}
+
+      <p className="mt-3 text-center text-xs font-semibold text-coral">{insight}</p>
+    </div>
+  );
+}
+
 function WeekOverWeekCompare({ trip, expenses }) {
   const thisWeek = weekBounds(0);
   const lastWeek = weekBounds(1);
@@ -388,17 +590,6 @@ export function ExpenseInsightCards({ trip, expenses, days, totalSpent, budget, 
   const sparkValues = useMemo(() => sparkDays.map((d) => d.value), [sparkDays]);
   const sparkDateIds = useMemo(() => sparkDays.map((d) => d.dateId), [sparkDays]);
 
-  const topDay = useMemo(() => {
-    const map = {};
-    expenses.forEach((e) => {
-      map[e.date] = (map[e.date] || 0) + (Number(e.amount) || 0);
-    });
-    const entries = Object.entries(map);
-    if (!entries.length) return null;
-    entries.sort((a, b) => b[1] - a[1]);
-    return { date: entries[0][0], amount: entries[0][1] };
-  }, [expenses]);
-
   const cards = [];
 
   if (isFeatureEnabled("today-vs-yesterday")) {
@@ -433,19 +624,11 @@ export function ExpenseInsightCards({ trip, expenses, days, totalSpent, budget, 
     );
   }
 
-  if (isFeatureEnabled("top-spender-day") && topDay) {
-    cards.push(
-      <div key="topday" className="rounded-2xl bg-white/85 p-3 shadow-[var(--shadow-soft)]">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-faint">爆煲日</p>
-        <p className="mt-1 font-display text-lg font-bold">{topDay.date}</p>
-        <p className="text-xs text-coral">當日使咗 {formatMoney(topDay.amount, trip.targetCurrency)}</p>
-      </div>,
-    );
-  }
-
   return (
     <>
       {cards.length > 0 && <div className="grid grid-cols-2 gap-2">{cards}</div>}
+
+      <TopSpenderDayPanel trip={trip} expenses={expenses} />
 
       <PaceVsIdealPanel
         trip={trip}

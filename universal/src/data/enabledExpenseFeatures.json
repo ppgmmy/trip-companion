@@ -13,7 +13,11 @@
     "pace-vs-ideal",
     "top-spender-day"
   ],
+<<<<<<< HEAD
   "updatedAt": "2026-08-27T02:01:39.366Z",
+=======
+  "updatedAt": "2026-08-27T02:05:00.000Z",
+>>>>>>> 77a169e (feat(daily): enable top-spender-day with full spending spike analysis panel)
   "lastFeatureId": "top-spender-day",
   "lastTitle": "爆煲日提示"
 }
