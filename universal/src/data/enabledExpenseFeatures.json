@@ -10,9 +10,10 @@
     "week-over-week",
     "quick-amount-chips",
     "expense-search",
-    "pace-vs-ideal"
+    "pace-vs-ideal",
+    "top-spender-day"
   ],
-  "updatedAt": "2026-08-26T02:02:55.004Z",
-  "lastFeatureId": "pace-vs-ideal",
-  "lastTitle": "理想日均對比"
+  "updatedAt": "2026-08-27T02:01:39.366Z",
+  "lastFeatureId": "top-spender-day",
+  "lastTitle": "爆煲日提示"
 }

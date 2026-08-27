@@ -65,6 +65,12 @@
       "id": "pace-vs-ideal",
       "title": "理想日均對比",
       "description": "實際日均 vs 預算理想日均，清楚知超前定落後。"
+    },
+    {
+      "date": "2026-08-27",
+      "id": "top-spender-day",
+      "title": "爆煲日提示",
+      "description": "標出使費最高嘅日子，避免重蹈覆轍。"
     }
   ]
 }
