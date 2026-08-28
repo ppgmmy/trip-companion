@@ -11,6 +11,7 @@ import {
   EmptyStateTip,
   ExpenseInsightCards,
   ExpenseListExtras,
+  ExportCsvPanel,
   FilteredCategorySummary,
   PinnedBudgetAlert,
   QuickAddHelpers,
@@ -337,6 +338,8 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
           記入（鎖定匯率）
         </button>
       </form>
+
+      <ExportCsvPanel trip={trip} expenses={expenses} filterCategory={filterCategory} />
 
       <ExpenseListExtras
         trip={trip}

@@ -71,6 +71,12 @@
       "id": "top-spender-day",
       "title": "爆煲日提示",
       "description": "標出使費最高嘅日子，避免重蹈覆轍。"
+    },
+    {
+      "date": "2026-08-28",
+      "id": "export-csv",
+      "title": "匯出 CSV",
+      "description": "一鍵匯出本旅程開支清單，方便試算表分析。"
     }
   ]
 }

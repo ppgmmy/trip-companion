@@ -62,6 +62,214 @@ function tripDayNumber(tripStartDate, dateId) {
   return Math.max(1, Math.floor((target - start) / 86400000) + 1);
 }
 
+function escapeCsvCell(val) {
+  const s = String(val ?? "");
+  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
+
+function buildExpenseCsv({ trip, expenses, includeSummary = true }) {
+  const rows = [];
+  rows.push(["# 旅程", trip.city || trip.id || "trip"]);
+  rows.push(["# 貨幣", trip.targetCurrency]);
+  rows.push(["# 匯出日期", toDateId(new Date())]);
+  rows.push(["# 筆數", expenses.length]);
+  rows.push([]);
+
+  rows.push(["date", "category", "note", "amount", "currency", "hkd", "rate"]);
+  expenses.forEach((e) => {
+    const cat = EXPENSE_CATEGORIES.find((c) => c.id === e.categoryId);
+    rows.push([
+      e.date,
+      cat?.label || e.categoryId,
+      e.note || "",
+      e.amount,
+      trip.targetCurrency,
+      Math.round(Number(e.baseAmount) || 0),
+      e.storedRate ?? "",
+    ]);
+  });
+
+  if (includeSummary && expenses.length) {
+    const catMap = {};
+    expenses.forEach((e) => {
+      if (!catMap[e.categoryId]) catMap[e.categoryId] = { count: 0, hkd: 0 };
+      catMap[e.categoryId].count += 1;
+      catMap[e.categoryId].hkd += Number(e.baseAmount) || 0;
+    });
+    const totalHkd = Object.values(catMap).reduce((s, c) => s + c.hkd, 0);
+    const totalAmount = expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+
+    rows.push([]);
+    rows.push(["# 分類摘要"]);
+    rows.push(["category", "count", "total_local", "total_hkd", "pct"]);
+    Object.entries(catMap)
+      .sort((a, b) => b[1].hkd - a[1].hkd)
+      .forEach(([id, data]) => {
+        const cat = EXPENSE_CATEGORIES.find((c) => c.id === id);
+        const catAmount = expenses
+          .filter((e) => e.categoryId === id)
+          .reduce((s, e) => s + (Number(e.amount) || 0), 0);
+        const pct = totalHkd > 0 ? Math.round((data.hkd / totalHkd) * 100) : 0;
+        rows.push([cat?.label || id, data.count, catAmount, Math.round(data.hkd), `${pct}%`]);
+      });
+    rows.push([]);
+    rows.push(["# 總計", expenses.length, totalAmount, Math.round(totalHkd)]);
+  }
+
+  const content = rows.map((r) => r.map(escapeCsvCell).join(",")).join("\r\n");
+  return `\uFEFF${content}`;
+}
+
+function downloadCsv(content, filename) {
+  const blob = new Blob([content], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export function ExportCsvPanel({ trip, expenses, filterCategory = "all" }) {
+  const [scope, setScope] = useState("all");
+  const [includeSummary, setIncludeSummary] = useState(true);
+  const [justExported, setJustExported] = useState(false);
+
+  const hasFilter = filterCategory !== "all";
+  const filterCat = EXPENSE_CATEGORIES.find((c) => c.id === filterCategory);
+  const filteredCount = useMemo(
+    () => (hasFilter ? expenses.filter((e) => e.categoryId === filterCategory).length : 0),
+    [expenses, hasFilter, filterCategory],
+  );
+
+  const exportList = useMemo(() => {
+    if (scope === "filtered" && hasFilter) {
+      return expenses.filter((e) => e.categoryId === filterCategory);
+    }
+    return expenses;
+  }, [expenses, scope, hasFilter, filterCategory]);
+
+  const stats = useMemo(() => {
+    const dates = exportList.map((e) => e.date).filter(Boolean).sort();
+    const total = exportList.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+    const totalHkd = exportList.reduce((s, e) => s + (Number(e.baseAmount) || 0), 0);
+    const cats = new Set(exportList.map((e) => e.categoryId)).size;
+    return {
+      count: exportList.length,
+      dateFrom: dates[0] || "—",
+      dateTo: dates[dates.length - 1] || "—",
+      total,
+      totalHkd,
+      cats,
+    };
+  }, [exportList]);
+
+  if (!isFeatureEnabled("export-csv") || !expenses.length) return null;
+
+  function handleExport() {
+    if (!exportList.length) return;
+    const csv = buildExpenseCsv({ trip, expenses: exportList, includeSummary });
+    const slug = (trip.city || "trip").replace(/\s+/g, "-").toLowerCase();
+    const scopeTag = scope === "filtered" && hasFilter ? `-${filterCategory}` : "";
+    downloadCsv(csv, `${slug}-expenses${scopeTag}-${toDateId(new Date())}.csv`);
+    setJustExported(true);
+    setTimeout(() => setJustExported(false), 3000);
+  }
+
+  return (
+    <div className="rounded-3xl bg-white/85 p-4 shadow-[var(--shadow-soft)]">
+      <div className="mb-3 flex items-start justify-between gap-2">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-ink-faint">匯出 CSV</p>
+          <p className="mt-1 text-[11px] text-ink-faint">
+            Excel 相容 · UTF-8 · 含旅程摘要
+          </p>
+        </div>
+        {justExported && (
+          <span className="shrink-0 rounded-full bg-jade-soft px-2.5 py-1 text-[11px] font-bold text-jade-deep">
+            ✓ 已下載
+          </span>
+        )}
+      </div>
+
+      <div className="grid grid-cols-3 gap-2 text-center">
+        <div className="rounded-2xl bg-shell px-2 py-2.5">
+          <p className="text-[10px] font-semibold text-ink-faint">筆數</p>
+          <p className="mt-0.5 text-sm font-black text-ink">{stats.count}</p>
+        </div>
+        <div className="rounded-2xl bg-shell px-2 py-2.5">
+          <p className="text-[10px] font-semibold text-ink-faint">日期範圍</p>
+          <p className="mt-0.5 text-xs font-black text-ink">
+            {stats.dateFrom === stats.dateTo
+              ? formatShortDate(stats.dateFrom)
+              : `${formatShortDate(stats.dateFrom)}–${formatShortDate(stats.dateTo)}`}
+          </p>
+        </div>
+        <div className="rounded-2xl bg-shell px-2 py-2.5">
+          <p className="text-[10px] font-semibold text-ink-faint">分類</p>
+          <p className="mt-0.5 text-sm font-black text-ink">{stats.cats}</p>
+        </div>
+      </div>
+
+      <div className="mt-3 rounded-2xl bg-jade-soft/40 px-3 py-2.5 text-center">
+        <p className="text-[10px] font-semibold text-ink-faint">匯出小計</p>
+        <p className="mt-0.5 font-display text-lg font-black text-jade-deep">
+          {formatMoney(stats.total, trip.targetCurrency)}
+        </p>
+        <p className="text-[11px] text-ink-faint">{formatHkd(stats.totalHkd)}</p>
+      </div>
+
+      {hasFilter && (
+        <div className="mt-3">
+          <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-ink-faint">匯出範圍</p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setScope("all")}
+              className={`min-h-10 flex-1 rounded-2xl border text-xs font-bold transition active:scale-[0.98] ${scope === "all" ? "badge-active border-transparent" : "border-jade/15 bg-mist text-ink-soft"}`}
+            >
+              全部 ({expenses.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setScope("filtered")}
+              className={`min-h-10 flex-1 rounded-2xl border text-xs font-bold transition active:scale-[0.98] ${scope === "filtered" ? "badge-active border-transparent" : "border-jade/15 bg-mist text-ink-soft"}`}
+            >
+              <span className="inline-flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full" style={{ background: filterCat?.color || "#64748b" }} />
+                {filterCat?.label || filterCategory} ({filteredCount})
+              </span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      <label className="mt-3 flex min-h-11 cursor-pointer items-center gap-2 rounded-2xl bg-shell px-3">
+        <input
+          type="checkbox"
+          checked={includeSummary}
+          onChange={(e) => setIncludeSummary(e.target.checked)}
+          className="h-4 w-4 rounded border-jade/30 text-jade focus:ring-jade"
+        />
+        <span className="text-xs font-semibold text-ink-soft">附加分類摘要（試算表分析更方便）</span>
+      </label>
+
+      <button
+        type="button"
+        onClick={handleExport}
+        disabled={!exportList.length}
+        className="mt-3 min-h-12 w-full rounded-2xl bg-gradient-to-r from-jade to-[#34d399] font-bold text-white shadow-[var(--shadow-soft)] transition active:scale-[0.98] disabled:opacity-50"
+      >
+        ⬇ 下載 CSV{scope === "filtered" && hasFilter ? `（${filterCat?.label || filterCategory}）` : ""}
+      </button>
+      <p className="mt-2 text-center text-[10px] text-ink-faint">
+        含 BOM 標記，Excel / Google Sheets 可直接開啟中文備註
+      </p>
+    </div>
+  );
+}
+
 function TopSpenderDayPanel({ trip, expenses }) {
   const analysis = useMemo(() => {
     const byDate = {};
@@ -838,7 +1046,6 @@ export function ExpenseListExtras({
   const showSearch = isFeatureEnabled("expense-search");
   const showToggle = isFeatureEnabled("hkd-list-toggle");
   const showDup = isFeatureEnabled("duplicate-last");
-  const showExport = isFeatureEnabled("export-csv");
 
   const countByCat = useMemo(() => {
     const map = {};
@@ -848,39 +1055,11 @@ export function ExpenseListExtras({
     return map;
   }, [expenses]);
 
-  if (!showFilter && !showSearch && !showToggle && !showDup && !showExport) return null;
-
-  function exportCsv() {
-    const rows = [["date", "category", "note", "amount", "currency", "hkd", "rate"]];
-    expenses.forEach((e) => {
-      const cat = EXPENSE_CATEGORIES.find((c) => c.id === e.categoryId);
-      rows.push([
-        e.date,
-        cat?.label || e.categoryId,
-        `"${(e.note || "").replace(/"/g, '""')}"`,
-        e.amount,
-        trip.targetCurrency,
-        e.baseAmount,
-        e.storedRate,
-      ]);
-    });
-    const blob = new Blob([rows.map((r) => r.join(",")).join("\n")], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${trip.city || "trip"}-expenses.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
+  if (!showFilter && !showSearch && !showToggle && !showDup) return null;
 
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap gap-2">
-        {showExport && (
-          <button type="button" onClick={exportCsv} className="min-h-10 rounded-2xl border border-jade/15 bg-white px-3 text-xs font-bold text-ink">
-            ⬇ 匯出 CSV
-          </button>
-        )}
         {showDup && expenses.length > 0 && (
           <button type="button" onClick={onDuplicateLast} className="min-h-10 rounded-2xl border border-jade/15 bg-white px-3 text-xs font-bold text-ink">
             ⎘ 複製上一筆

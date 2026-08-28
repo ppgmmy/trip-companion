@@ -11,13 +11,10 @@
     "quick-amount-chips",
     "expense-search",
     "pace-vs-ideal",
-    "top-spender-day"
+    "top-spender-day",
+    "export-csv"
   ],
-<<<<<<< HEAD
-  "updatedAt": "2026-08-27T02:01:39.366Z",
-=======
-  "updatedAt": "2026-08-27T02:05:00.000Z",
->>>>>>> 77a169e (feat(daily): enable top-spender-day with full spending spike analysis panel)
-  "lastFeatureId": "top-spender-day",
-  "lastTitle": "爆煲日提示"
+  "updatedAt": "2026-08-28T02:12:37.588Z",
+  "lastFeatureId": "export-csv",
+  "lastTitle": "匯出 CSV"
 }
