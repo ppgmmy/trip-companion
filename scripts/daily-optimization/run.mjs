@@ -45,7 +45,12 @@ function parseBacklog(source) {
 
 function readJson(path, fallback) {
   if (!existsSync(path)) return fallback;
-  return JSON.parse(readFileSync(path, "utf8"));
+  const raw = readFileSync(path, "utf8");
+  if (/^<<<<<<<|^=======|^>>>>>>>/m.test(raw)) {
+    console.error(`[daily-opt] ${path} 含有未解決的 git 衝突標記，請先修復。`);
+    process.exit(1);
+  }
+  return JSON.parse(raw);
 }
 
 function writeJson(path, data) {

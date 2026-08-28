@@ -1,12 +1,11 @@
-# 每日開支儀表板優化：多重觸發 + 冪等（同一香港日最多啟用一項）
+# 每日開支儀表板優化：冪等（同一香港日最多啟用一項）
 #
-# 觸發來源（任一成功即可）：
-# 1. Vercel Cron 02:00 UTC（香港 10:00 所在小時）
-# 2. Vercel Cron 03:00 UTC（香港 11:00 備援）
-# 3. GitHub schedule：02:07 / 02:23 / 02:41 UTC ≈ HKT 10:07/10:23/10:41
-# 4. workflow_dispatch（手動）
+# 觸發來源：
+# 1. GitHub schedule：02:07 / 02:23 / 02:41 UTC ≈ HKT 10:07/10:23/10:41（唯一寫入者）
+# 2. Vercel Cron → workflow_dispatch（備援，唔直接 commit，避免雙寫衝突）
+# 3. workflow_dispatch（手動）
 #
-# 無限期運作：無終止日；backlog 用盡時當日 skip，之後追加項目即可繼續啟用。
+# 無限期運作；backlog 用盡時當日 skip，末尾追加新功能即可繼續。
 
 name: Daily Optimization
 
@@ -32,11 +31,15 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+
+      - name: Sync latest main
+        run: git pull --rebase origin main
 
       - name: Run daily optimization script
         id: opt
@@ -78,4 +81,10 @@ jobs:
           EOF
           )"
 
-          git push origin HEAD:${{ github.ref_name }}
+          for attempt in 1 2 3; do
+            git pull --rebase origin main && git push origin HEAD:${{ github.ref_name }} && exit 0
+            echo "Push conflict, retry $attempt..."
+            sleep 3
+          done
+          echo "Push failed after retries"
+          exit 1

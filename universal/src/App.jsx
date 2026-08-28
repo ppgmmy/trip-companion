@@ -135,7 +135,6 @@ export default function App() {
                 fxStatus={fxStatus}
                 onRefreshRate={refreshRate}
                 onApplyManualRate={applyManualRate}
-                onOpenTool={openTool}
               />
             )}
             {activeTab === "tools" && (
