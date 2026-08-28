@@ -70,17 +70,24 @@ function main() {
   }
 
   const backlog = parseBacklog(readFileSync(BACKLOG_PATH, "utf8"));
+  if (!backlog.length) {
+    console.error("[daily-opt] backlog 為空，無法繼續。");
+    process.exit(1);
+  }
+
   const enabledState = readJson(ENABLED_PATH, { enabled: [], updatedAt: null });
   const used = new Set([
     ...history.entries.map((e) => e.id),
     ...(enabledState.enabled ?? []),
   ]);
-  const next = backlog.find((f) => !used.has(f.id));
+  let next = backlog.find((f) => !used.has(f.id));
+  let isCycle = false;
 
   if (!next) {
-    console.log("[daily-opt] backlog 已全部啟用。");
-    writeFileSync(join(ROOT, ".daily-opt-skip"), "exhausted\n", "utf8");
-    process.exit(0);
+    // 全部啟用後進入無限期輪播：每日仍更新公告同 history，永不停止
+    next = backlog[history.entries.length % backlog.length];
+    isCycle = true;
+    console.log(`[daily-opt] 進入無限期輪播（第 ${Math.floor(history.entries.length / backlog.length) + 1} 輪）：${next.id} — ${next.title}`);
   }
 
   const nextEnabled = {
@@ -97,11 +104,12 @@ function main() {
         id: next.id,
         title: next.title,
         description: next.description,
+        ...(isCycle ? { cycle: true } : {}),
       },
     ],
   };
 
-  console.log(`[daily-opt] 啟用功能：${next.id} — ${next.title}`);
+  console.log(`[daily-opt] ${isCycle ? "輪播" : "啟用"}功能：${next.id} — ${next.title}`);
   console.log(`[daily-opt] ${next.description}`);
 
   if (dryRun) {

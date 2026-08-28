@@ -2,8 +2,8 @@
  * 開支儀表板每日自動優化 backlog。
  * GitHub Actions / Vercel Cron 會依序啟用尚未開啟的功能。
  *
- * 無限期：無終止日。已上線 id 順序與內容勿改；只可在末尾追加。
- * backlog 用盡時當日 skip，追加新項目後翌日會繼續啟用。
+ * 無限期：無終止日、無「完結日」。已上線 id 順序與內容勿改；只可在末尾追加。
+ * 全部啟用後會自動進入輪播，每日仍更新公告同 history，永不停止。
  */
 
 /** @typedef {'convenience' | 'analysis' | 'stickiness'} ExpenseOptPillar */
