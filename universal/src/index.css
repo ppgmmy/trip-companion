@@ -95,3 +95,8 @@ body {
   background: rgb(13 148 136 / 0.3);
   border-radius: 999px;
 }
+
+.expense-panel-rail {
+  /* Keep chips readable while scrolling within a panel */
+  box-shadow: 0 8px 20px -16px rgb(18 33 31 / 0.35);
+}
