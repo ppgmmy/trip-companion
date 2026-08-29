@@ -12,9 +12,10 @@
     "expense-search",
     "pace-vs-ideal",
     "top-spender-day",
-    "export-csv"
+    "export-csv",
+    "note-templates"
   ],
-  "updatedAt": "2026-08-28T02:12:37.588Z",
-  "lastFeatureId": "export-csv",
-  "lastTitle": "匯出 CSV"
+  "updatedAt": "2026-08-29T02:01:45.882Z",
+  "lastFeatureId": "note-templates",
+  "lastTitle": "備註快捷模板"
 }

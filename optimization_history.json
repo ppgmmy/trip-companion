@@ -77,6 +77,12 @@
       "id": "export-csv",
       "title": "匯出 CSV",
       "description": "一鍵匯出本旅程開支清單，方便試算表分析。"
+    },
+    {
+      "date": "2026-08-29",
+      "id": "note-templates",
+      "title": "備註快捷模板",
+      "description": "午餐／交通／咖啡等常見備註一撳填入。"
     }
   ]
 }
