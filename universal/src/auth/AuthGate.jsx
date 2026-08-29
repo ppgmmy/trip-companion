@@ -182,13 +182,14 @@ function GoogleIcon() {
   );
 }
 
-/** Google OAuth 登入頁：撳掣 → 揀 Google 帳號 → 返回 */
+/** Google OAuth 登入頁：一入嚟自動跳去 Google 揀帳號 */
 function LoginScreen({ blockedReason }) {
   const { isLoaded, signIn } = useSignIn();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const autoStarted = useRef(false);
 
-  async function signInWithGoogle() {
+  const signInWithGoogle = useCallback(async () => {
     if (!signIn) return;
     setBusy(true);
     setError("");
@@ -204,8 +205,26 @@ function LoginScreen({ blockedReason }) {
       const msg = err?.errors?.[0]?.longMessage || err?.errors?.[0]?.message || err?.message || "無法啟動 Google 登入";
       setError(msg);
       setBusy(false);
+      try {
+        sessionStorage.setItem("tc_google_oauth_manual", "1");
+      } catch {}
     }
-  }
+  }, [signIn]);
+
+  // 一入 App 未登入 → 自動跳去 Google 帳號選擇（若用戶取消過就改為手動撳掣）
+  useEffect(() => {
+    if (!isLoaded || !signIn || autoStarted.current) return;
+    let skipped = false;
+    try {
+      skipped = sessionStorage.getItem("tc_google_oauth_manual") === "1";
+    } catch {}
+    if (skipped || blockedReason) return;
+    autoStarted.current = true;
+    const t = window.setTimeout(() => {
+      signInWithGoogle();
+    }, 250);
+    return () => window.clearTimeout(t);
+  }, [blockedReason, isLoaded, signIn, signInWithGoogle]);
 
   return (
     <div className="bg-travel relative flex min-h-dvh flex-col overflow-hidden">
@@ -220,13 +239,20 @@ function LoginScreen({ blockedReason }) {
           用 Google<br />登入
         </h1>
         <p className="mt-3 max-w-sm text-sm leading-relaxed text-ink-soft">
-          撳下面掣，跟住揀你要嘅 Google 帳號。登入後旅程同記帳會喺授權裝置之間同步。
+          {busy
+            ? "正跳去 Google，請揀你要用嘅帳號…"
+            : "一入嚟會自動開啟 Google 帳號選擇。揀完就入 App，資料會同步。"}
         </p>
 
         <div className="mt-8 rounded-[1.75rem] border border-jade/15 bg-white/90 p-5 shadow-[var(--shadow-soft)] backdrop-blur">
           <button
             type="button"
-            onClick={signInWithGoogle}
+            onClick={() => {
+              try {
+                sessionStorage.removeItem("tc_google_oauth_manual");
+              } catch {}
+              signInWithGoogle();
+            }}
             disabled={!isLoaded || busy}
             className="flex min-h-14 w-full items-center justify-center gap-3 rounded-2xl border border-[#dadce0] bg-white px-4 text-base font-bold text-[#3c4043] shadow-sm transition hover:bg-[#f8f9fa] active:scale-[0.98] disabled:opacity-60"
           >
@@ -235,7 +261,7 @@ function LoginScreen({ blockedReason }) {
           </button>
 
           <p className="mt-4 text-center text-[11px] leading-relaxed text-ink-faint">
-            會開啟 Google 帳號選擇畫面，揀完就返嚟呢度。
+            {busy ? "如果無自動跳轉，請再撳上面掣" : "或者手動撳掣再開 Google"}
           </p>
 
           {(error || blockedReason) && (
@@ -303,7 +329,11 @@ export function AuthGate({ children }) {
     if (!isSignedIn || !email) return;
     if (!isEmailAllowed(email)) {
       signOut();
+      return;
     }
+    try {
+      sessionStorage.removeItem("tc_google_oauth_manual");
+    } catch {}
   }, [email, isSignedIn, signOut]);
 
   useEffect(() => {

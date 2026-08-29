@@ -3,6 +3,7 @@
   "outputDirectory": "dist",
   "cleanUrls": true,
   "redirects": [
+    { "source": "/", "destination": "/universal/", "permanent": false },
     { "source": "/taipei", "destination": "/taipei/", "permanent": true },
     { "source": "/tokyo", "destination": "/tokyo/", "permanent": true },
     { "source": "/thailand", "destination": "/thailand/", "permanent": true },
