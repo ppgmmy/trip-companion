@@ -1028,7 +1028,7 @@ export function SevenDayTrendPanel({ trip, expenses }) {
   );
 }
 
-export function CategoryRanking({ catTotals, expenses, showPct, filterCategory, setFilterCategory }) {
+export function CategoryRanking({ catTotals, expenses, showPct, filterCategory, setFilterCategory, onJumpToLedger }) {
   const [focusId, setFocusId] = useState(null);
 
   const countByCat = useMemo(() => {
@@ -1055,6 +1055,9 @@ export function CategoryRanking({ catTotals, expenses, showPct, filterCategory, 
     if (canFilter) {
       setFilterCategory((prev) => (prev === catId ? "all" : catId));
     }
+    if (typeof onJumpToLedger === "function") {
+      onJumpToLedger(catId);
+    }
   }
 
   return (
@@ -1064,6 +1067,7 @@ export function CategoryRanking({ catTotals, expenses, showPct, filterCategory, 
           <p className="text-xs font-semibold uppercase tracking-wider text-ink-faint">邊類使得最多（港幣）</p>
           <p className="mt-1 text-[11px] text-ink-faint">
             {ranked[0].label} 佔 {topShare}% · Top {ranked.length}
+            {typeof onJumpToLedger === "function" ? " · 撳分類可去記帳睇清單" : ""}
           </p>
         </div>
         {canFilter && filterCategory !== "all" && (
@@ -1124,8 +1128,11 @@ export function CategoryRanking({ catTotals, expenses, showPct, filterCategory, 
           );
         })}
       </ul>
-      {canFilter && (
+      {canFilter && !onJumpToLedger && (
         <p className="mt-3 text-center text-[10px] text-ink-faint">點擊分類可篩選下方支出列表</p>
+      )}
+      {typeof onJumpToLedger === "function" && (
+        <p className="mt-3 text-center text-[10px] text-ink-faint">點擊分類 → 跳去記帳頁睇嗰類清單</p>
       )}
       {isFeatureEnabled("avg-per-category") && (
         <p className="mt-3 text-[11px] text-ink-faint">提示：排行以本旅程累計計算，日均可按旅程日數自行估算。</p>
@@ -1203,7 +1210,8 @@ export function ExpenseListExtras({
   const showFilter = isFeatureEnabled("category-filter");
   const showSearch = isFeatureEnabled("expense-search");
   const showToggle = isFeatureEnabled("hkd-list-toggle");
-  const showDup = isFeatureEnabled("duplicate-last");
+  // 記帳核心便利：複製上一筆一律可用（唔再等 daily flag）
+  const showDup = true;
 
   const countByCat = useMemo(() => {
     const map = {};

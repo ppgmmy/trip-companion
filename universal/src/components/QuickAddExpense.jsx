@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { EXPENSE_CATEGORIES, formatHkd, formatMoney } from "../data";
+import { EXPENSE_CATEGORIES, formatHkd, formatMoney, toDateId } from "../data";
 
 export default function QuickAddExpense({ trip, rate, onSave, onClose }) {
   const [categoryId, setCategoryId] = useState("food");
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
+  const [entryDate, setEntryDate] = useState(() => toDateId(new Date()));
 
   function save(e) {
     e.preventDefault();
@@ -17,7 +18,7 @@ export default function QuickAddExpense({ trip, rate, onSave, onClose }) {
       baseAmount: value * rate,
       storedRate: rate,
       note: note.trim() || EXPENSE_CATEGORIES.find((c) => c.id === categoryId)?.label || "開支",
-      date: new Date().toISOString().slice(0, 10),
+      date: entryDate || toDateId(new Date()),
       createdAt: Date.now(),
     });
     onClose();
@@ -63,6 +64,17 @@ export default function QuickAddExpense({ trip, rate, onSave, onClose }) {
             </button>
           ))}
         </div>
+        <label className="block">
+          <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-ink-faint">日期</span>
+          <input
+            type="date"
+            value={entryDate}
+            min={trip.startDate || undefined}
+            max={trip.endDate || undefined}
+            onChange={(e) => setEntryDate(e.target.value)}
+            className="h-11 w-full rounded-2xl border border-jade/15 bg-mist px-3 text-sm outline-none ring-jade focus:ring-2"
+          />
+        </label>
         <input
           value={note}
           onChange={(e) => setNote(e.target.value)}
