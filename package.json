@@ -9,5 +9,9 @@
     "build:universal": "npm --prefix universal ci && npm --prefix universal run build",
     "build": "npm run build:tokyo && npm run build:universal && node scripts/assemble.mjs",
     "start": "node server.js"
+  },
+  "dependencies": {
+    "@clerk/backend": "^3.16.13",
+    "@upstash/redis": "^1.38.3"
   }
 }
