@@ -3,6 +3,8 @@ import { EXPENSE_CATEGORIES, formatHkd, formatMoney, tripDays } from "../data";
 import { isFeatureEnabled } from "../data/featureFlags";
 import { BarChart, DoughnutChart } from "./Charts";
 import {
+  AnalysisSectionTitle,
+  AnalysisStory,
   CategoryRanking,
   DailyOptBanner,
   EmptyStateTip,
@@ -12,12 +14,12 @@ import {
   FilteredCategorySummary,
   PinnedBudgetAlert,
   QuickAddHelpers,
+  SevenDayTrendPanel,
 } from "./ExpenseDailyExtras";
 
 const PANELS = [
   { id: "overview", label: "概覽" },
-  { id: "insights", label: "洞察" },
-  { id: "charts", label: "圖表" },
+  { id: "analysis", label: "分析" },
   { id: "ledger", label: "記帳" },
 ];
 
@@ -38,6 +40,23 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
     if (el?.scrollIntoView) {
       el.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
     }
+  }, [panel]);
+
+  // 舊版「洞察／圖表」合併後，自動轉去「分析」
+  useEffect(() => {
+    try {
+      const legacy = sessionStorage.getItem("expense-panel-v1");
+      if (legacy === "insights" || legacy === "charts") {
+        setPanel("analysis");
+        sessionStorage.setItem("expense-panel-v1", "analysis");
+      }
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem("expense-panel-v1", panel);
+    } catch {}
   }, [panel]);
 
   const days = tripDays(trip);
@@ -72,6 +91,11 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
     return EXPENSE_CATEGORIES.map((c) => ({ ...c, value: map[c.id] || 0 }));
   }, [expenses]);
 
+  const topCat = useMemo(() => {
+    const ranked = [...catTotals].filter((c) => c.value > 0).sort((a, b) => b.value - a.value);
+    return ranked[0] || null;
+  }, [catTotals]);
+
   const weeklyTotals = useMemo(() => {
     const weeks = {};
     expenses.forEach((e) => {
@@ -79,8 +103,13 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
       const key = `W${Math.min(Math.max(1, w), 5)}`;
       weeks[key] = (weeks[key] || 0) + (Number(e.baseAmount) || 0);
     });
-    return ["W1", "W2", "W3", "W4", "W5"].map((id) => ({ id, label: id, value: weeks[id] || 0 }));
+    return ["W1", "W2", "W3", "W4", "W5"].map((id) => ({ id, label: `第${id.slice(1)}週`, value: weeks[id] || 0 }));
   }, [expenses, trip.startDate]);
+
+  const peakWeek = useMemo(() => {
+    const ranked = [...weeklyTotals].filter((w) => w.value > 0).sort((a, b) => b.value - a.value);
+    return ranked[0] || null;
+  }, [weeklyTotals]);
 
   const categoryFilteredExpenses = useMemo(() => {
     let list = expenses.slice().reverse();
@@ -140,6 +169,10 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
     cached: "使用快取",
     fallback: "離線預設",
   }[fxStatus] || "—";
+
+  const doughnutCenter = topCat
+    ? { label: "最多", value: topCat.label }
+    : { label: "分類", value: "—" };
 
   return (
     <div className="space-y-4">
@@ -203,13 +236,13 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
                   <div className={`h-full rounded-full transition-all duration-700 ${burnBar}`} style={{ width: `${Math.min(100, budgetPct)}%` }} />
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-2 text-center">
-                  <div className="rounded-2xl bg-shell px-2 py-2.5">
+                  <div className="rounded-2xl bg-[#f1f5f4] px-2 py-2.5">
                     <p className="text-[11px] font-semibold text-ink-faint">照而家速度全程預計</p>
                     <p className={`mt-0.5 text-sm font-black ${projectedTotal > budget ? "text-coral" : "text-ink"}`}>
                       {formatMoney(projectedTotal, trip.targetCurrency)}
                     </p>
                   </div>
-                  <div className="rounded-2xl bg-shell px-2 py-2.5">
+                  <div className="rounded-2xl bg-[#f1f5f4] px-2 py-2.5">
                     <p className="text-[11px] font-semibold text-ink-faint">剩餘 {remainingDays} 日每日可用</p>
                     <p className="mt-0.5 text-sm font-black text-ink">{formatMoney(dailyAllowance, trip.targetCurrency)}</p>
                   </div>
@@ -244,23 +277,51 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
           </>
         )}
 
-        {panel === "insights" && (
-          <ExpenseInsightCards
-            trip={trip}
-            expenses={expenses}
-            days={days}
-            totalSpent={totalSpent}
-            budget={budget}
-            elapsedDays={elapsedDays}
-            remainingDays={remainingDays}
-          />
-        )}
-
-        {panel === "charts" && (
+        {panel === "analysis" && (
           <>
+            <AnalysisStory
+              trip={trip}
+              expenses={expenses}
+              days={days}
+              totalSpent={totalSpent}
+              budget={budget}
+              elapsedDays={elapsedDays}
+              remainingDays={remainingDays}
+            />
+
+            <AnalysisSectionTitle
+              eyebrow="01 · 而家狀態"
+              title="今日同節奏點樣？"
+              hint="用白話對比今日、理想日均，同有冇爆煲日。"
+            />
+            <ExpenseInsightCards
+              trip={trip}
+              expenses={expenses}
+              days={days}
+              totalSpent={totalSpent}
+              budget={budget}
+              elapsedDays={elapsedDays}
+              remainingDays={remainingDays}
+              showTrend={false}
+            />
+
+            <AnalysisSectionTitle
+              eyebrow="02 · 錢去咗邊"
+              title="最多使喺邊類？"
+              hint={topCat ? `而家最多係「${topCat.label}」。撳排行可篩選記帳列表。` : "記幾筆之後就會睇到分類佔比。"}
+            />
             <div className="rounded-3xl bg-white/85 p-4 shadow-[var(--shadow-soft)]">
-              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-ink-faint">分類分佈（HKD）</p>
-              <DoughnutChart segments={catTotals} formatValue={(v) => formatHkd(v)} />
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-ink-faint">分類佔比（折合港幣）</p>
+              {expenses.length === 0 ? (
+                <p className="py-6 text-center text-sm text-ink-faint">未有支出，記一筆就會顯示圓餅</p>
+              ) : (
+                <DoughnutChart
+                  segments={catTotals}
+                  formatValue={(v) => formatHkd(v)}
+                  centerLabel={doughnutCenter.label}
+                  centerValue={doughnutCenter.value}
+                />
+              )}
             </div>
 
             <CategoryRanking
@@ -271,8 +332,15 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
               setFilterCategory={setFilterCategory}
             />
 
+            <AnalysisSectionTitle
+              eyebrow="03 · 時間走勢"
+              title="邊段時間使得多？"
+              hint={peakWeek ? `${peakWeek.label} 使得最多（${formatHkd(peakWeek.value)}）。` : "有記帳之後會顯示每週同近 7 日走勢。"}
+            />
+            <SevenDayTrendPanel trip={trip} expenses={expenses} />
             <div className="rounded-3xl bg-white/85 p-4 shadow-[var(--shadow-soft)]">
-              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-ink-faint">每週支出（HKD）</p>
+              <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-ink-faint">旅程每週使費（港幣）</p>
+              <p className="mb-3 text-[11px] text-ink-faint">由出發日起計第 1–5 週，越高柱＝嗰週使得越多</p>
               <BarChart bars={weeklyTotals} formatLabel={(v) => `HK$${Math.round(v)}`} />
             </div>
           </>

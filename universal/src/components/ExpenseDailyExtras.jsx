@@ -344,7 +344,7 @@ function TopSpenderDayPanel({ trip, expenses }) {
     <div className="rounded-3xl bg-white/85 p-4 shadow-[var(--shadow-soft)]">
       <div className="mb-3 flex items-start justify-between gap-2">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-ink-faint">爆煲日提示</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-ink-faint">使費最高嗰日</p>
           <p className="mt-1 text-[11px] text-ink-faint">
             {formatShortDate(top.date)}
             {dayNum ? ` · 旅程第 ${dayNum} 日` : ""}
@@ -718,9 +718,9 @@ function PaceVsIdealPanel({ trip, totalSpent, budget, days, elapsedDays, remaini
     <div className="rounded-3xl bg-white/85 p-4 shadow-[var(--shadow-soft)]">
       <div className="mb-3 flex items-start justify-between gap-2">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-ink-faint">理想日均對比</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-ink-faint">使費節奏（對理想日均）</p>
           <p className="mt-1 text-[11px] text-ink-faint">
-            第 {elapsedDays}/{days} 日 · 理想 {formatMoney(idealDaily, trip.targetCurrency)}/日
+            第 {elapsedDays}/{days} 日 · 預算平均每日應使 {formatMoney(idealDaily, trip.targetCurrency)}
           </p>
         </div>
         <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${statusClass}`}>
@@ -776,7 +776,125 @@ function PaceVsIdealPanel({ trip, totalSpent, budget, days, elapsedDays, remaini
   );
 }
 
-export function ExpenseInsightCards({ trip, expenses, days, totalSpent, budget, elapsedDays = 1, remainingDays }) {
+/** 用白話講清楚「而家使費狀態」——唔靠抽象數字堆砌 */
+export function AnalysisStory({ trip, expenses, days, totalSpent, budget, elapsedDays = 1, remainingDays }) {
+  const story = useMemo(() => {
+    if (!expenses.length) {
+      return {
+        tone: "idle",
+        headline: "未有記帳",
+        lines: ["記第一筆之後，呢度會用白話話你知錢使去邊、節奏快定慢。"],
+      };
+    }
+
+    const todayId = toDateId(new Date());
+    const yesterdayId = shiftDateId(todayId, -1);
+    const todaySum = sumByDate(expenses, todayId);
+    const yesterdaySum = sumByDate(expenses, yesterdayId);
+    const catMap = {};
+    expenses.forEach((e) => {
+      catMap[e.categoryId] = (catMap[e.categoryId] || 0) + (Number(e.amount) || 0);
+    });
+    const topCat = Object.entries(catMap).sort((a, b) => b[1] - a[1])[0];
+    const topCatMeta = topCat ? EXPENSE_CATEGORIES.find((c) => c.id === topCat[0]) : null;
+    const topShare = totalSpent > 0 && topCat ? Math.round((topCat[1] / totalSpent) * 100) : 0;
+
+    const idealDaily = budget > 0 ? budget / Math.max(1, days) : 0;
+    const actualPace = totalSpent / Math.max(1, elapsedDays);
+    const remaining = budget - totalSpent;
+
+    let tone = "ok";
+    let headline = "節奏大致穩陣";
+    if (budget > 0 && remaining < 0) {
+      tone = "warn";
+      headline = "預算已經超咗";
+    } else if (budget > 0 && actualPace > idealDaily * 1.2) {
+      tone = "warn";
+      headline = "使費偏快，要收油";
+    } else if (budget > 0 && actualPace < idealDaily * 0.85) {
+      tone = "good";
+      headline = "使費偏慳，有餘力";
+    } else if (todaySum > yesterdaySum && yesterdaySum > 0 && todaySum - yesterdaySum > yesterdaySum * 0.3) {
+      tone = "warn";
+      headline = "今日使得多過昨日";
+    }
+
+    const lines = [];
+    if (topCatMeta) {
+      lines.push(`最多錢落喺「${topCatMeta.label}」，約佔全程 ${topShare}%（${formatMoney(topCat[1], trip.targetCurrency)}）。`);
+    }
+    if (budget > 0) {
+      lines.push(
+        remaining >= 0
+          ? `預算仲剩 ${formatMoney(remaining, trip.targetCurrency)}，照理想日均大約仲有 ${remainingDays} 日可用。`
+          : `已超預算 ${formatMoney(-remaining, trip.targetCurrency)}，之後每筆都要掂過先。`,
+      );
+      lines.push(
+        `而家日均約 ${formatMoney(actualPace, trip.targetCurrency)}，理想係 ${formatMoney(idealDaily, trip.targetCurrency)}/日。`,
+      );
+    } else {
+      lines.push(`全程已記 ${formatMoney(totalSpent, trip.targetCurrency)}，共 ${expenses.length} 筆。`);
+    }
+    if (todaySum > 0 || yesterdaySum > 0) {
+      const d = todaySum - yesterdaySum;
+      lines.push(
+        d === 0
+          ? `今日同昨日一樣，都係 ${formatMoney(todaySum, trip.targetCurrency)}。`
+          : d > 0
+            ? `今日 ${formatMoney(todaySum, trip.targetCurrency)}，比昨日多 ${formatMoney(d, trip.targetCurrency)}。`
+            : `今日 ${formatMoney(todaySum, trip.targetCurrency)}，比昨日少 ${formatMoney(-d, trip.targetCurrency)}。`,
+      );
+    }
+
+    return { tone, headline, lines };
+  }, [trip, expenses, days, totalSpent, budget, elapsedDays, remainingDays]);
+
+  const toneClass =
+    story.tone === "warn"
+      ? "border-coral/30 from-[#fff7ed] to-[#ffedd5]"
+      : story.tone === "good"
+        ? "border-jade/25 from-[#f0fdfa] to-[#ccfbf1]"
+        : "border-jade/15 from-white to-[#f8fafc]";
+
+  const badgeClass =
+    story.tone === "warn"
+      ? "bg-coral/15 text-coral"
+      : story.tone === "good"
+        ? "bg-jade-soft text-jade-deep"
+        : "bg-[#eef3f1] text-ink-soft";
+
+  return (
+    <div className={`rounded-3xl border bg-gradient-to-br p-4 shadow-[var(--shadow-soft)] ${toneClass}`}>
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-ink-faint">一句睇晒</p>
+          <p className="mt-1 font-display text-xl font-bold text-ink">{story.headline}</p>
+        </div>
+        <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${badgeClass}`}>白話總結</span>
+      </div>
+      <ul className="mt-3 space-y-2">
+        {story.lines.map((line, i) => (
+          <li key={i} className="flex gap-2 text-sm leading-relaxed text-ink-soft">
+            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-jade" />
+            <span>{line}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export function AnalysisSectionTitle({ eyebrow, title, hint }) {
+  return (
+    <div className="pt-1">
+      <p className="text-[11px] font-bold uppercase tracking-wider text-jade">{eyebrow}</p>
+      <h3 className="mt-0.5 font-display text-lg font-bold text-ink">{title}</h3>
+      {hint && <p className="mt-1 text-xs leading-relaxed text-ink-faint">{hint}</p>}
+    </div>
+  );
+}
+
+export function ExpenseInsightCards({ trip, expenses, days, totalSpent, budget, elapsedDays = 1, remainingDays, showTrend = true }) {
   const todayId = toDateId(new Date());
   const yesterdayId = shiftDateId(todayId, -1);
   const todaySum = sumByDate(expenses, todayId);
@@ -803,10 +921,10 @@ export function ExpenseInsightCards({ trip, expenses, days, totalSpent, budget, 
   if (isFeatureEnabled("today-vs-yesterday")) {
     cards.push(
       <div key="ty" className="rounded-2xl bg-white/85 p-3 shadow-[var(--shadow-soft)]">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-faint">今日 vs 昨日</p>
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-faint">今日使咗幾多</p>
         <p className="mt-1 font-display text-lg font-bold">{formatMoney(todaySum, trip.targetCurrency)}</p>
         <p className={`text-xs font-semibold ${delta > 0 ? "text-coral" : delta < 0 ? "text-jade" : "text-ink-faint"}`}>
-          {delta === 0 ? "同昨日持平" : delta > 0 ? `比昨日多 ${formatMoney(delta, trip.targetCurrency)}` : `比昨日少 ${formatMoney(-delta, trip.targetCurrency)}`}
+          {delta === 0 ? "同昨日一樣多" : delta > 0 ? `比昨日多 ${formatMoney(delta, trip.targetCurrency)}` : `比昨日少 ${formatMoney(-delta, trip.targetCurrency)}`}
         </p>
       </div>,
     );
@@ -815,9 +933,9 @@ export function ExpenseInsightCards({ trip, expenses, days, totalSpent, budget, 
   if (isFeatureEnabled("logging-streak")) {
     cards.push(
       <div key="streak" className="rounded-2xl bg-white/85 p-3 shadow-[var(--shadow-soft)]">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-faint">記帳連續日數</p>
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-faint">連續有記帳</p>
         <p className="mt-1 font-display text-lg font-bold">{streak} 日</p>
-        <p className="text-xs text-ink-faint">{streak > 0 ? "繼續保持！" : "今日記一筆就開始"}</p>
+        <p className="text-xs text-ink-faint">{streak > 0 ? "習慣緊，繼續保持" : "今日記一筆就開始"}</p>
       </div>,
     );
   }
@@ -825,9 +943,9 @@ export function ExpenseInsightCards({ trip, expenses, days, totalSpent, budget, 
   if (isFeatureEnabled("biggest-expense") && biggest) {
     cards.push(
       <div key="big" className="rounded-2xl bg-white/85 p-3 shadow-[var(--shadow-soft)]">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-faint">單筆最高</p>
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-faint">最大一筆使費</p>
         <p className="mt-1 truncate font-display text-lg font-bold">{formatMoney(biggest.amount, trip.targetCurrency)}</p>
-        <p className="truncate text-xs text-ink-faint">{biggest.note} · {biggest.date}</p>
+        <p className="truncate text-xs text-ink-faint">{biggest.note} · {formatShortDate(biggest.date)}</p>
       </div>,
     );
   }
@@ -835,8 +953,6 @@ export function ExpenseInsightCards({ trip, expenses, days, totalSpent, budget, 
   return (
     <>
       {cards.length > 0 && <div className="grid grid-cols-2 gap-2">{cards}</div>}
-
-      <TopSpenderDayPanel trip={trip} expenses={expenses} />
 
       <PaceVsIdealPanel
         trip={trip}
@@ -847,14 +963,19 @@ export function ExpenseInsightCards({ trip, expenses, days, totalSpent, budget, 
         remainingDays={remainingDays}
       />
 
+      <TopSpenderDayPanel trip={trip} expenses={expenses} />
+
       {isFeatureEnabled("week-over-week") && (
         <WeekOverWeekCompare trip={trip} expenses={expenses} />
       )}
 
-      {isFeatureEnabled("seven-day-sparkline") && (
+      {showTrend && isFeatureEnabled("seven-day-sparkline") && (
         <div className="rounded-3xl bg-white/85 p-4 shadow-[var(--shadow-soft)]">
           <div className="mb-2 flex items-center justify-between gap-2">
-            <p className="text-xs font-semibold uppercase tracking-wider text-ink-faint">近 7 日趨勢</p>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-ink-faint">近一星期每日使幾多</p>
+              <p className="mt-0.5 text-[11px] text-ink-faint">點日期可睇當日金額</p>
+            </div>
             {sparkValues.every((v) => v === 0) && (
               <span className="text-[10px] font-semibold text-ink-faint">記一筆就會顯示走勢</span>
             )}
@@ -867,6 +988,43 @@ export function ExpenseInsightCards({ trip, expenses, days, totalSpent, budget, 
         </div>
       )}
     </>
+  );
+}
+
+export function SevenDayTrendPanel({ trip, expenses }) {
+  const todayId = toDateId(new Date());
+  const sparkDays = useMemo(() => {
+    return Array.from({ length: 7 }, (_, i) => {
+      const dateId = shiftDateId(todayId, i - 6);
+      return { dateId, value: sumByDate(expenses, dateId) };
+    });
+  }, [expenses, todayId]);
+  const sparkValues = useMemo(() => sparkDays.map((d) => d.value), [sparkDays]);
+  const sparkDateIds = useMemo(() => sparkDays.map((d) => d.dateId), [sparkDays]);
+
+  if (!isFeatureEnabled("seven-day-sparkline")) return null;
+
+  const peak = Math.max(...sparkValues, 0);
+  const peakIdx = sparkValues.indexOf(peak);
+  const caption =
+    peak > 0
+      ? `近 7 日最高係 ${formatShortDate(sparkDateIds[peakIdx])}，使咗 ${formatMoney(peak, trip.targetCurrency)}。`
+      : "未有近 7 日支出紀錄。";
+
+  return (
+    <div className="rounded-3xl bg-white/85 p-4 shadow-[var(--shadow-soft)]">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-ink-faint">近一星期每日使幾多</p>
+          <p className="mt-0.5 text-[11px] text-ink-faint">{caption}</p>
+        </div>
+      </div>
+      <Sparkline
+        values={sparkValues}
+        dateIds={sparkDateIds}
+        formatValue={(v) => formatMoney(v, trip.targetCurrency)}
+      />
+    </div>
   );
 }
 
@@ -903,7 +1061,7 @@ export function CategoryRanking({ catTotals, expenses, showPct, filterCategory, 
     <div className="rounded-3xl bg-white/85 p-4 shadow-[var(--shadow-soft)]">
       <div className="mb-3 flex items-start justify-between gap-2">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-ink-faint">分類排行榜（HKD）</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-ink-faint">邊類使得最多（港幣）</p>
           <p className="mt-1 text-[11px] text-ink-faint">
             {ranked[0].label} 佔 {topShare}% · Top {ranked.length}
           </p>
