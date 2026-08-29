@@ -1,9 +1,17 @@
-import { useAuth, useClerk, useUser, SignInButton, UserButton } from "@clerk/clerk-react";
+import {
+  AuthenticateWithRedirectCallback,
+  useAuth,
+  useClerk,
+  useSignIn,
+  useUser,
+  UserButton,
+} from "@clerk/clerk-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ALLOWED_EMAILS, isEmailAllowed, normalizeEmail } from "./allowlist";
 import { applySyncPayload, collectSyncPayload, payloadFingerprint } from "./syncStorage";
 
 const SYNC_META_KEY = "universal_cloud_sync_meta";
+const SSO_HASH = "#/sso-callback";
 
 function readLocalMeta() {
   try {
@@ -34,7 +42,7 @@ async function syncFetch(path, token, init = {}) {
 
 export function useCloudSync({ enabled }) {
   const { getToken, isSignedIn } = useAuth();
-  const [status, setStatus] = useState("idle"); // idle | syncing | synced | error | blocked
+  const [status, setStatus] = useState("idle");
   const [message, setMessage] = useState("");
   const [lastSyncedAt, setLastSyncedAt] = useState(null);
   const lastFingerprint = useRef("");
@@ -99,7 +107,6 @@ export function useCloudSync({ enabled }) {
         return { empty: true };
       }
 
-      // Prefer newer side; if remote newer or local empty → pull
       if (remoteAt >= localAt || localCount === 0) {
         applySyncPayload(data.payload, { wipeMissing: true });
         writeLocalMeta(remoteAt || Date.now());
@@ -107,12 +114,10 @@ export function useCloudSync({ enabled }) {
         setLastSyncedAt(remoteAt || Date.now());
         setStatus("synced");
         setMessage("已從雲端載入");
-        // Force remount-friendly reload so hooks re-read localStorage
         window.setTimeout(() => window.location.reload(), 350);
         return { pulled: true };
       }
 
-      // Local newer → upload
       await pushNow();
       return { uploaded: true };
     } catch (err) {
@@ -122,7 +127,6 @@ export function useCloudSync({ enabled }) {
     }
   }, [enabled, getToken, isSignedIn, pushNow]);
 
-  // Initial sync after sign-in
   useEffect(() => {
     if (!enabled || !isSignedIn) {
       bootstrapped.current = false;
@@ -133,7 +137,6 @@ export function useCloudSync({ enabled }) {
     pullOrMerge();
   }, [enabled, isSignedIn, pullOrMerge]);
 
-  // Debounced push when localStorage changes (same tab writes)
   useEffect(() => {
     if (!enabled || !isSignedIn) return undefined;
     let timer = null;
@@ -150,7 +153,6 @@ export function useCloudSync({ enabled }) {
       if (!e.key || e.key.startsWith("universal_")) schedule();
     };
     window.addEventListener("storage", onStorage);
-    // Same-tab writes don't fire storage events — poll lightly while signed in
     const poll = window.setInterval(() => {
       const fp = payloadFingerprint(collectSyncPayload());
       if (fp && lastFingerprint.current && fp !== lastFingerprint.current) {
@@ -169,37 +171,92 @@ export function useCloudSync({ enabled }) {
   return { status, message, lastSyncedAt, pushNow, pullOrMerge };
 }
 
-function LoginScreen({ blockedReason }) {
+function GoogleIcon() {
   return (
-    <div className="bg-travel flex min-h-dvh items-center justify-center px-4">
-      <div className="w-full max-w-md rounded-3xl border border-jade/15 bg-white/90 p-6 shadow-[var(--shadow-soft)] backdrop-blur">
-        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-jade">Trip Companion</p>
-        <h1 className="mt-2 font-display text-2xl font-bold text-ink">登入後即可雲端同步</h1>
-        <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-          旅程、記帳、清單會喺已授權裝置之間同步。暫時只開放指定 Gmail。
-        </p>
-        <ul className="mt-4 space-y-1.5 rounded-2xl bg-mist px-4 py-3 text-xs text-ink-soft">
-          {ALLOWED_EMAILS.map((email) => (
-            <li key={email} className="font-semibold">
-              · {email}
-            </li>
-          ))}
-        </ul>
-        {blockedReason && (
-          <p className="mt-4 rounded-2xl bg-coral/10 px-4 py-3 text-sm font-semibold text-coral">{blockedReason}</p>
-        )}
-        <div className="mt-5">
-          <SignInButton mode="modal">
-            <button
-              type="button"
-              className="min-h-12 w-full rounded-2xl bg-jade font-bold text-white shadow-[var(--shadow-soft)] transition active:scale-[0.98]"
-            >
-              用 Google／Email 登入
-            </button>
-          </SignInButton>
-        </div>
-        <p className="mt-3 text-center text-[11px] text-ink-faint">未授權帳號即使登入成功亦無法讀寫資料。</p>
+    <svg className="h-5 w-5 shrink-0" viewBox="0 0 48 48" aria-hidden="true">
+      <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 8 3.1l5.7-5.7C34.2 6.1 29.4 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z" />
+      <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 8 3.1l5.7-5.7C34.2 6.1 29.4 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
+      <path fill="#4CAF50" d="M24 44c5.2 0 10-2 13.6-5.2l-6.3-5.2C29.2 35.1 26.7 36 24 36c-5.3 0-9.7-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z" />
+      <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.5l.1.1 6.3 5.2C39.2 37.3 44 32 44 24c0-1.3-.1-2.7-.4-3.5z" />
+    </svg>
+  );
+}
+
+/** Google OAuth 登入頁：撳掣 → 揀 Google 帳號 → 返回 */
+function LoginScreen({ blockedReason }) {
+  const { isLoaded, signIn } = useSignIn();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function signInWithGoogle() {
+    if (!signIn) return;
+    setBusy(true);
+    setError("");
+    try {
+      const origin = window.location.origin;
+      const base = `${origin}/universal/`;
+      await signIn.authenticateWithRedirect({
+        strategy: "oauth_google",
+        redirectUrl: `${base}${SSO_HASH}`,
+        redirectUrlComplete: base,
+      });
+    } catch (err) {
+      const msg = err?.errors?.[0]?.longMessage || err?.errors?.[0]?.message || err?.message || "無法啟動 Google 登入";
+      setError(msg);
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="bg-travel relative flex min-h-dvh flex-col overflow-hidden">
+      <div className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute -top-24 right-[-10%] h-72 w-72 rounded-full bg-jade-soft/80 blur-3xl" />
+        <div className="absolute bottom-10 left-[-15%] h-64 w-64 rounded-full bg-coral-soft/70 blur-3xl" />
       </div>
+
+      <main className="safe-top mx-auto flex w-full max-w-lg flex-1 flex-col justify-center px-5 pb-10">
+        <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-jade">Trip Companion</p>
+        <h1 className="mt-3 font-display text-[2.4rem] font-extrabold leading-[1.05] tracking-tight text-ink">
+          用 Google<br />登入
+        </h1>
+        <p className="mt-3 max-w-sm text-sm leading-relaxed text-ink-soft">
+          撳下面掣，跟住揀你要嘅 Google 帳號。登入後旅程同記帳會喺授權裝置之間同步。
+        </p>
+
+        <div className="mt-8 rounded-[1.75rem] border border-jade/15 bg-white/90 p-5 shadow-[var(--shadow-soft)] backdrop-blur">
+          <button
+            type="button"
+            onClick={signInWithGoogle}
+            disabled={!isLoaded || busy}
+            className="flex min-h-14 w-full items-center justify-center gap-3 rounded-2xl border border-[#dadce0] bg-white px-4 text-base font-bold text-[#3c4043] shadow-sm transition hover:bg-[#f8f9fa] active:scale-[0.98] disabled:opacity-60"
+          >
+            <GoogleIcon />
+            {busy ? "即將跳去 Google…" : "用 Google 登入"}
+          </button>
+
+          <p className="mt-4 text-center text-[11px] leading-relaxed text-ink-faint">
+            會開啟 Google 帳號選擇畫面，揀完就返嚟呢度。
+          </p>
+
+          {(error || blockedReason) && (
+            <p className="mt-4 rounded-2xl bg-coral/10 px-4 py-3 text-sm font-semibold text-coral">
+              {blockedReason || error}
+            </p>
+          )}
+        </div>
+
+        <div className="mt-6 rounded-3xl bg-white/70 px-4 py-3 text-xs text-ink-soft">
+          <p className="font-bold text-ink">暫時只開放</p>
+          <ul className="mt-2 space-y-1">
+            {ALLOWED_EMAILS.map((email) => (
+              <li key={email} className="font-semibold">
+                · {email}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-[11px] text-ink-faint">其他 Google 帳號即使登入成功亦無法讀寫資料。</p>
+        </div>
+      </main>
     </div>
   );
 }
@@ -210,13 +267,19 @@ export function AuthNotConfigured() {
       <div className="w-full max-w-md rounded-3xl border border-amber-300/40 bg-[#fffbeb] p-6 shadow-[var(--shadow-soft)]">
         <h1 className="font-display text-xl font-bold text-ink">尚未設定登入</h1>
         <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-          請喺 Vercel 設定 <code className="rounded bg-white px-1">VITE_CLERK_PUBLISHABLE_KEY</code>、
-          <code className="rounded bg-white px-1">CLERK_SECRET_KEY</code> 同 Upstash Redis，然後重新部署。
-        </p>
-        <p className="mt-3 text-xs leading-relaxed text-ink-faint">
-          暫時只開放：wanlokszevenus@gmail.com、whatnamecaniuseonjg99gle@gmail.com
+          請喺 Vercel／Clerk 設定 Google 登入同環境變數，然後重新部署。詳見專案{" "}
+          <code className="rounded bg-white px-1">.env.example</code>。
         </p>
       </div>
+    </div>
+  );
+}
+
+function SsoCallback() {
+  return (
+    <div className="bg-travel flex min-h-dvh flex-col items-center justify-center gap-3 px-4">
+      <p className="text-sm font-semibold text-ink-soft">Google 登入處理中…</p>
+      <AuthenticateWithRedirectCallback />
     </div>
   );
 }
@@ -228,6 +291,13 @@ export function AuthGate({ children }) {
   const email = normalizeEmail(user?.primaryEmailAddress?.emailAddress);
   const allowed = !email || isEmailAllowed(email);
   const sync = useCloudSync({ enabled: isSignedIn && allowed });
+  const [hash, setHash] = useState(() => window.location.hash);
+
+  useEffect(() => {
+    const onHash = () => setHash(window.location.hash);
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
 
   useEffect(() => {
     if (!isSignedIn || !email) return;
@@ -241,6 +311,10 @@ export function AuthGate({ children }) {
       signOut();
     }
   }, [sync.status, signOut]);
+
+  if (hash.startsWith(SSO_HASH) || hash === "#/sso-callback") {
+    return <SsoCallback />;
+  }
 
   if (!isLoaded) {
     return (
@@ -265,7 +339,9 @@ export function AuthGate({ children }) {
               {sync.status === "synced" && (sync.message || "已同步")}
               {sync.status === "error" && (sync.message || "同步失敗")}
               {sync.status === "idle" && "準備同步"}
-              {sync.lastSyncedAt ? ` · ${new Date(sync.lastSyncedAt).toLocaleTimeString("zh-HK", { hour: "2-digit", minute: "2-digit" })}` : ""}
+              {sync.lastSyncedAt
+                ? ` · ${new Date(sync.lastSyncedAt).toLocaleTimeString("zh-HK", { hour: "2-digit", minute: "2-digit" })}`
+                : ""}
             </p>
           </div>
           <button
