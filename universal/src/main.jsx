@@ -1,22 +1,13 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { ClerkProvider } from "@clerk/clerk-react";
 import App from "./App.jsx";
-import { AuthGate, AuthNotConfigured } from "./auth/AuthGate.jsx";
 import "./index.css";
 
-const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || "";
+// 登入／雲端同步暫時擱置：每部手機用各自 localStorage，唔共通。
+// 相關程式留喺 ./auth/，之後要開返再 wrap AuthGate 即可。
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    {publishableKey ? (
-      <ClerkProvider publishableKey={publishableKey} afterSignOutUrl="/universal/">
-        <AuthGate>
-          <App />
-        </AuthGate>
-      </ClerkProvider>
-    ) : (
-      <AuthNotConfigured />
-    )}
+    <App />
   </StrictMode>,
 );

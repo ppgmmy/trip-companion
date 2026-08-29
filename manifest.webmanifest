@@ -2,7 +2,7 @@
   "name": "Trip Companion",
   "short_name": "Trip Companion",
   "description": "一個入口，全球行程。台北 · 東京 · 泰國 · 萬能版",
-  "start_url": "/universal/",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
@@ -12,7 +12,7 @@
     { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ],
   "shortcuts": [
-    { "name": "登入／萬能版", "url": "/universal/" },
+    { "name": "全球萬能版", "url": "/universal/" },
     { "name": "台北", "url": "/taipei/" },
     { "name": "東京", "url": "/tokyo/" },
     { "name": "泰國", "url": "/thailand/" }
