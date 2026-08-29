@@ -275,6 +275,7 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
           currency={trip.targetCurrency}
           expenses={expenses}
           rate={rate}
+          categoryId={categoryId}
         />
         <div className="grid grid-cols-[1fr_1.2fr] gap-2">
           <input

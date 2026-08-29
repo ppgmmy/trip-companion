@@ -15,7 +15,11 @@
     "export-csv",
     "note-templates"
   ],
+<<<<<<< HEAD
   "updatedAt": "2026-08-29T02:01:45.882Z",
+=======
+  "updatedAt": "2026-08-29T02:15:55.363Z",
+>>>>>>> d0c6f42 (feat(daily): enable smart note-templates for faster expense logging)
   "lastFeatureId": "note-templates",
   "lastTitle": "備註快捷模板"
 }

@@ -1192,13 +1192,75 @@ function AmountChip({ n, label, currency, rate, active, onPick }) {
   );
 }
 
-export function QuickAddHelpers({ amount, setAmount, note, setNote, currency, expenses = [], rate = 0 }) {
+const CATEGORY_NOTE_TEMPLATES = {
+  food: [
+    { text: "午餐", emoji: "🍱" },
+    { text: "晚餐", emoji: "🍜" },
+    { text: "早餐", emoji: "🥐" },
+    { text: "宵夜", emoji: "🌙" },
+  ],
+  cafe: [
+    { text: "咖啡", emoji: "☕" },
+    { text: "甜品", emoji: "🍰" },
+    { text: "下午茶", emoji: "🫖" },
+  ],
+  shopping: [
+    { text: "手信", emoji: "🎁" },
+    { text: "藥妝", emoji: "💊" },
+    { text: "超市", emoji: "🛒" },
+    { text: "免稅", emoji: "🛍️" },
+  ],
+  transport: [
+    { text: "地鐵", emoji: "🚇" },
+    { text: "的士", emoji: "🚕" },
+    { text: "巴士", emoji: "🚌" },
+    { text: "新幹線", emoji: "🚄" },
+  ],
+  attractions: [
+    { text: "門票", emoji: "🎫" },
+    { text: "體驗", emoji: "🎢" },
+    { text: "溫泉", emoji: "♨️" },
+  ],
+  hotel: [
+    { text: "住宿", emoji: "🏨" },
+    { text: "加床", emoji: "🛏️" },
+  ],
+  other: [
+    { text: "雜項", emoji: "📦" },
+    { text: "小費", emoji: "💴" },
+    { text: "提款", emoji: "🏧" },
+  ],
+};
+
+const COMMON_NOTE_TEMPLATES = [
+  { text: "午餐", emoji: "🍱" },
+  { text: "晚餐", emoji: "🍜" },
+  { text: "咖啡", emoji: "☕" },
+  { text: "交通", emoji: "🚇" },
+  { text: "超市", emoji: "🛒" },
+  { text: "手信", emoji: "🎁" },
+];
+
+function NoteTemplateChip({ text, emoji, active, onPick }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onPick(text)}
+      className={`inline-flex min-h-9 items-center gap-1 rounded-2xl border px-3 text-xs font-bold transition active:scale-95 ${active ? "badge-active border-transparent shadow-sm" : "border-jade/15 bg-mist text-ink-soft"}`}
+    >
+      {emoji && <span aria-hidden="true">{emoji}</span>}
+      <span>{text}</span>
+    </button>
+  );
+}
+
+export function QuickAddHelpers({ amount, setAmount, note, setNote, currency, expenses = [], rate = 0, categoryId = "food" }) {
   const chips = isFeatureEnabled("quick-amount-chips");
   const templates = isFeatureEnabled("note-templates");
   const [addMode, setAddMode] = useState(false);
 
   const presets = QUICK_AMOUNT_PRESETS[currency] || QUICK_AMOUNT_PRESETS.default;
-  const notes = ["午餐", "晚餐", "咖啡", "交通", "超市", "手信"];
+  const categoryTemplates = CATEGORY_NOTE_TEMPLATES[categoryId] || COMMON_NOTE_TEMPLATES;
 
   const recentAmounts = useMemo(() => {
     const seen = new Set();
@@ -1212,6 +1274,21 @@ export function QuickAddHelpers({ amount, setAmount, note, setNote, currency, ex
     }
     return result;
   }, [expenses]);
+
+  const recentNotes = useMemo(() => {
+    const catLabels = new Set(EXPENSE_CATEGORIES.map((c) => c.label));
+    const seen = new Set();
+    const result = [];
+    for (let i = expenses.length - 1; i >= 0 && result.length < 4; i -= 1) {
+      const t = (expenses[i].note || "").trim();
+      if (!t || t.length > 20 || catLabels.has(t) || seen.has(t)) continue;
+      seen.add(t);
+      result.push(t);
+    }
+    return result;
+  }, [expenses]);
+
+  const categoryLabel = EXPENSE_CATEGORIES.find((c) => c.id === categoryId)?.label || "常用";
 
   function pickAmount(n) {
     if (addMode) {
@@ -1280,17 +1357,43 @@ export function QuickAddHelpers({ amount, setAmount, note, setNote, currency, ex
         </div>
       )}
       {templates && (
-        <div className="flex flex-wrap gap-1.5">
-          {notes.map((n) => (
-            <button
-              key={n}
-              type="button"
-              onClick={() => setNote(n)}
-              className={`min-h-9 rounded-2xl border px-3 text-xs font-bold ${note === n ? "badge-active border-transparent" : "border-jade/15 bg-mist text-ink-soft"}`}
-            >
-              {n}
-            </button>
-          ))}
+        <div className="rounded-2xl border border-jade/10 bg-shell/60 p-3">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-faint">備註快捷模板</p>
+            <span className="rounded-full bg-white/80 px-2 py-0.5 text-[9px] font-bold text-jade-deep">
+              {categoryLabel}
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {categoryTemplates.map(({ text, emoji }) => (
+              <NoteTemplateChip
+                key={`cat-${text}`}
+                text={text}
+                emoji={emoji}
+                active={note === text}
+                onPick={setNote}
+              />
+            ))}
+          </div>
+          {recentNotes.length > 0 && (
+            <>
+              <p className="mb-1.5 mt-2.5 text-[10px] font-semibold text-ink-faint">最近用過</p>
+              <div className="flex flex-wrap gap-1.5">
+                {recentNotes.map((t) => (
+                  <NoteTemplateChip
+                    key={`recent-${t}`}
+                    text={t}
+                    emoji="🕐"
+                    active={note === t}
+                    onPick={setNote}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+          <p className="mt-2 text-center text-[10px] text-ink-faint">
+            撳一下填入備註，再改金額就完成
+          </p>
         </div>
       )}
     </div>
