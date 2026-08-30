@@ -1210,8 +1210,7 @@ export function ExpenseListExtras({
   const showFilter = isFeatureEnabled("category-filter");
   const showSearch = isFeatureEnabled("expense-search");
   const showToggle = isFeatureEnabled("hkd-list-toggle");
-  // 記帳核心便利：複製上一筆一律可用（唔再等 daily flag）
-  const showDup = true;
+  const showDup = isFeatureEnabled("duplicate-last");
 
   const countByCat = useMemo(() => {
     const map = {};
@@ -1417,6 +1416,61 @@ function NoteTemplateChip({ text, emoji, active, onPick }) {
       {emoji && <span aria-hidden="true">{emoji}</span>}
       <span>{text}</span>
     </button>
+  );
+}
+
+const CATEGORY_EMOJI = {
+  food: "🍜",
+  cafe: "☕",
+  shopping: "🛍️",
+  transport: "🚇",
+  attractions: "🎡",
+  hotel: "🏨",
+  other: "💸",
+};
+
+export function DuplicateLastPanel({ trip, expenses, onDuplicate, editingId }) {
+  if (!isFeatureEnabled("duplicate-last") || editingId || !expenses.length) return null;
+
+  const last = expenses[expenses.length - 1];
+  const cat = EXPENSE_CATEGORIES.find((c) => c.id === last.categoryId);
+  const sameCategoryCount = expenses.filter((e) => e.categoryId === last.categoryId).length;
+
+  return (
+    <div className="rounded-2xl border border-jade/15 bg-gradient-to-br from-[#f0fdf9] to-white p-3">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-faint">複製上一筆</p>
+        <span className="rounded-full bg-jade-soft px-2 py-0.5 text-[9px] font-bold text-jade-deep">
+          極速記帳
+        </span>
+      </div>
+      <div className="flex items-center gap-3">
+        <span
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-lg"
+          style={{ background: `${cat?.color || "#64748b"}22` }}
+          aria-hidden="true"
+        >
+          {CATEGORY_EMOJI[last.categoryId] || "💸"}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-bold text-ink">{last.note || cat?.label || "開支"}</p>
+          <p className="text-[11px] text-ink-faint">
+            {cat?.label || last.categoryId} · {formatMoney(last.amount, trip.targetCurrency)}
+            {sameCategoryCount > 1 && ` · 同類 ${sameCategoryCount} 筆`}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => onDuplicate(last)}
+          className="shrink-0 rounded-2xl bg-jade px-4 py-2.5 text-xs font-bold text-white shadow-sm transition active:scale-95"
+        >
+          複製
+        </button>
+      </div>
+      <p className="mt-2 text-center text-[10px] text-ink-faint">
+        會填入今日日期，改金額後撳記入即可
+      </p>
+    </div>
   );
 }
 
