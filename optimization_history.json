@@ -83,6 +83,12 @@
       "id": "note-templates",
       "title": "備註快捷模板",
       "description": "午餐／交通／咖啡等常見備註一撳填入。"
+    },
+    {
+      "date": "2026-08-30",
+      "id": "duplicate-last",
+      "title": "複製上一筆",
+      "description": "重複消費一撳複製上一筆再微調，極速記帳。"
     }
   ]
 }
