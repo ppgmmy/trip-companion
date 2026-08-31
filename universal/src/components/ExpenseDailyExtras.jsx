@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { EXPENSE_CATEGORIES, formatHkd, formatMoney, payerLabel, paymentMethodLabel, toDateId } from "../data";
+import { EXPENSE_CATEGORIES, expenseMetaLine, formatHkd, formatMoney, payerLabel, paymentMethodLabel, toDateId } from "../data";
 import { getFeatureMeta, getLastEnabledFeature, isFeatureEnabled } from "../data/featureFlags";
 
 function shiftDateId(dateId, deltaDays) {
@@ -1559,6 +1559,7 @@ export function DuplicateLastPanel({ trip, expenses, onDuplicate, editingId }) {
   const last = expenses[expenses.length - 1];
   const cat = EXPENSE_CATEGORIES.find((c) => c.id === last.categoryId);
   const sameCategoryCount = expenses.filter((e) => e.categoryId === last.categoryId).length;
+  const meta = expenseMetaLine(last);
 
   return (
     <div className="rounded-2xl border border-jade/15 bg-gradient-to-br from-[#f0fdf9] to-white p-3">
@@ -1580,6 +1581,7 @@ export function DuplicateLastPanel({ trip, expenses, onDuplicate, editingId }) {
           <p className="truncate text-sm font-bold text-ink">{last.note || cat?.label || "開支"}</p>
           <p className="text-[11px] text-ink-faint">
             {cat?.label || last.categoryId} · {formatMoney(last.amount, trip.targetCurrency)}
+            {meta ? ` · ${meta}` : ""}
             {sameCategoryCount > 1 && ` · 同類 ${sameCategoryCount} 筆`}
           </p>
         </div>
