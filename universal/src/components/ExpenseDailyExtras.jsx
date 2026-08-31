@@ -1141,13 +1141,135 @@ export function CategoryRanking({ catTotals, expenses, showPct, filterCategory, 
   );
 }
 
-export function PinnedBudgetAlert({ budgetPct, remaining, currency }) {
-  if (!isFeatureEnabled("pinned-budget-alert") || budgetPct < 80) return null;
+function budgetHealthTier(budgetPct) {
+  if (budgetPct >= 100) {
+    return {
+      id: "over",
+      label: "已超預算",
+      barClass: "bg-coral",
+      cardClass: "border-coral/40 bg-gradient-to-br from-coral to-[#dc2626]",
+      badgeClass: "bg-white/20 text-white",
+      pulse: true,
+    };
+  }
+  if (budgetPct >= 95) {
+    return {
+      id: "critical",
+      label: "極度警戒",
+      barClass: "bg-gradient-to-r from-[#f97316] to-coral",
+      cardClass: "border-[#f97316]/50 bg-gradient-to-br from-[#ea580c] to-coral",
+      badgeClass: "bg-white/20 text-white",
+      pulse: true,
+    };
+  }
+  if (budgetPct >= 90) {
+    return {
+      id: "danger",
+      label: "高度警戒",
+      barClass: "bg-gradient-to-r from-[#f59e0b] to-[#f97316]",
+      cardClass: "border-[#f59e0b]/50 bg-gradient-to-br from-[#d97706] to-[#ea580c]",
+      badgeClass: "bg-white/20 text-white",
+      pulse: false,
+    };
+  }
+  return {
+    id: "warning",
+    label: "預算警戒",
+    barClass: "bg-gradient-to-r from-[#fbbf24] to-[#f59e0b]",
+    cardClass: "border-[#f59e0b]/40 bg-gradient-to-br from-[#b45309] to-[#d97706]",
+    badgeClass: "bg-white/20 text-white",
+    pulse: false,
+  };
+}
+
+export function PinnedBudgetAlert({
+  budgetPct,
+  remaining,
+  budget = 0,
+  totalSpent = 0,
+  remainingDays = 1,
+  dailyAllowance = 0,
+  currency,
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  if (!isFeatureEnabled("pinned-budget-alert") || budgetPct < 80 || budget <= 0) return null;
+
+  const tier = budgetHealthTier(budgetPct);
+  const pctDisplay = Math.min(999, budgetPct).toFixed(0);
+  const barWidth = Math.min(100, budgetPct);
+  const overAmount = totalSpent > budget ? totalSpent - budget : 0;
+  const daysLabel = remainingDays === 1 ? "最後 1 日" : `剩 ${remainingDays} 日`;
+
   return (
-    <div className={`rounded-2xl px-4 py-3 text-sm font-bold text-white shadow-md ${budgetPct >= 100 ? "bg-coral" : "bg-[#b45309]"}`}>
-      {budgetPct >= 100
-        ? `⚠️ 已超預算！剩餘 ${formatMoney(remaining, currency)}`
-        : `⚠️ 已用 ${budgetPct.toFixed(0)}% 預算，剩餘 ${formatMoney(remaining, currency)} — 開始收油`}
+    <div
+      className={`overflow-hidden rounded-3xl border shadow-[var(--shadow-soft)] ${tier.cardClass} ${tier.pulse ? "animate-[pulse_2.5s_ease-in-out_infinite]" : ""}`}
+      role="alert"
+    >
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="flex w-full items-start gap-3 px-4 py-3.5 text-left text-white transition active:scale-[0.99]"
+        aria-expanded={expanded}
+      >
+        <span className="mt-0.5 text-lg" aria-hidden="true">
+          {budgetPct >= 100 ? "🚨" : budgetPct >= 90 ? "⚠️" : "💡"}
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm font-black">
+              {budgetPct >= 100
+                ? `已超預算 ${formatMoney(overAmount, currency)}`
+                : `已用 ${pctDisplay}% 預算`}
+            </p>
+            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${tier.badgeClass}`}>
+              {tier.label}
+            </span>
+          </div>
+          <p className="mt-1 text-xs font-semibold text-white/90">
+            {budgetPct >= 100
+              ? `全程 budget 已爆 · 超出 ${formatMoney(overAmount, currency)}`
+              : `${daysLabel} · 每日建議最多 ${formatMoney(dailyAllowance, currency)}`}
+          </p>
+          <div className="mt-2.5 h-2 overflow-hidden rounded-full bg-black/20">
+            <div
+              className={`h-full rounded-full transition-all duration-700 ${tier.barClass}`}
+              style={{ width: `${barWidth}%` }}
+            />
+          </div>
+        </div>
+        <span className="shrink-0 rounded-full bg-white/15 px-2 py-1 text-[10px] font-bold text-white/90">
+          {expanded ? "收起" : "詳情"}
+        </span>
+      </button>
+
+      {expanded && (
+        <div className="space-y-2 border-t border-white/15 px-4 pb-4 pt-3 text-white">
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="rounded-2xl bg-black/15 px-2 py-2">
+              <p className="text-[10px] font-semibold text-white/70">已使</p>
+              <p className="mt-0.5 text-xs font-black">{formatMoney(totalSpent, currency)}</p>
+            </div>
+            <div className="rounded-2xl bg-black/15 px-2 py-2">
+              <p className="text-[10px] font-semibold text-white/70">總預算</p>
+              <p className="mt-0.5 text-xs font-black">{formatMoney(budget, currency)}</p>
+            </div>
+            <div className="rounded-2xl bg-black/15 px-2 py-2">
+              <p className="text-[10px] font-semibold text-white/70">剩餘</p>
+              <p className={`mt-0.5 text-xs font-black ${remaining < 0 ? "text-[#fecaca]" : ""}`}>
+                {formatMoney(remaining, currency)}
+              </p>
+            </div>
+          </div>
+          <p className="text-center text-[11px] font-semibold text-white/85">
+            {budgetPct >= 100
+              ? "建議今日起減非必要消費，優先保留交通同住宿緩衝"
+              : budgetPct >= 90
+                ? `再使多 ${formatMoney(remaining, currency)} 就會用盡 — 後 ${remainingDays} 日平均每日 ${formatMoney(dailyAllowance, currency)}`
+                : `仲有 ${formatMoney(remaining, currency)} 緩衝 · 照而家節奏每日 ${formatMoney(dailyAllowance, currency)} 就安全`}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

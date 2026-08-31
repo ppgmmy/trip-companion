@@ -89,6 +89,12 @@
       "id": "duplicate-last",
       "title": "複製上一筆",
       "description": "重複消費一撳複製上一筆再微調，極速記帳。"
+    },
+    {
+      "date": "2026-08-31",
+      "id": "pinned-budget-alert",
+      "title": "預算警戒條",
+      "description": "用咗超過 80% 預算時顯示醒目提示。"
     }
   ]
 }

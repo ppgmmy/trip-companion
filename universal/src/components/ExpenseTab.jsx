@@ -339,7 +339,15 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
         {panel === "overview" && (
           <>
             <DailyOptBanner />
-            <PinnedBudgetAlert budgetPct={budgetPct} remaining={remaining} currency={trip.targetCurrency} />
+            <PinnedBudgetAlert
+              budgetPct={budgetPct}
+              remaining={remaining}
+              budget={budget}
+              totalSpent={totalSpent}
+              remainingDays={remainingDays}
+              dailyAllowance={dailyAllowance}
+              currency={trip.targetCurrency}
+            />
 
             {budget > 0 && (
               <div className="rounded-3xl bg-white p-4 shadow-[var(--shadow-soft)]">

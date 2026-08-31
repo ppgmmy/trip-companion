@@ -14,13 +14,10 @@
     "top-spender-day",
     "export-csv",
     "note-templates",
-    "duplicate-last"
+    "duplicate-last",
+    "pinned-budget-alert"
   ],
-<<<<<<< HEAD
-  "updatedAt": "2026-08-30T02:01:43.945Z",
-=======
-  "updatedAt": "2026-08-30T02:15:16.617Z",
->>>>>>> f6fddb1 (feat(daily): enable duplicate-last — one-tap copy with preview and per-item duplicate)
-  "lastFeatureId": "duplicate-last",
-  "lastTitle": "複製上一筆"
+  "updatedAt": "2026-08-31T02:00:05.000Z",
+  "lastFeatureId": "pinned-budget-alert",
+  "lastTitle": "預算警戒條"
 }
