@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { EXPENSE_CATEGORIES, aggregateByPayer, aggregateByPaymentMethod, expenseMetaLine, formatHkd, formatMoney, lastPaymentDefaults, payerLabel, paymentMethodLabel, recentCustomPayers, resolvePayerFields, toDateId, tripDays } from "../data";
+import { DEFAULT_PAYER_ID, EXPENSE_CATEGORIES, aggregateByPayer, aggregateByPaymentMethod, expenseMetaLine, formatHkd, formatMoney, lastPaymentDefaults, payerLabel, paymentMethodLabel, recentCustomPayers, resolvePayerFields, toDateId, tripDays } from "../data";
 import { isFeatureEnabled } from "../data/featureFlags";
 import { BarChart, DoughnutChart } from "./Charts";
 import {
@@ -151,7 +151,7 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
       list = list.filter((e) => e.categoryId === filterCategory);
     }
     if (filterPayer !== "all") {
-      list = list.filter((e) => (e.payer || "me") === filterPayer);
+      list = list.filter((e) => (e.payer || DEFAULT_PAYER_ID) === filterPayer);
     }
     if (filterPaymentMethod !== "all") {
       list = list.filter((e) => (e.paymentMethod || "cash") === filterPaymentMethod);
@@ -213,7 +213,7 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
     if (!Number.isFinite(value) || value <= 0) return;
     const date = entryDate || toDateId(new Date());
 
-    const resolvedPayer = customPayer.trim() || payer || "me";
+    const resolvedPayer = customPayer.trim() || payer || DEFAULT_PAYER_ID;
 
     if (editingId) {
       setExpenses((prev) =>

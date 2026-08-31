@@ -41,10 +41,17 @@ export const PAYMENT_METHODS = [
 ];
 
 export const PAYER_PRESETS = [
-  { id: "me", label: "我" },
-  { id: "partner", label: "同伴" },
+  { id: "ppg", label: "ppg" },
+  { id: "mo", label: "mo" },
   { id: "shared", label: "大家分攤" },
 ];
+
+const LEGACY_PAYER_LABELS = {
+  me: "我",
+  partner: "同伴",
+};
+
+export const DEFAULT_PAYER_ID = "ppg";
 
 export function paymentMethodLabel(id) {
   if (!id) return "";
@@ -53,12 +60,12 @@ export function paymentMethodLabel(id) {
 
 export function payerLabel(payer) {
   if (!payer) return "";
-  return PAYER_PRESETS.find((item) => item.id === payer)?.label || payer;
+  return PAYER_PRESETS.find((item) => item.id === payer)?.label || LEGACY_PAYER_LABELS[payer] || payer;
 }
 
 export function resolvePayerFields(entry) {
   const presetIds = new Set(PAYER_PRESETS.map((item) => item.id));
-  const payer = entry?.payer || "me";
+  const payer = entry?.payer || DEFAULT_PAYER_ID;
   if (presetIds.has(payer)) {
     return { payer, customPayer: "" };
   }
@@ -68,7 +75,7 @@ export function resolvePayerFields(entry) {
 export function lastPaymentDefaults(expenses) {
   const last = expenses[expenses.length - 1];
   if (!last) {
-    return { payer: "me", customPayer: "", paymentMethod: "cash" };
+    return { payer: DEFAULT_PAYER_ID, customPayer: "", paymentMethod: "cash" };
   }
   const payerFields = resolvePayerFields(last);
   return {
@@ -93,7 +100,7 @@ export function recentCustomPayers(expenses, limit = 4) {
 export function aggregateByPayer(expenses) {
   const map = {};
   expenses.forEach((entry) => {
-    const key = entry.payer || "me";
+    const key = entry.payer || DEFAULT_PAYER_ID;
     if (!map[key]) {
       map[key] = { key, label: payerLabel(key), count: 0, amount: 0, hkd: 0 };
     }
