@@ -591,14 +591,7 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
               fxLabel={statusLabel}
             />
 
-            <PayerSpendStats
-              trip={trip}
-              expenses={expenses}
-              payerTotals={payerTotals}
-              totalHkd={totalHkd}
-              activePayer={filterPayer}
-              onJumpToPayer={jumpToLedgerPayer}
-            />
+            <PayerSpendStats trip={trip} payerTotals={payerTotals} />
 
             <form ref={formRef} onSubmit={submitExpense} className="expense-section-card-compact space-y-2">
               {editingId && (
