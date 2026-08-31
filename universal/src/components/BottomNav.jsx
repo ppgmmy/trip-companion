@@ -1,3 +1,5 @@
+import { useRef } from "react";
+
 const NAV = [
   { id: "itinerary", label: "行程", icon: (active) => (
     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={active ? 2.2 : 1.6}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -16,18 +18,53 @@ const NAV = [
   )},
 ];
 
-export default function BottomNav({ active, onSelect }) {
+export default function BottomNav({ active, onSelect, onLongPressExpenses }) {
+  const pressTimer = useRef(null);
+  const longPressFired = useRef(false);
+
+  function clearPressTimer() {
+    if (pressTimer.current) {
+      window.clearTimeout(pressTimer.current);
+      pressTimer.current = null;
+    }
+  }
+
+  function handlePointerDown(item) {
+    if (item.id !== "expenses" || !onLongPressExpenses) return;
+    longPressFired.current = false;
+    clearPressTimer();
+    pressTimer.current = window.setTimeout(() => {
+      longPressFired.current = true;
+      onLongPressExpenses();
+      if (navigator.vibrate) navigator.vibrate(12);
+    }, 500);
+  }
+
+  function handlePointerUp(item) {
+    clearPressTimer();
+    if (longPressFired.current) {
+      longPressFired.current = false;
+      return;
+    }
+    onSelect(item.id);
+  }
+
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 w-full safe-bottom" aria-label="主要導覽">
       <div className="mx-auto w-full max-w-lg box-border px-4">
         <div className="mb-3 flex gap-1 rounded-3xl border border-jade/15 bg-white/85 p-2 shadow-[var(--shadow-nav)] backdrop-blur">
         {NAV.map((item) => {
           const isActive = active === item.id;
+          const useLongPress = item.id === "expenses" && onLongPressExpenses;
           return (
             <button
               key={item.id}
               type="button"
-              onClick={() => onSelect(item.id)}
+              onClick={useLongPress ? undefined : () => onSelect(item.id)}
+              onPointerDown={useLongPress ? () => handlePointerDown(item) : undefined}
+              onPointerUp={useLongPress ? () => handlePointerUp(item) : undefined}
+              onPointerLeave={useLongPress ? clearPressTimer : undefined}
+              onPointerCancel={useLongPress ? clearPressTimer : undefined}
               className={`nav-btn flex min-h-12 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl text-[11px] font-semibold transition ${isActive ? "is-active" : "text-ink-faint"}`}
             >
               <span className="nav-icon flex h-8 w-12 items-center justify-center rounded-xl transition">{item.icon(isActive)}</span>

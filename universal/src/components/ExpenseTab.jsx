@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DEFAULT_PAYER_ID, DEFAULT_PAYMENT_METHOD, EXPENSE_CATEGORIES, aggregateByPayer, aggregateByPaymentMethod, expenseEntryTags, formatHkd, formatMoney, lastPaymentDefaults, normalizePaymentMethod, payerLabel, paymentMethodLabel, recentCustomPayers, resolvePayerFields, toDateId, tripDays } from "../data";
 import { isFeatureEnabled } from "../data/featureFlags";
+import { amountExpressionPreview, frequentAmounts, parseAmountExpression, suggestCategoryByHour } from "../utils/expenseInput";
 import { BarChart, DoughnutChart } from "./Charts";
+import CollapsibleSection from "./CollapsibleSection";
+import PwaQuickAddHint from "./PwaQuickAddHint";
+import SplitSettlementPanel from "./SplitSettlementPanel";
+import SwipeableExpenseItem from "./SwipeableExpenseItem";
+import UndoToast from "./UndoToast";
 import {
   AnalysisSectionTitle,
   AnalysisStory,
@@ -39,7 +45,7 @@ function formatDayHeading(dateId) {
 }
 
 export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxStatus, onRefreshRate, onApplyManualRate }) {
-  const [categoryId, setCategoryId] = useState("food");
+  const [categoryId, setCategoryId] = useState(() => suggestCategoryByHour());
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
   const [entryDate, setEntryDate] = useState(() => toDateId(new Date()));
@@ -55,10 +61,19 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
   const [customPayer, setCustomPayer] = useState(() => lastPaymentDefaults(expenses).customPayer);
   const [paymentMethod, setPaymentMethod] = useState(() => lastPaymentDefaults(expenses).paymentMethod);
   const [fxOpen, setFxOpen] = useState(false);
-  const [saveFlash, setSaveFlash] = useState("");
+  const [toast, setToast] = useState(null);
+  const [listTodayOnly, setListTodayOnly] = useState(true);
+  const undoRef = useRef(null);
   const tabRefs = useRef({});
   const tabRailRef = useRef(null);
   const formRef = useRef(null);
+  const amountRef = useRef(null);
+
+  useEffect(() => {
+    if (panel === "ledger" && !editingId) {
+      amountRef.current?.focus({ preventScroll: true });
+    }
+  }, [panel, editingId]);
 
   useEffect(() => {
     const el = tabRefs.current[panel];
@@ -66,6 +81,9 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
       el.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
     }
   }, [panel]);
+
+  const suggestedAmounts = useMemo(() => frequentAmounts(expenses), [expenses]);
+  const hasActiveListFilter = filterCategory !== "all" || filterPayer !== "all" || filterPaymentMethod !== "all" || Boolean(search.trim());
 
   const days = tripDays(trip);
   const rate = rateState?.rate || 0;
@@ -174,31 +192,52 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
     return groups;
   }, [visibleExpenses]);
 
+  const displayGroups = useMemo(() => {
+    if (!listTodayOnly || hasActiveListFilter) return groupedExpenses;
+    return groupedExpenses.filter((group) => group.date === todayId);
+  }, [groupedExpenses, hasActiveListFilter, listTodayOnly, todayId]);
+
+  const hiddenOlderCount = useMemo(() => {
+    if (!listTodayOnly || hasActiveListFilter) return 0;
+    return groupedExpenses.filter((group) => group.date !== todayId).reduce((sum, group) => sum + group.items.length, 0);
+  }, [groupedExpenses, hasActiveListFilter, listTodayOnly, todayId]);
+
   function resetForm() {
     const defaults = lastPaymentDefaults(expenses);
     setEditingId(null);
     setAmount("");
     setNote("");
     setEntryDate(toDateId(new Date()));
-    setCategoryId("food");
+    setCategoryId(suggestCategoryByHour());
     setPayer(defaults.payer);
     setCustomPayer(defaults.customPayer);
     setPaymentMethod(defaults.paymentMethod);
   }
 
-  function flash(msg) {
-    setSaveFlash(msg);
-    window.clearTimeout(flash._t);
-    flash._t = window.setTimeout(() => setSaveFlash(""), 2200);
+  function showToast(message, undoSnapshot = null) {
+    undoRef.current = undoSnapshot;
+    setToast({ message, undo: Boolean(undoSnapshot) });
+    window.clearTimeout(showToast._t);
+    showToast._t = window.setTimeout(() => {
+      setToast(null);
+      undoRef.current = null;
+    }, 5000);
+  }
+
+  function undoLastAction() {
+    if (!undoRef.current) return;
+    setExpenses(undoRef.current);
+    undoRef.current = null;
+    setToast(null);
   }
 
   function submitExpense(e) {
     e.preventDefault();
-    const value = Number(amount);
+    const value = parseAmountExpression(amount);
     if (!Number.isFinite(value) || value <= 0) return;
     const date = entryDate || toDateId(new Date());
-
     const resolvedPayer = customPayer.trim() || payer || DEFAULT_PAYER_ID;
+    const before = expenses;
 
     if (editingId) {
       setExpenses((prev) =>
@@ -218,7 +257,7 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
           };
         }),
       );
-      flash("已更新呢筆開支");
+      showToast("已更新呢筆開支");
       resetForm();
       return;
     }
@@ -236,15 +275,17 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
       createdAt: Date.now(),
     };
     setExpenses((prev) => [...prev, entry]);
-    flash(date === todayId ? "已記入今日開支" : `已補記 ${formatDayHeading(date)}`);
+    showToast(date === todayId ? "已記入今日開支" : `已補記 ${formatDayHeading(date)}`, before);
     setAmount("");
     setNote("");
+    window.requestAnimationFrame(() => amountRef.current?.focus({ preventScroll: true }));
   }
 
   function removeExpense(id) {
+    const before = expenses;
     setExpenses((prev) => prev.filter((e) => e.id !== id));
     if (editingId === id) resetForm();
-    flash("已刪除");
+    showToast("已刪除", before);
   }
 
   function startEdit(entry) {
@@ -258,9 +299,7 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
     setCustomPayer(payerFields.customPayer);
     setPaymentMethod(normalizePaymentMethod(entry.paymentMethod));
     setPanel("ledger");
-    requestAnimationFrame(() => {
-      formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
+    window.requestAnimationFrame(() => amountRef.current?.focus({ preventScroll: true }));
   }
 
   function duplicateFrom(entry) {
@@ -275,10 +314,15 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
     setCustomPayer(payerFields.customPayer);
     setPaymentMethod(normalizePaymentMethod(entry.paymentMethod));
     setPanel("ledger");
-    requestAnimationFrame(() => {
-      formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-    flash(`已複製「${entry.note || EXPENSE_CATEGORIES.find((c) => c.id === entry.categoryId)?.label || "開支"}」— 改金額後記入`);
+    window.requestAnimationFrame(() => amountRef.current?.focus({ preventScroll: true }));
+    showToast(`已複製「${entry.note || EXPENSE_CATEGORIES.find((c) => c.id === entry.categoryId)?.label || "開支"}」— 改金額後記入`);
+  }
+
+  function handleAmountKeyDown(e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      formRef.current?.requestSubmit();
+    }
   }
 
   function jumpToLedgerCategory(catId) {
@@ -310,7 +354,7 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
     ? { label: "最多", value: topCat.label }
     : { label: "分類", value: "—" };
 
-  const draftAmount = Number(amount) || 0;
+  const draftAmount = amountExpressionPreview(amount) ?? (Number(amount) || 0);
   const afterToday = todayLeft != null && entryDate === todayId ? todayLeft - (editingId ? 0 : draftAmount) : null;
 
   return (
@@ -359,10 +403,8 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
         </div>
       </div>
 
-      {saveFlash && (
-        <div className="rounded-2xl bg-jade px-4 py-2.5 text-center text-sm font-bold text-white shadow-[var(--shadow-soft)]">
-          ✓ {saveFlash}
-        </div>
+      {toast && (
+        <UndoToast message={toast.message} onUndo={toast.undo ? undoLastAction : null} />
       )}
 
       <div key={panel} className="tab-panel space-y-5" role="tabpanel">
@@ -442,29 +484,38 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
               remainingDays={remainingDays}
             />
 
-            <AnalysisSectionTitle
-              eyebrow="01 · 而家狀態"
-              title="今日同節奏點樣？"
-              hint="用白話對比今日、理想日均，同有冇爆煲日。"
-            />
-            <ExpenseInsightCards
-              trip={trip}
-              expenses={expenses}
-              days={days}
-              totalSpent={totalSpent}
-              budget={budget}
-              elapsedDays={elapsedDays}
-              remainingDays={remainingDays}
-              showTrend={false}
-            />
+            <CollapsibleSection
+              title="01 · 而家狀態"
+              summary={todaySpent > 0 ? `今日已使 ${formatMoney(todaySpent, trip.targetCurrency)}` : "今日尚未記帳"}
+              defaultOpen={false}
+            >
+              <AnalysisSectionTitle
+                eyebrow="01 · 而家狀態"
+                title="今日同節奏點樣？"
+                hint="用白話對比今日、理想日均，同有冇爆煲日。"
+              />
+              <ExpenseInsightCards
+                trip={trip}
+                expenses={expenses}
+                days={days}
+                totalSpent={totalSpent}
+                budget={budget}
+                elapsedDays={elapsedDays}
+                remainingDays={remainingDays}
+                showTrend={false}
+              />
+            </CollapsibleSection>
 
-            <AnalysisSectionTitle
-              eyebrow="02 · 錢去咗邊"
-              title="最多使喺邊類？"
-              hint={topCat ? `而家最多係「${topCat.label}」。撳排行可跳去記帳睇清單。` : "記幾筆之後就會睇到分類佔比。"}
-            />
-            <div className="expense-section-card">
-              <p className="expense-stat-label mb-3">分類佔比（折合港幣）</p>
+            <CollapsibleSection
+              title="02 · 錢去咗邊"
+              summary={topCat ? `最多：${topCat.label}` : "記幾筆後顯示分類佔比"}
+              defaultOpen={false}
+            >
+              <AnalysisSectionTitle
+                eyebrow="02 · 錢去咗邊"
+                title="最多使喺邊類？"
+                hint={topCat ? `而家最多係「${topCat.label}」。撳排行可跳去記帳睇清單。` : "記幾筆之後就會睇到分類佔比。"}
+              />
               {expenses.length === 0 ? (
                 <p className="py-6 text-center text-sm text-ink-faint">未有支出，記一筆就會顯示圓餅</p>
               ) : (
@@ -475,43 +526,59 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
                   centerValue={doughnutCenter.value}
                 />
               )}
-            </div>
+              <div className="mt-4">
+                <CategoryRanking
+                  catTotals={catTotals}
+                  expenses={expenses}
+                  showPct
+                  filterCategory={filterCategory}
+                  setFilterCategory={setFilterCategory}
+                  onJumpToLedger={jumpToLedgerCategory}
+                />
+              </div>
+            </CollapsibleSection>
 
-            <CategoryRanking
-              catTotals={catTotals}
-              expenses={expenses}
-              showPct
-              filterCategory={filterCategory}
-              setFilterCategory={setFilterCategory}
-              onJumpToLedger={jumpToLedgerCategory}
-            />
+            <CollapsibleSection
+              title="02b · 邊個付、點付"
+              summary={payerTotals[0] ? `${payerTotals[0].label} 付最多` : "記幾筆後顯示分帳"}
+              defaultOpen={false}
+            >
+              <PayerPaymentBreakdown
+                trip={trip}
+                expenses={expenses}
+                payerTotals={payerTotals}
+                paymentTotals={paymentTotals}
+                totalHkd={totalHkd}
+                onJumpToPayer={jumpToLedgerPayer}
+                onJumpToPayment={jumpToLedgerPayment}
+              />
+              <div className="mt-3">
+                <SplitSettlementPanel trip={trip} expenses={expenses} />
+              </div>
+            </CollapsibleSection>
 
-            <PayerPaymentBreakdown
-              trip={trip}
-              expenses={expenses}
-              payerTotals={payerTotals}
-              paymentTotals={paymentTotals}
-              totalHkd={totalHkd}
-              onJumpToPayer={jumpToLedgerPayer}
-              onJumpToPayment={jumpToLedgerPayment}
-            />
-
-            <AnalysisSectionTitle
-              eyebrow="03 · 時間走勢"
-              title="邊段時間使得多？"
-              hint={peakWeek ? `${peakWeek.label} 使得最多（${formatHkd(peakWeek.value)}）。` : "有記帳之後會顯示每週同近 7 日走勢。"}
-            />
-            <SevenDayTrendPanel trip={trip} expenses={expenses} />
-            <div className="expense-section-card">
-              <p className="expense-stat-label">旅程每週使費（港幣）</p>
-              <p className="mb-3 mt-1 text-sm text-ink-soft">由出發日起計第 1–5 週，越高柱＝嗰週使得越多</p>
-              <BarChart bars={weeklyTotals} formatLabel={(v) => `HK$${Math.round(v)}`} />
-            </div>
+            <CollapsibleSection
+              title="03 · 時間走勢"
+              summary={peakWeek ? `${peakWeek.label} 使得最多` : "記帳後顯示趨勢"}
+              defaultOpen={false}
+            >
+              <AnalysisSectionTitle
+                eyebrow="03 · 時間走勢"
+                title="邊段時間使得多？"
+                hint={peakWeek ? `${peakWeek.label} 使得最多（${formatHkd(peakWeek.value)}）。` : "有記帳之後會顯示每週同近 7 日走勢。"}
+              />
+              <SevenDayTrendPanel trip={trip} expenses={expenses} />
+              <div className="mt-4">
+                <p className="expense-stat-label">旅程每週使費（港幣）</p>
+                <BarChart bars={weeklyTotals} formatLabel={(v) => `HK$${Math.round(v)}`} />
+              </div>
+            </CollapsibleSection>
           </div>
         )}
 
         {panel === "ledger" && (
           <div className="space-y-3">
+            <PwaQuickAddHint />
             <LedgerSummaryBar
               trip={trip}
               expenses={expenses}
@@ -522,6 +589,8 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
               rate={rate}
               fxLabel={statusLabel}
             />
+
+            <SplitSettlementPanel trip={trip} expenses={expenses} />
 
             <form ref={formRef} onSubmit={submitExpense} className="expense-section-card-compact space-y-2">
               {editingId && (
@@ -544,18 +613,36 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
               />
 
               <input
-                type="number"
+                ref={amountRef}
+                type="text"
                 inputMode="decimal"
-                min="0"
-                step="0.01"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
+                onKeyDown={handleAmountKeyDown}
                 placeholder={`金額（${trip.targetCurrency}）`}
                 className="h-12 w-full rounded-xl border border-jade/15 bg-mist px-3 text-center font-display text-xl font-bold outline-none ring-jade focus:ring-2"
               />
 
+              {suggestedAmounts.length > 0 && !amount && (
+                <div className="expense-chip-row">
+                  {suggestedAmounts.map((value) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setAmount(String(value))}
+                      className="shrink-0 rounded-xl border border-jade/15 bg-white px-2.5 py-1.5 text-xs font-bold text-ink-soft"
+                    >
+                      {formatMoney(value, trip.targetCurrency)}
+                    </button>
+                  ))}
+                </div>
+              )}
+
               {draftAmount > 0 && (
                 <p className="text-center text-[11px] font-semibold text-ink-soft">
+                  {amountExpressionPreview(amount) != null && amount.trim() !== String(draftAmount) && (
+                    <span>= {formatMoney(draftAmount, trip.targetCurrency)} · </span>
+                  )}
                   ≈ {formatHkd(draftAmount * rate)}
                   {afterToday != null && entryDate === todayId && !editingId && (
                     <span className={afterToday < 0 ? " text-coral" : " text-jade-deep"}>
@@ -679,6 +766,16 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
               totalSpent={totalSpent}
             />
 
+            {!hasActiveListFilter && hiddenOlderCount > 0 && (
+              <button
+                type="button"
+                onClick={() => setListTodayOnly((v) => !v)}
+                className="w-full rounded-xl border border-jade/15 bg-white px-3 py-2 text-xs font-bold text-jade-deep"
+              >
+                {listTodayOnly ? `顯示全部（另有 ${hiddenOlderCount} 筆舊記錄）` : "只顯示今日"}
+              </button>
+            )}
+
               {expenses.length === 0 ? (
                 isFeatureEnabled("empty-state-tips") ? (
                   <ul><EmptyStateTip hasExpenses={false} /></ul>
@@ -687,8 +784,10 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
                 )
               ) : visibleExpenses.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-jade/20 bg-white/50 px-4 py-8 text-center text-sm text-ink-faint">無符合條件嘅支出</div>
+              ) : displayGroups.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-jade/20 bg-white/50 px-4 py-8 text-center text-sm text-ink-faint">今日尚未記帳</div>
               ) : (
-                groupedExpenses.map((group) => (
+                displayGroups.map((group) => (
                   <section key={group.date} className="space-y-2.5">
                     <div className="expense-day-header py-1.5">
                       <h3 className="text-xs font-bold text-ink">{formatDayHeading(group.date)}</h3>
@@ -703,10 +802,13 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
                         const isEditing = editingId === entry.id;
                         const tags = expenseEntryTags(entry);
                         return (
-                          <li
-                            key={entry.id}
-                            className={`rounded-xl bg-white px-3 py-2.5 shadow-[var(--shadow-soft)] ${isEditing ? "ring-2 ring-jade/40" : ""}`}
+                          <li key={entry.id} className="list-none">
+                          <SwipeableExpenseItem
+                            className={isEditing ? "ring-2 ring-jade/40" : ""}
+                            onDelete={() => removeExpense(entry.id)}
+                            onDuplicate={() => duplicateFrom(entry)}
                           >
+                          <div className="rounded-xl px-3 py-2.5 shadow-[var(--shadow-soft)]">
                             <div className="flex items-start gap-2">
                             <button
                               type="button"
@@ -762,6 +864,8 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
                               </svg>
                             </button>
                             </div>
+                          </div>
+                          </SwipeableExpenseItem>
                           </li>
                         );
                       })}

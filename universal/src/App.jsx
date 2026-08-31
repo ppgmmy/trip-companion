@@ -144,7 +144,16 @@ export default function App() {
         )}
       </main>
 
-      {activeTrip && <BottomNav active={activeTab} onSelect={setActiveTab} />}
+      {activeTrip && (
+        <BottomNav
+          active={activeTab}
+          onSelect={setActiveTab}
+          onLongPressExpenses={() => {
+            setActiveTab("expenses");
+            setQuickAdd(true);
+          }}
+        />
+      )}
       {activeTrip && (
         <button
           type="button"

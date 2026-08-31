@@ -15,9 +15,14 @@
     "export-csv",
     "note-templates",
     "duplicate-last",
-    "pinned-budget-alert"
+    "pinned-budget-alert",
+    "hkd-list-toggle",
+    "empty-state-tips",
+    "remaining-days-chip",
+    "category-pct-labels",
+    "avg-per-category"
   ],
-  "updatedAt": "2026-08-31T02:00:05.000Z",
-  "lastFeatureId": "pinned-budget-alert",
-  "lastTitle": "預算警戒條"
+  "updatedAt": "2026-08-31T06:30:00.000Z",
+  "lastFeatureId": "avg-per-category",
+  "lastTitle": "分類日均"
 }
