@@ -111,8 +111,10 @@ export function recentCustomPayers(expenses, limit = 4) {
 
 export function aggregateByPayer(expenses) {
   const map = {};
+  const order = ["ppg", "mo", "cash-pool", "shared"];
   expenses.forEach((entry) => {
-    const key = entry.payer || DEFAULT_PAYER_ID;
+    let key = entry.payer || DEFAULT_PAYER_ID;
+    if (key === "cash") key = "cash-pool";
     if (!map[key]) {
       map[key] = { key, label: payerLabel(key), count: 0, amount: 0, hkd: 0 };
     }
@@ -120,7 +122,16 @@ export function aggregateByPayer(expenses) {
     map[key].amount += Number(entry.amount) || 0;
     map[key].hkd += Number(entry.baseAmount) || 0;
   });
-  return Object.values(map).sort((a, b) => b.hkd - a.hkd);
+  return Object.values(map).sort((a, b) => {
+    const ai = order.indexOf(a.key);
+    const bi = order.indexOf(b.key);
+    if (ai !== -1 || bi !== -1) {
+      if (ai === -1) return 1;
+      if (bi === -1) return -1;
+      return ai - bi;
+    }
+    return b.hkd - a.hkd;
+  });
 }
 
 export function aggregateByPaymentMethod(expenses) {

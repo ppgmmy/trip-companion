@@ -154,7 +154,10 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
       list = list.filter((e) => e.categoryId === filterCategory);
     }
     if (filterPayer !== "all") {
-      list = list.filter((e) => (e.payer || DEFAULT_PAYER_ID) === filterPayer);
+      list = list.filter((e) => {
+        const key = e.payer === "cash" ? "cash-pool" : (e.payer || DEFAULT_PAYER_ID);
+        return key === filterPayer;
+      });
     }
     if (filterPaymentMethod !== "all") {
       list = list.filter((e) => normalizePaymentMethod(e.paymentMethod) === filterPaymentMethod);
@@ -333,6 +336,7 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
   function jumpToLedgerPayer(payerKey) {
     setFilterPayer(payerKey);
     setFilterPaymentMethod("all");
+    if (payerKey !== "all") setListTodayOnly(false);
     setPanel("ledger");
   }
 
@@ -587,7 +591,14 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
               fxLabel={statusLabel}
             />
 
-            <PayerSpendStats trip={trip} payerTotals={payerTotals} />
+            <PayerSpendStats
+              trip={trip}
+              expenses={expenses}
+              payerTotals={payerTotals}
+              totalHkd={totalHkd}
+              activePayer={filterPayer}
+              onJumpToPayer={jumpToLedgerPayer}
+            />
 
             <form ref={formRef} onSubmit={submitExpense} className="expense-section-card-compact space-y-2">
               {editingId && (
