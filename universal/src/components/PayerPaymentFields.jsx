@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { DEFAULT_PAYER_ID, PAYER_PRESETS, PAYMENT_METHODS, payerLabel } from "../data";
 
-/** 一撳付款人：ppg / mo / 共用現金袋 */
+/** 一撳付款人：ppg / mo / 現金 */
 const QUICK_PAYER_IDS = ["ppg", "mo", "cash-pool"];
 const CASH_POOL_ID = "cash-pool";
 
@@ -31,7 +31,7 @@ export default function PayerPaymentFields({
 
   function selectPayment(methodId) {
     setPaymentMethod(methodId);
-    // 揀卡／個人現金時，唔好留喺共用現金袋
+    // 揀卡／個人現金時，改返 ppg
     if (isCashPool) {
       setPayer(DEFAULT_PAYER_ID);
       setCustomPayer("");
@@ -72,9 +72,7 @@ export default function PayerPaymentFields({
       )}
 
       <p className="px-0.5 text-[10px] leading-snug text-ink-faint">
-        {isCashPool
-          ? "共用現金袋：唔記入 ppg／mo"
-          : "ppg／mo 可揀信用卡或現金；「現金」掣＝共用現金袋"}
+        {isCashPool ? "「現金」唔記入 ppg／mo" : "ppg／mo 可揀信用卡或現金"}
       </p>
 
       <button
