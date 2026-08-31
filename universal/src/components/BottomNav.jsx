@@ -18,8 +18,9 @@ const NAV = [
 
 export default function BottomNav({ active, onSelect }) {
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-lg safe-bottom" aria-label="主要導覽">
-      <div className="mx-3 mb-3 flex gap-1 rounded-3xl border border-jade/15 bg-white/85 p-2 shadow-[var(--shadow-nav)] backdrop-blur">
+    <nav className="fixed inset-x-0 bottom-0 z-40 w-full safe-bottom" aria-label="主要導覽">
+      <div className="mx-auto w-full max-w-lg box-border px-4">
+        <div className="mb-3 flex gap-1 rounded-3xl border border-jade/15 bg-white/85 p-2 shadow-[var(--shadow-nav)] backdrop-blur">
         {NAV.map((item) => {
           const isActive = active === item.id;
           return (
@@ -34,6 +35,7 @@ export default function BottomNav({ active, onSelect }) {
             </button>
           );
         })}
+        </div>
       </div>
     </nav>
   );

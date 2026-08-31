@@ -27,6 +27,8 @@ html,
 body,
 #root {
   min-height: 100%;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 body {
@@ -34,6 +36,7 @@ body {
   font-family: var(--font-sans);
   color: var(--color-ink);
   background: var(--color-mist);
+  -webkit-text-size-adjust: 100%;
 }
 
 .bg-travel {
@@ -97,6 +100,8 @@ body {
 }
 
 .expense-panel-rail {
-  /* Keep chips readable while scrolling within a panel */
   box-shadow: 0 8px 20px -16px rgb(18 33 31 / 0.35);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
 }

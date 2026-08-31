@@ -36,7 +36,7 @@ function EmptyState({ onCreate }) {
 export default function App() {
   const [trips, setTrips] = useLocalStorage(REGISTRY_KEYS.trips, [], { migrate: (v) => (Array.isArray(v) ? v : []) });
   const [activeId, setActiveId] = useLocalStorage(REGISTRY_KEYS.active, null, { migrate: (v) => (typeof v === "string" ? v : null) });
-  const [activeTab, setActiveTab] = useState("itinerary");
+  const [activeTab, setActiveTab] = useState("expenses");
   const [expandedTool, setExpandedTool] = useState(null);
   const [quickAdd, setQuickAdd] = useState(false);
 
@@ -106,8 +106,8 @@ export default function App() {
   }
 
   return (
-    <div className="bg-travel min-h-dvh">
-      <main className="safe-top mx-auto max-w-lg px-4 pb-32">
+    <div className="bg-travel min-h-dvh w-full overflow-x-hidden">
+      <main className="safe-top mx-auto w-full max-w-lg box-border px-4 pb-32">
         {activeTrip && (
           <div className="mb-4">
             <TripSwitcher variant="banner" trips={trips} activeId={activeTrip?.id} onSwitch={switchTrip} onCreate={createTrip} onUpdate={updateTrip} onDelete={deleteTrip} />
@@ -150,7 +150,7 @@ export default function App() {
           type="button"
           onClick={() => setQuickAdd(true)}
           aria-label="快速記帳"
-          className="fixed bottom-24 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-jade text-2xl text-white shadow-[var(--shadow-soft)] transition active:scale-90"
+          className="fixed bottom-[calc(6.5rem+env(safe-area-inset-bottom,0px))] right-[max(1rem,env(safe-area-inset-right,0px))] z-30 flex h-14 w-14 items-center justify-center rounded-full bg-jade text-2xl text-white shadow-[var(--shadow-soft)] transition active:scale-90"
         >
           ⚡
         </button>
