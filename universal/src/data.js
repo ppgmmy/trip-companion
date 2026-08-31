@@ -134,6 +134,15 @@ export function expenseMetaLine(entry) {
   return parts.join(" · ");
 }
 
+export function expenseEntryTags(entry) {
+  const tags = [];
+  const payer = payerLabel(entry.payer);
+  const payment = paymentMethodLabel(entry.paymentMethod);
+  if (payer) tags.push({ kind: "payer", label: payer });
+  if (payment) tags.push({ kind: "payment", label: payment });
+  return tags;
+}
+
 export const DEFAULT_BADGES = [
   { id: "outlets", label: "有插座" },
   { id: "quiet", label: "安靜" },

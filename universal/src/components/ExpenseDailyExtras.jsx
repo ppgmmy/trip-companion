@@ -866,19 +866,19 @@ export function AnalysisStory({ trip, expenses, days, totalSpent, budget, elapse
         : "bg-[#eef3f1] text-ink-soft";
 
   return (
-    <div className={`rounded-3xl border bg-gradient-to-br p-4 shadow-[var(--shadow-soft)] ${toneClass}`}>
+    <div className={`rounded-3xl border bg-gradient-to-br p-5 shadow-[var(--shadow-soft)] ${toneClass}`}>
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-wider text-ink-faint">一句睇晒</p>
-          <p className="mt-1 font-display text-xl font-bold text-ink">{story.headline}</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-ink-faint">一句睇晒</p>
+          <p className="mt-1 font-display text-2xl font-bold leading-tight text-ink">{story.headline}</p>
         </div>
-        <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${badgeClass}`}>白話總結</span>
+        <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${badgeClass}`}>白話總結</span>
       </div>
-      <ul className="mt-3 space-y-2">
+      <ul className="mt-4 space-y-2.5">
         {story.lines.map((line, i) => (
-          <li key={i} className="flex gap-2 text-sm leading-relaxed text-ink-soft">
-            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-jade" />
-            <span>{line}</span>
+          <li key={i} className="flex gap-2.5 text-sm leading-relaxed text-ink-soft">
+            <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-jade" />
+            <span className="text-[15px] leading-relaxed text-ink-soft">{line}</span>
           </li>
         ))}
       </ul>
@@ -886,12 +886,35 @@ export function AnalysisStory({ trip, expenses, days, totalSpent, budget, elapse
   );
 }
 
+export function LedgerSummaryBar({ trip, expenses, visibleCount, todaySpent, totalSpent, totalHkd }) {
+  return (
+    <div className="grid grid-cols-3 gap-2">
+      <div className="expense-section-card text-center">
+        <p className="expense-stat-label">今日已使</p>
+        <p className="expense-stat-value mt-1 text-jade-deep">{formatMoney(todaySpent, trip.targetCurrency)}</p>
+      </div>
+      <div className="expense-section-card text-center">
+        <p className="expense-stat-label">旅程總計</p>
+        <p className="expense-stat-value mt-1">{formatMoney(totalSpent, trip.targetCurrency)}</p>
+        <p className="mt-0.5 text-[11px] font-semibold text-ink-faint">{formatHkd(totalHkd)}</p>
+      </div>
+      <div className="expense-section-card text-center">
+        <p className="expense-stat-label">清單筆數</p>
+        <p className="expense-stat-value mt-1">
+          {visibleCount === expenses.length ? expenses.length : `${visibleCount}/${expenses.length}`}
+        </p>
+        <p className="mt-0.5 text-[11px] font-semibold text-ink-faint">筆</p>
+      </div>
+    </div>
+  );
+}
+
 export function AnalysisSectionTitle({ eyebrow, title, hint }) {
   return (
-    <div className="pt-1">
-      <p className="text-[11px] font-bold uppercase tracking-wider text-jade">{eyebrow}</p>
-      <h3 className="mt-0.5 font-display text-lg font-bold text-ink">{title}</h3>
-      {hint && <p className="mt-1 text-xs leading-relaxed text-ink-faint">{hint}</p>}
+    <div className="rounded-2xl bg-white/70 px-1 pt-1">
+      <p className="text-xs font-bold uppercase tracking-wider text-jade">{eyebrow}</p>
+      <h3 className="mt-1 font-display text-xl font-bold text-ink">{title}</h3>
+      {hint && <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">{hint}</p>}
     </div>
   );
 }
@@ -922,10 +945,10 @@ export function ExpenseInsightCards({ trip, expenses, days, totalSpent, budget, 
 
   if (isFeatureEnabled("today-vs-yesterday")) {
     cards.push(
-      <div key="ty" className="rounded-2xl bg-white/85 p-3 shadow-[var(--shadow-soft)]">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-faint">今日使咗幾多</p>
-        <p className="mt-1 font-display text-lg font-bold">{formatMoney(todaySum, trip.targetCurrency)}</p>
-        <p className={`text-xs font-semibold ${delta > 0 ? "text-coral" : delta < 0 ? "text-jade" : "text-ink-faint"}`}>
+      <div key="ty" className="expense-section-card">
+        <p className="expense-stat-label">今日使咗幾多</p>
+        <p className="expense-stat-value mt-1">{formatMoney(todaySum, trip.targetCurrency)}</p>
+        <p className={`mt-1.5 text-sm font-semibold ${delta > 0 ? "text-coral" : delta < 0 ? "text-jade" : "text-ink-faint"}`}>
           {delta === 0 ? "同昨日一樣多" : delta > 0 ? `比昨日多 ${formatMoney(delta, trip.targetCurrency)}` : `比昨日少 ${formatMoney(-delta, trip.targetCurrency)}`}
         </p>
       </div>,
@@ -934,27 +957,27 @@ export function ExpenseInsightCards({ trip, expenses, days, totalSpent, budget, 
 
   if (isFeatureEnabled("logging-streak")) {
     cards.push(
-      <div key="streak" className="rounded-2xl bg-white/85 p-3 shadow-[var(--shadow-soft)]">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-faint">連續有記帳</p>
-        <p className="mt-1 font-display text-lg font-bold">{streak} 日</p>
-        <p className="text-xs text-ink-faint">{streak > 0 ? "習慣緊，繼續保持" : "今日記一筆就開始"}</p>
+      <div key="streak" className="expense-section-card">
+        <p className="expense-stat-label">連續有記帳</p>
+        <p className="expense-stat-value mt-1">{streak} 日</p>
+        <p className="mt-1.5 text-sm text-ink-soft">{streak > 0 ? "習慣緊，繼續保持" : "今日記一筆就開始"}</p>
       </div>,
     );
   }
 
   if (isFeatureEnabled("biggest-expense") && biggest) {
     cards.push(
-      <div key="big" className="rounded-2xl bg-white/85 p-3 shadow-[var(--shadow-soft)]">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-faint">最大一筆使費</p>
-        <p className="mt-1 truncate font-display text-lg font-bold">{formatMoney(biggest.amount, trip.targetCurrency)}</p>
-        <p className="truncate text-xs text-ink-faint">{biggest.note} · {formatShortDate(biggest.date)}</p>
+      <div key="big" className="expense-section-card">
+        <p className="expense-stat-label">最大一筆使費</p>
+        <p className="expense-stat-value mt-1">{formatMoney(biggest.amount, trip.targetCurrency)}</p>
+        <p className="mt-1.5 truncate text-sm text-ink-soft">{biggest.note} · {formatShortDate(biggest.date)}</p>
       </div>,
     );
   }
 
   return (
     <>
-      {cards.length > 0 && <div className="grid grid-cols-2 gap-2">{cards}</div>}
+      {cards.length > 0 && <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">{cards}</div>}
 
       <PaceVsIdealPanel
         trip={trip}
@@ -1014,11 +1037,11 @@ export function SevenDayTrendPanel({ trip, expenses }) {
       : "未有近 7 日支出紀錄。";
 
   return (
-    <div className="rounded-3xl bg-white/85 p-4 shadow-[var(--shadow-soft)]">
-      <div className="mb-2 flex items-center justify-between gap-2">
+    <div className="expense-section-card">
+      <div className="mb-3 flex items-center justify-between gap-2">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-ink-faint">近一星期每日使幾多</p>
-          <p className="mt-0.5 text-[11px] text-ink-faint">{caption}</p>
+          <p className="expense-stat-label">近一星期每日使幾多</p>
+          <p className="mt-1 text-sm leading-relaxed text-ink-soft">{caption}</p>
         </div>
       </div>
       <Sparkline
@@ -1063,13 +1086,13 @@ export function CategoryRanking({ catTotals, expenses, showPct, filterCategory, 
   }
 
   return (
-    <div className="rounded-3xl bg-white/85 p-4 shadow-[var(--shadow-soft)]">
-      <div className="mb-3 flex items-start justify-between gap-2">
+    <div className="expense-section-card">
+      <div className="mb-4 flex items-start justify-between gap-2">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-ink-faint">邊類使得最多（港幣）</p>
-          <p className="mt-1 text-[11px] text-ink-faint">
+          <p className="expense-stat-label">邊類使得最多（港幣）</p>
+          <p className="mt-1 text-sm leading-relaxed text-ink-soft">
             {ranked[0].label} 佔 {topShare}% · Top {ranked.length}
-            {typeof onJumpToLedger === "function" ? " · 撳分類可去記帳睇清單" : ""}
+            {typeof onJumpToLedger === "function" ? " · 撳分類可去記帳" : ""}
           </p>
         </div>
         {canFilter && filterCategory !== "all" && (
@@ -1104,10 +1127,10 @@ export function CategoryRanking({ catTotals, expenses, showPct, filterCategory, 
                     {i < 3 ? medals[i] : i + 1}
                   </span>
                   <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: c.color }} />
-                  <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">{c.label}</span>
-                  <span className="text-sm font-bold text-jade-deep">{formatHkd(c.value)}</span>
+                  <span className="min-w-0 flex-1 truncate text-base font-bold text-ink">{c.label}</span>
+                  <span className="font-display text-base font-black text-jade-deep">{formatHkd(c.value)}</span>
                   {(showPct || isFeatureEnabled("category-pct-labels")) && (
-                    <span className="w-9 shrink-0 text-right text-[11px] font-semibold text-ink-faint">{pct}%</span>
+                    <span className="w-10 shrink-0 text-right text-sm font-bold text-ink-soft">{pct}%</span>
                   )}
                 </div>
                 <div className="mt-2 ml-7 h-2 overflow-hidden rounded-full bg-[#efe9e0]">
@@ -1120,9 +1143,9 @@ export function CategoryRanking({ catTotals, expenses, showPct, filterCategory, 
                   />
                 </div>
                 {isActive && (
-                  <p className="mt-2 ml-7 text-[11px] font-semibold text-ink-soft">
+                  <p className="mt-2 ml-7 text-sm font-semibold text-ink-soft">
                     {txCount} 筆 · 平均每筆 {formatHkd(avgPerTx)}
-                    {canFilter ? " · 已篩選列表" : " · 點擊展開"}
+                    {canFilter ? " · 已篩選列表" : ""}
                   </p>
                 )}
               </button>
@@ -1298,15 +1321,15 @@ export function PayerPaymentBreakdown({ expenses, payerTotals, paymentTotals, to
               <button
                 type="button"
                 onClick={() => onJump?.(row.key)}
-                className="flex w-full items-center gap-3 rounded-2xl bg-[#f1f5f4] px-3 py-2.5 text-left transition active:scale-[0.99]"
+                className="flex w-full items-center gap-3 rounded-2xl bg-[#f1f5f4] px-3.5 py-3 text-left transition active:scale-[0.99]"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-bold text-ink">{row.label}</p>
-                  <p className="text-[11px] text-ink-faint">{row.count} 筆 · 撳我睇清單</p>
+                  <p className="truncate text-base font-bold text-ink">{row.label}</p>
+                  <p className="mt-0.5 text-sm text-ink-soft">{row.count} 筆 · 撳我睇清單</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-black text-jade-deep">{formatHkd(row.hkd)}</p>
-                  <p className="text-[11px] text-ink-faint">{pct}%</p>
+                  <p className="font-display text-base font-black text-jade-deep">{formatHkd(row.hkd)}</p>
+                  <p className="text-sm font-semibold text-ink-faint">{pct}%</p>
                 </div>
               </button>
             </li>
@@ -1323,15 +1346,15 @@ export function PayerPaymentBreakdown({ expenses, payerTotals, paymentTotals, to
         title="付款人同支付方式"
         hint={`${payerHint}；${paymentHint}`}
       />
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div className="rounded-3xl bg-white/85 p-4 shadow-[var(--shadow-soft)]">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-ink-faint">邊個付咗幾多</p>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="expense-section-card">
+          <p className="expense-stat-label mb-3">邊個付咗幾多</p>
           {payerTotals.length ? renderRows(payerTotals, onJumpToPayer) : (
             <p className="py-4 text-center text-sm text-ink-faint">未有付款人資料</p>
           )}
         </div>
-        <div className="rounded-3xl bg-white/85 p-4 shadow-[var(--shadow-soft)]">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-ink-faint">支付方式分佈</p>
+        <div className="expense-section-card">
+          <p className="expense-stat-label mb-3">支付方式分佈</p>
           {paymentTotals.length ? renderRows(paymentTotals, onJumpToPayment) : (
             <p className="py-4 text-center text-sm text-ink-faint">未有支付方式資料</p>
           )}
@@ -1420,7 +1443,7 @@ export function ExpenseListExtras({
   if (!showFilter && !showSearch && !showToggle && !showDup && !payerTotals.length && !paymentTotals.length) return null;
 
   return (
-    <div className="space-y-2">
+    <div className="expense-section-card space-y-3">
       <div className="flex flex-wrap gap-2">
         {showDup && expenses.length > 0 && (
           <button type="button" onClick={onDuplicateLast} className="min-h-10 rounded-2xl border border-jade/15 bg-white px-3 text-xs font-bold text-ink">
@@ -1471,7 +1494,7 @@ export function ExpenseListExtras({
       )}
       {showFilter && (
         <div>
-          <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-ink-faint">分類篩選</p>
+          <p className="expense-stat-label mb-2">分類篩選</p>
           <div className="flex flex-wrap gap-1.5">
             <button
               type="button"
@@ -1506,7 +1529,7 @@ export function ExpenseListExtras({
         <div className="space-y-2">
           {payerTotals.length > 0 && (
             <div>
-              <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-ink-faint">付款人篩選</p>
+              <p className="expense-stat-label mb-2">付款人篩選</p>
               <div className="flex flex-wrap gap-1.5">
                 <button
                   type="button"
@@ -1531,7 +1554,7 @@ export function ExpenseListExtras({
           )}
           {paymentTotals.length > 0 && (
             <div>
-              <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-ink-faint">支付方式篩選</p>
+              <p className="expense-stat-label mb-2">支付方式篩選</p>
               <div className="flex flex-wrap gap-1.5">
                 <button
                   type="button"

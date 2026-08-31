@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { DEFAULT_PAYER_ID, EXPENSE_CATEGORIES, aggregateByPayer, aggregateByPaymentMethod, expenseMetaLine, formatHkd, formatMoney, lastPaymentDefaults, payerLabel, paymentMethodLabel, recentCustomPayers, resolvePayerFields, toDateId, tripDays } from "../data";
+import { DEFAULT_PAYER_ID, EXPENSE_CATEGORIES, aggregateByPayer, aggregateByPaymentMethod, expenseEntryTags, formatHkd, formatMoney, lastPaymentDefaults, payerLabel, paymentMethodLabel, recentCustomPayers, resolvePayerFields, toDateId, tripDays } from "../data";
 import { isFeatureEnabled } from "../data/featureFlags";
 import { BarChart, DoughnutChart } from "./Charts";
 import {
@@ -13,6 +13,7 @@ import {
   ExpenseListExtras,
   ExportCsvPanel,
   FilteredCategorySummary,
+  LedgerSummaryBar,
   PinnedBudgetAlert,
   PayerPaymentBreakdown,
   QuickAddHelpers,
@@ -21,9 +22,9 @@ import {
 import PayerPaymentFields from "./PayerPaymentFields";
 
 const PANELS = [
-  { id: "overview", label: "概覽" },
-  { id: "analysis", label: "分析" },
   { id: "ledger", label: "記帳" },
+  { id: "analysis", label: "分析" },
+  { id: "overview", label: "概覽" },
 ];
 
 function formatDayHeading(dateId) {
@@ -368,7 +369,7 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
         </div>
       )}
 
-      <div key={panel} className="tab-panel space-y-4" role="tabpanel">
+      <div key={panel} className="tab-panel space-y-5" role="tabpanel">
         {panel === "overview" && (
           <>
             <DailyOptBanner />
@@ -434,7 +435,7 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
         )}
 
         {panel === "analysis" && (
-          <>
+          <div className="space-y-6">
             <AnalysisStory
               trip={trip}
               expenses={expenses}
@@ -466,8 +467,8 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
               title="最多使喺邊類？"
               hint={topCat ? `而家最多係「${topCat.label}」。撳排行可跳去記帳睇清單。` : "記幾筆之後就會睇到分類佔比。"}
             />
-            <div className="rounded-3xl bg-white/85 p-4 shadow-[var(--shadow-soft)]">
-              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-ink-faint">分類佔比（折合港幣）</p>
+            <div className="expense-section-card">
+              <p className="expense-stat-label mb-3">分類佔比（折合港幣）</p>
               {expenses.length === 0 ? (
                 <p className="py-6 text-center text-sm text-ink-faint">未有支出，記一筆就會顯示圓餅</p>
               ) : (
@@ -505,21 +506,24 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
               hint={peakWeek ? `${peakWeek.label} 使得最多（${formatHkd(peakWeek.value)}）。` : "有記帳之後會顯示每週同近 7 日走勢。"}
             />
             <SevenDayTrendPanel trip={trip} expenses={expenses} />
-            <div className="rounded-3xl bg-white/85 p-4 shadow-[var(--shadow-soft)]">
-              <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-ink-faint">旅程每週使費（港幣）</p>
-              <p className="mb-3 text-[11px] text-ink-faint">由出發日起計第 1–5 週，越高柱＝嗰週使得越多</p>
+            <div className="expense-section-card">
+              <p className="expense-stat-label">旅程每週使費（港幣）</p>
+              <p className="mb-3 mt-1 text-sm text-ink-soft">由出發日起計第 1–5 週，越高柱＝嗰週使得越多</p>
               <BarChart bars={weeklyTotals} formatLabel={(v) => `HK$${Math.round(v)}`} />
             </div>
-          </>
+          </div>
         )}
 
         {panel === "ledger" && (
-          <>
-            <form ref={formRef} onSubmit={submitExpense} className="space-y-3 rounded-3xl bg-white/85 p-4 shadow-[var(--shadow-soft)]">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-xs font-semibold uppercase tracking-wider text-ink-faint">
-                  {editingId ? "編輯開支" : "新增開支"}
-                </p>
+          <div className="space-y-5">
+            <form ref={formRef} onSubmit={submitExpense} className="expense-section-card space-y-3">
+              <div className="flex items-center justify-between gap-2 border-b border-jade/10 pb-3">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-jade">快速記帳</p>
+                  <p className="font-display text-lg font-bold text-ink">
+                    {editingId ? "編輯開支" : "新增開支"}
+                  </p>
+                </div>
                 {editingId && (
                   <button type="button" onClick={resetForm} className="text-[11px] font-bold text-ink-faint">
                     取消編輯
@@ -683,6 +687,28 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
               )}
             </div>
 
+            <LedgerSummaryBar
+              trip={trip}
+              expenses={expenses}
+              visibleCount={visibleExpenses.length}
+              todaySpent={todaySpent}
+              totalSpent={totalSpent}
+              totalHkd={totalHkd}
+            />
+
+            <div className="space-y-3">
+              <div className="flex items-end justify-between gap-2 px-0.5">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-jade">支出清單</p>
+                  <h3 className="font-display text-lg font-bold text-ink">已記帳明細</h3>
+                </div>
+                <p className="text-right text-xs font-semibold text-ink-faint">
+                  {visibleExpenses.length === expenses.length
+                    ? `共 ${expenses.length} 筆`
+                    : `顯示 ${visibleExpenses.length} / ${expenses.length} 筆`}
+                </p>
+              </div>
+
             <ExpenseListExtras
               trip={trip}
               expenses={expenses}
@@ -710,7 +736,6 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
               totalSpent={totalSpent}
             />
 
-            <div className="space-y-3">
               {expenses.length === 0 ? (
                 isFeatureEnabled("empty-state-tips") ? (
                   <ul><EmptyStateTip hasExpenses={false} /></ul>
@@ -721,48 +746,56 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
                 <div className="rounded-2xl border border-dashed border-jade/20 bg-white/50 px-4 py-8 text-center text-sm text-ink-faint">無符合條件嘅支出</div>
               ) : (
                 groupedExpenses.map((group) => (
-                  <section key={group.date} className="space-y-2">
-                    <div className="flex items-baseline justify-between gap-2 px-1">
-                      <h3 className="text-xs font-bold text-ink-soft">{formatDayHeading(group.date)}</h3>
-                      <p className="text-[11px] font-semibold text-ink-faint">
-                        {group.items.length} 筆 · {formatMoney(group.sum, trip.targetCurrency)}
-                      </p>
+                  <section key={group.date} className="space-y-2.5">
+                    <div className="expense-day-header">
+                      <h3 className="text-sm font-bold text-ink">{formatDayHeading(group.date)}</h3>
+                      <div className="text-right">
+                        <p className="font-display text-base font-black text-jade-deep">{formatMoney(group.sum, trip.targetCurrency)}</p>
+                        <p className="text-[11px] font-semibold text-ink-faint">{group.items.length} 筆</p>
+                      </div>
                     </div>
-                    <ul className="space-y-2">
+                    <ul className="space-y-2.5">
                       {group.items.map((entry) => {
                         const cat = EXPENSE_CATEGORIES.find((c) => c.id === entry.categoryId);
                         const isEditing = editingId === entry.id;
-                        const meta = expenseMetaLine(entry);
+                        const tags = expenseEntryTags(entry);
                         return (
                           <li
                             key={entry.id}
-                            className={`flex items-center gap-2 rounded-2xl bg-white/85 px-3 py-3 shadow-[var(--shadow-soft)] ${isEditing ? "ring-2 ring-jade/40" : ""}`}
+                            className={`rounded-2xl bg-white px-3.5 py-3.5 shadow-[var(--shadow-soft)] ${isEditing ? "ring-2 ring-jade/40" : ""}`}
                           >
+                            <div className="flex items-start gap-2">
                             <button
                               type="button"
                               onClick={() => startEdit(entry)}
-                              className="flex min-w-0 flex-1 items-center gap-3 text-left transition active:scale-[0.99]"
+                              className="flex min-w-0 flex-1 items-start gap-3 text-left transition active:scale-[0.99]"
                               aria-label={`編輯 ${entry.note}`}
                             >
-                              <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: cat?.color || "#64748b" }} />
+                              <span
+                                className="mt-1.5 h-3 w-3 shrink-0 rounded-full"
+                                style={{ background: cat?.color || "#64748b" }}
+                              />
                               <div className="min-w-0 flex-1">
-                                <p className="truncate text-sm font-semibold text-ink">{entry.note}</p>
-                                <p className="text-[11px] text-ink-faint">
-                                  {cat?.label || entry.categoryId}
-                                  {meta ? ` · ${meta}` : ""}
-                                  {" · 撳我編輯"}
-                                </p>
+                                <p className="text-base font-bold leading-snug text-ink">{entry.note}</p>
+                                <div className="mt-2 flex flex-wrap gap-1.5">
+                                  <span className="expense-meta-pill">{cat?.label || entry.categoryId}</span>
+                                  {tags.map((tag) => (
+                                    <span key={`${entry.id}-${tag.kind}`} className="expense-meta-pill">
+                                      {tag.label}
+                                    </span>
+                                  ))}
+                                </div>
                               </div>
-                              <div className="text-right">
+                              <div className="shrink-0 text-right">
                                 {isFeatureEnabled("hkd-list-toggle") && showHkd ? (
                                   <>
-                                    <p className="font-display text-sm font-bold text-jade-deep">{formatHkd(entry.baseAmount)}</p>
-                                    <p className="text-xs text-ink-soft">{formatMoney(entry.amount, trip.targetCurrency)}</p>
+                                    <p className="font-display text-lg font-black text-jade-deep">{formatHkd(entry.baseAmount)}</p>
+                                    <p className="text-xs font-semibold text-ink-soft">{formatMoney(entry.amount, trip.targetCurrency)}</p>
                                   </>
                                 ) : (
                                   <>
-                                    <p className="font-display text-sm font-bold text-jade-deep">{formatMoney(entry.amount, trip.targetCurrency)}</p>
-                                    <p className="text-xs text-ink-soft">{formatHkd(entry.baseAmount)}</p>
+                                    <p className="font-display text-lg font-black text-jade-deep">{formatMoney(entry.amount, trip.targetCurrency)}</p>
+                                    <p className="text-xs font-semibold text-ink-soft">{formatHkd(entry.baseAmount)}</p>
                                   </>
                                 )}
                               </div>
@@ -771,7 +804,7 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
                               <button
                                 type="button"
                                 onClick={() => duplicateFrom(entry)}
-                                className="shrink-0 p-1.5 text-jade-deep transition active:scale-90"
+                                className="shrink-0 rounded-xl p-2 text-jade-deep transition active:scale-90"
                                 aria-label={`複製 ${entry.note}`}
                                 title="複製為新開支"
                               >
@@ -780,11 +813,12 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
                                 </svg>
                               </button>
                             )}
-                            <button type="button" onClick={() => removeExpense(entry.id)} className="shrink-0 p-1.5 text-ink-faint transition active:scale-90" aria-label="刪除">
+                            <button type="button" onClick={() => removeExpense(entry.id)} className="shrink-0 rounded-xl p-2 text-ink-faint transition active:scale-90" aria-label="刪除">
                               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                               </svg>
                             </button>
+                            </div>
                           </li>
                         );
                       })}
@@ -795,7 +829,7 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
             </div>
 
             <ExportCsvPanel trip={trip} expenses={expenses} filterCategory={filterCategory} />
-          </>
+          </div>
         )}
       </div>
     </div>
