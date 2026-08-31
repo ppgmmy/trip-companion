@@ -886,35 +886,39 @@ export function AnalysisStory({ trip, expenses, days, totalSpent, budget, elapse
   );
 }
 
-export function LedgerSummaryBar({ trip, expenses, visibleCount, todaySpent, totalSpent, totalHkd }) {
+export function LedgerSummaryBar({ trip, expenses, visibleCount, todaySpent, totalSpent, totalHkd, rate, fxLabel }) {
   return (
-    <div className="grid grid-cols-3 gap-2">
-      <div className="expense-section-card text-center">
-        <p className="expense-stat-label">今日已使</p>
-        <p className="expense-stat-value mt-1 text-jade-deep">{formatMoney(todaySpent, trip.targetCurrency)}</p>
-      </div>
-      <div className="expense-section-card text-center">
-        <p className="expense-stat-label">旅程總計</p>
-        <p className="expense-stat-value mt-1">{formatMoney(totalSpent, trip.targetCurrency)}</p>
-        <p className="mt-0.5 text-[11px] font-semibold text-ink-faint">{formatHkd(totalHkd)}</p>
-      </div>
-      <div className="expense-section-card text-center">
-        <p className="expense-stat-label">清單筆數</p>
-        <p className="expense-stat-value mt-1">
-          {visibleCount === expenses.length ? expenses.length : `${visibleCount}/${expenses.length}`}
-        </p>
-        <p className="mt-0.5 text-[11px] font-semibold text-ink-faint">筆</p>
-      </div>
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl bg-jade-soft/40 px-3 py-2 text-[11px] font-semibold text-ink-soft">
+      <span>
+        今日 <strong className="text-jade-deep">{formatMoney(todaySpent, trip.targetCurrency)}</strong>
+      </span>
+      <span className="text-ink-faint">·</span>
+      <span>
+        總計 <strong className="text-ink">{formatMoney(totalSpent, trip.targetCurrency)}</strong>
+        <span className="ml-1 text-ink-faint">({formatHkd(totalHkd)})</span>
+      </span>
+      <span className="text-ink-faint">·</span>
+      <span>
+        {visibleCount === expenses.length ? `${expenses.length} 筆` : `${visibleCount}/${expenses.length} 筆`}
+      </span>
+      {rate > 0 && (
+        <>
+          <span className="text-ink-faint">·</span>
+          <span className="text-ink-faint">
+            1 {trip.targetCurrency} ≈ {rate.toFixed(4)} HKD{fxLabel ? ` · ${fxLabel}` : ""}
+          </span>
+        </>
+      )}
     </div>
   );
 }
 
 export function AnalysisSectionTitle({ eyebrow, title, hint }) {
   return (
-    <div className="rounded-2xl bg-white/70 px-1 pt-1">
-      <p className="text-xs font-bold uppercase tracking-wider text-jade">{eyebrow}</p>
-      <h3 className="mt-1 font-display text-xl font-bold text-ink">{title}</h3>
-      {hint && <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">{hint}</p>}
+    <div>
+      <p className="text-[11px] font-bold uppercase tracking-wider text-jade">{eyebrow}</p>
+      <h3 className="mt-0.5 font-display text-lg font-bold text-ink">{title}</h3>
+      {hint && <p className="mt-1 text-xs leading-relaxed text-ink-soft">{hint}</p>}
     </div>
   );
 }
@@ -1423,14 +1427,15 @@ export function ExpenseListExtras({
   searchPoolCount = 0,
   showHkd,
   setShowHkd,
-  onDuplicateLast,
 }) {
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const showFilter = isFeatureEnabled("category-filter");
   const showSearch = isFeatureEnabled("expense-search");
   const showToggle = isFeatureEnabled("hkd-list-toggle");
-  const showDup = isFeatureEnabled("duplicate-last");
   const hasPayerFilter = filterPayer !== "all";
   const hasPaymentFilter = filterPaymentMethod !== "all";
+  const hasCategoryFilter = filterCategory !== "all";
+  const hasActiveFilter = hasPayerFilter || hasPaymentFilter || hasCategoryFilter || Boolean(search.trim());
 
   const countByCat = useMemo(() => {
     const map = {};
@@ -1440,54 +1445,55 @@ export function ExpenseListExtras({
     return map;
   }, [expenses]);
 
-  if (!showFilter && !showSearch && !showToggle && !showDup && !payerTotals.length && !paymentTotals.length) return null;
+  if (!showFilter && !showSearch && !showToggle && !payerTotals.length && !paymentTotals.length) return null;
 
   return (
-    <div className="expense-section-card space-y-3">
-      <div className="flex flex-wrap gap-2">
-        {showDup && expenses.length > 0 && (
-          <button type="button" onClick={onDuplicateLast} className="min-h-10 rounded-2xl border border-jade/15 bg-white px-3 text-xs font-bold text-ink">
-            ⎘ 複製上一筆
+    <div className="space-y-2">
+      <div className="flex flex-wrap gap-1.5">
+        {(showFilter || showSearch || payerTotals.length > 0 || paymentTotals.length > 0) && (
+          <button
+            type="button"
+            onClick={() => setFiltersOpen((v) => !v)}
+            className={`min-h-8 rounded-xl border px-2.5 text-xs font-bold ${hasActiveFilter || filtersOpen ? "badge-active border-transparent" : "border-jade/15 bg-white text-ink-soft"}`}
+          >
+            {filtersOpen ? "收起篩選" : "篩選／搜尋"}
+            {hasActiveFilter && !filtersOpen ? " ✓" : ""}
           </button>
         )}
         {showToggle && (
           <button
             type="button"
             onClick={() => setShowHkd((v) => !v)}
-            className="min-h-10 rounded-2xl border border-jade/15 bg-white px-3 text-xs font-bold text-ink"
+            className="min-h-8 rounded-xl border border-jade/15 bg-white px-2.5 text-xs font-bold text-ink"
           >
-            顯示：{showHkd ? "港幣" : trip.targetCurrency}
+            {showHkd ? "港幣" : trip.targetCurrency}
           </button>
         )}
       </div>
+
+      {filtersOpen && (
+        <div className="space-y-2 rounded-xl border border-jade/10 bg-white/80 p-2">
       {showSearch && (
-        <div className="space-y-1.5">
-          <div className="relative">
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-ink-faint" aria-hidden="true">
-              🔍
-            </span>
+        <div className="relative">
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="搜尋備註、分類、付款人或支付方式…"
-              className="h-11 w-full rounded-2xl border border-jade/15 bg-mist pl-9 pr-10 text-sm outline-none ring-jade focus:ring-2"
+              placeholder="搜尋…"
+              className="h-9 w-full rounded-xl border border-jade/15 bg-mist px-3 text-sm outline-none ring-jade focus:ring-2"
             />
             {search.trim() && (
               <button
                 type="button"
                 onClick={() => setSearch("")}
-                className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-xl text-ink-faint transition active:scale-90"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-ink-faint"
                 aria-label="清除搜尋"
               >
                 ✕
               </button>
             )}
-          </div>
           {search.trim() && (
-            <p className="px-1 text-[11px] font-semibold text-ink-soft">
-              {searchMatchCount > 0
-                ? `找到 ${searchMatchCount} 筆${searchPoolCount !== searchMatchCount ? `（共 ${searchPoolCount} 筆可搜）` : ""}`
-                : `搵唔到「${search.trim()}」— 試分類名或金額`}
+            <p className="mt-1 px-0.5 text-[10px] font-semibold text-ink-soft">
+              {searchMatchCount > 0 ? `找到 ${searchMatchCount} 筆` : "搵唔到"}
             </p>
           )}
         </div>
@@ -1579,6 +1585,8 @@ export function ExpenseListExtras({
           )}
         </div>
       )}
+        </div>
+      )}
     </div>
   );
 }
@@ -1660,45 +1668,19 @@ export function DuplicateLastPanel({ trip, expenses, onDuplicate, editingId }) {
 
   const last = expenses[expenses.length - 1];
   const cat = EXPENSE_CATEGORIES.find((c) => c.id === last.categoryId);
-  const sameCategoryCount = expenses.filter((e) => e.categoryId === last.categoryId).length;
-  const meta = expenseMetaLine(last);
 
   return (
-    <div className="rounded-2xl border border-jade/15 bg-gradient-to-br from-[#f0fdf9] to-white p-3">
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-faint">複製上一筆</p>
-        <span className="rounded-full bg-jade-soft px-2 py-0.5 text-[9px] font-bold text-jade-deep">
-          極速記帳
-        </span>
-      </div>
-      <div className="flex items-center gap-3">
-        <span
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-lg"
-          style={{ background: `${cat?.color || "#64748b"}22` }}
-          aria-hidden="true"
-        >
-          {CATEGORY_EMOJI[last.categoryId] || "💸"}
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-bold text-ink">{last.note || cat?.label || "開支"}</p>
-          <p className="text-[11px] text-ink-faint">
-            {cat?.label || last.categoryId} · {formatMoney(last.amount, trip.targetCurrency)}
-            {meta ? ` · ${meta}` : ""}
-            {sameCategoryCount > 1 && ` · 同類 ${sameCategoryCount} 筆`}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => onDuplicate(last)}
-          className="shrink-0 rounded-2xl bg-jade px-4 py-2.5 text-xs font-bold text-white shadow-sm transition active:scale-95"
-        >
-          複製
-        </button>
-      </div>
-      <p className="mt-2 text-center text-[10px] text-ink-faint">
-        會填入今日日期，改金額後撳記入即可
-      </p>
-    </div>
+    <button
+      type="button"
+      onClick={() => onDuplicate(last)}
+      className="flex w-full items-center justify-between gap-2 rounded-xl border border-jade/15 bg-jade-soft/50 px-2.5 py-2 text-left transition active:scale-[0.99]"
+    >
+      <span className="min-w-0 truncate text-xs font-semibold text-ink-soft">
+        ⎘ 複製上一筆：<span className="font-bold text-ink">{last.note || cat?.label || "開支"}</span>
+        {" · "}{formatMoney(last.amount, trip.targetCurrency)}
+      </span>
+      <span className="shrink-0 text-[10px] font-bold text-jade-deep">複製</span>
+    </button>
   );
 }
 
@@ -1720,48 +1702,28 @@ export function QuickAddHelpers({ note, setNote, expenses = [], categoryId = "fo
     return result;
   }, [expenses]);
 
-  const categoryLabel = EXPENSE_CATEGORIES.find((c) => c.id === categoryId)?.label || "常用";
-
   if (!templates) return null;
 
   return (
-    <div className="rounded-2xl border border-jade/10 bg-shell/60 p-3">
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-faint">備註快捷模板</p>
-        <span className="rounded-full bg-white/80 px-2 py-0.5 text-[9px] font-bold text-jade-deep">
-          {categoryLabel}
-        </span>
-      </div>
-      <div className="flex flex-wrap gap-1.5">
-        {categoryTemplates.map(({ text, emoji }) => (
-          <NoteTemplateChip
-            key={`cat-${text}`}
-            text={text}
-            emoji={emoji}
-            active={note === text}
-            onPick={setNote}
-          />
-        ))}
-      </div>
-      {recentNotes.length > 0 && (
-        <>
-          <p className="mb-1.5 mt-2.5 text-[10px] font-semibold text-ink-faint">最近用過備註</p>
-          <div className="flex flex-wrap gap-1.5">
-            {recentNotes.map((t) => (
-              <NoteTemplateChip
-                key={`recent-${t}`}
-                text={t}
-                emoji="🕐"
-                active={note === t}
-                onPick={setNote}
-              />
-            ))}
-          </div>
-        </>
-      )}
-      <p className="mt-2 text-center text-[10px] text-ink-faint">
-        撳一下填入備註，再改金額就完成
-      </p>
+    <div className="expense-chip-row">
+      {categoryTemplates.map(({ text, emoji }) => (
+        <NoteTemplateChip
+          key={`cat-${text}`}
+          text={text}
+          emoji={emoji}
+          active={note === text}
+          onPick={setNote}
+        />
+      ))}
+      {recentNotes.map((t) => (
+        <NoteTemplateChip
+          key={`recent-${t}`}
+          text={t}
+          emoji="🕐"
+          active={note === t}
+          onPick={setNote}
+        />
+      ))}
     </div>
   );
 }

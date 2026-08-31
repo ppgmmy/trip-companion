@@ -281,10 +281,6 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
     flash(`已複製「${entry.note || EXPENSE_CATEGORIES.find((c) => c.id === entry.categoryId)?.label || "開支"}」— 改金額後記入`);
   }
 
-  function duplicateLast() {
-    duplicateFrom(expenses[expenses.length - 1]);
-  }
-
   function jumpToLedgerCategory(catId) {
     setFilterCategory(catId);
     setPanel("ledger");
@@ -435,7 +431,7 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
         )}
 
         {panel === "analysis" && (
-          <div className="space-y-6">
+          <div className="space-y-3">
             <AnalysisStory
               trip={trip}
               expenses={expenses}
@@ -515,21 +511,26 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
         )}
 
         {panel === "ledger" && (
-          <div className="space-y-5">
-            <form ref={formRef} onSubmit={submitExpense} className="expense-section-card space-y-3">
-              <div className="flex items-center justify-between gap-2 border-b border-jade/10 pb-3">
-                <div>
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-jade">快速記帳</p>
-                  <p className="font-display text-lg font-bold text-ink">
-                    {editingId ? "編輯開支" : "新增開支"}
-                  </p>
-                </div>
-                {editingId && (
+          <div className="space-y-3">
+            <LedgerSummaryBar
+              trip={trip}
+              expenses={expenses}
+              visibleCount={visibleExpenses.length}
+              todaySpent={todaySpent}
+              totalSpent={totalSpent}
+              totalHkd={totalHkd}
+              rate={rate}
+              fxLabel={statusLabel}
+            />
+
+            <form ref={formRef} onSubmit={submitExpense} className="expense-section-card-compact space-y-2">
+              {editingId && (
+                <div className="flex justify-end">
                   <button type="button" onClick={resetForm} className="text-[11px] font-bold text-ink-faint">
                     取消編輯
                   </button>
-                )}
-              </div>
+                </div>
+              )}
 
               <PayerPaymentFields
                 payer={payer}
@@ -542,54 +543,59 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
                 defaultOpen={Boolean(editingId)}
               />
 
-              <label className="block">
-                <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-ink-faint">金額</span>
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  min="0"
-                  step="0.01"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  placeholder={`輸入金額（${trip.targetCurrency}）`}
-                  className="h-14 w-full rounded-2xl border border-jade/15 bg-mist px-4 text-center font-display text-2xl font-bold outline-none ring-jade focus:ring-2"
-                />
-              </label>
-
               <input
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="備註（例：Siam 午餐）"
-                className="h-11 w-full rounded-2xl border border-jade/15 bg-mist px-3 text-sm outline-none ring-jade focus:ring-2"
+                type="number"
+                inputMode="decimal"
+                min="0"
+                step="0.01"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder={`金額（${trip.targetCurrency}）`}
+                className="h-12 w-full rounded-xl border border-jade/15 bg-mist px-3 text-center font-display text-xl font-bold outline-none ring-jade focus:ring-2"
               />
 
-              <div className="flex flex-wrap gap-1.5">
+              {draftAmount > 0 && (
+                <p className="text-center text-[11px] font-semibold text-ink-soft">
+                  ≈ {formatHkd(draftAmount * rate)}
+                  {afterToday != null && entryDate === todayId && !editingId && (
+                    <span className={afterToday < 0 ? " text-coral" : " text-jade-deep"}>
+                      {" "}· 記入後今日剩 {formatMoney(afterToday, trip.targetCurrency)}
+                    </span>
+                  )}
+                </p>
+              )}
+
+              <div className="grid grid-cols-[1fr_auto] gap-1.5">
+                <input
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="備註"
+                  className="h-9 rounded-xl border border-jade/15 bg-mist px-3 text-sm outline-none ring-jade focus:ring-2"
+                />
+                <input
+                  type="date"
+                  value={entryDate}
+                  min={trip.startDate || undefined}
+                  max={trip.endDate || undefined}
+                  onChange={(e) => setEntryDate(e.target.value)}
+                  className="h-9 w-[8.5rem] rounded-xl border border-jade/15 bg-mist px-2 text-xs outline-none ring-jade focus:ring-2"
+                />
+              </div>
+
+              <div className="expense-chip-row">
                 {EXPENSE_CATEGORIES.map((c) => (
                   <button
                     key={c.id}
                     type="button"
                     onClick={() => setCategoryId(c.id)}
-                    className={`min-h-10 rounded-2xl border px-3 text-xs font-bold transition ${categoryId === c.id ? "badge-active border-transparent" : "border-jade/15 bg-mist text-ink-soft"}`}
+                    className={`shrink-0 rounded-xl border px-2.5 py-1.5 text-xs font-bold transition ${categoryId === c.id ? "badge-active border-transparent" : "border-jade/15 bg-mist text-ink-soft"}`}
                   >
                     {c.label}
                   </button>
                 ))}
               </div>
 
-              {budget > 0 && (
-                <div className="grid grid-cols-2 gap-2 text-center">
-                  <div className="rounded-2xl bg-[#f1f5f4] px-2 py-2">
-                    <p className="text-[10px] font-semibold text-ink-faint">今日已使</p>
-                    <p className="text-sm font-black text-ink">{formatMoney(todaySpent, trip.targetCurrency)}</p>
-                  </div>
-                  <div className="rounded-2xl bg-[#f1f5f4] px-2 py-2">
-                    <p className="text-[10px] font-semibold text-ink-faint">今日建議剩餘</p>
-                    <p className={`text-sm font-black ${todayLeft != null && todayLeft < 0 ? "text-coral" : "text-jade-deep"}`}>
-                      {todayLeft != null ? formatMoney(todayLeft, trip.targetCurrency) : "—"}
-                    </p>
-                  </div>
-                </div>
-              )}
+              <QuickAddHelpers note={note} setNote={setNote} expenses={expenses} categoryId={categoryId} />
 
               <DuplicateLastPanel
                 trip={trip}
@@ -598,75 +604,39 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
                 editingId={editingId}
               />
 
-              <QuickAddHelpers
-                note={note}
-                setNote={setNote}
-                expenses={expenses}
-                categoryId={categoryId}
-              />
+              <div className="flex gap-1.5">
+                <button type="submit" className="min-h-10 flex-1 rounded-xl bg-jade text-sm font-bold text-white shadow-[var(--shadow-soft)] transition active:scale-[0.98]">
+                  {editingId ? "儲存" : "記入"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFxOpen((v) => !v)}
+                  className="min-h-10 shrink-0 rounded-xl border border-jade/15 bg-white px-3 text-xs font-bold text-ink-soft"
+                  aria-expanded={fxOpen}
+                >
+                  匯率
+                </button>
+              </div>
 
-              <label className="block">
-                <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-ink-faint">日期（可補記舊日）</span>
-                <input
-                  type="date"
-                  value={entryDate}
-                  min={trip.startDate || undefined}
-                  max={trip.endDate || undefined}
-                  onChange={(e) => setEntryDate(e.target.value)}
-                  className="h-12 w-full rounded-2xl border border-jade/15 bg-mist px-3 outline-none ring-jade focus:ring-2"
-                />
-              </label>
-
-              <p className="rounded-2xl bg-jade-soft/70 px-4 py-3 text-sm text-ink-soft">
-                換算預覽（將鎖定）：{draftAmount > 0 ? `${formatMoney(draftAmount, trip.targetCurrency)} ≈ ${formatHkd(draftAmount * rate)} @ ${rate.toFixed(4)}` : "—"}
-                {afterToday != null && draftAmount > 0 && entryDate === todayId && !editingId && (
-                  <span className={`mt-1 block text-xs font-semibold ${afterToday < 0 ? "text-coral" : "text-jade-deep"}`}>
-                    記入後今日剩餘約 {formatMoney(afterToday, trip.targetCurrency)}
-                  </span>
-                )}
-              </p>
-
-              <button type="submit" className="min-h-12 w-full rounded-2xl bg-jade font-bold text-white shadow-[var(--shadow-soft)] transition active:scale-[0.98]">
-                {editingId ? "儲存修改" : "記入（鎖定匯率）"}
-              </button>
-            </form>
-
-            <div className="rounded-3xl bg-white/85 shadow-[var(--shadow-soft)]">
-              <button
-                type="button"
-                onClick={() => setFxOpen((v) => !v)}
-                className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
-                aria-expanded={fxOpen}
-              >
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-ink-faint">匯率 · {statusLabel}</p>
-                  <p className="mt-0.5 truncate font-display text-sm font-bold text-ink">
-                    1 {trip.targetCurrency} ≈ {rate.toFixed(4)} HKD
-                  </p>
-                </div>
-                <span className="shrink-0 rounded-full bg-mist px-2.5 py-1 text-[11px] font-bold text-ink-soft">
-                  {fxOpen ? "收起" : "展開"}
-                </span>
-              </button>
               {fxOpen && (
-                <div className="space-y-3 border-t border-jade/10 px-4 pb-4 pt-3">
+                <div className="space-y-2 rounded-xl border border-jade/10 bg-mist/50 p-2">
                   <button
                     type="button"
                     onClick={onRefreshRate}
                     disabled={fxStatus === "loading"}
-                    className="min-h-11 w-full rounded-2xl bg-jade-soft px-3 text-xs font-bold text-jade-deep transition active:scale-95 disabled:opacity-60"
+                    className="min-h-9 w-full rounded-xl bg-jade-soft px-3 text-xs font-bold text-jade-deep disabled:opacity-60"
                   >
-                    立即更新匯率
+                    更新匯率
                   </button>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1.5">
                     <input
                       value={manualRate}
                       onChange={(e) => setManualRate(e.target.value)}
                       type="number"
                       step="0.0001"
                       min="0"
-                      placeholder={`手動 1 ${trip.targetCurrency} = ? HKD`}
-                      className="h-11 min-w-0 flex-1 rounded-2xl border border-jade/15 bg-mist px-3 text-sm outline-none ring-jade focus:ring-2"
+                      placeholder={`1 ${trip.targetCurrency} = ? HKD`}
+                      className="h-9 min-w-0 flex-1 rounded-xl border border-jade/15 bg-white px-2 text-sm outline-none ring-jade focus:ring-2"
                     />
                     <button
                       type="button"
@@ -674,36 +644,14 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
                         onApplyManualRate(Number(manualRate));
                         setManualRate("");
                       }}
-                      className="h-11 shrink-0 rounded-2xl border border-jade/15 bg-white px-4 text-sm font-bold text-ink transition active:scale-95"
+                      className="h-9 shrink-0 rounded-xl border border-jade/15 bg-white px-3 text-xs font-bold text-ink"
                     >
                       套用
                     </button>
                   </div>
                 </div>
               )}
-            </div>
-
-            <LedgerSummaryBar
-              trip={trip}
-              expenses={expenses}
-              visibleCount={visibleExpenses.length}
-              todaySpent={todaySpent}
-              totalSpent={totalSpent}
-              totalHkd={totalHkd}
-            />
-
-            <div className="space-y-3">
-              <div className="flex items-end justify-between gap-2 px-0.5">
-                <div>
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-jade">支出清單</p>
-                  <h3 className="font-display text-lg font-bold text-ink">已記帳明細</h3>
-                </div>
-                <p className="text-right text-xs font-semibold text-ink-faint">
-                  {visibleExpenses.length === expenses.length
-                    ? `共 ${expenses.length} 筆`
-                    : `顯示 ${visibleExpenses.length} / ${expenses.length} 筆`}
-                </p>
-              </div>
+            </form>
 
             <ExpenseListExtras
               trip={trip}
@@ -722,7 +670,6 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
               searchPoolCount={categoryFilteredExpenses.length}
               showHkd={showHkd}
               setShowHkd={setShowHkd}
-              onDuplicateLast={duplicateLast}
             />
 
             <FilteredCategorySummary
@@ -743,11 +690,11 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
               ) : (
                 groupedExpenses.map((group) => (
                   <section key={group.date} className="space-y-2.5">
-                    <div className="expense-day-header">
-                      <h3 className="text-sm font-bold text-ink">{formatDayHeading(group.date)}</h3>
+                    <div className="expense-day-header py-1.5">
+                      <h3 className="text-xs font-bold text-ink">{formatDayHeading(group.date)}</h3>
                       <div className="text-right">
-                        <p className="font-display text-base font-black text-jade-deep">{formatMoney(group.sum, trip.targetCurrency)}</p>
-                        <p className="text-[11px] font-semibold text-ink-faint">{group.items.length} 筆</p>
+                        <p className="font-display text-sm font-black text-jade-deep">{formatMoney(group.sum, trip.targetCurrency)}</p>
+                        <p className="text-[10px] font-semibold text-ink-faint">{group.items.length} 筆</p>
                       </div>
                     </div>
                     <ul className="space-y-2.5">
@@ -758,7 +705,7 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
                         return (
                           <li
                             key={entry.id}
-                            className={`rounded-2xl bg-white px-3.5 py-3.5 shadow-[var(--shadow-soft)] ${isEditing ? "ring-2 ring-jade/40" : ""}`}
+                            className={`rounded-xl bg-white px-3 py-2.5 shadow-[var(--shadow-soft)] ${isEditing ? "ring-2 ring-jade/40" : ""}`}
                           >
                             <div className="flex items-start gap-2">
                             <button
@@ -772,8 +719,8 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
                                 style={{ background: cat?.color || "#64748b" }}
                               />
                               <div className="min-w-0 flex-1">
-                                <p className="text-base font-bold leading-snug text-ink">{entry.note}</p>
-                                <div className="mt-2 flex flex-wrap gap-1.5">
+                                <p className="text-sm font-bold leading-snug text-ink">{entry.note}</p>
+                                <div className="mt-1 flex flex-wrap gap-1">
                                   <span className="expense-meta-pill">{cat?.label || entry.categoryId}</span>
                                   {tags.map((tag) => (
                                     <span key={`${entry.id}-${tag.kind}`} className="expense-meta-pill">
@@ -785,12 +732,12 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
                               <div className="shrink-0 text-right">
                                 {isFeatureEnabled("hkd-list-toggle") && showHkd ? (
                                   <>
-                                    <p className="font-display text-lg font-black text-jade-deep">{formatHkd(entry.baseAmount)}</p>
+                                    <p className="font-display text-base font-black text-jade-deep">{formatHkd(entry.baseAmount)}</p>
                                     <p className="text-xs font-semibold text-ink-soft">{formatMoney(entry.amount, trip.targetCurrency)}</p>
                                   </>
                                 ) : (
                                   <>
-                                    <p className="font-display text-lg font-black text-jade-deep">{formatMoney(entry.amount, trip.targetCurrency)}</p>
+                                    <p className="font-display text-base font-black text-jade-deep">{formatMoney(entry.amount, trip.targetCurrency)}</p>
                                     <p className="text-xs font-semibold text-ink-soft">{formatHkd(entry.baseAmount)}</p>
                                   </>
                                 )}
@@ -822,7 +769,6 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
                   </section>
                 ))
               )}
-            </div>
 
             <ExportCsvPanel trip={trip} expenses={expenses} filterCategory={filterCategory} />
           </div>
