@@ -159,6 +159,7 @@ export default function App() {
         <QuickAddExpense
           trip={activeTrip}
           rate={rateState?.rate || 0}
+          expenses={expenses}
           onSave={(entry) => setExpenses((prev) => [...prev, entry])}
           onClose={() => setQuickAdd(false)}
         />

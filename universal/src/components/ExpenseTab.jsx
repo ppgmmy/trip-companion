@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { EXPENSE_CATEGORIES, expenseMetaLine, formatHkd, formatMoney, payerLabel, paymentMethodLabel, toDateId, tripDays } from "../data";
+import { EXPENSE_CATEGORIES, aggregateByPayer, aggregateByPaymentMethod, expenseMetaLine, formatHkd, formatMoney, lastPaymentDefaults, payerLabel, paymentMethodLabel, recentCustomPayers, resolvePayerFields, toDateId, tripDays } from "../data";
 import { isFeatureEnabled } from "../data/featureFlags";
 import { BarChart, DoughnutChart } from "./Charts";
 import {
@@ -14,10 +14,11 @@ import {
   ExportCsvPanel,
   FilteredCategorySummary,
   PinnedBudgetAlert,
+  PayerPaymentBreakdown,
   QuickAddHelpers,
   SevenDayTrendPanel,
 } from "./ExpenseDailyExtras";
-import PayerPaymentFields, { resolvePayerFields } from "./PayerPaymentFields";
+import PayerPaymentFields from "./PayerPaymentFields";
 
 const PANELS = [
   { id: "overview", label: "概覽" },
@@ -43,13 +44,15 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
   const [entryDate, setEntryDate] = useState(() => toDateId(new Date()));
   const [manualRate, setManualRate] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
+  const [filterPayer, setFilterPayer] = useState("all");
+  const [filterPaymentMethod, setFilterPaymentMethod] = useState("all");
   const [search, setSearch] = useState("");
   const [showHkd, setShowHkd] = useState(false);
   const [panel, setPanel] = useState("ledger");
   const [editingId, setEditingId] = useState(null);
-  const [payer, setPayer] = useState("me");
-  const [customPayer, setCustomPayer] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("cash");
+  const [payer, setPayer] = useState(() => lastPaymentDefaults(expenses).payer);
+  const [customPayer, setCustomPayer] = useState(() => lastPaymentDefaults(expenses).customPayer);
+  const [paymentMethod, setPaymentMethod] = useState(() => lastPaymentDefaults(expenses).paymentMethod);
   const [fxOpen, setFxOpen] = useState(false);
   const [saveFlash, setSaveFlash] = useState("");
   const tabRefs = useRef({});
@@ -110,6 +113,10 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
   );
   const todayLeft = budget > 0 ? dailyAllowance - todaySpent : null;
 
+  const recentPayers = useMemo(() => recentCustomPayers(expenses), [expenses]);
+  const payerTotals = useMemo(() => aggregateByPayer(expenses), [expenses]);
+  const paymentTotals = useMemo(() => aggregateByPaymentMethod(expenses), [expenses]);
+
   const catTotals = useMemo(() => {
     const map = {};
     expenses.forEach((e) => {
@@ -143,8 +150,14 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
     if (isFeatureEnabled("category-filter") && filterCategory !== "all") {
       list = list.filter((e) => e.categoryId === filterCategory);
     }
+    if (filterPayer !== "all") {
+      list = list.filter((e) => (e.payer || "me") === filterPayer);
+    }
+    if (filterPaymentMethod !== "all") {
+      list = list.filter((e) => (e.paymentMethod || "cash") === filterPaymentMethod);
+    }
     return list;
-  }, [expenses, filterCategory]);
+  }, [expenses, filterCategory, filterPayer, filterPaymentMethod]);
 
   const visibleExpenses = useMemo(() => {
     if (!isFeatureEnabled("expense-search") || !search.trim()) return categoryFilteredExpenses;
@@ -177,14 +190,15 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
   }, [visibleExpenses]);
 
   function resetForm() {
+    const defaults = lastPaymentDefaults(expenses);
     setEditingId(null);
     setAmount("");
     setNote("");
     setEntryDate(toDateId(new Date()));
     setCategoryId("food");
-    setPayer("me");
-    setCustomPayer("");
-    setPaymentMethod("cash");
+    setPayer(defaults.payer);
+    setCustomPayer(defaults.customPayer);
+    setPaymentMethod(defaults.paymentMethod);
   }
 
   function flash(msg) {
@@ -288,6 +302,18 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
 
   function jumpToLedgerCategory(catId) {
     setFilterCategory(catId);
+    setPanel("ledger");
+  }
+
+  function jumpToLedgerPayer(payerKey) {
+    setFilterPayer(payerKey);
+    setFilterPaymentMethod("all");
+    setPanel("ledger");
+  }
+
+  function jumpToLedgerPayment(methodKey) {
+    setFilterPaymentMethod(methodKey);
+    setFilterPayer("all");
     setPanel("ledger");
   }
 
@@ -479,6 +505,16 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
               onJumpToLedger={jumpToLedgerCategory}
             />
 
+            <PayerPaymentBreakdown
+              trip={trip}
+              expenses={expenses}
+              payerTotals={payerTotals}
+              paymentTotals={paymentTotals}
+              totalHkd={totalHkd}
+              onJumpToPayer={jumpToLedgerPayer}
+              onJumpToPayment={jumpToLedgerPayment}
+            />
+
             <AnalysisSectionTitle
               eyebrow="03 · 時間走勢"
               title="邊段時間使得多？"
@@ -612,6 +648,8 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
                 setCustomPayer={setCustomPayer}
                 paymentMethod={paymentMethod}
                 setPaymentMethod={setPaymentMethod}
+                recentPayers={recentPayers}
+                defaultOpen={Boolean(editingId)}
               />
 
               <label className="block">
@@ -663,6 +701,12 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
               expenses={expenses}
               filterCategory={filterCategory}
               setFilterCategory={setFilterCategory}
+              filterPayer={filterPayer}
+              setFilterPayer={setFilterPayer}
+              filterPaymentMethod={filterPaymentMethod}
+              setFilterPaymentMethod={setFilterPaymentMethod}
+              payerTotals={payerTotals}
+              paymentTotals={paymentTotals}
               search={search}
               setSearch={setSearch}
               searchMatchCount={visibleExpenses.length}

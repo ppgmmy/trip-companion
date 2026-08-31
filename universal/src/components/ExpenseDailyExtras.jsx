@@ -1276,6 +1276,71 @@ export function PinnedBudgetAlert({
   );
 }
 
+export function PayerPaymentBreakdown({ expenses, payerTotals, paymentTotals, totalHkd, onJumpToPayer, onJumpToPayment }) {
+  if (!expenses.length) return null;
+
+  const topPayer = payerTotals[0];
+  const topPayment = paymentTotals[0];
+  const payerHint = topPayer
+    ? `「${topPayer.label}」付咗最多（${formatHkd(topPayer.hkd)}，${topPayer.count} 筆）`
+    : "記幾筆之後就會睇到邊個付咗幾多。";
+  const paymentHint = topPayment
+    ? `主要用「${topPayment.label}」（${formatHkd(topPayment.hkd)}）`
+    : "記幾筆之後就會睇到支付方式分佈。";
+
+  function renderRows(rows, onJump) {
+    return (
+      <ul className="space-y-2">
+        {rows.map((row) => {
+          const pct = totalHkd > 0 ? Math.round((row.hkd / totalHkd) * 100) : 0;
+          return (
+            <li key={row.key}>
+              <button
+                type="button"
+                onClick={() => onJump?.(row.key)}
+                className="flex w-full items-center gap-3 rounded-2xl bg-[#f1f5f4] px-3 py-2.5 text-left transition active:scale-[0.99]"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-bold text-ink">{row.label}</p>
+                  <p className="text-[11px] text-ink-faint">{row.count} 筆 · 撳我睇清單</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-black text-jade-deep">{formatHkd(row.hkd)}</p>
+                  <p className="text-[11px] text-ink-faint">{pct}%</p>
+                </div>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    );
+  }
+
+  return (
+    <>
+      <AnalysisSectionTitle
+        eyebrow="02b · 邊個付、點付"
+        title="付款人同支付方式"
+        hint={`${payerHint}；${paymentHint}`}
+      />
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="rounded-3xl bg-white/85 p-4 shadow-[var(--shadow-soft)]">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-ink-faint">邊個付咗幾多</p>
+          {payerTotals.length ? renderRows(payerTotals, onJumpToPayer) : (
+            <p className="py-4 text-center text-sm text-ink-faint">未有付款人資料</p>
+          )}
+        </div>
+        <div className="rounded-3xl bg-white/85 p-4 shadow-[var(--shadow-soft)]">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-ink-faint">支付方式分佈</p>
+          {paymentTotals.length ? renderRows(paymentTotals, onJumpToPayment) : (
+            <p className="py-4 text-center text-sm text-ink-faint">未有支付方式資料</p>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
 export function FilteredCategorySummary({ trip, expenses, filterCategory, totalSpent }) {
   if (!isFeatureEnabled("category-filter") || filterCategory === "all") return null;
 
@@ -1323,6 +1388,12 @@ export function ExpenseListExtras({
   expenses,
   filterCategory,
   setFilterCategory,
+  filterPayer = "all",
+  setFilterPayer,
+  filterPaymentMethod = "all",
+  setFilterPaymentMethod,
+  payerTotals = [],
+  paymentTotals = [],
   search,
   setSearch,
   searchMatchCount = 0,
@@ -1335,6 +1406,8 @@ export function ExpenseListExtras({
   const showSearch = isFeatureEnabled("expense-search");
   const showToggle = isFeatureEnabled("hkd-list-toggle");
   const showDup = isFeatureEnabled("duplicate-last");
+  const hasPayerFilter = filterPayer !== "all";
+  const hasPaymentFilter = filterPaymentMethod !== "all";
 
   const countByCat = useMemo(() => {
     const map = {};
@@ -1344,7 +1417,7 @@ export function ExpenseListExtras({
     return map;
   }, [expenses]);
 
-  if (!showFilter && !showSearch && !showToggle && !showDup) return null;
+  if (!showFilter && !showSearch && !showToggle && !showDup && !payerTotals.length && !paymentTotals.length) return null;
 
   return (
     <div className="space-y-2">
@@ -1373,7 +1446,7 @@ export function ExpenseListExtras({
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="搜尋備註、分類或金額…"
+              placeholder="搜尋備註、分類、付款人或支付方式…"
               className="h-11 w-full rounded-2xl border border-jade/15 bg-mist pl-9 pr-10 text-sm outline-none ring-jade focus:ring-2"
             />
             {search.trim() && (
@@ -1427,6 +1500,60 @@ export function ExpenseListExtras({
               );
             })}
           </div>
+        </div>
+      )}
+      {(payerTotals.length > 0 || paymentTotals.length > 0) && (
+        <div className="space-y-2">
+          {payerTotals.length > 0 && (
+            <div>
+              <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-ink-faint">付款人篩選</p>
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setFilterPayer?.("all")}
+                  className={`min-h-9 rounded-2xl border px-3 text-xs font-bold ${!hasPayerFilter ? "badge-active border-transparent" : "border-jade/15 bg-mist text-ink-soft"}`}
+                >
+                  全部
+                </button>
+                {payerTotals.map((row) => (
+                  <button
+                    key={row.key}
+                    type="button"
+                    onClick={() => setFilterPayer?.(row.key)}
+                    className={`min-h-9 rounded-2xl border px-3 text-xs font-bold ${filterPayer === row.key ? "badge-active border-transparent" : "border-jade/15 bg-mist text-ink-soft"}`}
+                  >
+                    {row.label}
+                    <span className="ml-1 opacity-70">({row.count})</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {paymentTotals.length > 0 && (
+            <div>
+              <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-ink-faint">支付方式篩選</p>
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setFilterPaymentMethod?.("all")}
+                  className={`min-h-9 rounded-2xl border px-3 text-xs font-bold ${!hasPaymentFilter ? "badge-active border-transparent" : "border-jade/15 bg-mist text-ink-soft"}`}
+                >
+                  全部
+                </button>
+                {paymentTotals.map((row) => (
+                  <button
+                    key={row.key}
+                    type="button"
+                    onClick={() => setFilterPaymentMethod?.(row.key)}
+                    className={`min-h-9 rounded-2xl border px-3 text-xs font-bold ${filterPaymentMethod === row.key ? "badge-active border-transparent" : "border-jade/15 bg-mist text-ink-soft"}`}
+                  >
+                    {row.label}
+                    <span className="ml-1 opacity-70">({row.count})</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

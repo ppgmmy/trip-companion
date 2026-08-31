@@ -1,15 +1,17 @@
 import { useState } from "react";
-import { EXPENSE_CATEGORIES, formatHkd, formatMoney, toDateId } from "../data";
+import { EXPENSE_CATEGORIES, formatHkd, formatMoney, lastPaymentDefaults, recentCustomPayers, toDateId } from "../data";
 import PayerPaymentFields from "./PayerPaymentFields";
 
-export default function QuickAddExpense({ trip, rate, onSave, onClose }) {
+export default function QuickAddExpense({ trip, rate, expenses = [], onSave, onClose }) {
+  const defaults = lastPaymentDefaults(expenses);
   const [categoryId, setCategoryId] = useState("food");
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
   const [entryDate, setEntryDate] = useState(() => toDateId(new Date()));
-  const [payer, setPayer] = useState("me");
-  const [customPayer, setCustomPayer] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("cash");
+  const [payer, setPayer] = useState(defaults.payer);
+  const [customPayer, setCustomPayer] = useState(defaults.customPayer);
+  const [paymentMethod, setPaymentMethod] = useState(defaults.paymentMethod);
+  const recentPayers = recentCustomPayers(expenses);
 
   function save(e) {
     e.preventDefault();
@@ -94,6 +96,7 @@ export default function QuickAddExpense({ trip, rate, onSave, onClose }) {
           setCustomPayer={setCustomPayer}
           paymentMethod={paymentMethod}
           setPaymentMethod={setPaymentMethod}
+          recentPayers={recentPayers}
           compact
         />
         <p className="rounded-2xl bg-jade-soft/70 px-4 py-2.5 text-center text-sm text-ink-soft">

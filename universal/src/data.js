@@ -56,6 +56,68 @@ export function payerLabel(payer) {
   return PAYER_PRESETS.find((item) => item.id === payer)?.label || payer;
 }
 
+export function resolvePayerFields(entry) {
+  const presetIds = new Set(PAYER_PRESETS.map((item) => item.id));
+  const payer = entry?.payer || "me";
+  if (presetIds.has(payer)) {
+    return { payer, customPayer: "" };
+  }
+  return { payer, customPayer: payer };
+}
+
+export function lastPaymentDefaults(expenses) {
+  const last = expenses[expenses.length - 1];
+  if (!last) {
+    return { payer: "me", customPayer: "", paymentMethod: "cash" };
+  }
+  const payerFields = resolvePayerFields(last);
+  return {
+    ...payerFields,
+    paymentMethod: last.paymentMethod || "cash",
+  };
+}
+
+export function recentCustomPayers(expenses, limit = 4) {
+  const presetIds = new Set(PAYER_PRESETS.map((item) => item.id));
+  const seen = new Set();
+  const result = [];
+  for (let i = expenses.length - 1; i >= 0 && result.length < limit; i -= 1) {
+    const payer = expenses[i].payer;
+    if (!payer || presetIds.has(payer) || seen.has(payer)) continue;
+    seen.add(payer);
+    result.push(payer);
+  }
+  return result;
+}
+
+export function aggregateByPayer(expenses) {
+  const map = {};
+  expenses.forEach((entry) => {
+    const key = entry.payer || "me";
+    if (!map[key]) {
+      map[key] = { key, label: payerLabel(key), count: 0, amount: 0, hkd: 0 };
+    }
+    map[key].count += 1;
+    map[key].amount += Number(entry.amount) || 0;
+    map[key].hkd += Number(entry.baseAmount) || 0;
+  });
+  return Object.values(map).sort((a, b) => b.hkd - a.hkd);
+}
+
+export function aggregateByPaymentMethod(expenses) {
+  const map = {};
+  expenses.forEach((entry) => {
+    const key = entry.paymentMethod || "cash";
+    if (!map[key]) {
+      map[key] = { key, label: paymentMethodLabel(key), count: 0, amount: 0, hkd: 0 };
+    }
+    map[key].count += 1;
+    map[key].amount += Number(entry.amount) || 0;
+    map[key].hkd += Number(entry.baseAmount) || 0;
+  });
+  return Object.values(map).sort((a, b) => b.hkd - a.hkd);
+}
+
 export function expenseMetaLine(entry) {
   const parts = [];
   const payer = payerLabel(entry.payer);
