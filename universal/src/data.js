@@ -116,11 +116,27 @@ export function aggregateByPayer(expenses) {
     let key = entry.payer || DEFAULT_PAYER_ID;
     if (key === "cash") key = "cash-pool";
     if (!map[key]) {
-      map[key] = { key, label: payerLabel(key), count: 0, amount: 0, hkd: 0 };
+      map[key] = {
+        key,
+        label: payerLabel(key),
+        count: 0,
+        amount: 0,
+        hkd: 0,
+        byPayment: {
+          cash: { amount: 0, hkd: 0, count: 0 },
+          card: { amount: 0, hkd: 0, count: 0 },
+        },
+      };
     }
+    const amount = Number(entry.amount) || 0;
+    const hkd = Number(entry.baseAmount) || 0;
+    const method = normalizePaymentMethod(entry.paymentMethod);
     map[key].count += 1;
-    map[key].amount += Number(entry.amount) || 0;
-    map[key].hkd += Number(entry.baseAmount) || 0;
+    map[key].amount += amount;
+    map[key].hkd += hkd;
+    map[key].byPayment[method].count += 1;
+    map[key].byPayment[method].amount += amount;
+    map[key].byPayment[method].hkd += hkd;
   });
   return Object.values(map).sort((a, b) => {
     const ai = order.indexOf(a.key);
