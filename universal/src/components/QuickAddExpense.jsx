@@ -1,11 +1,15 @@
 import { useState } from "react";
 import { EXPENSE_CATEGORIES, formatHkd, formatMoney, toDateId } from "../data";
+import PayerPaymentFields from "./PayerPaymentFields";
 
 export default function QuickAddExpense({ trip, rate, onSave, onClose }) {
   const [categoryId, setCategoryId] = useState("food");
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
   const [entryDate, setEntryDate] = useState(() => toDateId(new Date()));
+  const [payer, setPayer] = useState("me");
+  const [customPayer, setCustomPayer] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("cash");
 
   function save(e) {
     e.preventDefault();
@@ -19,6 +23,8 @@ export default function QuickAddExpense({ trip, rate, onSave, onClose }) {
       storedRate: rate,
       note: note.trim() || EXPENSE_CATEGORIES.find((c) => c.id === categoryId)?.label || "開支",
       date: entryDate || toDateId(new Date()),
+      payer: customPayer.trim() || payer || "me",
+      paymentMethod,
       createdAt: Date.now(),
     });
     onClose();
@@ -80,6 +86,15 @@ export default function QuickAddExpense({ trip, rate, onSave, onClose }) {
           onChange={(e) => setNote(e.target.value)}
           placeholder="備註（可留空）"
           className="h-11 w-full rounded-2xl border border-jade/15 bg-mist px-3 text-sm outline-none ring-jade focus:ring-2"
+        />
+        <PayerPaymentFields
+          payer={payer}
+          setPayer={setPayer}
+          customPayer={customPayer}
+          setCustomPayer={setCustomPayer}
+          paymentMethod={paymentMethod}
+          setPaymentMethod={setPaymentMethod}
+          compact
         />
         <p className="rounded-2xl bg-jade-soft/70 px-4 py-2.5 text-center text-sm text-ink-soft">
           {Number(amount) > 0 ? `${formatMoney(Number(amount), trip.targetCurrency)} ≈ ${formatHkd(Number(amount) * rate)}` : "輸入金額後自動換算港幣"}

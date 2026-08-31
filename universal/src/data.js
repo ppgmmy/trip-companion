@@ -30,6 +30,41 @@ export const EXPENSE_CATEGORIES = [
   { id: "other", label: "其他", color: "#64748b" },
 ];
 
+export const PAYMENT_METHODS = [
+  { id: "cash", label: "現金" },
+  { id: "card", label: "信用卡" },
+  { id: "alipay", label: "支付寶" },
+  { id: "wechat", label: "微信支付" },
+  { id: "octopus", label: "八達通" },
+  { id: "apple-pay", label: "Apple Pay" },
+  { id: "other", label: "其他" },
+];
+
+export const PAYER_PRESETS = [
+  { id: "me", label: "我" },
+  { id: "partner", label: "同伴" },
+  { id: "shared", label: "大家分攤" },
+];
+
+export function paymentMethodLabel(id) {
+  if (!id) return "";
+  return PAYMENT_METHODS.find((method) => method.id === id)?.label || id;
+}
+
+export function payerLabel(payer) {
+  if (!payer) return "";
+  return PAYER_PRESETS.find((item) => item.id === payer)?.label || payer;
+}
+
+export function expenseMetaLine(entry) {
+  const parts = [];
+  const payer = payerLabel(entry.payer);
+  const payment = paymentMethodLabel(entry.paymentMethod);
+  if (payer) parts.push(payer);
+  if (payment) parts.push(payment);
+  return parts.join(" · ");
+}
+
 export const DEFAULT_BADGES = [
   { id: "outlets", label: "有插座" },
   { id: "quiet", label: "安靜" },

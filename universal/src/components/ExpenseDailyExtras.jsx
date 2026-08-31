@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { EXPENSE_CATEGORIES, formatHkd, formatMoney, toDateId } from "../data";
+import { EXPENSE_CATEGORIES, formatHkd, formatMoney, payerLabel, paymentMethodLabel, toDateId } from "../data";
 import { getFeatureMeta, getLastEnabledFeature, isFeatureEnabled } from "../data/featureFlags";
 
 function shiftDateId(dateId, deltaDays) {
@@ -76,13 +76,15 @@ function buildExpenseCsv({ trip, expenses, includeSummary = true }) {
   rows.push(["# 筆數", expenses.length]);
   rows.push([]);
 
-  rows.push(["date", "category", "note", "amount", "currency", "hkd", "rate"]);
+  rows.push(["date", "category", "note", "payer", "payment_method", "amount", "currency", "hkd", "rate"]);
   expenses.forEach((e) => {
     const cat = EXPENSE_CATEGORIES.find((c) => c.id === e.categoryId);
     rows.push([
       e.date,
       cat?.label || e.categoryId,
       e.note || "",
+      payerLabel(e.payer),
+      paymentMethodLabel(e.paymentMethod),
       e.amount,
       trip.targetCurrency,
       Math.round(Number(e.baseAmount) || 0),

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { EXPENSE_CATEGORIES, formatHkd, formatMoney, toDateId, tripDays } from "../data";
+import { EXPENSE_CATEGORIES, expenseMetaLine, formatHkd, formatMoney, payerLabel, paymentMethodLabel, toDateId, tripDays } from "../data";
 import { isFeatureEnabled } from "../data/featureFlags";
 import { BarChart, DoughnutChart } from "./Charts";
 import {
@@ -17,6 +17,7 @@ import {
   QuickAddHelpers,
   SevenDayTrendPanel,
 } from "./ExpenseDailyExtras";
+import PayerPaymentFields, { resolvePayerFields } from "./PayerPaymentFields";
 
 const PANELS = [
   { id: "overview", label: "概覽" },
@@ -46,6 +47,9 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
   const [showHkd, setShowHkd] = useState(false);
   const [panel, setPanel] = useState("ledger");
   const [editingId, setEditingId] = useState(null);
+  const [payer, setPayer] = useState("me");
+  const [customPayer, setCustomPayer] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("cash");
   const [fxOpen, setFxOpen] = useState(false);
   const [saveFlash, setSaveFlash] = useState("");
   const tabRefs = useRef({});
@@ -150,7 +154,9 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
       const noteMatch = (e.note || "").toLowerCase().includes(q);
       const catMatch = (cat?.label || e.categoryId || "").toLowerCase().includes(q);
       const amountMatch = String(e.amount).includes(q) || String(Math.round(e.baseAmount || 0)).includes(q);
-      return noteMatch || catMatch || amountMatch;
+      const payerMatch = payerLabel(e.payer).toLowerCase().includes(q) || (e.payer || "").toLowerCase().includes(q);
+      const paymentMatch = paymentMethodLabel(e.paymentMethod).toLowerCase().includes(q);
+      return noteMatch || catMatch || amountMatch || payerMatch || paymentMatch;
     });
   }, [categoryFilteredExpenses, search]);
 
@@ -176,6 +182,9 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
     setNote("");
     setEntryDate(toDateId(new Date()));
     setCategoryId("food");
+    setPayer("me");
+    setCustomPayer("");
+    setPaymentMethod("cash");
   }
 
   function flash(msg) {
@@ -190,6 +199,8 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
     if (!Number.isFinite(value) || value <= 0) return;
     const date = entryDate || toDateId(new Date());
 
+    const resolvedPayer = customPayer.trim() || payer || "me";
+
     if (editingId) {
       setExpenses((prev) =>
         prev.map((item) => {
@@ -202,6 +213,8 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
             storedRate: rate,
             note: note.trim() || EXPENSE_CATEGORIES.find((c) => c.id === categoryId)?.label || "開支",
             date,
+            payer: resolvedPayer,
+            paymentMethod,
             updatedAt: Date.now(),
           };
         }),
@@ -219,6 +232,8 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
       storedRate: rate,
       note: note.trim() || EXPENSE_CATEGORIES.find((c) => c.id === categoryId)?.label || "開支",
       date,
+      payer: resolvedPayer,
+      paymentMethod,
       createdAt: Date.now(),
     };
     setExpenses((prev) => [...prev, entry]);
@@ -239,6 +254,10 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
     setAmount(String(entry.amount));
     setNote(entry.note || "");
     setEntryDate(entry.date || toDateId(new Date()));
+    const payerFields = resolvePayerFields(entry);
+    setPayer(payerFields.payer);
+    setCustomPayer(payerFields.customPayer);
+    setPaymentMethod(entry.paymentMethod || "cash");
     setPanel("ledger");
     requestAnimationFrame(() => {
       formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -252,6 +271,10 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
     setAmount(String(entry.amount));
     setNote(entry.note || "");
     setEntryDate(toDateId(new Date()));
+    const payerFields = resolvePayerFields(entry);
+    setPayer(payerFields.payer);
+    setCustomPayer(payerFields.customPayer);
+    setPaymentMethod(entry.paymentMethod || "cash");
     setPanel("ledger");
     requestAnimationFrame(() => {
       formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -582,6 +605,15 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
                 categoryId={categoryId}
               />
 
+              <PayerPaymentFields
+                payer={payer}
+                setPayer={setPayer}
+                customPayer={customPayer}
+                setCustomPayer={setCustomPayer}
+                paymentMethod={paymentMethod}
+                setPaymentMethod={setPaymentMethod}
+              />
+
               <label className="block">
                 <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-ink-faint">日期（可補記舊日）</span>
                 <input
@@ -669,6 +701,7 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
                       {group.items.map((entry) => {
                         const cat = EXPENSE_CATEGORIES.find((c) => c.id === entry.categoryId);
                         const isEditing = editingId === entry.id;
+                        const meta = expenseMetaLine(entry);
                         return (
                           <li
                             key={entry.id}
@@ -683,7 +716,11 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
                               <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: cat?.color || "#64748b" }} />
                               <div className="min-w-0 flex-1">
                                 <p className="truncate text-sm font-semibold text-ink">{entry.note}</p>
-                                <p className="text-[11px] text-ink-faint">{cat?.label || entry.categoryId} · 撳我編輯</p>
+                                <p className="text-[11px] text-ink-faint">
+                                  {cat?.label || entry.categoryId}
+                                  {meta ? ` · ${meta}` : ""}
+                                  {" · 撳我編輯"}
+                                </p>
                               </div>
                               <div className="text-right">
                                 {isFeatureEnabled("hkd-list-toggle") && showHkd ? (
