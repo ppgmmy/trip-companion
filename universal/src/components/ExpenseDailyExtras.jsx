@@ -1309,8 +1309,8 @@ export function PayerPaymentBreakdown({ expenses, payerTotals, paymentTotals, to
   const topPayer = payerTotals[0];
   const topPayment = paymentTotals[0];
   const payerHint = topPayer
-    ? `「${topPayer.label}」付咗最多（${formatHkd(topPayer.hkd)}，${topPayer.count} 筆）`
-    : "記幾筆之後就會睇到邊個付咗幾多。";
+    ? `「${topPayer.label}」用咗最多（${formatHkd(topPayer.hkd)}，${topPayer.count} 筆）`
+    : "記幾筆之後就會睇到邊個用咗幾多。";
   const paymentHint = topPayment
     ? `主要用「${topPayment.label}」（${formatHkd(topPayment.hkd)}）`
     : "記幾筆之後就會睇到支付方式分佈。";
@@ -1346,13 +1346,13 @@ export function PayerPaymentBreakdown({ expenses, payerTotals, paymentTotals, to
   return (
     <>
       <AnalysisSectionTitle
-        eyebrow="02b · 邊個付、點付"
+        eyebrow="02b · 邊個用咗幾多"
         title="付款人同支付方式"
-        hint={`${payerHint}；${paymentHint}`}
+        hint={`${payerHint}；${paymentHint}。「大家分攤」只係標記共同開支，唔計欠款。`}
       />
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="expense-section-card">
-          <p className="expense-stat-label mb-3">邊個付咗幾多</p>
+          <p className="expense-stat-label mb-3">邊個用咗幾多</p>
           {payerTotals.length ? renderRows(payerTotals, onJumpToPayer) : (
             <p className="py-4 text-center text-sm text-ink-faint">未有付款人資料</p>
           )}

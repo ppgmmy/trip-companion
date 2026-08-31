@@ -5,7 +5,7 @@ import { amountExpressionPreview, frequentAmounts, parseAmountExpression, sugges
 import { BarChart, DoughnutChart } from "./Charts";
 import CollapsibleSection from "./CollapsibleSection";
 import PwaQuickAddHint from "./PwaQuickAddHint";
-import SplitSettlementPanel from "./SplitSettlementPanel";
+import PayerSpendStats from "./PayerSpendStats";
 import SwipeableExpenseItem from "./SwipeableExpenseItem";
 import UndoToast from "./UndoToast";
 import {
@@ -539,8 +539,8 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
             </CollapsibleSection>
 
             <CollapsibleSection
-              title="02b · 邊個付、點付"
-              summary={payerTotals[0] ? `${payerTotals[0].label} 付最多` : "記幾筆後顯示分帳"}
+              title="02b · 邊個用咗幾多"
+              summary={payerTotals[0] ? `${payerTotals[0].label} 用最多` : "記幾筆後顯示統計"}
               defaultOpen={false}
             >
               <PayerPaymentBreakdown
@@ -552,9 +552,6 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
                 onJumpToPayer={jumpToLedgerPayer}
                 onJumpToPayment={jumpToLedgerPayment}
               />
-              <div className="mt-3">
-                <SplitSettlementPanel trip={trip} expenses={expenses} />
-              </div>
             </CollapsibleSection>
 
             <CollapsibleSection
@@ -590,7 +587,7 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
               fxLabel={statusLabel}
             />
 
-            <SplitSettlementPanel trip={trip} expenses={expenses} />
+            <PayerSpendStats trip={trip} payerTotals={payerTotals} />
 
             <form ref={formRef} onSubmit={submitExpense} className="expense-section-card-compact space-y-2">
               {editingId && (
