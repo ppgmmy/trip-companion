@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { DEFAULT_PAYER_ID, EXPENSE_CATEGORIES, aggregateByPayer, aggregateByPaymentMethod, expenseEntryTags, formatHkd, formatMoney, lastPaymentDefaults, payerLabel, paymentMethodLabel, recentCustomPayers, resolvePayerFields, toDateId, tripDays } from "../data";
+import { DEFAULT_PAYER_ID, DEFAULT_PAYMENT_METHOD, EXPENSE_CATEGORIES, aggregateByPayer, aggregateByPaymentMethod, expenseEntryTags, formatHkd, formatMoney, lastPaymentDefaults, normalizePaymentMethod, payerLabel, paymentMethodLabel, recentCustomPayers, resolvePayerFields, toDateId, tripDays } from "../data";
 import { isFeatureEnabled } from "../data/featureFlags";
 import { BarChart, DoughnutChart } from "./Charts";
 import {
@@ -139,7 +139,7 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
       list = list.filter((e) => (e.payer || DEFAULT_PAYER_ID) === filterPayer);
     }
     if (filterPaymentMethod !== "all") {
-      list = list.filter((e) => (e.paymentMethod || "cash") === filterPaymentMethod);
+      list = list.filter((e) => normalizePaymentMethod(e.paymentMethod) === filterPaymentMethod);
     }
     return list;
   }, [expenses, filterCategory, filterPayer, filterPaymentMethod]);
@@ -213,7 +213,7 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
             note: note.trim() || EXPENSE_CATEGORIES.find((c) => c.id === categoryId)?.label || "開支",
             date,
             payer: resolvedPayer,
-            paymentMethod,
+            paymentMethod: normalizePaymentMethod(paymentMethod),
             updatedAt: Date.now(),
           };
         }),
@@ -232,7 +232,7 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
       note: note.trim() || EXPENSE_CATEGORIES.find((c) => c.id === categoryId)?.label || "開支",
       date,
       payer: resolvedPayer,
-      paymentMethod,
+      paymentMethod: normalizePaymentMethod(paymentMethod),
       createdAt: Date.now(),
     };
     setExpenses((prev) => [...prev, entry]);
@@ -256,7 +256,7 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
     const payerFields = resolvePayerFields(entry);
     setPayer(payerFields.payer);
     setCustomPayer(payerFields.customPayer);
-    setPaymentMethod(entry.paymentMethod || "cash");
+    setPaymentMethod(normalizePaymentMethod(entry.paymentMethod));
     setPanel("ledger");
     requestAnimationFrame(() => {
       formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -273,7 +273,7 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
     const payerFields = resolvePayerFields(entry);
     setPayer(payerFields.payer);
     setCustomPayer(payerFields.customPayer);
-    setPaymentMethod(entry.paymentMethod || "cash");
+    setPaymentMethod(normalizePaymentMethod(entry.paymentMethod));
     setPanel("ledger");
     requestAnimationFrame(() => {
       formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });

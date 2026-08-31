@@ -33,12 +33,17 @@ export const EXPENSE_CATEGORIES = [
 export const PAYMENT_METHODS = [
   { id: "cash", label: "現金" },
   { id: "card", label: "信用卡" },
-  { id: "alipay", label: "支付寶" },
-  { id: "wechat", label: "微信支付" },
-  { id: "octopus", label: "八達通" },
-  { id: "apple-pay", label: "Apple Pay" },
-  { id: "other", label: "其他" },
 ];
+
+const LEGACY_PAYMENT_LABELS = {
+  alipay: "支付寶",
+  wechat: "微信支付",
+  octopus: "八達通",
+  "apple-pay": "Apple Pay",
+  other: "其他",
+};
+
+export const DEFAULT_PAYMENT_METHOD = "cash";
 
 export const PAYER_PRESETS = [
   { id: "ppg", label: "ppg" },
@@ -55,7 +60,12 @@ export const DEFAULT_PAYER_ID = "ppg";
 
 export function paymentMethodLabel(id) {
   if (!id) return "";
-  return PAYMENT_METHODS.find((method) => method.id === id)?.label || id;
+  return PAYMENT_METHODS.find((method) => method.id === id)?.label || LEGACY_PAYMENT_LABELS[id] || id;
+}
+
+export function normalizePaymentMethod(id) {
+  if (id === "card") return "card";
+  return "cash";
 }
 
 export function payerLabel(payer) {
@@ -75,12 +85,12 @@ export function resolvePayerFields(entry) {
 export function lastPaymentDefaults(expenses) {
   const last = expenses[expenses.length - 1];
   if (!last) {
-    return { payer: DEFAULT_PAYER_ID, customPayer: "", paymentMethod: "cash" };
+    return { payer: DEFAULT_PAYER_ID, customPayer: "", paymentMethod: DEFAULT_PAYMENT_METHOD };
   }
   const payerFields = resolvePayerFields(last);
   return {
     ...payerFields,
-    paymentMethod: last.paymentMethod || "cash",
+    paymentMethod: normalizePaymentMethod(last.paymentMethod),
   };
 }
 
@@ -114,7 +124,7 @@ export function aggregateByPayer(expenses) {
 export function aggregateByPaymentMethod(expenses) {
   const map = {};
   expenses.forEach((entry) => {
-    const key = entry.paymentMethod || "cash";
+    const key = normalizePaymentMethod(entry.paymentMethod);
     if (!map[key]) {
       map[key] = { key, label: paymentMethodLabel(key), count: 0, amount: 0, hkd: 0 };
     }

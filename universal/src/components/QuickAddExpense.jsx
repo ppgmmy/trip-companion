@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { DEFAULT_PAYER_ID, EXPENSE_CATEGORIES, formatHkd, formatMoney, lastPaymentDefaults, recentCustomPayers, toDateId } from "../data";
+import { DEFAULT_PAYER_ID, DEFAULT_PAYMENT_METHOD, EXPENSE_CATEGORIES, formatHkd, formatMoney, lastPaymentDefaults, normalizePaymentMethod, recentCustomPayers, toDateId } from "../data";
 import PayerPaymentFields from "./PayerPaymentFields";
 
 export default function QuickAddExpense({ trip, rate, expenses = [], onSave, onClose }) {
@@ -26,7 +26,7 @@ export default function QuickAddExpense({ trip, rate, expenses = [], onSave, onC
       note: note.trim() || EXPENSE_CATEGORIES.find((c) => c.id === categoryId)?.label || "開支",
       date: entryDate || toDateId(new Date()),
       payer: customPayer.trim() || payer || DEFAULT_PAYER_ID,
-      paymentMethod,
+      paymentMethod: normalizePaymentMethod(paymentMethod),
       createdAt: Date.now(),
     });
     onClose();
