@@ -1,6 +1,6 @@
 import { formatHkd, formatMoney, payerLabel } from "../data";
 
-/** 記帳頁扁列：純統計邊個用咗幾多，唔計欠款 */
+/** 記帳頁扁列：純統計邊個用咗幾多（含共用現金袋），唔計欠款 */
 export default function PayerSpendStats({ trip, payerTotals }) {
   if (!payerTotals?.length) return null;
 
@@ -14,10 +14,14 @@ export default function PayerSpendStats({ trip, payerTotals }) {
             <span className="font-display font-black text-jade-deep">
               {formatMoney(row.amount, trip.targetCurrency)}
             </span>
-            <span className="ml-1 text-ink-faint">({formatHkd(row.hkd)})</span>
+            <span className="ml-1 text-ink-faint">
+              ({formatHkd(row.hkd)}
+              {row.count ? ` · ${row.count}筆` : ""})
+            </span>
           </span>
         ))}
       </div>
+      <p className="mt-1 text-[10px] text-ink-faint">「現金」＝共用現金袋支出，唔屬 ppg／mo</p>
     </div>
   );
 }

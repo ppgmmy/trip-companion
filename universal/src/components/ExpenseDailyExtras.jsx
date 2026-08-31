@@ -1348,7 +1348,7 @@ export function PayerPaymentBreakdown({ expenses, payerTotals, paymentTotals, to
       <AnalysisSectionTitle
         eyebrow="02b · 邊個用咗幾多"
         title="付款人同支付方式"
-        hint={`${payerHint}；${paymentHint}。「大家分攤」只係標記共同開支，唔計欠款。`}
+        hint={`${payerHint}；${paymentHint}。「現金」＝共用現金袋（唔屬 ppg／mo）；「大家分攤」＝共同開支標記。`}
       />
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="expense-section-card">

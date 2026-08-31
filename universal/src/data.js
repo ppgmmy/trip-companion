@@ -48,12 +48,14 @@ export const DEFAULT_PAYMENT_METHOD = "cash";
 export const PAYER_PRESETS = [
   { id: "ppg", label: "ppg" },
   { id: "mo", label: "mo" },
+  { id: "cash-pool", label: "現金" },
   { id: "shared", label: "大家分攤" },
 ];
 
 const LEGACY_PAYER_LABELS = {
   me: "我",
   partner: "同伴",
+  cash: "現金",
 };
 
 export const DEFAULT_PAYER_ID = "ppg";
@@ -149,7 +151,11 @@ export function expenseEntryTags(entry) {
   const payer = payerLabel(entry.payer);
   const payment = paymentMethodLabel(entry.paymentMethod);
   if (payer) tags.push({ kind: "payer", label: payer });
-  if (payment) tags.push({ kind: "payment", label: payment });
+  // 共用現金袋已經用「現金」做付款人，唔使再重複顯示支付方式「現金」
+  const isCashPool = entry.payer === "cash-pool" || entry.payer === "cash";
+  if (payment && !(isCashPool && normalizePaymentMethod(entry.paymentMethod) === "cash")) {
+    tags.push({ kind: "payment", label: payment });
+  }
   return tags;
 }
 
