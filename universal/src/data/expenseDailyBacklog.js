@@ -140,4 +140,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "各分類平均每日使費，方便計劃餘下日子。",
     pillar: "analysis",
   },
+  {
+    id: "fx-rate-impact",
+    title: "匯率影響說明",
+    description: "對比記帳鎖定港幣同而家匯率重算嘅差額，了解匯率波動點影響總使費。",
+    pillar: "stickiness",
+  },
 ];

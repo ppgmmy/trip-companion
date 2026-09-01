@@ -19,6 +19,7 @@ import {
   ExpenseListExtras,
   ExportCsvPanel,
   FilteredCategorySummary,
+  FxRateImpactPanel,
   LedgerSummaryBar,
   PinnedBudgetAlert,
   PayerPaymentBreakdown,
@@ -473,6 +474,8 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
                 </p>
               </div>
             </div>
+
+            <FxRateImpactPanel trip={trip} expenses={expenses} currentRate={rate} />
           </>
         )}
 

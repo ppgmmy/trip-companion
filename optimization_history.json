@@ -98,10 +98,9 @@
     },
     {
       "date": "2026-09-01",
-      "id": "hkd-list-toggle",
-      "title": "列表幣種切換",
-      "description": "支出列表可切換顯示當地幣或港幣。",
-      "cycle": true
+      "id": "fx-rate-impact",
+      "title": "匯率影響說明",
+      "description": "對比記帳鎖定港幣同而家匯率重算嘅差額，了解匯率波動點影響總使費。"
     }
   ]
 }

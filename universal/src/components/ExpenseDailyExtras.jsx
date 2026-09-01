@@ -1303,6 +1303,172 @@ export function PinnedBudgetAlert({
   );
 }
 
+export function FxRateImpactPanel({ trip, expenses, currentRate }) {
+  const [expanded, setExpanded] = useState(false);
+
+  const analysis = useMemo(() => {
+    if (!expenses.length || !currentRate || currentRate <= 0) return null;
+
+    let lockedHkd = 0;
+    let currentHkd = 0;
+    let totalLocal = 0;
+    let rateWeighted = 0;
+    const affected = [];
+
+    expenses.forEach((e) => {
+      const amount = Number(e.amount) || 0;
+      const locked = Number(e.baseAmount) || 0;
+      const storedRate = Number(e.storedRate) || (amount > 0 ? locked / amount : 0);
+      const atCurrent = amount * currentRate;
+      const entryDelta = atCurrent - locked;
+
+      lockedHkd += locked;
+      currentHkd += atCurrent;
+      totalLocal += amount;
+      if (amount > 0 && storedRate > 0) rateWeighted += storedRate * amount;
+
+      if (Math.abs(entryDelta) >= 0.5) {
+        affected.push({
+          id: e.id,
+          note: e.note,
+          date: e.date,
+          amount,
+          locked,
+          atCurrent,
+          entryDelta,
+          storedRate,
+        });
+      }
+    });
+
+    const avgStoredRate = totalLocal > 0 ? rateWeighted / totalLocal : 0;
+    const delta = currentHkd - lockedHkd;
+    const deltaPct = lockedHkd > 0 ? (delta / lockedHkd) * 100 : 0;
+    const rateChangePct = avgStoredRate > 0 ? ((currentRate - avgStoredRate) / avgStoredRate) * 100 : 0;
+
+    return {
+      lockedHkd,
+      currentHkd,
+      delta,
+      deltaPct,
+      avgStoredRate,
+      rateChangePct,
+      totalLocal,
+      affected: affected.sort((a, b) => Math.abs(b.entryDelta) - Math.abs(a.entryDelta)).slice(0, 5),
+    };
+  }, [expenses, currentRate]);
+
+  if (!isFeatureEnabled("fx-rate-impact") || !analysis) return null;
+
+  const { lockedHkd, currentHkd, delta, deltaPct, avgStoredRate, rateChangePct, affected } = analysis;
+  const absDelta = Math.abs(delta);
+  const isStable = absDelta < 10 && Math.abs(rateChangePct) < 1;
+  const deltaUp = delta > 0;
+  const deltaColor = isStable ? "text-ink-soft" : deltaUp ? "text-coral" : "text-jade";
+  const deltaIcon = isStable ? "≈" : deltaUp ? "↑" : "↓";
+
+  let summary;
+  if (isStable) {
+    summary = "匯率變動不大，記帳鎖定港幣同而家重算差唔多。";
+  } else if (deltaUp) {
+    summary = `若用而家匯率重算全部開支，港幣總額會多 ${formatHkd(absDelta)}（${Math.abs(deltaPct).toFixed(1)}%）。`;
+  } else {
+    summary = `若用而家匯率重算全部開支，港幣總額會少 ${formatHkd(absDelta)}（${Math.abs(deltaPct).toFixed(1)}%）。`;
+  }
+
+  return (
+    <div className="rounded-3xl bg-white p-4 shadow-[var(--shadow-soft)]">
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="flex w-full items-start gap-3 text-left transition active:scale-[0.99]"
+        aria-expanded={expanded}
+      >
+        <span className="mt-0.5 text-lg" aria-hidden="true">💱</span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-xs font-bold uppercase tracking-wider text-ink-soft">匯率對港幣影響</p>
+            {!isStable && (
+              <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${deltaUp ? "bg-coral/15 text-coral" : "bg-jade-soft text-jade-deep"}`}>
+                {deltaIcon} {formatHkd(absDelta)}
+              </span>
+            )}
+          </div>
+          <p className="mt-1 text-sm leading-relaxed text-ink-soft">{summary}</p>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <div className="rounded-2xl bg-[#f1f5f4] px-2.5 py-2.5 text-center">
+              <p className="text-[10px] font-semibold text-ink-faint">記帳鎖定（實際）</p>
+              <p className="mt-0.5 text-sm font-black text-jade-deep">{formatHkd(lockedHkd)}</p>
+            </div>
+            <div className="rounded-2xl bg-[#f1f5f4] px-2.5 py-2.5 text-center">
+              <p className="text-[10px] font-semibold text-ink-faint">而家匯率重算</p>
+              <p className={`mt-0.5 text-sm font-black ${deltaColor}`}>{formatHkd(currentHkd)}</p>
+            </div>
+          </div>
+        </div>
+        <span className="shrink-0 rounded-full border border-jade/15 bg-mist px-2 py-1 text-[10px] font-bold text-ink-soft">
+          {expanded ? "收起" : "詳情"}
+        </span>
+      </button>
+
+      {expanded && (
+        <div className="mt-3 space-y-3 border-t border-jade/10 pt-3">
+          <div className="rounded-2xl bg-mist/60 px-3 py-2.5 text-xs leading-relaxed text-ink-soft">
+            <p>
+              每筆開支記帳時會鎖定匯率（1 {trip.targetCurrency} = 記帳匯率 HKD），所以「記帳鎖定」係你實際記低嘅港幣總額。
+            </p>
+            <p className="mt-1.5">
+              「而家匯率重算」係假設全部用今日匯率計 — 只供參考，唔會改你嘅記帳紀錄。
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 text-center">
+            <div className="rounded-xl bg-shell px-2 py-2">
+              <p className="text-[10px] font-semibold text-ink-faint">平均記帳匯率</p>
+              <p className="mt-0.5 text-xs font-black text-ink">{avgStoredRate.toFixed(4)}</p>
+            </div>
+            <div className="rounded-xl bg-shell px-2 py-2">
+              <p className="text-[10px] font-semibold text-ink-faint">而家匯率</p>
+              <p className={`mt-0.5 text-xs font-black ${Math.abs(rateChangePct) >= 1 ? (rateChangePct > 0 ? "text-coral" : "text-jade") : "text-ink"}`}>
+                {currentRate.toFixed(4)}
+                {Math.abs(rateChangePct) >= 0.5 && (
+                  <span className="ml-1 text-[10px] font-semibold">
+                    ({rateChangePct > 0 ? "+" : ""}{rateChangePct.toFixed(1)}%)
+                  </span>
+                )}
+              </p>
+            </div>
+          </div>
+
+          {affected.length > 0 && (
+            <div>
+              <p className="mb-2 text-[11px] font-bold text-ink-soft">受匯率影響最大嘅 {affected.length} 筆</p>
+              <ul className="space-y-2">
+                {affected.map((row) => (
+                  <li key={row.id} className="flex items-center justify-between gap-2 rounded-xl bg-shell px-2.5 py-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs font-bold text-ink">{row.note || "開支"}</p>
+                      <p className="text-[10px] text-ink-faint">
+                        {formatShortDate(row.date)} · {formatMoney(row.amount, trip.targetCurrency)} @ {row.storedRate.toFixed(4)}
+                      </p>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <p className="text-[10px] text-ink-faint">{formatHkd(row.locked)} → {formatHkd(row.atCurrent)}</p>
+                      <p className={`text-xs font-bold ${row.entryDelta > 0 ? "text-coral" : "text-jade"}`}>
+                        {row.entryDelta > 0 ? "+" : ""}{formatHkd(row.entryDelta)}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function PayerPaymentBreakdown({ expenses, payerTotals, paymentTotals, totalHkd, onJumpToPayer, onJumpToPayment }) {
   if (!expenses.length) return null;
 
