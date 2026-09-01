@@ -95,6 +95,13 @@
       "id": "pinned-budget-alert",
       "title": "預算警戒條",
       "description": "用咗超過 80% 預算時顯示醒目提示。"
+    },
+    {
+      "date": "2026-09-01",
+      "id": "hkd-list-toggle",
+      "title": "列表幣種切換",
+      "description": "支出列表可切換顯示當地幣或港幣。",
+      "cycle": true
     }
   ]
 }
