@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { DEFAULT_PAYER_ID, DEFAULT_PAYMENT_METHOD, EXPENSE_CATEGORIES, aggregateByPayer, aggregateByPaymentMethod, expenseEntryTags, formatHkd, formatMoney, lastPaymentDefaults, normalizePaymentMethod, payerLabel, paymentMethodLabel, recentCustomPayers, resolvePayerFields, savePayerPrefs, toDateId, tripDays } from "../data";
+import { DEFAULT_PAYER_ID, DEFAULT_PAYMENT_METHOD, EXPENSE_CATEGORIES, RATE_TTL_MS, aggregateByPayer, aggregateByPaymentMethod, expenseEntryTags, formatHkd, formatMoney, lastPaymentDefaults, normalizePaymentMethod, payerLabel, paymentMethodLabel, recentCustomPayers, resolvePayerFields, savePayerPrefs, toDateId, tripDays } from "../data";
 import { isFeatureEnabled } from "../data/featureFlags";
 import { amountExpressionPreview, frequentAmounts, parseAmountExpression, suggestCategoryByHour } from "../utils/expenseInput";
 import { BarChart, DoughnutChart } from "./Charts";
@@ -28,6 +28,12 @@ import {
 } from "./ExpenseDailyExtras";
 import PayerPaymentFields from "./PayerPaymentFields";
 import { REGISTRY_KEYS } from "../storage";
+
+function formatRateWhen(ts) {
+  if (!ts) return null;
+  const d = new Date(ts);
+  return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
 import { useLocalStorage } from "../hooks/useLocalStorage";
 
 const PANELS = [
@@ -361,9 +367,16 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
     idle: "同步中…",
     loading: "更新中…",
     live: "即時匯率",
-    cached: "使用快取",
+    cached: rateState?.source === "manual" ? "手動匯率" : "使用快取",
     fallback: "離線預設",
   }[fxStatus] || "—";
+
+  const rateUpdatedAt = rateState?.lastUpdated;
+  const rateMeta = rateUpdatedAt
+    ? rateState?.source === "manual"
+      ? `手動設定於 ${formatRateWhen(rateUpdatedAt)}`
+      : `線上更新 ${formatRateWhen(rateUpdatedAt)} · 下次約 ${formatRateWhen(rateUpdatedAt + RATE_TTL_MS)}`
+    : "每 12 小時自動更新 · 可手動調整";
 
   const doughnutCenter = topCat
     ? { label: "最多", value: topCat.label }
@@ -721,13 +734,17 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
 
               {fxOpen && (
                 <div className="space-y-2 rounded-xl border border-jade/10 bg-mist/50 p-2">
+                  <p className="text-[11px] leading-relaxed text-ink-soft">
+                    {rateMeta}
+                    {fxStatus === "loading" ? " · 正在更新匯率…" : ""}
+                  </p>
                   <button
                     type="button"
                     onClick={onRefreshRate}
                     disabled={fxStatus === "loading"}
                     className="min-h-9 w-full rounded-xl bg-jade-soft px-3 text-xs font-bold text-jade-deep disabled:opacity-60"
                   >
-                    更新匯率
+                    立即更新匯率
                   </button>
                   <div className="flex gap-1.5">
                     <input

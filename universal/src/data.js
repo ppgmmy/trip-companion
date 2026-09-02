@@ -1,5 +1,5 @@
 export const BASE_CURRENCY = "HKD";
-export const RATE_TTL_MS = 24 * 60 * 60 * 1000;
+export const RATE_TTL_MS = 12 * 60 * 60 * 1000;
 
 export const CURRENCIES = [
   { code: "HKD", symbol: "HK$", name: "港幣" },
