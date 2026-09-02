@@ -35,9 +35,10 @@ function nextRoundedHour() {
 function sortItems(items) {
   return [...items].sort((a, b) => {
     if (a.date !== b.date) return a.date.localeCompare(b.date);
-    const ta = a.time || "99:99";
-    const tb = b.time || "99:99";
-    if (ta !== tb) return ta.localeCompare(tb);
+    const aEvent = a.kind === "event";
+    const bEvent = b.kind === "event";
+    if (aEvent && bEvent) return (a.time || "99:99").localeCompare(b.time || "99:99");
+    if (aEvent !== bEvent) return aEvent ? -1 : 1;
     return (b.createdAt || 0) - (a.createdAt || 0);
   });
 }
@@ -106,13 +107,9 @@ function TimetableItem({ item, onToggle, onRemove, onPostpone }) {
       >
         ✓
       </button>
-      <span
-        className={`w-11 shrink-0 text-[10px] font-bold tabular-nums ${
-          item.time ? "text-jade-deep" : "text-ink-faint"
-        }`}
-      >
-        {item.time || "—"}
-      </span>
+      {isEvent && (
+        <span className="w-11 shrink-0 text-[10px] font-bold tabular-nums text-jade-deep">{item.time || "—"}</span>
+      )}
       <span
         className={`shrink-0 rounded px-1 py-0.5 text-[9px] font-bold ${
           isEvent ? "bg-sky/15 text-sky-900" : "bg-jade-soft/80 text-jade-deep"
@@ -271,7 +268,7 @@ function ThreeDayTimetable({
   return (
     <SectionCard
       title="黎緊 3 日"
-      hint="按日分組 · 日程在上、待辦在下"
+      hint="按日分組 · 日程（有時間）在上、待辦（备忘）在下"
       action={
         <div className="flex shrink-0 items-center gap-1">
           {FILTERS.map((f) => (
@@ -402,7 +399,7 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
   const undoRef = useRef(null);
   const [toast, setToast] = useState(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [timeOpen, setTimeOpen] = useState(false);
+  const [timeError, setTimeError] = useState(false);
   const [personalUi, setPersonalUi] = useLocalStorage(
     REGISTRY_KEYS.personalUi,
     { selectedDate: todayId, viewMonth: null, kind: "todo", filterKind: "all", showCompleted: false },
@@ -435,6 +432,13 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
   });
 
   const items = useMemo(() => (Array.isArray(personal) ? personal : []), [personal]);
+
+  useEffect(() => {
+    if (!Array.isArray(personal)) return;
+    const needsStrip = personal.some((item) => item.kind === "todo" && item.time);
+    if (!needsStrip) return;
+    setPersonal(personal.map((item) => (item.kind === "todo" ? { ...item, time: "" } : item)));
+  }, [personal, setPersonal]);
   const threeDayHorizon = useMemo(
     () => [todayId, shiftDateId(todayId, 1), shiftDateId(todayId, 2)],
     [todayId],
@@ -468,9 +472,11 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
 
   function selectKind(nextKind) {
     setKind(nextKind);
+    setTimeError(false);
     if (nextKind === "event") {
-      setTimeOpen(true);
       setEntryTime((t) => t || nextRoundedHour());
+    } else {
+      setEntryTime("");
     }
   }
 
@@ -485,11 +491,16 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
     e.preventDefault();
     const trimmed = title.trim();
     if (!trimmed) return;
+    if (kind === "event" && !entryTime.trim()) {
+      setTimeError(true);
+      return;
+    }
+    setTimeError(false);
     const entry = {
       id: uid("personal"),
       title: trimmed,
       date: entryDate || selectedDate || todayId,
-      time: kind === "event" || timeOpen ? entryTime.trim() : "",
+      time: kind === "event" ? entryTime.trim() : "",
       kind: kind === "event" ? "event" : "todo",
       note: "",
       done: false,
@@ -497,10 +508,7 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
     };
     setPersonal((prev) => [...(Array.isArray(prev) ? prev : []), entry]);
     setTitle("");
-    if (kind !== "event") {
-      setEntryTime("");
-      setTimeOpen(false);
-    }
+    if (kind !== "event") setEntryTime("");
     selectDay(entry.date);
     titleRef.current?.focus({ preventScroll: true });
   }
@@ -545,7 +553,7 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
       <div className="flex items-start justify-between gap-2">
         <div>
           <h2 className="font-display text-lg font-bold text-ink">個人日程</h2>
-          <p className="text-[11px] text-ink-faint">待辦同日程分開睇 · 近 3 日優先</p>
+          <p className="text-[11px] text-ink-faint">待辦＝备忘 · 日程＝指定時間</p>
         </div>
         <button
           type="button"
@@ -573,7 +581,7 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
 
       <SectionCard
         title={`新增${kindMeta.label}`}
-        hint={kind === "event" ? "日程建議填時間" : "待辦時間屬選填"}
+        hint={kind === "event" ? "指定幾時去做（必填時間）" : "記低要做嘅事，唔使填時間"}
       >
         <form ref={formRef} onSubmit={addItem} className="space-y-2 p-3">
           <div className="grid grid-cols-2 gap-1.5">
@@ -595,7 +603,7 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
             ref={titleRef}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder={kind === "event" ? "日程標題…" : "待辦事項…"}
+            placeholder={kind === "event" ? "幾時做咩？例如：食飯、開會…" : "备忘：要做嘅事…"}
             className="h-10 w-full rounded-xl border border-jade/15 bg-mist px-3 text-sm outline-none ring-jade focus:ring-2"
           />
 
@@ -633,56 +641,46 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
             />
           </div>
 
-          {(kind === "event" || timeOpen) && (
+          {kind === "event" && (
             <div>
-              <p className="mb-1 text-[10px] font-bold text-ink-faint">{kind === "event" ? "時間" : "時間（選填）"}</p>
+              <p className="mb-1 text-[10px] font-bold text-ink-faint">
+                時間 <span className="text-coral">*</span>
+              </p>
               <div className="space-y-1">
-                <div className="flex gap-1.5">
-                  <input
-                    type="time"
-                    value={entryTime}
-                    onChange={(e) => setEntryTime(e.target.value)}
-                    className="h-9 min-w-0 flex-1 rounded-xl border border-jade/15 bg-mist px-2 text-xs outline-none ring-jade focus:ring-2"
-                  />
-                  {kind === "todo" && (
+                <input
+                  type="time"
+                  value={entryTime}
+                  onChange={(e) => {
+                    setEntryTime(e.target.value);
+                    setTimeError(false);
+                  }}
+                  required
+                  className={`h-9 w-full rounded-xl border bg-mist px-2 text-xs outline-none ring-jade focus:ring-2 ${
+                    timeError ? "border-coral ring-coral" : "border-jade/15"
+                  }`}
+                />
+                {timeError && <p className="text-[10px] font-bold text-coral">日程需要指定時間</p>}
+                <div className="flex flex-wrap gap-1">
+                  {TIME_PRESETS.map((t) => (
                     <button
+                      key={t}
                       type="button"
                       onClick={() => {
-                        setTimeOpen(false);
-                        setEntryTime("");
+                        setEntryTime(t);
+                        setTimeError(false);
                       }}
-                      className="shrink-0 rounded-xl border border-jade/15 px-2 text-[10px] font-bold text-ink-faint"
+                      className={`rounded-lg border px-2 py-0.5 text-[10px] font-bold active:scale-95 ${
+                        entryTime === t
+                          ? "border-jade bg-jade-soft/60 text-jade-deep"
+                          : "border-jade/15 bg-white text-ink-soft"
+                      }`}
                     >
-                      清除
+                      {t}
                     </button>
-                  )}
+                  ))}
                 </div>
-                {kind === "event" && (
-                  <div className="flex flex-wrap gap-1">
-                    {TIME_PRESETS.map((t) => (
-                      <button
-                        key={t}
-                        type="button"
-                        onClick={() => setEntryTime(t)}
-                        className={`rounded-lg border px-2 py-0.5 text-[10px] font-bold active:scale-95 ${
-                          entryTime === t
-                            ? "border-jade bg-jade-soft/60 text-jade-deep"
-                            : "border-jade/15 bg-white text-ink-soft"
-                        }`}
-                      >
-                        {t}
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
             </div>
-          )}
-
-          {kind === "todo" && !timeOpen && (
-            <button type="button" onClick={() => setTimeOpen(true)} className="text-[11px] font-bold text-jade-deep">
-              ＋ 加時間
-            </button>
           )}
 
           <button type="submit" className="h-10 w-full rounded-xl bg-jade text-sm font-bold text-white">
