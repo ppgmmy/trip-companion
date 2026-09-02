@@ -4,6 +4,8 @@ export const REGISTRY_KEYS = {
   active: "universal_active_trip",
   personal: "universal_personal",
   personalUi: "universal_personal_ui",
+  dailyTodos: "universal_daily_todos",
+  sharedTodos: "universal_shared_todos",
   appMode: "universal_app_mode",
   activeTab: "universal_active_tab",
   tripTabs: "universal_trip_tabs",

@@ -386,6 +386,44 @@ export function todoPriorityTier(startDate, todayId = toDateId(new Date())) {
   return "normal";
 }
 
+export function buildDateHorizon(startDateId, days) {
+  return Array.from({ length: days }, (_, i) => shiftDateId(startDateId, i));
+}
+
+export function monthDateIds(year, month, capAtDateId = null) {
+  const last = new Date(year, month + 1, 0).getDate();
+  const ids = [];
+  for (let d = 1; d <= last; d += 1) {
+    ids.push(toDateId(new Date(year, month, d)));
+  }
+  if (!capAtDateId) return ids;
+  return ids.filter((id) => id <= capAtDateId);
+}
+
+export function dailyTodosMonthStats(templates, log, todayId = toDateId(new Date())) {
+  const list = Array.isArray(templates) ? templates : [];
+  if (list.length === 0) {
+    return { eligibleDays: 0, perfectDays: 0, pct: 0, monthLabel: "" };
+  }
+  const [y, m] = todayId.split("-").map(Number);
+  const days = monthDateIds(y, m - 1, todayId);
+  let perfectDays = 0;
+  days.forEach((dateId) => {
+    const doneIds = Array.isArray(log?.[dateId]) ? log[dateId] : [];
+    if (list.every((item) => doneIds.includes(item.id))) perfectDays += 1;
+  });
+  const eligibleDays = days.length;
+  const pct = eligibleDays > 0 ? Math.round((perfectDays / eligibleDays) * 100) : 0;
+  return { eligibleDays, perfectDays, pct, monthLabel: `${y} 年 ${m} 月` };
+}
+
+export const SHARED_TODO_MEMBERS = [
+  { id: "C", label: "C", chip: "bg-violet-100 text-violet-900 border-violet-200" },
+  { id: "M", label: "M", chip: "bg-sky-100 text-sky-900 border-sky-200" },
+  { id: "S", label: "S", chip: "bg-amber-100 text-amber-900 border-amber-200" },
+  { id: "P", label: "P", chip: "bg-rose-100 text-rose-900 border-rose-200" },
+];
+
 export function uid(prefix) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 }

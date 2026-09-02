@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  buildDateHorizon,
   daysBetweenDateIds,
   formatPersonalDayLabel,
   formatTodoActiveLabel,
@@ -12,6 +13,14 @@ import {
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { REGISTRY_KEYS } from "../storage";
 import UndoToast from "./UndoToast";
+import DailyTodosPanel from "./DailyTodosPanel";
+import SharedTodoPanel from "./SharedTodoPanel";
+
+const PERSONAL_VIEWS = [
+  { id: "mine", label: "我的", hint: "私人待辦／日程" },
+  { id: "daily", label: "每日", hint: "每日習慣＋本月%" },
+  { id: "shared", label: "共用", hint: "C M S P" },
+];
 
 const KINDS = [
   { id: "todo", label: "待辦", icon: "☑️" },
@@ -269,7 +278,7 @@ function DayBlock({ dateId, items, showCompleted, active, onSelectDay, onToggle,
   );
 }
 
-function ThreeDayTimetable({
+function SevenDayTimetable({
   horizon,
   items,
   selectedDate,
@@ -285,7 +294,7 @@ function ThreeDayTimetable({
 }) {
   return (
     <SectionCard
-      title="黎緊 3 日 · 日程"
+      title="黎緊 7 日 · 日程"
       hint="指定時間嘅安排"
       action={
         <div className="flex shrink-0 items-center gap-1">
@@ -335,80 +344,98 @@ function ThreeDayTimetable({
 
 function PersonalCalendar({ year, month, selectedDate, todayId, items, onSelectDay, onPrevMonth, onNextMonth }) {
   const cells = useMemo(() => monthMatrix(year, month), [year, month]);
-  const counts = useMemo(() => {
+  const eventCounts = useMemo(() => {
     const map = {};
     items.forEach((item) => {
-      if (item.done) return;
-      const key = item.kind === "event" ? item.date : personalTodoStartDate(item);
+      if (item.done || item.kind !== "event") return;
+      map[item.date] = (map[item.date] || 0) + 1;
+    });
+    return map;
+  }, [items]);
+  const todoStarts = useMemo(() => {
+    const map = {};
+    items.forEach((item) => {
+      if (item.done || item.kind !== "todo") return;
+      const key = personalTodoStartDate(item);
       if (key) map[key] = (map[key] || 0) + 1;
     });
     return map;
   }, [items]);
 
   return (
-    <SectionCard title="月曆" hint="紅點 = 該日有日程或待辦開始">
-      <div className="flex items-center justify-between border-b border-jade/10 bg-mist/30 px-3 py-2">
+    <section className="overflow-hidden rounded-3xl border border-jade/15 bg-gradient-to-b from-jade-soft/35 to-white shadow-[var(--shadow-soft)]">
+      <div className="flex items-center justify-between px-4 py-3">
         <button
           type="button"
           onClick={onPrevMonth}
-          className="flex h-7 w-7 items-center justify-center rounded-lg border border-jade/15 bg-white text-sm font-bold text-ink-soft active:scale-95"
+          className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/80 bg-white/90 text-base font-bold text-jade-deep shadow-sm active:scale-95"
           aria-label="上個月"
         >
           ‹
         </button>
-        <p className="text-xs font-bold text-ink">
-          {year} 年 {month + 1} 月
-        </p>
+        <div className="text-center">
+          <p className="font-display text-sm font-bold text-ink">
+            {year} 年 {month + 1} 月
+          </p>
+          <p className="text-[10px] text-ink-faint">藍點日程 · 綠點待辦開始</p>
+        </div>
         <button
           type="button"
           onClick={onNextMonth}
-          className="flex h-7 w-7 items-center justify-center rounded-lg border border-jade/15 bg-white text-sm font-bold text-ink-soft active:scale-95"
+          className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/80 bg-white/90 text-base font-bold text-jade-deep shadow-sm active:scale-95"
           aria-label="下個月"
         >
           ›
         </button>
       </div>
 
-      <div className="grid grid-cols-7 border-b border-jade/10 bg-jade-soft/30">
+      <div className="grid grid-cols-7 gap-1 px-3 pb-1">
         {WEEKDAYS.map((w) => (
-          <div key={w} className="py-1 text-center text-[9px] font-bold text-jade-deep">
+          <div key={w} className="py-1 text-center text-[10px] font-bold text-jade-deep">
             {w}
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-7">
+      <div className="grid grid-cols-7 gap-1 px-3 pb-4">
         {cells.map((dateId, idx) => {
           if (!dateId) {
-            return <div key={`empty-${idx}`} className="aspect-square border-b border-r border-jade/5 bg-mist/20" />;
+            return <div key={`empty-${idx}`} className="aspect-square" />;
           }
           const isToday = dateId === todayId;
           const isSelected = dateId === selectedDate;
-          const count = counts[dateId] || 0;
+          const ev = eventCounts[dateId] || 0;
+          const td = todoStarts[dateId] || 0;
 
           return (
             <button
               key={dateId}
               type="button"
               onClick={() => onSelectDay(dateId)}
-              className={`relative flex aspect-square flex-col items-center justify-center border-b border-r border-jade/8 text-[11px] transition active:scale-95 ${
-                isSelected ? "bg-jade text-white" : isToday ? "bg-jade-soft/70" : "bg-white"
+              className={`relative flex aspect-square flex-col items-center justify-center rounded-xl text-[12px] transition active:scale-95 ${
+                isSelected
+                  ? "bg-jade text-white shadow-md"
+                  : isToday
+                    ? "bg-white text-jade-deep ring-2 ring-jade/50"
+                    : "bg-white/85 text-ink hover:bg-jade-soft/40"
               }`}
             >
-              <span className={`font-bold ${isSelected ? "text-white" : isToday ? "text-jade-deep" : "text-ink"}`}>
-                {Number(dateId.split("-")[2])}
-              </span>
-              {count > 0 && (
-                <span
-                  className={`mt-0.5 h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-coral"}`}
-                  aria-hidden="true"
-                />
+              <span className={`font-bold ${isSelected ? "text-white" : ""}`}>{Number(dateId.split("-")[2])}</span>
+              {(ev > 0 || td > 0) && (
+                <span className="mt-0.5 flex gap-0.5">
+                  {ev > 0 && (
+                    <span className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-sky-500"}`} />
+                  )}
+                  {td > 0 && (
+                    <span className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-jade-soft" : "bg-jade"}`} />
+                  )}
+                </span>
               )}
             </button>
           );
         })}
       </div>
-    </SectionCard>
+    </section>
   );
 }
 
@@ -422,7 +449,7 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
   const [timeError, setTimeError] = useState(false);
   const [personalUi, setPersonalUi] = useLocalStorage(
     REGISTRY_KEYS.personalUi,
-    { selectedDate: todayId, viewMonth: null, kind: "todo", filterKind: "all", showCompleted: false },
+    { selectedDate: todayId, viewMonth: null, kind: "todo", filterKind: "all", showCompleted: false, section: "mine" },
     {
       migrate: (v) => {
         const base = v && typeof v === "object" ? v : {};
@@ -432,10 +459,12 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
           kind: base.kind === "event" ? "event" : "todo",
           filterKind: ["all", "todo", "event"].includes(base.filterKind) ? base.filterKind : "all",
           showCompleted: Boolean(base.showCompleted),
+          section: ["mine", "daily", "shared"].includes(base.section) ? base.section : "mine",
         };
       },
     },
   );
+  const [section, setSection] = useState(personalUi.section || "mine");
   const [kind, setKind] = useState(personalUi.kind || "todo");
   const [filterKind, setFilterKind] = useState(personalUi.filterKind || "all");
   const [showCompleted, setShowCompleted] = useState(Boolean(personalUi.showCompleted));
@@ -472,10 +501,7 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
     if (changed) setPersonal(fixed);
   }, [personal, setPersonal, todayId]);
 
-  const threeDayHorizon = useMemo(
-    () => [todayId, shiftDateId(todayId, 1), shiftDateId(todayId, 2)],
-    [todayId],
-  );
+  const sevenDayHorizon = useMemo(() => buildDateHorizon(todayId, 7), [todayId]);
   const todayStats = useMemo(() => {
     const active = activeTodos(items, todayId);
     const events = eventsForDate(items, todayId).filter((i) => !i.done);
@@ -487,8 +513,8 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
   }, [items, todayId]);
 
   useEffect(() => {
-    setPersonalUi((prev) => ({ ...prev, selectedDate, viewMonth, kind, filterKind, showCompleted }));
-  }, [selectedDate, viewMonth, kind, filterKind, showCompleted, setPersonalUi]);
+    setPersonalUi((prev) => ({ ...prev, selectedDate, viewMonth, kind, filterKind, showCompleted, section }));
+  }, [selectedDate, viewMonth, kind, filterKind, showCompleted, section, setPersonalUi]);
 
   useEffect(() => {
     if (focusAddTick > 0) {
@@ -596,7 +622,9 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
 
   const kindMeta = KINDS.find((k) => k.id === kind) || KINDS[0];
   const outOfHorizonEvents =
-    selectedDate && !threeDayHorizon.includes(selectedDate) ? eventsForDate(items, selectedDate) : [];
+    selectedDate && !sevenDayHorizon.includes(selectedDate) ? eventsForDate(items, selectedDate) : [];
+
+  const activeView = PERSONAL_VIEWS.find((v) => v.id === section) || PERSONAL_VIEWS[0];
 
   return (
     <div className="space-y-3">
@@ -605,17 +633,39 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
       <div className="flex items-start justify-between gap-2">
         <div>
           <h2 className="font-display text-lg font-bold text-ink">個人日程</h2>
-          <p className="text-[11px] text-ink-faint">待辦＝開始日期計優先 · 日程＝指定時間</p>
+          <p className="text-[11px] text-ink-faint">{activeView.hint}</p>
         </div>
-        <button
-          type="button"
-          onClick={() => setCalendarOpen((v) => !v)}
-          className="shrink-0 rounded-xl border border-jade/15 bg-white px-2.5 py-1.5 text-[11px] font-bold text-jade-deep"
-        >
-          {calendarOpen ? "收起月曆" : "月曆"}
-        </button>
+        {section === "mine" && (
+          <button
+            type="button"
+            onClick={() => setCalendarOpen((v) => !v)}
+            className="shrink-0 rounded-xl border border-jade/15 bg-white px-2.5 py-1.5 text-[11px] font-bold text-jade-deep"
+          >
+            {calendarOpen ? "收起月曆" : "月曆"}
+          </button>
+        )}
       </div>
 
+      <div className="grid grid-cols-3 gap-1.5">
+        {PERSONAL_VIEWS.map((v) => (
+          <button
+            key={v.id}
+            type="button"
+            onClick={() => setSection(v.id)}
+            className={`min-h-10 rounded-xl border px-2 text-xs font-bold transition active:scale-[0.98] ${
+              section === v.id ? "badge-active border-transparent" : "border-jade/15 bg-white text-ink-soft"
+            }`}
+          >
+            {v.label}
+          </button>
+        ))}
+      </div>
+
+      {section === "daily" && <DailyTodosPanel />}
+      {section === "shared" && <SharedTodoPanel />}
+
+      {section === "mine" && (
+        <>
       <div className="grid grid-cols-3 gap-1.5">
         <div className="rounded-xl border border-jade/15 bg-jade-soft/40 px-2 py-2 text-center">
           <p className="text-[10px] font-bold text-ink-faint">進行中待辦</p>
@@ -778,8 +828,8 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
       )}
 
       {(filterKind === "all" || filterKind === "event") && (
-        <ThreeDayTimetable
-          horizon={threeDayHorizon}
+        <SevenDayTimetable
+          horizon={sevenDayHorizon}
           items={items}
           selectedDate={selectedDate}
           showCompleted={showCompleted}
@@ -846,6 +896,8 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
             />
           </div>
         </SectionCard>
+      )}
+        </>
       )}
     </div>
   );
