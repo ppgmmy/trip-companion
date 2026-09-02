@@ -147,11 +147,13 @@ export default function App() {
 
   return (
     <div className="bg-travel min-h-dvh w-full overflow-x-hidden">
-      {activeTrip && <ModeRail mode={appMode} onModeChange={setAppMode} personalPending={personalPending} />}
       <main className="safe-top mx-auto w-full max-w-lg box-border px-4 pb-32">
         {activeTrip && (
-          <div className="mb-4">
-            <TripSwitcher variant="banner" trips={trips} activeId={activeTrip?.id} onSwitch={switchTrip} onCreate={createTrip} onUpdate={updateTrip} onDelete={deleteTrip} />
+          <div className="mb-4 flex items-stretch gap-2">
+            <ModeRail mode={appMode} onModeChange={setAppMode} personalPending={personalPending} />
+            <div className="min-w-0 flex-1">
+              <TripSwitcher variant="banner" trips={trips} activeId={activeTrip?.id} onSwitch={switchTrip} onCreate={createTrip} onUpdate={updateTrip} onDelete={deleteTrip} />
+            </div>
           </div>
         )}
         {!activeTrip ? (
