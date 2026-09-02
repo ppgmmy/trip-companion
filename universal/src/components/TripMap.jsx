@@ -1,9 +1,9 @@
-import { useEffect, useRef } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
 function pinIcon(color, active) {
-  const size = active ? 16 : 13;
+  const size = active ? 18 : 14;
   return L.divIcon({
     className: "",
     html: `<div style="
@@ -19,16 +19,30 @@ function pinIcon(color, active) {
   });
 }
 
-export default function TripMap({
-  config,
-  markers = [],
-  selectedId,
-  onSelect,
-  heightClass = "h-56",
-}) {
+const TripMap = forwardRef(function TripMap(
+  { config, markers = [], selectedId, onSelect, heightClass = "h-56" },
+  ref,
+) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const layerRef = useRef(null);
+  const markerMapRef = useRef(new Map());
+
+  const selected = markers.find((m) => m.id === selectedId) || null;
+
+  useImperativeHandle(ref, () => ({
+    scrollIntoView() {
+      containerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    },
+    focusMarker(id) {
+      const map = mapRef.current;
+      const marker = markerMapRef.current.get(id);
+      const target = markers.find((m) => m.id === id);
+      if (!map || !target) return;
+      map.flyTo([target.lat, target.lng], 16, { duration: 0.45 });
+      marker?.openTooltip();
+    },
+  }));
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -44,7 +58,7 @@ export default function TripMap({
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+      attribution: "© OpenStreetMap",
     }).addTo(map);
 
     mapRef.current = map;
@@ -54,55 +68,66 @@ export default function TripMap({
       map.remove();
       mapRef.current = null;
       layerRef.current = null;
+      markerMapRef.current.clear();
     };
   }, [config.lat, config.lng, config.zoom]);
 
+  // 繪製標記（換日時重畫 + 自動 fit 全部）
   useEffect(() => {
     const map = mapRef.current;
     const group = layerRef.current;
     if (!map || !group) return;
 
     group.clearLayers();
+    markerMapRef.current.clear();
     const bounds = [];
 
     markers.forEach((m) => {
       const active = m.id === selectedId;
       const marker = L.marker([m.lat, m.lng], { icon: pinIcon(m.color, active) });
-      marker.bindPopup(
-        `<div style="min-width:10rem;font-family:system-ui,sans-serif">
-          <p style="margin:0;font-size:11px;font-weight:700;color:#0f766e">${m.time} · ${m.kind === "food" ? "食" : "景點"}</p>
-          <p style="margin:4px 0 0;font-size:13px;font-weight:700;color:#12211f">${m.title}</p>
-          <p style="margin:4px 0 0;font-size:11px;color:#3f5a55">${m.detail || ""}</p>
-        </div>`,
-      );
-      marker.on("click", () => onSelect?.(m.id));
+      marker.bindTooltip(`${m.time} ${m.title}`, {
+        permanent: active,
+        direction: "top",
+        offset: [0, -8],
+        className: "trip-map-tooltip",
+      });
+      marker.on("click", (e) => {
+        L.DomEvent.stopPropagation(e);
+        onSelect?.(m.id);
+      });
       marker.addTo(group);
+      markerMapRef.current.set(m.id, marker);
       bounds.push([m.lat, m.lng]);
     });
 
     if (bounds.length > 1) {
-      map.fitBounds(bounds, { padding: [36, 36], maxZoom: 15 });
+      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
     } else if (bounds.length === 1) {
       map.setView(bounds[0], 15);
-    } else if (config.lat != null && config.lng != null) {
-      map.setView([config.lat, config.lng], config.zoom ?? 13);
     }
-  }, [markers, selectedId, config.lat, config.lng, config.zoom, onSelect]);
+  }, [markers]);
 
+  // 選中某一點：只喺頁內大地圖平移過去（唔開新頁）
   useEffect(() => {
     const map = mapRef.current;
-    const group = layerRef.current;
-    if (!map || !group || !selectedId) return;
+    if (!map || !selectedId) return;
     const target = markers.find((m) => m.id === selectedId);
     if (!target) return;
-    map.flyTo([target.lat, target.lng], Math.max(map.getZoom(), 15), { duration: 0.5 });
-    group.eachLayer((layer) => {
-      if (layer instanceof L.Marker) {
-        const pos = layer.getLatLng();
-        if (Math.abs(pos.lat - target.lat) < 0.0001 && Math.abs(pos.lng - target.lng) < 0.0001) {
-          layer.openPopup();
-        }
-      }
+
+    map.flyTo([target.lat, target.lng], 16, { duration: 0.45 });
+
+    markerMapRef.current.forEach((marker, id) => {
+      const m = markers.find((x) => x.id === id);
+      if (!m) return;
+      const active = id === selectedId;
+      marker.setIcon(pinIcon(m.color, active));
+      marker.unbindTooltip();
+      marker.bindTooltip(`${m.time} ${m.title}`, {
+        permanent: active,
+        direction: "top",
+        offset: [0, -8],
+        className: "trip-map-tooltip",
+      });
     });
   }, [selectedId, markers]);
 
@@ -110,10 +135,19 @@ export default function TripMap({
     <section className="overflow-hidden rounded-3xl border border-jade/15 bg-white/90 shadow-[var(--shadow-soft)]" aria-label="行程地圖">
       <div className="border-b border-jade/10 px-3 py-2">
         <p className="text-[11px] font-bold uppercase tracking-wider text-jade">行程地圖</p>
-        <p className="text-xs text-ink-soft">{config.query} · 點標記或下方項目定位</p>
+        <p className="text-xs text-ink-soft">{config.query} · 撳下面景點，地圖會喺呢度轉過去</p>
+        {selected && (
+          <div className="mt-2 rounded-xl bg-jade-soft/50 px-2.5 py-2">
+            <p className="text-[11px] font-bold text-jade-deep">
+              {selected.time} · {selected.kind === "food" ? "食" : "景點"}
+            </p>
+            <p className="text-sm font-bold text-ink">{selected.title}</p>
+            {selected.area && <p className="text-[11px] text-ink-soft">{selected.area}</p>}
+          </div>
+        )}
       </div>
 
-      <div ref={containerRef} className={`relative z-0 w-full ${heightClass}`} />
+      <div ref={containerRef} className={`trip-map-canvas relative z-0 w-full ${heightClass}`} />
 
       {markers.length > 0 && (
         <div className="flex flex-wrap gap-2 border-t border-jade/10 px-3 py-2 text-[10px] font-semibold text-ink-faint">
@@ -129,16 +163,23 @@ export default function TripMap({
       {config.zones?.length > 0 && (
         <div className="flex flex-wrap gap-1.5 border-t border-jade/10 px-3 py-2">
           {config.zones.map((zone) => (
-            <span
+            <button
               key={zone.id}
-              className="inline-flex items-center gap-1 rounded-full bg-mist px-2 py-0.5 text-[10px] font-bold text-ink-soft"
+              type="button"
+              onClick={() => {
+                const map = mapRef.current;
+                if (map) map.flyTo([zone.lat, zone.lng], 14, { duration: 0.4 });
+              }}
+              className="inline-flex items-center gap-1 rounded-full bg-mist px-2 py-0.5 text-[10px] font-bold text-ink-soft transition active:scale-95"
             >
               <span className="h-2 w-2 rounded-full" style={{ backgroundColor: zone.color }} aria-hidden="true" />
               {zone.label}
-            </span>
+            </button>
           ))}
         </div>
       )}
     </section>
   );
-}
+});
+
+export default TripMap;

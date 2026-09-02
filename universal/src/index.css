@@ -190,3 +190,21 @@ body {
   background: rgb(204 251 241 / 0.45);
   padding: 0.4rem 0.65rem;
 }
+
+.trip-map-canvas .leaflet-control-attribution a {
+  pointer-events: none;
+  cursor: default;
+  text-decoration: none;
+  color: inherit;
+}
+
+.trip-map-tooltip {
+  border: none !important;
+  border-radius: 0.75rem !important;
+  background: rgb(255 255 255 / 0.95) !important;
+  box-shadow: var(--shadow-soft) !important;
+  color: var(--color-ink) !important;
+  font-size: 0.6875rem !important;
+  font-weight: 700 !important;
+  padding: 0.25rem 0.5rem !important;
+}

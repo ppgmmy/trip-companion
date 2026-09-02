@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   buildTripDayList,
   dayPlanForTrip,
@@ -18,6 +18,7 @@ const KIND_STYLE = {
 export { buildDays } from "./itineraryDays";
 
 export default function ItineraryTab({ trip, itinerary, setItinerary }) {
+  const mapRef = useRef(null);
   const [dayId, setDayId] = useState(null);
   const [selectedMarkerId, setSelectedMarkerId] = useState(null);
   const [note, setNote] = useState("");
@@ -83,6 +84,12 @@ export default function ItineraryTab({ trip, itinerary, setItinerary }) {
     }));
   }
 
+  function focusOnMap(markerId) {
+    setSelectedMarkerId(markerId);
+    mapRef.current?.scrollIntoView();
+    window.requestAnimationFrame(() => mapRef.current?.focusMarker(markerId));
+  }
+
   function applySuggestion() {
     if (!activeDay || !dayPlan?.slots?.length) return;
     const incoming = slotsToItineraryItems(dayPlan.slots);
@@ -113,10 +120,11 @@ export default function ItineraryTab({ trip, itinerary, setItinerary }) {
       </div>
 
       <TripMap
+        ref={mapRef}
         config={mapConfig}
         markers={mapMarkers}
         selectedId={selectedMarkerId}
-        onSelect={setSelectedMarkerId}
+        onSelect={focusOnMap}
         heightClass="h-56 sm:h-64"
       />
 
@@ -165,7 +173,7 @@ export default function ItineraryTab({ trip, itinerary, setItinerary }) {
               <li key={markerId}>
                 <button
                   type="button"
-                  onClick={() => setSelectedMarkerId(markerId)}
+                  onClick={() => focusOnMap(markerId)}
                   className={`w-full rounded-2xl px-3 py-2.5 text-left transition active:scale-[0.99] ${
                     active ? "bg-jade-soft/70 ring-2 ring-jade/30" : "bg-mist/70"
                   }`}
@@ -182,7 +190,7 @@ export default function ItineraryTab({ trip, itinerary, setItinerary }) {
                     <p className="mt-0.5 text-xs text-ink-soft">{s.detail}</p>
                     {s.area && <p className="mt-0.5 text-[10px] font-semibold text-ink-faint">{s.area}</p>}
                   </div>
-                  {active && <span className="shrink-0 text-[10px] font-bold text-jade-deep">地圖中</span>}
+                  {active && <span className="shrink-0 text-[10px] font-bold text-jade-deep">↑ 地圖</span>}
                 </div>
                 </button>
               </li>
