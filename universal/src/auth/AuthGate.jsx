@@ -318,12 +318,22 @@ export function AuthGate({ children }) {
   const allowed = !email || isEmailAllowed(email);
   const sync = useCloudSync({ enabled: isSignedIn && allowed });
   const [hash, setHash] = useState(() => window.location.hash);
+  const [loadTimedOut, setLoadTimedOut] = useState(false);
 
   useEffect(() => {
     const onHash = () => setHash(window.location.hash);
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
+
+  useEffect(() => {
+    if (isLoaded) {
+      setLoadTimedOut(false);
+      return undefined;
+    }
+    const t = window.setTimeout(() => setLoadTimedOut(true), 10000);
+    return () => window.clearTimeout(t);
+  }, [isLoaded]);
 
   useEffect(() => {
     if (!isSignedIn || !email) return;
@@ -348,8 +358,31 @@ export function AuthGate({ children }) {
 
   if (!isLoaded) {
     return (
-      <div className="bg-travel flex min-h-dvh items-center justify-center">
-        <p className="text-sm font-semibold text-ink-soft">載入登入狀態…</p>
+      <div className="bg-travel flex min-h-dvh flex-col items-center justify-center gap-3 px-5 text-center">
+        <p className="text-sm font-semibold text-ink-soft">
+          {loadTimedOut ? "登入服務回應較慢…" : "載入登入狀態…"}
+        </p>
+        {loadTimedOut && (
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                if ("serviceWorker" in navigator) {
+                  const regs = await navigator.serviceWorker.getRegistrations();
+                  await Promise.all(regs.map((r) => r.unregister()));
+                }
+                if (typeof caches !== "undefined") {
+                  const keys = await caches.keys();
+                  await Promise.all(keys.map((k) => caches.delete(k)));
+                }
+              } catch {}
+              window.location.reload();
+            }}
+            className="min-h-11 rounded-2xl bg-jade px-4 text-sm font-bold text-white"
+          >
+            清除快取後重試
+          </button>
+        )}
       </div>
     );
   }

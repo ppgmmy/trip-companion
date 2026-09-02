@@ -11,7 +11,13 @@
     <title>全球萬能旅行 Companion · Trip Companion</title>
     <script>
       if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js"));
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("/sw.js").then((reg) => {
+            try {
+              reg.update();
+            } catch {}
+          }).catch(() => {});
+        });
       }
     </script>
     <script src="/storage-migration.js"></script>
@@ -25,5 +31,47 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      // If React never mounts (stale SW / broken asset), show a recovery UI instead of endless white.
+      (function () {
+        var booted = false;
+        var root = document.getElementById("root");
+        if (!root) return;
+        var obs = new MutationObserver(function () {
+          if (root.childNodes.length > 0) {
+            booted = true;
+            obs.disconnect();
+          }
+        });
+        obs.observe(root, { childList: true });
+        setTimeout(async function () {
+          if (booted || root.childNodes.length > 0) return;
+          obs.disconnect();
+          root.innerHTML =
+            '<div style="min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:1.5rem;font-family:system-ui,sans-serif;background:#f7faf9;color:#12211f;text-align:center">' +
+            '<div style="max-width:22rem">' +
+            "<h1 style=\"font-size:1.25rem;margin:0 0 .5rem\">載入唔到</h1>" +
+            "<p style=\"font-size:.875rem;line-height:1.5;color:#5b6b68;margin:0 0 1rem\">可能係舊版快取。請撳下面清快取再開。</p>" +
+            '<button id="tc-hard-reset" style="min-height:2.75rem;width:100%;border:0;border-radius:1rem;background:#0d9488;color:#fff;font-weight:700">清除快取後重開</button>' +
+            "</div></div>";
+          var btn = document.getElementById("tc-hard-reset");
+          if (!btn) return;
+          btn.onclick = async function () {
+            try {
+              if ("serviceWorker" in navigator) {
+                var regs = await navigator.serviceWorker.getRegistrations();
+                await Promise.all(regs.map(function (r) { return r.unregister(); }));
+              }
+              if (typeof caches !== "undefined") {
+                var keys = await caches.keys();
+                await Promise.all(keys.map(function (k) { return caches.delete(k); }));
+              }
+            } catch (e) {}
+            location.reload();
+          };
+        }, 8000);
+      })();
+    </script>
   </body>
 </html>
+

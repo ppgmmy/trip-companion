@@ -1,5 +1,5 @@
-/* Trip Companion service worker — offline-first runtime cache for all sub-apps. */
-const CACHE = "trip-companion-v7";
+/* Trip Companion service worker — network-first pages; avoid stale hashed assets. */
+const CACHE = "trip-companion-v8";
 const CORE = ["/manifest.webmanifest", "/icon-512.png"];
 
 self.addEventListener("install", (event) => {
@@ -16,6 +16,18 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+function networkFirst(req) {
+  return fetch(req)
+    .then((res) => {
+      if (res && res.ok) {
+        const copy = res.clone();
+        caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
+      }
+      return res;
+    })
+    .catch(() => caches.match(req));
+}
+
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
@@ -28,30 +40,39 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Network-first for pages so updates land quickly; fall back to cache offline.
-  if (req.mode === "navigate" || url.pathname.endsWith(".html") || url.pathname.endsWith("/")) {
-    event.respondWith(
-      fetch(req)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put(req, copy));
-          return res;
-        })
-        .catch(() => caches.match(req))
-    );
+  // Never cache API / auth endpoints.
+  if (url.pathname.startsWith("/api/")) {
+    event.respondWith(fetch(req));
     return;
   }
 
-  // Cache-first for static assets (hashed by Vite, safe to cache long).
+  // HTML / navigations: always prefer network so new Vite hashes land.
+  if (req.mode === "navigate" || url.pathname.endsWith(".html") || url.pathname.endsWith("/")) {
+    event.respondWith(networkFirst(req));
+    return;
+  }
+
+  // Hashed Vite bundles: network-first (old hashes 404 after deploy → white screen if cache-first stale HTML).
+  if (
+    url.pathname.includes("/assets/") ||
+    /\.(?:js|css|mjs|map)$/.test(url.pathname)
+  ) {
+    event.respondWith(networkFirst(req));
+    return;
+  }
+
+  // Other static (icons, fonts under same origin): cache-first with network fill.
   event.respondWith(
     caches.match(req).then(
       (hit) =>
         hit ||
         fetch(req).then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put(req, copy));
+          if (res && res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
+          }
           return res;
-        })
+        }).catch(() => hit)
     )
   );
 });
