@@ -6,6 +6,7 @@ import { uid } from "./data";
 import TripSwitcher from "./components/TripSwitcher";
 import TripForm from "./components/TripForm";
 import BottomNav from "./components/BottomNav";
+import ModeRail from "./components/ModeRail";
 import ItineraryTab from "./components/ItineraryTab";
 import ChecklistTab from "./components/ChecklistTab";
 import SpotsTab from "./components/SpotsTab";
@@ -135,7 +136,9 @@ export default function App() {
   }
 
   return (
-    <div className="bg-travel min-h-dvh w-full overflow-x-hidden">
+    <div className="bg-travel flex min-h-dvh w-full overflow-x-hidden">
+      {activeTrip && <ModeRail mode={appMode} onModeChange={setAppMode} />}
+      <div className="min-w-0 flex-1">
       <main className="safe-top mx-auto w-full max-w-lg box-border px-4 pb-32">
         {activeTrip && (
           <div className="mb-4">
@@ -179,10 +182,8 @@ export default function App() {
         )}
       </main>
 
-      {activeTrip && (
+      {activeTrip && appMode === "travel" && (
         <BottomNav
-          mode={appMode}
-          onModeChange={setAppMode}
           travelActive={activeTab}
           onTravelSelect={setActiveTab}
           onLongPressExpenses={() => {
@@ -211,6 +212,7 @@ export default function App() {
         />
       )}
       {activeTrip && <FeedbackModal trip={activeTrip} feedback={feedback} setFeedback={setFeedback} />}
+      </div>
     </div>
   );
 }

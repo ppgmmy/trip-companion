@@ -56,6 +56,11 @@ body {
   padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
 }
 
+.mode-rail {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  flex-shrink: 0;
+}
+
 .font-display {
   font-family: var(--font-display);
 }
