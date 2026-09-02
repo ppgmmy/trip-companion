@@ -450,3 +450,59 @@ export function mapsEmbedUrl({ query, lat, lng, zoom = 13 }) {
 export function mapsSearchUrl(query) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
 }
+
+const AREA_ZONE_HINTS = [
+  ["堺筋本町", "hommachi"],
+  ["本町", "hommachi"],
+  ["心齋橋", "shinsaibashi"],
+  ["道頓堀", "dotonbori"],
+  ["難波", "namba"],
+  ["黑門", "kuromon"],
+  ["日本橋", "kuromon"],
+  ["大阪城", "castle"],
+  ["梅田", "umeda"],
+  ["天王寺", "tennoji"],
+  ["新世界", "tennoji"],
+  ["中之島", "nakanoshima"],
+  ["天保山", "tennoji"],
+  ["環球", "hommachi"],
+  ["Phra Ram", "rama9"],
+  ["Siam", "siam"],
+  ["Chong Nonsi", "chong"],
+];
+
+function zoneIdForArea(area, fallbackZoneId, zones) {
+  if (!area) return fallbackZoneId;
+  const hit = AREA_ZONE_HINTS.find(([hint]) => area.includes(hint));
+  if (hit && zones.some((z) => z.id === hit[1])) return hit[1];
+  const direct = zones.find((z) => area.includes(z.label) || z.label.includes(area));
+  return direct?.id || fallbackZoneId;
+}
+
+/** 將當日行程變成地圖標記（頁內顯示，唔使跳轉） */
+export function markersForDayPlan(trip, dayPlan) {
+  if (!dayPlan?.slots?.length) return [];
+  const config = mapConfigForTrip(trip, dayPlan.zone);
+  const zones = config.zones || [];
+  const fallback = zones.find((z) => z.id === dayPlan.zone) || zones[0];
+  const baseLat = config.lat ?? fallback?.lat ?? 34.6819;
+  const baseLng = config.lng ?? fallback?.lng ?? 135.5068;
+
+  return dayPlan.slots.map((s, i) => {
+    const zoneId = zoneIdForArea(s.area, dayPlan.zone, zones);
+    const zone = zones.find((z) => z.id === zoneId) || fallback;
+    const lat = (zone?.lat ?? baseLat) + (i - 1.5) * 0.002;
+    const lng = (zone?.lng ?? baseLng) + (i % 2 === 0 ? 0.0015 : -0.0015);
+    return {
+      id: `${s.time}-${s.title}`,
+      lat,
+      lng,
+      time: s.time,
+      title: s.title,
+      detail: s.detail,
+      area: s.area,
+      kind: s.kind,
+      color: s.kind === "food" ? "#f97316" : "#0d9488",
+    };
+  });
+}

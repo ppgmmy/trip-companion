@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import {
   buildTripDayList,
   dayPlanForTrip,
-  mapsSearchUrl,
   mapConfigForTrip,
+  markersForDayPlan,
   slotsToItineraryItems,
 } from "../data/itineraryGuide";
 import { toDateId } from "../data";
@@ -19,6 +19,7 @@ export { buildDays } from "./itineraryDays";
 
 export default function ItineraryTab({ trip, itinerary, setItinerary }) {
   const [dayId, setDayId] = useState(null);
+  const [selectedMarkerId, setSelectedMarkerId] = useState(null);
   const [note, setNote] = useState("");
   const [time, setTime] = useState("10:00");
 
@@ -36,6 +37,21 @@ export default function ItineraryTab({ trip, itinerary, setItinerary }) {
     () => mapConfigForTrip(trip, dayPlan?.zone),
     [trip, dayPlan?.zone],
   );
+
+  const mapMarkers = useMemo(
+    () => markersForDayPlan(trip, dayPlan),
+    [trip, dayPlan],
+  );
+
+  useEffect(() => {
+    setSelectedMarkerId(null);
+  }, [activeDayId]);
+
+  useEffect(() => {
+    if (mapMarkers.length > 0 && !selectedMarkerId) {
+      setSelectedMarkerId(mapMarkers[0].id);
+    }
+  }, [mapMarkers, selectedMarkerId]);
 
   const userItems = itinerary[activeDay?.id] || [];
   const hasSuggestion = (dayPlan?.slots?.length || 0) > 0;
@@ -96,7 +112,13 @@ export default function ItineraryTab({ trip, itinerary, setItinerary }) {
         </p>
       </div>
 
-      <TripMap config={mapConfig} activeZoneId={dayPlan?.zone} heightClass="h-56 sm:h-64" />
+      <TripMap
+        config={mapConfig}
+        markers={mapMarkers}
+        selectedId={selectedMarkerId}
+        onSelect={setSelectedMarkerId}
+        heightClass="h-56 sm:h-64"
+      />
 
       <div className="scroll-thin -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5">
         {days.map((d) => {
@@ -136,8 +158,18 @@ export default function ItineraryTab({ trip, itinerary, setItinerary }) {
           </div>
 
           <ol className="mt-3 space-y-2">
-            {dayPlan.slots.map((s) => (
-              <li key={`${s.time}-${s.title}`} className="rounded-2xl bg-mist/70 px-3 py-2.5">
+            {dayPlan.slots.map((s) => {
+              const markerId = `${s.time}-${s.title}`;
+              const active = selectedMarkerId === markerId;
+              return (
+              <li key={markerId}>
+                <button
+                  type="button"
+                  onClick={() => setSelectedMarkerId(markerId)}
+                  className={`w-full rounded-2xl px-3 py-2.5 text-left transition active:scale-[0.99] ${
+                    active ? "bg-jade-soft/70 ring-2 ring-jade/30" : "bg-mist/70"
+                  }`}
+                >
                 <div className="flex items-start gap-2">
                   <span className="w-10 shrink-0 text-xs font-bold text-jade-deep">{s.time}</span>
                   <div className="min-w-0 flex-1">
@@ -150,17 +182,12 @@ export default function ItineraryTab({ trip, itinerary, setItinerary }) {
                     <p className="mt-0.5 text-xs text-ink-soft">{s.detail}</p>
                     {s.area && <p className="mt-0.5 text-[10px] font-semibold text-ink-faint">{s.area}</p>}
                   </div>
-                  <a
-                    href={mapsSearchUrl(s.maps)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="shrink-0 rounded-lg bg-white px-2 py-1 text-[10px] font-bold text-jade-deep"
-                  >
-                    地圖
-                  </a>
+                  {active && <span className="shrink-0 text-[10px] font-bold text-jade-deep">地圖中</span>}
                 </div>
+                </button>
               </li>
-            ))}
+            );
+            })}
           </ol>
         </section>
       )}
@@ -195,16 +222,6 @@ export default function ItineraryTab({ trip, itinerary, setItinerary }) {
               <li key={item.id} className="flex items-center gap-3 rounded-2xl bg-white/85 px-4 py-3 shadow-[var(--shadow-soft)]">
                 <span className="w-12 shrink-0 text-xs font-bold text-jade-deep">{item.time}</span>
                 <span className="min-w-0 flex-1 text-sm text-ink">{item.text}</span>
-                {item.maps && (
-                  <a
-                    href={mapsSearchUrl(item.maps)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="shrink-0 text-[10px] font-bold text-jade-deep"
-                  >
-                    地圖
-                  </a>
-                )}
                 <button
                   type="button"
                   onClick={() => removeItem(activeDay.id, item.id)}
