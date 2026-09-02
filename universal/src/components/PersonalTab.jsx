@@ -6,6 +6,10 @@ const KINDS = [
   { id: "event", label: "日程", icon: "📅" },
 ];
 
+const WEEKDAYS = ["日", "一", "二", "三", "四", "五", "六"];
+const TIMETABLE_START = 6;
+const TIMETABLE_END = 23;
+
 function sortItems(items) {
   return [...items].sort((a, b) => {
     if (a.date !== b.date) return a.date.localeCompare(b.date);
@@ -20,64 +24,216 @@ function itemsForDate(items, dateId) {
   return sortItems(items.filter((item) => item.date === dateId));
 }
 
-function DayBlock({ dateId, label, items, onToggle, onRemove, highlight }) {
-  const pending = items.filter((i) => !i.done);
-  const done = items.filter((i) => i.done);
+function monthMatrix(year, month) {
+  const first = new Date(year, month, 1);
+  const last = new Date(year, month + 1, 0);
+  const startPad = first.getDay();
+  const cells = [];
+  for (let i = 0; i < startPad; i += 1) cells.push(null);
+  for (let d = 1; d <= last.getDate(); d += 1) {
+    cells.push(toDateId(new Date(year, month, d)));
+  }
+  while (cells.length % 7 !== 0) cells.push(null);
+  return cells;
+}
+
+function parseHour(time) {
+  if (!time) return null;
+  const [h] = time.split(":").map(Number);
+  return Number.isFinite(h) ? h : null;
+}
+
+function TimetableRow({ hour, items, onToggle, onRemove }) {
+  const label = `${String(hour).padStart(2, "0")}:00`;
 
   return (
-    <section
-      className={`rounded-2xl border px-3 py-2.5 shadow-[var(--shadow-soft)] ${
-        highlight ? "border-jade/30 bg-jade-soft/35" : "border-jade/10 bg-white/90"
+    <div className="personal-timetable-row grid grid-cols-[2.75rem_1fr] border-b border-jade/8 last:border-b-0">
+      <div className="border-r border-jade/10 py-2 pr-1.5 text-right text-[10px] font-bold tabular-nums text-ink-faint">
+        {label}
+      </div>
+      <div className="min-h-[2.25rem] space-y-1 py-1 pl-2">
+        {items.length === 0 ? (
+          <span className="block h-5" aria-hidden="true" />
+        ) : (
+          items.map((item) => (
+            <TimetableItem key={item.id} item={item} onToggle={onToggle} onRemove={onRemove} />
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+function TimetableItem({ item, onToggle, onRemove }) {
+  const kind = KINDS.find((k) => k.id === item.kind) || KINDS[0];
+  const isEvent = item.kind === "event";
+
+  return (
+    <div
+      className={`flex items-start gap-1.5 rounded-lg border px-2 py-1.5 ${
+        item.done
+          ? "border-jade/10 bg-mist/40 opacity-75"
+          : isEvent
+            ? "border-sky/25 bg-sky/10"
+            : "border-jade/20 bg-jade-soft/45"
       }`}
     >
-      <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-bold text-ink">{label}</h3>
-        <span className="text-[10px] font-semibold text-ink-faint">
-          {pending.length > 0 ? `${pending.length} 項待做` : items.length ? "已完成" : "無事項"}
-        </span>
+      <button
+        type="button"
+        onClick={() => onToggle(item.id)}
+        className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[9px] font-bold ${
+          item.done ? "border-jade bg-jade text-white" : "border-jade/30 bg-white text-transparent"
+        }`}
+        aria-label={item.done ? "標記未完成" : "標記完成"}
+      >
+        ✓
+      </button>
+      <div className="min-w-0 flex-1">
+        <p className={`text-xs font-bold leading-snug ${item.done ? "text-ink-faint line-through" : "text-ink"}`}>
+          <span className="mr-0.5">{kind.icon}</span>
+          {item.title}
+        </p>
+        {item.time && <p className="text-[10px] font-semibold text-jade-deep">{item.time}</p>}
+        {item.note && <p className="text-[10px] text-ink-soft">{item.note}</p>}
+      </div>
+      <button
+        type="button"
+        onClick={() => onRemove(item.id)}
+        className="shrink-0 rounded p-1 text-ink-faint active:scale-90"
+        aria-label="刪除"
+      >
+        ✕
+      </button>
+    </div>
+  );
+}
+
+function PersonalCalendar({ year, month, selectedDate, todayId, items, onSelectDay, onPrevMonth, onNextMonth }) {
+  const cells = useMemo(() => monthMatrix(year, month), [year, month]);
+  const counts = useMemo(() => {
+    const map = {};
+    items.forEach((item) => {
+      map[item.date] = (map[item.date] || 0) + 1;
+    });
+    return map;
+  }, [items]);
+
+  return (
+    <section className="overflow-hidden rounded-2xl border border-jade/15 bg-white shadow-[var(--shadow-soft)]">
+      <div className="flex items-center justify-between border-b border-jade/10 bg-mist/50 px-3 py-2.5">
+        <button
+          type="button"
+          onClick={onPrevMonth}
+          className="flex h-8 w-8 items-center justify-center rounded-xl border border-jade/15 bg-white text-sm font-bold text-ink-soft active:scale-95"
+          aria-label="上個月"
+        >
+          ‹
+        </button>
+        <p className="font-display text-sm font-bold text-ink">
+          {year} 年 {month + 1} 月
+        </p>
+        <button
+          type="button"
+          onClick={onNextMonth}
+          className="flex h-8 w-8 items-center justify-center rounded-xl border border-jade/15 bg-white text-sm font-bold text-ink-soft active:scale-95"
+          aria-label="下個月"
+        >
+          ›
+        </button>
       </div>
 
-      {items.length === 0 ? (
-        <p className="mt-2 text-center text-xs text-ink-faint">暫無安排</p>
-      ) : (
-        <ul className="mt-2 space-y-1.5">
-          {[...pending, ...done].map((item) => {
-            const kind = KINDS.find((k) => k.id === item.kind) || KINDS[0];
-            return (
-              <li
-                key={item.id}
-                className={`flex items-start gap-2 rounded-xl px-2 py-2 ${item.done ? "bg-mist/40 opacity-70" : "bg-mist/70"}`}
-              >
-                <button
-                  type="button"
-                  onClick={() => onToggle(item.id)}
-                  className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border text-[10px] font-bold ${
-                    item.done ? "border-jade bg-jade text-white" : "border-jade/25 bg-white text-transparent"
+      <div className="grid grid-cols-7 border-b border-jade/10 bg-jade-soft/30">
+        {WEEKDAYS.map((w) => (
+          <div key={w} className="py-1.5 text-center text-[10px] font-bold text-jade-deep">
+            {w}
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-7">
+        {cells.map((dateId, idx) => {
+          if (!dateId) {
+            return <div key={`empty-${idx}`} className="aspect-square border-b border-r border-jade/5 bg-mist/20" />;
+          }
+          const isToday = dateId === todayId;
+          const isSelected = dateId === selectedDate;
+          const count = counts[dateId] || 0;
+          const pending = items.filter((i) => i.date === dateId && !i.done).length;
+
+          return (
+            <button
+              key={dateId}
+              type="button"
+              onClick={() => onSelectDay(dateId)}
+              className={`relative flex aspect-square flex-col items-center justify-center border-b border-r border-jade/8 text-xs transition active:scale-95 ${
+                isSelected ? "bg-jade text-white" : isToday ? "bg-jade-soft/70" : "bg-white hover:bg-mist/60"
+              }`}
+            >
+              <span className={`font-bold tabular-nums ${isSelected ? "text-white" : isToday ? "text-jade-deep" : "text-ink"}`}>
+                {Number(dateId.split("-")[2])}
+              </span>
+              {count > 0 && (
+                <span
+                  className={`mt-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold ${
+                    isSelected ? "bg-white/25 text-white" : pending > 0 ? "bg-coral/15 text-coral" : "bg-jade/15 text-jade-deep"
                   }`}
-                  aria-label={item.done ? "標記未完成" : "標記完成"}
                 >
-                  ✓
-                </button>
-                <div className="min-w-0 flex-1">
-                  <p className={`text-sm font-semibold leading-snug ${item.done ? "text-ink-faint line-through" : "text-ink"}`}>
-                    <span className="mr-1">{kind.icon}</span>
-                    {item.title}
-                  </p>
-                  {item.time && <p className="mt-0.5 text-[11px] font-semibold text-jade-deep">{item.time}</p>}
-                  {item.note && <p className="mt-0.5 text-[11px] text-ink-soft">{item.note}</p>}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => onRemove(item.id)}
-                  className="shrink-0 rounded-lg p-1.5 text-ink-faint transition active:scale-90"
-                  aria-label="刪除"
-                >
-                  ✕
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+                  {count}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function DayTimetable({ dateId, items, onToggle, onRemove }) {
+  const untimed = items.filter((i) => !i.time);
+  const byHour = useMemo(() => {
+    const map = {};
+    for (let h = TIMETABLE_START; h <= TIMETABLE_END; h += 1) map[h] = [];
+    items.forEach((item) => {
+      const hour = parseHour(item.time);
+      if (hour == null) return;
+      const slot = Math.min(TIMETABLE_END, Math.max(TIMETABLE_START, hour));
+      map[slot].push(item);
+    });
+    return map;
+  }, [items]);
+
+  const hasAny = items.length > 0;
+
+  return (
+    <section className="overflow-hidden rounded-2xl border border-jade/15 bg-white shadow-[var(--shadow-soft)]">
+      <div className="border-b border-jade/10 bg-mist/40 px-3 py-2.5">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-jade">當日時間表</p>
+        <h3 className="font-display text-base font-bold text-ink">{formatPersonalDayLabel(dateId)}</h3>
+        <p className="text-[11px] text-ink-faint">
+          {hasAny ? `${items.filter((i) => !i.done).length} 項待做 · ${items.length} 項總計` : "暫無安排"}
+        </p>
+      </div>
+
+      {untimed.length > 0 && (
+        <div className="border-b border-jade/10 bg-amber/5 px-3 py-2">
+          <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-ink-faint">待安排（無時間）</p>
+          <div className="space-y-1">
+            {untimed.map((item) => (
+              <TimetableItem key={item.id} item={item} onToggle={onToggle} onRemove={onRemove} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="personal-timetable max-h-[min(52vh,28rem)] overflow-y-auto scroll-thin">
+        {Array.from({ length: TIMETABLE_END - TIMETABLE_START + 1 }, (_, i) => TIMETABLE_START + i).map((hour) => (
+          <TimetableRow key={hour} hour={hour} items={byHour[hour]} onToggle={onToggle} onRemove={onRemove} />
+        ))}
+      </div>
+
+      {!hasAny && (
+        <p className="px-3 py-6 text-center text-xs text-ink-faint">撳上面月曆揀日期，或喺下方快速新增</p>
       )}
     </section>
   );
@@ -91,27 +247,15 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
   const [entryTime, setEntryTime] = useState("");
   const [kind, setKind] = useState("todo");
   const [note, setNote] = useState("");
-  const [browseDate, setBrowseDate] = useState(todayId);
+  const [selectedDate, setSelectedDate] = useState(todayId);
+  const [viewMonth, setViewMonth] = useState(() => {
+    const now = new Date();
+    return { year: now.getFullYear(), month: now.getMonth() };
+  });
 
   const items = useMemo(() => (Array.isArray(personal) ? personal : []), [personal]);
-
-  const horizon = useMemo(
-    () => [todayId, shiftDateId(todayId, 1), shiftDateId(todayId, 2), shiftDateId(todayId, 3)],
-    [todayId],
-  );
-
-  const upcomingLabels = useMemo(
-    () => [
-      { dateId: todayId, label: formatPersonalDayLabel(todayId), highlight: true },
-      { dateId: shiftDateId(todayId, 1), label: formatPersonalDayLabel(shiftDateId(todayId, 1)), highlight: false },
-      { dateId: shiftDateId(todayId, 2), label: formatPersonalDayLabel(shiftDateId(todayId, 2)), highlight: false },
-      { dateId: shiftDateId(todayId, 3), label: formatPersonalDayLabel(shiftDateId(todayId, 3)), highlight: false },
-    ],
-    [todayId],
-  );
-
+  const selectedItems = useMemo(() => itemsForDate(items, selectedDate), [items, selectedDate]);
   const todayPending = itemsForDate(items, todayId).filter((i) => !i.done).length;
-  const browseItems = itemsForDate(items, browseDate);
 
   useEffect(() => {
     if (focusAddTick > 0) {
@@ -120,6 +264,20 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
     }
   }, [focusAddTick]);
 
+  function selectDay(dateId) {
+    setSelectedDate(dateId);
+    setEntryDate(dateId);
+    const [y, m] = dateId.split("-").map(Number);
+    setViewMonth({ year: y, month: m - 1 });
+  }
+
+  function shiftMonth(delta) {
+    setViewMonth((prev) => {
+      const d = new Date(prev.year, prev.month + delta, 1);
+      return { year: d.getFullYear(), month: d.getMonth() };
+    });
+  }
+
   function addItem(e) {
     e.preventDefault();
     const trimmed = title.trim();
@@ -127,7 +285,7 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
     const entry = {
       id: uid("personal"),
       title: trimmed,
-      date: entryDate || todayId,
+      date: entryDate || selectedDate || todayId,
       time: entryTime.trim(),
       kind: kind === "event" ? "event" : "todo",
       note: note.trim(),
@@ -138,7 +296,7 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
     setTitle("");
     setNote("");
     setEntryTime("");
-    setEntryDate(todayId);
+    selectDay(entry.date);
   }
 
   function toggleItem(id) {
@@ -153,14 +311,29 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
     <div className="space-y-3">
       <div>
         <p className="text-[11px] font-bold uppercase tracking-wider text-jade">個人</p>
-        <h2 className="font-display text-xl font-bold text-ink">待辦同日程</h2>
+        <h2 className="font-display text-xl font-bold text-ink">Schedule Book</h2>
         <p className="text-sm text-ink-soft">
-          今日 {todayPending > 0 ? `仲有 ${todayPending} 項` : "無待辦"} · 顯示黎緊 3 日
+          月曆揀日 · 時間表睇安排 · 今日 {todayPending > 0 ? `仲有 ${todayPending} 項` : "無待辦"}
         </p>
       </div>
 
+      <PersonalCalendar
+        year={viewMonth.year}
+        month={viewMonth.month}
+        selectedDate={selectedDate}
+        todayId={todayId}
+        items={items}
+        onSelectDay={selectDay}
+        onPrevMonth={() => shiftMonth(-1)}
+        onNextMonth={() => shiftMonth(1)}
+      />
+
+      <DayTimetable dateId={selectedDate} items={selectedItems} onToggle={toggleItem} onRemove={removeItem} />
+
       <form onSubmit={addItem} className="expense-section-card-compact space-y-2">
-        <p className="text-[11px] font-bold uppercase tracking-wider text-jade">快速新增</p>
+        <p className="text-[11px] font-bold uppercase tracking-wider text-jade">
+          快速新增 · {formatPersonalDayLabel(entryDate)}
+        </p>
         <div className="grid grid-cols-2 gap-1.5">
           {KINDS.map((k) => (
             <button
@@ -184,7 +357,10 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
           <input
             type="date"
             value={entryDate}
-            onChange={(e) => setEntryDate(e.target.value)}
+            onChange={(e) => {
+              setEntryDate(e.target.value);
+              setSelectedDate(e.target.value);
+            }}
             className="h-9 rounded-xl border border-jade/15 bg-mist px-2 text-xs outline-none ring-jade focus:ring-2"
           />
           <input
@@ -205,66 +381,30 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
         />
       </form>
 
-      <div className="space-y-2">
-        {upcomingLabels.map(({ dateId, label, highlight }) => (
-          <DayBlock
-            key={dateId}
-            dateId={dateId}
-            label={label}
-            items={itemsForDate(items, dateId)}
-            onToggle={toggleItem}
-            onRemove={removeItem}
-            highlight={highlight}
-          />
-        ))}
-      </div>
-
-      <section className="rounded-2xl border border-jade/10 bg-white/85 p-3 shadow-[var(--shadow-soft)]">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-xs font-bold uppercase tracking-wider text-ink-faint">日曆瀏覽</p>
-          <input
-            type="date"
-            value={browseDate}
-            onChange={(e) => setBrowseDate(e.target.value)}
-            className="h-8 rounded-lg border border-jade/15 bg-mist px-2 text-xs outline-none"
-          />
+      <section className="rounded-2xl border border-jade/10 bg-white/85 px-3 py-2.5 shadow-[var(--shadow-soft)]">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">黎緊 3 日概覽</p>
+        <div className="mt-2 grid grid-cols-3 gap-1.5">
+          {[todayId, shiftDateId(todayId, 1), shiftDateId(todayId, 2)].map((dateId) => {
+            const dayItems = itemsForDate(items, dateId);
+            const pending = dayItems.filter((i) => !i.done).length;
+            const active = dateId === selectedDate;
+            return (
+              <button
+                key={dateId}
+                type="button"
+                onClick={() => selectDay(dateId)}
+                className={`rounded-xl border px-2 py-2 text-left transition active:scale-[0.98] ${
+                  active ? "border-jade bg-jade-soft/60" : "border-jade/10 bg-mist/50"
+                }`}
+              >
+                <p className="text-[10px] font-bold text-jade-deep">{formatPersonalDayLabel(dateId).split(" · ")[0]}</p>
+                <p className="text-lg font-black text-ink">{pending}</p>
+                <p className="text-[9px] text-ink-faint">項待做</p>
+              </button>
+            );
+          })}
         </div>
-        <p className="mt-1 text-sm font-bold text-ink">{formatPersonalDayLabel(browseDate)}</p>
-        {browseItems.length === 0 ? (
-          <p className="mt-2 text-center text-xs text-ink-faint">呢日無事項</p>
-        ) : (
-          <ul className="mt-2 space-y-1.5">
-            {browseItems.map((item) => {
-              const k = KINDS.find((x) => x.id === item.kind) || KINDS[0];
-              return (
-                <li key={item.id} className="flex items-center gap-2 rounded-xl bg-mist/60 px-2.5 py-2 text-sm">
-                  <span>{k.icon}</span>
-                  <span className={`min-w-0 flex-1 font-semibold ${item.done ? "line-through text-ink-faint" : "text-ink"}`}>
-                    {item.title}
-                  </span>
-                  {item.time && <span className="text-[11px] font-bold text-jade-deep">{item.time}</span>}
-                </li>
-              );
-            })}
-          </ul>
-        )}
       </section>
-
-      {items.some((i) => !horizon.includes(i.date)) && (
-        <section className="rounded-2xl border border-dashed border-jade/20 bg-white/50 px-3 py-2">
-          <p className="text-[11px] font-bold text-ink-soft">其他日期</p>
-          <ul className="mt-1.5 space-y-1">
-            {sortItems(items.filter((i) => !horizon.includes(i.date)))
-              .slice(0, 8)
-              .map((item) => (
-                <li key={item.id} className="flex items-center justify-between gap-2 text-xs">
-                  <span className="truncate font-semibold text-ink">{item.title}</span>
-                  <span className="shrink-0 text-ink-faint">{formatPersonalDayLabel(item.date)}</span>
-                </li>
-              ))}
-          </ul>
-        </section>
-      )}
     </div>
   );
 }

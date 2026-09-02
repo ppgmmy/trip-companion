@@ -64,6 +64,10 @@ body {
   color: white;
 }
 
+.personal-timetable {
+  background: linear-gradient(to bottom, rgb(255 255 255), rgb(242 248 246 / 0.5));
+}
+
 .font-display {
   font-family: var(--font-display);
 }
