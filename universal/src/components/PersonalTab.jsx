@@ -17,9 +17,9 @@ import DailyTodosPanel from "./DailyTodosPanel";
 import SharedTodoPanel from "./SharedTodoPanel";
 
 const PERSONAL_VIEWS = [
-  { id: "mine", label: "我的", hint: "個人行程／日程時間表" },
+  { id: "mine", label: "行程", hint: "個人行程／日程時間表" },
   { id: "daily", label: "每日", hint: "每日習慣＋本月%" },
-  { id: "shared", label: "共同", hint: "共用 To-Do List（C M S P）" },
+  { id: "shared", label: "To-Do", hint: "共用 To-Do List（C M S P）" },
 ];
 
 const KINDS = [
@@ -622,7 +622,7 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
       <div className="flex items-start justify-between gap-2">
         <div>
           <h2 className="font-display text-lg font-bold text-ink">
-            {section === "mine" ? "我的行程" : section === "shared" ? "共同 To-Do" : section === "daily" ? "每日習慣" : "個人"}
+            {section === "mine" ? "行程" : section === "shared" ? "To-Do" : section === "daily" ? "每日" : "個人"}
           </h2>
           <p className="text-[11px] text-ink-faint">{activeView.hint}</p>
         </div>
