@@ -78,13 +78,16 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
   const tabRailRef = useRef(null);
   const formRef = useRef(null);
   const amountRef = useRef(null);
+  const prevPanelRef = useRef(panel);
 
   useEffect(() => {
     setExpenseUi((prev) => ({ ...prev, panel, listTodayOnly }));
   }, [panel, listTodayOnly, setExpenseUi]);
 
   useEffect(() => {
-    if (panel === "ledger" && !editingId) {
+    const enteredLedger = panel === "ledger" && prevPanelRef.current !== "ledger";
+    prevPanelRef.current = panel;
+    if (enteredLedger && !editingId) {
       amountRef.current?.focus({ preventScroll: true });
     }
   }, [panel, editingId]);

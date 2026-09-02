@@ -110,11 +110,12 @@ export default function TripForm({ onCreate, heading, initial = null, submitLabe
         <label className="block">
           <span className="mb-1 block text-[11px] font-semibold text-ink-faint">總預算（當地幣）</span>
           <input
-            type="number"
-            min="0"
-            step="100"
+            type="text"
+            inputMode="text"
+            autoComplete="off"
             value={form.budget}
-            onChange={(e) => setForm((f) => ({ ...f, budget: e.target.value }))}
+            onChange={(e) => setForm((f) => ({ ...f, budget: e.target.value.replace(/[^\d]/g, "") }))}
+            placeholder="例如 50000"
             className="h-12 w-full rounded-2xl border border-jade/15 bg-mist px-3 outline-none ring-jade focus:ring-2"
           />
         </label>
