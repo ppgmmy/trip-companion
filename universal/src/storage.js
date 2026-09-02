@@ -2,6 +2,7 @@
 export const REGISTRY_KEYS = {
   trips: "universal_trips",
   active: "universal_active_trip",
+  personal: "universal_personal",
 };
 
 /** Per-trip data namespace — isolated so code updates never wipe another trip. */

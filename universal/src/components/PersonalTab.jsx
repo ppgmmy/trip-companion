@@ -83,7 +83,7 @@ function DayBlock({ dateId, label, items, onToggle, onRemove, highlight }) {
   );
 }
 
-export default function PersonalTab({ trip, personal, setPersonal }) {
+export default function PersonalTab({ personal, setPersonal }) {
   const todayId = toDateId(new Date());
   const [title, setTitle] = useState("");
   const [entryDate, setEntryDate] = useState(todayId);
@@ -144,9 +144,10 @@ export default function PersonalTab({ trip, personal, setPersonal }) {
   return (
     <div className="space-y-3">
       <div>
-        <h2 className="font-display text-xl font-bold text-ink">個人</h2>
+        <p className="text-[11px] font-bold uppercase tracking-wider text-jade">個人</p>
+        <h2 className="font-display text-xl font-bold text-ink">待辦同日程</h2>
         <p className="text-sm text-ink-soft">
-          待辦同日程 · 今日 {todayPending > 0 ? `仲有 ${todayPending} 項` : "無待辦"}
+          今日 {todayPending > 0 ? `仲有 ${todayPending} 項` : "無待辦"} · 顯示黎緊 3 日
         </p>
       </div>
 
@@ -188,8 +189,6 @@ export default function PersonalTab({ trip, personal, setPersonal }) {
           <input
             type="date"
             value={entryDate}
-            min={trip?.startDate || undefined}
-            max={trip?.endDate || undefined}
             onChange={(e) => setEntryDate(e.target.value)}
             className="h-9 rounded-xl border border-jade/15 bg-mist px-2 text-xs outline-none ring-jade focus:ring-2"
           />

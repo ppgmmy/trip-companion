@@ -38,6 +38,7 @@ export default function App() {
   const [trips, setTrips] = useLocalStorage(REGISTRY_KEYS.trips, [], { migrate: (v) => (Array.isArray(v) ? v : []) });
   const [activeId, setActiveId] = useLocalStorage(REGISTRY_KEYS.active, null, { migrate: (v) => (typeof v === "string" ? v : null) });
   const [activeTab, setActiveTab] = useState("expenses");
+  const [appMode, setAppMode] = useState("travel");
   const [expandedTool, setExpandedTool] = useState(null);
   const [quickAdd, setQuickAdd] = useState(false);
 
@@ -46,12 +47,15 @@ export default function App() {
     const params = new URLSearchParams(window.location.search);
     if (params.get("quick") === "add") {
       setQuickAdd(true);
+      setAppMode("travel");
+      setActiveTab("expenses");
       window.history.replaceState({}, "", window.location.pathname);
     }
   }, []);
 
   function openTool(toolId) {
     setExpandedTool(toolId);
+    setAppMode("travel");
     setActiveTab("tools");
   }
 
@@ -77,7 +81,7 @@ export default function App() {
   const [feedback, setFeedback] = useLocalStorage(tripId ? tripKey(tripId, TRIP_SECTIONS.feedback) : "universal_disabled", [], {
     migrate: (v) => (Array.isArray(v) ? v : []),
   });
-  const [personal, setPersonal] = useLocalStorage(tripId ? tripKey(tripId, TRIP_SECTIONS.personal) : "universal_disabled", [], {
+  const [personal, setPersonal] = useLocalStorage(REGISTRY_KEYS.personal, [], {
     migrate: (v) => (Array.isArray(v) ? v : []),
   });
   const [rateState, setRateState] = useLocalStorage(tripId ? tripKey(tripId, TRIP_SECTIONS.rate) : "universal_disabled", null, {
@@ -85,6 +89,27 @@ export default function App() {
   });
 
   const { status: fxStatus, refresh: refreshRate, applyManual: applyManualRate } = useExchangeRate(activeTrip, rateState, setRateState);
+
+  // 將舊版「每旅程 personal」資料合併到全域個人儲存（一次性）
+  useEffect(() => {
+    if (personal.length > 0) return;
+    try {
+      const merged = [];
+      const seen = new Set();
+      trips.forEach((trip) => {
+        const raw = localStorage.getItem(tripKey(trip.id, TRIP_SECTIONS.personal));
+        if (!raw) return;
+        const items = JSON.parse(raw);
+        if (!Array.isArray(items)) return;
+        items.forEach((item) => {
+          if (!item?.id || seen.has(item.id)) return;
+          seen.add(item.id);
+          merged.push(item);
+        });
+      });
+      if (merged.length > 0) setPersonal(merged);
+    } catch {}
+  }, [personal.length, setPersonal, trips]);
 
   function createTrip(trip) {
     setTrips((prev) => [...prev, trip]);
@@ -121,31 +146,34 @@ export default function App() {
           <EmptyState onCreate={createTrip} />
         ) : (
           <div className="tab-panel space-y-4">
-            {activeTab === "itinerary" && (
+            {appMode === "personal" ? (
+              <PersonalTab personal={personal} setPersonal={setPersonal} />
+            ) : (
               <>
-                <DailyIntel trip={activeTrip} expenses={expenses} personal={personal} />
-                <DailyEvolution trip={activeTrip} onOpenTool={openTool} />
-                <ItineraryTab trip={activeTrip} itinerary={itinerary} setItinerary={setItinerary} />
+                {activeTab === "itinerary" && (
+                  <>
+                    <DailyIntel trip={activeTrip} expenses={expenses} personal={personal} />
+                    <DailyEvolution trip={activeTrip} onOpenTool={openTool} />
+                    <ItineraryTab trip={activeTrip} itinerary={itinerary} setItinerary={setItinerary} />
+                  </>
+                )}
+                {activeTab === "checklist" && <ChecklistTab checked={checklist} setChecked={setChecklist} />}
+                {activeTab === "spots" && <SpotsTab trip={activeTrip} spots={spots} setSpots={setSpots} />}
+                {activeTab === "expenses" && (
+                  <ExpenseTab
+                    trip={activeTrip}
+                    expenses={expenses}
+                    setExpenses={setExpenses}
+                    rateState={rateState}
+                    fxStatus={fxStatus}
+                    onRefreshRate={refreshRate}
+                    onApplyManualRate={applyManualRate}
+                  />
+                )}
+                {activeTab === "tools" && (
+                  <ToolkitTab trip={activeTrip} spots={spots} expenses={expenses} rateState={rateState} expandedTool={expandedTool} />
+                )}
               </>
-            )}
-            {activeTab === "checklist" && <ChecklistTab checked={checklist} setChecked={setChecklist} />}
-            {activeTab === "spots" && <SpotsTab trip={activeTrip} spots={spots} setSpots={setSpots} />}
-            {activeTab === "expenses" && (
-              <ExpenseTab
-                trip={activeTrip}
-                expenses={expenses}
-                setExpenses={setExpenses}
-                rateState={rateState}
-                fxStatus={fxStatus}
-                onRefreshRate={refreshRate}
-                onApplyManualRate={applyManualRate}
-              />
-            )}
-            {activeTab === "personal" && (
-              <PersonalTab trip={activeTrip} personal={personal} setPersonal={setPersonal} />
-            )}
-            {activeTab === "tools" && (
-              <ToolkitTab trip={activeTrip} spots={spots} expenses={expenses} rateState={rateState} expandedTool={expandedTool} />
             )}
           </div>
         )}
@@ -153,15 +181,17 @@ export default function App() {
 
       {activeTrip && (
         <BottomNav
-          active={activeTab}
-          onSelect={setActiveTab}
+          mode={appMode}
+          onModeChange={setAppMode}
+          travelActive={activeTab}
+          onTravelSelect={setActiveTab}
           onLongPressExpenses={() => {
             setActiveTab("expenses");
             setQuickAdd(true);
           }}
         />
       )}
-      {activeTrip && (
+      {activeTrip && appMode === "travel" && (
         <button
           type="button"
           onClick={() => setQuickAdd(true)}
