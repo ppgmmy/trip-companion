@@ -86,14 +86,36 @@ export function resolvePayerFields(entry) {
 
 export function lastPaymentDefaults(expenses) {
   const last = expenses[expenses.length - 1];
-  if (!last) {
-    return { payer: DEFAULT_PAYER_ID, customPayer: "", paymentMethod: DEFAULT_PAYMENT_METHOD };
+  if (last) {
+    const payerFields = resolvePayerFields(last);
+    return {
+      ...payerFields,
+      paymentMethod: normalizePaymentMethod(last.paymentMethod),
+    };
   }
-  const payerFields = resolvePayerFields(last);
-  return {
-    ...payerFields,
-    paymentMethod: normalizePaymentMethod(last.paymentMethod),
-  };
+  try {
+    const raw = localStorage.getItem("universal_last_payer_prefs");
+    if (raw) {
+      const saved = JSON.parse(raw);
+      if (saved?.payer) {
+        return {
+          payer: saved.payer,
+          customPayer: saved.customPayer || "",
+          paymentMethod: normalizePaymentMethod(saved.paymentMethod),
+        };
+      }
+    }
+  } catch {}
+  return { payer: DEFAULT_PAYER_ID, customPayer: "", paymentMethod: DEFAULT_PAYMENT_METHOD };
+}
+
+export function savePayerPrefs({ payer, customPayer, paymentMethod }) {
+  try {
+    localStorage.setItem(
+      "universal_last_payer_prefs",
+      JSON.stringify({ payer, customPayer: customPayer || "", paymentMethod: normalizePaymentMethod(paymentMethod) }),
+    );
+  } catch {}
 }
 
 export function recentCustomPayers(expenses, limit = 4) {

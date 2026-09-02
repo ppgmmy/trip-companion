@@ -7,7 +7,7 @@ const LOW_COST = {
   default: ["市區公園散步", "Window Shopping", "免費觀景點", "安靜 Cafe 久坐"],
 };
 
-export default function DailyIntel({ trip, expenses, personal = [] }) {
+export default function DailyIntel({ trip, expenses, personal = [], onOpenPersonal, onOpenExpenses }) {
   const [adapt, setAdapt] = useLocalStorage(tripKey(trip.id, TRIP_SECTIONS.adapt), false, {
     migrate: (v) => v === true || v === "true" || v === 1,
   });
@@ -93,7 +93,13 @@ export default function DailyIntel({ trip, expenses, personal = [] }) {
       </div>
 
       {todayPersonal.length > 0 && (
-        <div className="rounded-3xl border border-jade/20 bg-white/85 px-4 py-3 shadow-[var(--shadow-soft)]">
+        <button
+          type="button"
+          onClick={onOpenPersonal}
+          className={`w-full rounded-3xl border border-jade/20 bg-white/85 px-4 py-3 text-left shadow-[var(--shadow-soft)] transition ${
+            onOpenPersonal ? "active:scale-[0.99]" : ""
+          }`}
+        >
           <p className="text-[11px] font-bold uppercase tracking-wider text-jade">今日個人</p>
           <ul className="mt-2 space-y-1.5">
             {todayPersonal.slice(0, 4).map((item) => (
@@ -105,12 +111,19 @@ export default function DailyIntel({ trip, expenses, personal = [] }) {
             ))}
           </ul>
           {todayPersonal.length > 4 && (
-            <p className="mt-1.5 text-[11px] text-ink-faint">仲有 {todayPersonal.length - 4} 項 · 見「個人」分頁</p>
+            <p className="mt-1.5 text-[11px] text-ink-faint">仲有 {todayPersonal.length - 4} 項</p>
           )}
-        </div>
+          {onOpenPersonal && <p className="mt-1.5 text-[11px] font-bold text-jade-deep">點擊開啟個人 ›</p>}
+        </button>
       )}
 
-      <div className={`rounded-3xl border px-4 py-3 shadow-[var(--shadow-soft)] ${overPace ? "border-coral/30 bg-coral-soft" : "border-jade/20 bg-jade-soft/70"}`}>
+      <button
+        type="button"
+        onClick={onOpenExpenses}
+        className={`w-full rounded-3xl border px-4 py-3 text-left shadow-[var(--shadow-soft)] transition ${
+          overPace ? "border-coral/30 bg-coral-soft" : "border-jade/20 bg-jade-soft/70"
+        } ${onOpenExpenses ? "active:scale-[0.99]" : ""}`}
+      >
         <div className="flex items-start gap-2.5">
           <span className="text-lg" aria-hidden="true">{overPace ? "⚠️" : "✅"}</span>
           <div>
@@ -122,7 +135,8 @@ export default function DailyIntel({ trip, expenses, personal = [] }) {
             </p>
           </div>
         </div>
-      </div>
+        {onOpenExpenses && <p className="mt-2 text-[11px] font-bold text-jade-deep">點擊開啟記帳 ›</p>}
+      </button>
     </section>
   );
 }

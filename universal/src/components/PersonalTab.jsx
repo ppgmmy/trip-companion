@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { formatPersonalDayLabel, shiftDateId, toDateId, uid } from "../data";
 
 const KINDS = [
@@ -83,8 +83,9 @@ function DayBlock({ dateId, label, items, onToggle, onRemove, highlight }) {
   );
 }
 
-export default function PersonalTab({ personal, setPersonal }) {
+export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 }) {
   const todayId = toDateId(new Date());
+  const titleRef = useRef(null);
   const [title, setTitle] = useState("");
   const [entryDate, setEntryDate] = useState(todayId);
   const [entryTime, setEntryTime] = useState("");
@@ -111,6 +112,13 @@ export default function PersonalTab({ personal, setPersonal }) {
 
   const todayPending = itemsForDate(items, todayId).filter((i) => !i.done).length;
   const browseItems = itemsForDate(items, browseDate);
+
+  useEffect(() => {
+    if (focusAddTick > 0) {
+      titleRef.current?.focus({ preventScroll: true });
+      titleRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [focusAddTick]);
 
   function addItem(e) {
     e.preventDefault();
@@ -151,22 +159,8 @@ export default function PersonalTab({ personal, setPersonal }) {
         </p>
       </div>
 
-      <div className="space-y-2">
-        {upcomingLabels.map(({ dateId, label, highlight }) => (
-          <DayBlock
-            key={dateId}
-            dateId={dateId}
-            label={label}
-            items={itemsForDate(items, dateId)}
-            onToggle={toggleItem}
-            onRemove={removeItem}
-            highlight={highlight}
-          />
-        ))}
-      </div>
-
       <form onSubmit={addItem} className="expense-section-card-compact space-y-2">
-        <p className="text-[11px] font-bold uppercase tracking-wider text-jade">新增</p>
+        <p className="text-[11px] font-bold uppercase tracking-wider text-jade">快速新增</p>
         <div className="grid grid-cols-2 gap-1.5">
           {KINDS.map((k) => (
             <button
@@ -180,6 +174,7 @@ export default function PersonalTab({ personal, setPersonal }) {
           ))}
         </div>
         <input
+          ref={titleRef}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder={kind === "event" ? "日程標題" : "待辦事項"}
@@ -209,6 +204,20 @@ export default function PersonalTab({ personal, setPersonal }) {
           className="h-9 w-full rounded-xl border border-jade/15 bg-mist px-3 text-xs outline-none ring-jade focus:ring-2"
         />
       </form>
+
+      <div className="space-y-2">
+        {upcomingLabels.map(({ dateId, label, highlight }) => (
+          <DayBlock
+            key={dateId}
+            dateId={dateId}
+            label={label}
+            items={itemsForDate(items, dateId)}
+            onToggle={toggleItem}
+            onRemove={removeItem}
+            highlight={highlight}
+          />
+        ))}
+      </div>
 
       <section className="rounded-2xl border border-jade/10 bg-white/85 p-3 shadow-[var(--shadow-soft)]">
         <div className="flex items-center justify-between gap-2">

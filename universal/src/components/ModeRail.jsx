@@ -23,7 +23,7 @@ const MODES = [
   },
 ];
 
-export default function ModeRail({ mode, onModeChange }) {
+export default function ModeRail({ mode, onModeChange, personalPending = 0 }) {
   const [open, setOpen] = useState(false);
   const activeMode = MODES.find((m) => m.id === mode) || MODES[0];
 
@@ -54,6 +54,11 @@ export default function ModeRail({ mode, onModeChange }) {
             {activeMode.icon(true)}
           </span>
           <span className="text-[10px] font-bold leading-none text-jade-deep">{activeMode.label}</span>
+          {personalPending > 0 && mode !== "personal" && (
+            <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-coral px-1 text-[9px] font-bold text-white">
+              {personalPending > 9 ? "9+" : personalPending}
+            </span>
+          )}
           <svg className="mt-0.5 h-3 w-3 text-ink-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
           </svg>
@@ -85,12 +90,17 @@ export default function ModeRail({ mode, onModeChange }) {
                     role="tab"
                     aria-selected={isActive}
                     onClick={() => selectMode(item.id)}
-                    className={`nav-btn flex min-h-12 w-full flex-col items-center justify-center gap-0.5 rounded-2xl text-[11px] font-semibold transition ${
+                    className={`nav-btn relative flex min-h-12 w-full flex-col items-center justify-center gap-0.5 rounded-2xl text-[11px] font-semibold transition ${
                       isActive ? "is-active" : "text-ink-faint"
                     }`}
                   >
                     <span className="nav-icon flex h-8 w-full items-center justify-center rounded-xl transition">{item.icon(isActive)}</span>
                     {item.label}
+                    {item.id === "personal" && personalPending > 0 && (
+                      <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-coral px-1 text-[9px] font-bold text-white">
+                        {personalPending > 9 ? "9+" : personalPending}
+                      </span>
+                    )}
                   </button>
                 );
               })}

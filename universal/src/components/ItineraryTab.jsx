@@ -34,7 +34,10 @@ export default function ItineraryTab({ trip, itinerary, setItinerary }) {
   const activeDay = days.find((d) => d.id === activeDayId) || days[0];
 
   useEffect(() => {
-    if (!dayId && days[0]) setDayId(days[0].id);
+    if (dayId || !days.length) return;
+    const today = toDateId(new Date());
+    const todayInTrip = days.find((d) => d.id === today);
+    setDayId(todayInTrip?.id || days[0].id);
   }, [dayId, days]);
 
   function addItem(e) {

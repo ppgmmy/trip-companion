@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { DEFAULT_PAYER_ID, DEFAULT_PAYMENT_METHOD, EXPENSE_CATEGORIES, aggregateByPayer, aggregateByPaymentMethod, expenseEntryTags, formatHkd, formatMoney, lastPaymentDefaults, normalizePaymentMethod, payerLabel, paymentMethodLabel, recentCustomPayers, resolvePayerFields, toDateId, tripDays } from "../data";
+import { DEFAULT_PAYER_ID, DEFAULT_PAYMENT_METHOD, EXPENSE_CATEGORIES, aggregateByPayer, aggregateByPaymentMethod, expenseEntryTags, formatHkd, formatMoney, lastPaymentDefaults, normalizePaymentMethod, payerLabel, paymentMethodLabel, recentCustomPayers, resolvePayerFields, savePayerPrefs, toDateId, tripDays } from "../data";
 import { isFeatureEnabled } from "../data/featureFlags";
 import { amountExpressionPreview, frequentAmounts, parseAmountExpression, suggestCategoryByHour } from "../utils/expenseInput";
 import { BarChart, DoughnutChart } from "./Charts";
@@ -27,6 +27,8 @@ import {
   SevenDayTrendPanel,
 } from "./ExpenseDailyExtras";
 import PayerPaymentFields from "./PayerPaymentFields";
+import { REGISTRY_KEYS } from "../storage";
+import { useLocalStorage } from "../hooks/useLocalStorage";
 
 const PANELS = [
   { id: "ledger", label: "記帳" },
@@ -56,19 +58,26 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
   const [filterPaymentMethod, setFilterPaymentMethod] = useState("all");
   const [search, setSearch] = useState("");
   const [showHkd, setShowHkd] = useState(false);
-  const [panel, setPanel] = useState("ledger");
+  const [expenseUi, setExpenseUi] = useLocalStorage(REGISTRY_KEYS.expenseUi, { panel: "ledger", listTodayOnly: true }, {
+    migrate: (v) => (v && typeof v === "object" ? v : { panel: "ledger", listTodayOnly: true }),
+  });
+  const [panel, setPanel] = useState(expenseUi.panel || "ledger");
   const [editingId, setEditingId] = useState(null);
   const [payer, setPayer] = useState(() => lastPaymentDefaults(expenses).payer);
   const [customPayer, setCustomPayer] = useState(() => lastPaymentDefaults(expenses).customPayer);
   const [paymentMethod, setPaymentMethod] = useState(() => lastPaymentDefaults(expenses).paymentMethod);
   const [fxOpen, setFxOpen] = useState(false);
   const [toast, setToast] = useState(null);
-  const [listTodayOnly, setListTodayOnly] = useState(true);
+  const [listTodayOnly, setListTodayOnly] = useState(expenseUi.listTodayOnly !== false);
   const undoRef = useRef(null);
   const tabRefs = useRef({});
   const tabRailRef = useRef(null);
   const formRef = useRef(null);
   const amountRef = useRef(null);
+
+  useEffect(() => {
+    setExpenseUi((prev) => ({ ...prev, panel, listTodayOnly }));
+  }, [panel, listTodayOnly, setExpenseUi]);
 
   useEffect(() => {
     if (panel === "ledger" && !editingId) {
@@ -278,6 +287,7 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
       paymentMethod: normalizePaymentMethod(paymentMethod),
       createdAt: Date.now(),
     };
+    savePayerPrefs({ payer: resolvedPayer, customPayer: customPayer.trim(), paymentMethod });
     setExpenses((prev) => [...prev, entry]);
     showToast(date === todayId ? "已記入今日開支" : `已補記 ${formatDayHeading(date)}`, before);
     setAmount("");
@@ -594,7 +604,7 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
               fxLabel={statusLabel}
             />
 
-            <PayerSpendStats trip={trip} payerTotals={payerTotals} />
+            <PayerSpendStats trip={trip} payerTotals={payerTotals} onJumpToPayer={jumpToLedgerPayer} />
 
             <form ref={formRef} onSubmit={submitExpense} className="expense-section-card-compact space-y-2">
               {editingId && (

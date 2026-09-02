@@ -1,4 +1,4 @@
-import { formatHkd, formatMoney, payerLabel } from "../data";
+import { formatHkd, formatMoney } from "../data";
 
 function paymentBits(row, currency) {
   const cash = row.byPayment?.cash;
@@ -10,17 +10,19 @@ function paymentBits(row, currency) {
 }
 
 /** 簡潔：ppg／mo／現金／大家分攤；個人再拆卡／現金 */
-export default function PayerSpendStats({ trip, payerTotals }) {
+export default function PayerSpendStats({ trip, payerTotals, onJumpToPayer }) {
   if (!payerTotals?.length) return null;
 
   return (
     <div className="rounded-xl border border-jade/15 bg-white px-3 py-2 shadow-[var(--shadow-soft)]">
-      <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">邊個用咗幾多</p>
+      <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">
+        邊個用咗幾多{onJumpToPayer ? " · 點擊篩選" : ""}
+      </p>
       <ul className="mt-1.5 space-y-1">
         {payerTotals.map((row) => {
           const bits = row.key === "cash-pool" || row.key === "cash" ? [] : paymentBits(row, trip.targetCurrency);
-          return (
-            <li key={row.key} className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-[11px]">
+          const inner = (
+            <>
               <span className="font-bold text-ink">{row.label}</span>
               <span className="font-display font-black text-jade-deep">
                 {formatMoney(row.amount, trip.targetCurrency)}
@@ -32,6 +34,21 @@ export default function PayerSpendStats({ trip, payerTotals }) {
                 <span className="w-full text-[10px] font-semibold text-ink-soft sm:w-auto">
                   {bits.join(" · ")}
                 </span>
+              )}
+            </>
+          );
+          return (
+            <li key={row.key}>
+              {onJumpToPayer ? (
+                <button
+                  type="button"
+                  onClick={() => onJumpToPayer(row.key)}
+                  className="flex w-full flex-wrap items-baseline gap-x-2 gap-y-0.5 rounded-lg px-1 py-0.5 text-left text-[11px] transition active:bg-jade-soft/40"
+                >
+                  {inner}
+                </button>
+              ) : (
+                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-[11px]">{inner}</div>
               )}
             </li>
           );
@@ -47,7 +64,7 @@ export function payerSpendShareText(trip, payerTotals) {
   payerTotals.forEach((row) => {
     const bits = row.key === "cash-pool" || row.key === "cash" ? [] : paymentBits(row, trip.targetCurrency);
     lines.push(
-      `${payerLabel(row.key) || row.label}：${formatMoney(row.amount, trip.targetCurrency)}（${formatHkd(row.hkd)}，${row.count} 筆）` +
+      `${row.label}：${formatMoney(row.amount, trip.targetCurrency)}（${formatHkd(row.hkd)}，${row.count} 筆）` +
         (bits.length ? `｜${bits.join(" · ")}` : ""),
     );
   });
