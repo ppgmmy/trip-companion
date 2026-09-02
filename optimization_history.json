@@ -101,6 +101,13 @@
       "id": "fx-rate-impact",
       "title": "匯率影響說明",
       "description": "對比記帳鎖定港幣同而家匯率重算嘅差額，了解匯率波動點影響總使費。"
+    },
+    {
+      "date": "2026-09-02",
+      "id": "category-pct-labels",
+      "title": "分類百分比標籤",
+      "description": "分類排行旁顯示佔總支出百分比。",
+      "cycle": true
     }
   ]
 }
