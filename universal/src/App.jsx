@@ -10,6 +10,7 @@ import ItineraryTab from "./components/ItineraryTab";
 import ChecklistTab from "./components/ChecklistTab";
 import SpotsTab from "./components/SpotsTab";
 import ExpenseTab from "./components/ExpenseTab";
+import PersonalTab from "./components/PersonalTab";
 import DailyIntel from "./components/DailyIntel";
 import DailyEvolution from "./components/DailyEvolution";
 import ToolkitTab from "./components/ToolkitTab";
@@ -76,6 +77,9 @@ export default function App() {
   const [feedback, setFeedback] = useLocalStorage(tripId ? tripKey(tripId, TRIP_SECTIONS.feedback) : "universal_disabled", [], {
     migrate: (v) => (Array.isArray(v) ? v : []),
   });
+  const [personal, setPersonal] = useLocalStorage(tripId ? tripKey(tripId, TRIP_SECTIONS.personal) : "universal_disabled", [], {
+    migrate: (v) => (Array.isArray(v) ? v : []),
+  });
   const [rateState, setRateState] = useLocalStorage(tripId ? tripKey(tripId, TRIP_SECTIONS.rate) : "universal_disabled", null, {
     migrate: (v) => (v && typeof v === "object" ? v : null),
   });
@@ -119,7 +123,7 @@ export default function App() {
           <div className="tab-panel space-y-4">
             {activeTab === "itinerary" && (
               <>
-                <DailyIntel trip={activeTrip} expenses={expenses} />
+                <DailyIntel trip={activeTrip} expenses={expenses} personal={personal} />
                 <DailyEvolution trip={activeTrip} onOpenTool={openTool} />
                 <ItineraryTab trip={activeTrip} itinerary={itinerary} setItinerary={setItinerary} />
               </>
@@ -136,6 +140,9 @@ export default function App() {
                 onRefreshRate={refreshRate}
                 onApplyManualRate={applyManualRate}
               />
+            )}
+            {activeTab === "personal" && (
+              <PersonalTab trip={activeTrip} personal={personal} setPersonal={setPersonal} />
             )}
             {activeTab === "tools" && (
               <ToolkitTab trip={activeTrip} spots={spots} expenses={expenses} rateState={rateState} expandedTool={expandedTool} />

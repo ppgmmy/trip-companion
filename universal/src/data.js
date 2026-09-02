@@ -264,6 +264,26 @@ export function toDateId(date) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
+export function shiftDateId(dateId, days) {
+  const [y, m, d] = String(dateId || "").split("-").map(Number);
+  if (!y || !m || !d) return toDateId(new Date());
+  const date = new Date(y, m - 1, d + days);
+  return toDateId(date);
+}
+
+export function formatPersonalDayLabel(dateId, baseDate = new Date()) {
+  if (!dateId) return "未知日期";
+  const todayId = toDateId(baseDate);
+  const tomorrowId = shiftDateId(todayId, 1);
+  const [, m, d] = dateId.split("-");
+  const base = `${Number(m)}/${Number(d)}（${WEEKDAY_LABELS[new Date(dateId).getDay()]}）`;
+  if (dateId === todayId) return `今日 · ${base}`;
+  if (dateId === tomorrowId) return `明日 · ${base}`;
+  const dayAfter = shiftDateId(todayId, 2);
+  if (dateId === dayAfter) return `後日 · ${base}`;
+  return base;
+}
+
 export function uid(prefix) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 }

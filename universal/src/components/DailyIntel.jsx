@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { formatHkd, formatMoney, todayIndex, tripDays, weatherForDay } from "../data";
+import { formatHkd, formatMoney, toDateId, todayIndex, tripDays, weatherForDay } from "../data";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { tripKey, TRIP_SECTIONS } from "../storage";
 
@@ -7,7 +7,7 @@ const LOW_COST = {
   default: ["市區公園散步", "Window Shopping", "免費觀景點", "安靜 Cafe 久坐"],
 };
 
-export default function DailyIntel({ trip, expenses }) {
+export default function DailyIntel({ trip, expenses, personal = [] }) {
   const [adapt, setAdapt] = useLocalStorage(tripKey(trip.id, TRIP_SECTIONS.adapt), false, {
     migrate: (v) => v === true || v === "true" || v === 1,
   });
@@ -25,6 +25,13 @@ export default function DailyIntel({ trip, expenses }) {
   const perDay = remaining / remainingDays;
   const avgPlanned = trip.budget / days;
   const overPace = totalSpent > avgPlanned * (idx + 1) * 1.1;
+
+  const todayPersonal = useMemo(() => {
+    const todayId = toDateId(new Date());
+    return (Array.isArray(personal) ? personal : [])
+      .filter((item) => item.date === todayId && !item.done)
+      .sort((a, b) => (a.time || "99:99").localeCompare(b.time || "99:99"));
+  }, [personal]);
 
   const date = new Date(new Date(trip.startDate).getTime() + idx * 86400000);
   const dateLabel = `${trip.startDate.slice(5).replace("-", "/")} 起第 ${idx + 1}/${days} 天`;
@@ -84,6 +91,24 @@ export default function DailyIntel({ trip, expenses }) {
           </p>
         </div>
       </div>
+
+      {todayPersonal.length > 0 && (
+        <div className="rounded-3xl border border-jade/20 bg-white/85 px-4 py-3 shadow-[var(--shadow-soft)]">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-jade">今日個人</p>
+          <ul className="mt-2 space-y-1.5">
+            {todayPersonal.slice(0, 4).map((item) => (
+              <li key={item.id} className="flex items-center gap-2 text-[13px]">
+                <span aria-hidden="true">{item.kind === "event" ? "📅" : "☑️"}</span>
+                <span className="min-w-0 flex-1 truncate font-semibold text-ink">{item.title}</span>
+                {item.time && <span className="shrink-0 text-[11px] font-bold text-jade-deep">{item.time}</span>}
+              </li>
+            ))}
+          </ul>
+          {todayPersonal.length > 4 && (
+            <p className="mt-1.5 text-[11px] text-ink-faint">仲有 {todayPersonal.length - 4} 項 · 見「個人」分頁</p>
+          )}
+        </div>
+      )}
 
       <div className={`rounded-3xl border px-4 py-3 shadow-[var(--shadow-soft)] ${overPace ? "border-coral/30 bg-coral-soft" : "border-jade/20 bg-jade-soft/70"}`}>
         <div className="flex items-start gap-2.5">

@@ -17,4 +17,5 @@ export const TRIP_SECTIONS = {
   rate: "rate",
   feedback: "feedback",
   adapt: "adapt",
+  personal: "personal",
 };
