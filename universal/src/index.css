@@ -61,7 +61,7 @@ body {
 }
 
 .mode-toggle .nav-btn.is-active .nav-icon {
-  background: rgb(255 255 255 / 0.7);
+  color: white;
 }
 
 .font-display {
