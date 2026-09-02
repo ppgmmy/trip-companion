@@ -138,7 +138,6 @@ export default function App() {
   return (
     <div className="bg-travel min-h-dvh w-full overflow-x-hidden">
       {activeTrip && <ModeRail mode={appMode} onModeChange={setAppMode} />}
-      <div className={activeTrip ? "pl-[4.75rem]" : ""}>
       <main className="safe-top mx-auto w-full max-w-lg box-border px-4 pb-32">
         {activeTrip && (
           <div className="mb-4">
@@ -212,7 +211,6 @@ export default function App() {
         />
       )}
       {activeTrip && <FeedbackModal trip={activeTrip} feedback={feedback} setFeedback={setFeedback} />}
-      </div>
     </div>
   );
 }

@@ -56,13 +56,26 @@ body {
   padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
 }
 
-.mode-rail {
-  padding-top: max(2.75rem, calc(env(safe-area-inset-top, 0px) + 1rem));
-  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+.mode-rail-handle .nav-icon {
+  background: var(--color-jade-soft);
 }
 
-.mode-rail-card {
-  box-shadow: var(--shadow-nav);
+.mode-rail-overlay {
+  animation: mode-rail-fade-in 0.2s ease-out both;
+}
+
+.mode-rail-panel {
+  animation: mode-rail-slide-in 0.24s ease-out both;
+}
+
+@keyframes mode-rail-fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes mode-rail-slide-in {
+  0% { opacity: 0; transform: translate(-0.75rem, -50%); }
+  100% { opacity: 1; transform: translate(0, -50%); }
 }
 
 .font-display {
