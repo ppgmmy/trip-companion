@@ -265,15 +265,15 @@ export const DEFAULT_BADGES = [
 
 /** 足跡地點類型 — 一眼識別去過咩類型 */
 export const PLACE_TYPES = [
-  { id: "arrival", label: "抵達", icon: "🚄", tone: "bg-indigo-50 text-indigo-900 border-indigo-200/80" },
-  { id: "hotel", label: "酒店", icon: "🏨", tone: "bg-teal-50 text-teal-900 border-teal-200/80" },
-  { id: "move", label: "移動", icon: "🛴", tone: "bg-slate-100 text-slate-800 border-slate-200/80" },
-  { id: "spot", label: "景點", icon: "📍", tone: "bg-jade-soft/80 text-jade-deep border-jade/20" },
-  { id: "cafe", label: "Cafe", icon: "☕", tone: "bg-amber-50 text-amber-900 border-amber-200/80" },
-  { id: "food", label: "美食", icon: "🍜", tone: "bg-coral-soft text-coral border-coral/25" },
-  { id: "shop", label: "購物", icon: "🛍️", tone: "bg-violet-50 text-violet-900 border-violet-200/80" },
-  { id: "experience", label: "體驗", icon: "✨", tone: "bg-sky-50 text-sky-900 border-sky-200/80" },
-  { id: "other", label: "其他", icon: "🗺", tone: "bg-mist text-ink-soft border-jade/15" },
+  { id: "arrival", label: "抵達", icon: "🚄", tone: "bg-indigo-50 text-indigo-900 border-indigo-200/80", accent: "border-l-indigo-400" },
+  { id: "hotel", label: "酒店", icon: "🏨", tone: "bg-teal-50 text-teal-900 border-teal-200/80", accent: "border-l-teal-500" },
+  { id: "move", label: "移動", icon: "🛴", tone: "bg-slate-100 text-slate-800 border-slate-200/80", accent: "border-l-slate-400" },
+  { id: "spot", label: "景點", icon: "📍", tone: "bg-jade-soft/80 text-jade-deep border-jade/20", accent: "border-l-jade" },
+  { id: "cafe", label: "Cafe", icon: "☕", tone: "bg-amber-50 text-amber-900 border-amber-200/80", accent: "border-l-amber-400" },
+  { id: "food", label: "美食", icon: "🍜", tone: "bg-coral-soft text-coral border-coral/25", accent: "border-l-orange-400" },
+  { id: "shop", label: "購物", icon: "🛍️", tone: "bg-violet-50 text-violet-900 border-violet-200/80", accent: "border-l-violet-400" },
+  { id: "experience", label: "體驗", icon: "✨", tone: "bg-sky-50 text-sky-900 border-sky-200/80", accent: "border-l-sky-400" },
+  { id: "other", label: "其他", icon: "🗺", tone: "bg-mist text-ink-soft border-jade/15", accent: "border-l-jade/30" },
 ];
 
 export function placeTypeMeta(typeId) {
