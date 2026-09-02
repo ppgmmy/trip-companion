@@ -15,55 +15,67 @@
       #root { min-height: 100dvh; }
       .tc-boot {
         min-height: 100dvh; display: flex; flex-direction: column; align-items: center;
-        justify-content: center; padding: 1.5rem; text-align: center;
-        font-family: "Figtree", system-ui, -apple-system, sans-serif;
+        justify-content: center; padding: 1.5rem; text-align: center; box-sizing: border-box;
+        font-family: system-ui, -apple-system, "PingFang HK", "Noto Sans TC", sans-serif;
       }
-      .tc-boot h1 { font-size: 1.15rem; margin: 0 0 0.4rem; }
-      .tc-boot p { margin: 0; font-size: 0.85rem; color: #5b6b68; line-height: 1.5; }
+      .tc-boot h1 { font-size: 1.2rem; margin: 0 0 0.5rem; }
+      .tc-boot p { margin: 0; font-size: 0.875rem; color: #5b6b68; line-height: 1.55; }
+      .tc-boot .tc-err {
+        margin-top: 0.75rem; max-width: 22rem; max-height: 6rem; overflow: auto;
+        text-align: left; font-size: 0.7rem; line-height: 1.4; color: #9a3412;
+        background: #fff7ed; border-radius: 0.75rem; padding: 0.6rem 0.75rem;
+        word-break: break-word;
+      }
       .tc-boot button {
-        margin-top: 1rem; min-height: 2.75rem; width: min(100%, 16rem); border: 0;
+        margin-top: 1rem; min-height: 2.85rem; width: min(100%, 17rem); border: 0;
         border-radius: 1rem; background: #0d9488; color: #fff; font-weight: 700; font-size: 0.95rem;
+      }
+      .tc-boot a.tc-link {
+        margin-top: 0.75rem; font-size: 0.8rem; font-weight: 700; color: #0f766e;
       }
     </style>
     <script>
-      // One-shot bust for stuck mobile PWAs holding old SW caches.
+      // Kill broken SW once — no reload loop (session lock).
       (function () {
-        var EPOCH = "9";
+        var EPOCH = "10";
         var KEY = "tc_sw_epoch";
+        var LOCK = "tc_sw_bust_lock";
+        window.__tcBootErrors = [];
+        window.addEventListener("error", function (ev) {
+          try {
+            window.__tcBootErrors.push(String((ev && ev.message) || "error"));
+          } catch (e) {}
+        });
+        window.addEventListener("unhandledrejection", function (ev) {
+          try {
+            var r = ev && ev.reason;
+            window.__tcBootErrors.push(String((r && r.message) || r || "promise"));
+          } catch (e) {}
+        });
         try {
+          if (sessionStorage.getItem(LOCK) === EPOCH) return;
           if (localStorage.getItem(KEY) === EPOCH) return;
+          sessionStorage.setItem(LOCK, EPOCH);
           localStorage.setItem(KEY, EPOCH);
         } catch (e) {
           return;
         }
-        var done = function () {
-          location.reload();
-        };
-        var clear = async function () {
-          try {
-            if ("serviceWorker" in navigator) {
-              var regs = await navigator.serviceWorker.getRegistrations();
-              await Promise.all(regs.map(function (r) { return r.unregister(); }));
-            }
-            if (typeof caches !== "undefined") {
-              var keys = await caches.keys();
-              await Promise.all(keys.map(function (k) { return caches.delete(k); }));
-            }
-          } catch (e) {}
-          done();
-        };
-        clear();
+        if (!("serviceWorker" in navigator)) return;
+        navigator.serviceWorker.getRegistrations().then(function (regs) {
+          return Promise.all(regs.map(function (r) { return r.unregister(); }));
+        }).then(function () {
+          if (typeof caches === "undefined") return;
+          return caches.keys().then(function (keys) {
+            return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+          });
+        }).catch(function () {});
       })();
     </script>
     <script>
+      // Register pass-through SW only after load (replaces old broken workers).
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", function () {
-          navigator.serviceWorker
-            .register("/sw.js")
-            .then(function (reg) {
-              try { reg.update(); } catch (e) {}
-            })
-            .catch(function () {});
+          navigator.serviceWorker.register("/sw.js").catch(function () {});
         });
       }
     </script>
@@ -89,12 +101,10 @@
         if (!root) return;
         var booted = false;
         var markBooted = function () {
-          // React mounted real UI (boot stub replaced or expanded beyond stub-only).
-          if (root.querySelector("[data-reactroot], .bg-travel, main, #tc-app")) {
+          if (root.querySelector(".bg-travel, main, #tc-app")) {
             booted = true;
             return true;
           }
-          // createRoot replaces children — if boot node gone, React took over.
           if (!document.getElementById("tc-boot") && root.childNodes.length > 0) {
             booted = true;
             return true;
@@ -105,35 +115,48 @@
           if (markBooted()) obs.disconnect();
         });
         obs.observe(root, { childList: true, subtree: true });
-        setTimeout(function () {
-          if (booted || markBooted()) {
-            obs.disconnect();
-            return;
-          }
+
+        function showFail() {
+          if (booted || markBooted()) return;
           obs.disconnect();
+          var errs = (window.__tcBootErrors || []).slice(-3).join(" | ") || "主程式未啟動（可能仍被舊快取攔截）";
           root.innerHTML =
             '<div class="tc-boot">' +
-            "<h1>載入唔到</h1>" +
-            "<p>手機 App 多數係舊快取。撳下面清走再開。</p>" +
-            '<button type="button" id="tc-hard-reset">清除快取後重開</button>' +
+            "<h1>開唔到 App</h1>" +
+            "<p>唔好再用主畫面舊圖示。請用 Safari／Chrome 開下面連結，成功後再重新加入主畫面。</p>" +
+            '<div class="tc-err" id="tc-err"></div>' +
+            '<button type="button" id="tc-hard-reset">清除資料並重試</button>' +
+            '<a class="tc-link" href="https://trip-companion-pied.vercel.app/universal/?fresh=1">用瀏覽器開啟</a>' +
             "</div>";
+          var errEl = document.getElementById("tc-err");
+          if (errEl) errEl.textContent = errs;
           var btn = document.getElementById("tc-hard-reset");
           if (!btn) return;
-          btn.onclick = async function () {
+          btn.onclick = function () {
+            var finish = function () {
+              location.href = "/universal/?fresh=" + Date.now();
+            };
             try {
-              try { localStorage.removeItem("tc_sw_epoch"); } catch (e) {}
-              if ("serviceWorker" in navigator) {
-                var regs = await navigator.serviceWorker.getRegistrations();
-                await Promise.all(regs.map(function (r) { return r.unregister(); }));
-              }
-              if (typeof caches !== "undefined") {
-                var keys = await caches.keys();
-                await Promise.all(keys.map(function (k) { return caches.delete(k); }));
-              }
+              sessionStorage.removeItem("tc_sw_bust_lock");
+              localStorage.removeItem("tc_sw_epoch");
             } catch (e) {}
-            location.reload();
+            var p = Promise.resolve();
+            if ("serviceWorker" in navigator) {
+              p = navigator.serviceWorker.getRegistrations().then(function (regs) {
+                return Promise.all(regs.map(function (r) { return r.unregister(); }));
+              });
+            }
+            p.then(function () {
+              if (typeof caches === "undefined") return;
+              return caches.keys().then(function (keys) {
+                return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+              });
+            }).catch(function () {}).then(finish);
           };
-        }, 3500);
+        }
+
+        // Slow phones / first paint after SW wipe
+        setTimeout(showFail, 10000);
       })();
     </script>
   </body>
