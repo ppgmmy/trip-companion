@@ -82,7 +82,7 @@ export default function SharedTodoPanel() {
         ))}
       </div>
 
-      <SectionCard title="To-Do List（C · M · S · P）" hint="四人共用 · 同你私人待辦分開">
+      <SectionCard title="共同 To-Do List（C · M · S · P）" hint="四人共同清單 · 喺呢度管理全部 To-Do">
         <form onSubmit={addItem} className="space-y-2 border-b border-jade/10 p-3">
           <input
             value={title}

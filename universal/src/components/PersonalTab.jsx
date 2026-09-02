@@ -17,20 +17,17 @@ import DailyTodosPanel from "./DailyTodosPanel";
 import SharedTodoPanel from "./SharedTodoPanel";
 
 const PERSONAL_VIEWS = [
-  { id: "mine", label: "我的", hint: "私人待辦／日程" },
+  { id: "mine", label: "我的", hint: "個人行程／日程時間表" },
   { id: "daily", label: "每日", hint: "每日習慣＋本月%" },
-  { id: "shared", label: "共用", hint: "C M S P" },
+  { id: "shared", label: "共同", hint: "共用 To-Do List（C M S P）" },
 ];
 
 const KINDS = [
-  { id: "todo", label: "待辦", icon: "☑️" },
-  { id: "event", label: "日程", icon: "📅" },
+  { id: "event", label: "行程", icon: "📅" },
 ];
 
 const FILTERS = [
-  { id: "all", label: "全部" },
-  { id: "todo", label: "待辦" },
-  { id: "event", label: "日程" },
+  { id: "event", label: "行程" },
 ];
 
 const QUICK_START_DATES = [{ label: "今日開始", offset: 0 }];
@@ -449,15 +446,15 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
   const [timeError, setTimeError] = useState(false);
   const [personalUi, setPersonalUi] = useLocalStorage(
     REGISTRY_KEYS.personalUi,
-    { selectedDate: todayId, viewMonth: null, kind: "todo", filterKind: "all", showCompleted: false, section: "mine" },
+    { selectedDate: todayId, viewMonth: null, kind: "event", filterKind: "event", showCompleted: false, section: "mine" },
     {
       migrate: (v) => {
         const base = v && typeof v === "object" ? v : {};
         return {
           selectedDate: base.selectedDate || todayId,
           viewMonth: base.viewMonth && typeof base.viewMonth === "object" ? base.viewMonth : null,
-          kind: base.kind === "event" ? "event" : "todo",
-          filterKind: ["all", "todo", "event"].includes(base.filterKind) ? base.filterKind : "all",
+          kind: "event",
+          filterKind: "event",
           showCompleted: Boolean(base.showCompleted),
           section: ["mine", "daily", "shared"].includes(base.section) ? base.section : "mine",
         };
@@ -465,8 +462,8 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
     },
   );
   const [section, setSection] = useState(personalUi.section || "mine");
-  const [kind, setKind] = useState(personalUi.kind || "todo");
-  const [filterKind, setFilterKind] = useState(personalUi.filterKind || "all");
+  const [kind, setKind] = useState("event");
+  const [filterKind, setFilterKind] = useState("event");
   const [showCompleted, setShowCompleted] = useState(Boolean(personalUi.showCompleted));
   const [title, setTitle] = useState("");
   const [entryDate, setEntryDate] = useState(todayId);
@@ -503,18 +500,27 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
 
   const sevenDayHorizon = useMemo(() => buildDateHorizon(todayId, 7), [todayId]);
   const todayStats = useMemo(() => {
-    const active = activeTodos(items, todayId);
     const events = eventsForDate(items, todayId).filter((i) => !i.done);
+    const weekEvents = items.filter(
+      (i) => i.kind === "event" && !i.done && sevenDayHorizon.includes(i.date),
+    ).length;
     return {
-      activeTodos: active.length,
       events: events.length,
-      highPriority: active.filter((i) => todoPriorityTier(personalTodoStartDate(i), todayId) === "high").length,
+      weekEvents,
     };
-  }, [items, todayId]);
+  }, [items, todayId, sevenDayHorizon]);
 
   useEffect(() => {
     setPersonalUi((prev) => ({ ...prev, selectedDate, viewMonth, kind, filterKind, showCompleted, section }));
   }, [selectedDate, viewMonth, kind, filterKind, showCompleted, section, setPersonalUi]);
+
+  useEffect(() => {
+    if (section === "mine") {
+      setKind("event");
+      setFilterKind("event");
+      setEntryTime((t) => t || nextRoundedHour());
+    }
+  }, [section]);
 
   useEffect(() => {
     if (focusAddTick > 0) {
@@ -553,42 +559,25 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
     e.preventDefault();
     const trimmed = title.trim();
     if (!trimmed) return;
-    if (kind === "event" && !entryTime.trim()) {
+    if (!entryTime.trim()) {
       setTimeError(true);
       return;
     }
     setTimeError(false);
     const startDate = entryDate || todayId;
-    const entry =
-      kind === "event"
-        ? {
-            id: uid("personal"),
-            title: trimmed,
-            date: startDate,
-            time: entryTime.trim(),
-            kind: "event",
-            note: "",
-            done: false,
-            createdAt: Date.now(),
-          }
-        : {
-            id: uid("personal"),
-            title: trimmed,
-            startDate,
-            date: startDate,
-            time: "",
-            kind: "todo",
-            note: "",
-            done: false,
-            createdAt: Date.now(),
-          };
+    const entry = {
+      id: uid("personal"),
+      title: trimmed,
+      date: startDate,
+      time: entryTime.trim(),
+      kind: "event",
+      note: "",
+      done: false,
+      createdAt: Date.now(),
+    };
     setPersonal((prev) => [...(Array.isArray(prev) ? prev : []), entry]);
     setTitle("");
-    if (kind === "event") {
-      selectDay(entry.date);
-    } else {
-      setEntryDate(todayId);
-    }
+    selectDay(entry.date);
     titleRef.current?.focus({ preventScroll: true });
   }
 
@@ -632,7 +621,9 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
 
       <div className="flex items-start justify-between gap-2">
         <div>
-          <h2 className="font-display text-lg font-bold text-ink">個人日程</h2>
+          <h2 className="font-display text-lg font-bold text-ink">
+            {section === "mine" ? "我的行程" : section === "shared" ? "共同 To-Do" : section === "daily" ? "每日習慣" : "個人"}
+          </h2>
           <p className="text-[11px] text-ink-faint">{activeView.hint}</p>
         </div>
         {section === "mine" && (
@@ -666,73 +657,38 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
 
       {section === "mine" && (
         <>
-      <div className="grid grid-cols-3 gap-1.5">
-        <div className="rounded-xl border border-jade/15 bg-jade-soft/40 px-2 py-2 text-center">
-          <p className="text-[10px] font-bold text-ink-faint">進行中待辦</p>
-          <p className="font-display text-lg font-bold text-jade-deep">{todayStats.activeTodos}</p>
-        </div>
+      <div className="grid grid-cols-2 gap-1.5">
         <div className="rounded-xl border border-sky/20 bg-sky/8 px-2 py-2 text-center">
-          <p className="text-[10px] font-bold text-ink-faint">今日日程</p>
+          <p className="text-[10px] font-bold text-ink-faint">今日行程</p>
           <p className="font-display text-lg font-bold text-ink">{todayStats.events}</p>
         </div>
-        <div className="rounded-xl border border-coral/25 bg-coral-soft/60 px-2 py-2 text-center">
-          <p className="text-[10px] font-bold text-ink-faint">逾週待辦</p>
-          <p className="font-display text-lg font-bold text-coral">{todayStats.highPriority}</p>
+        <div className="rounded-xl border border-jade/15 bg-jade-soft/40 px-2 py-2 text-center">
+          <p className="text-[10px] font-bold text-ink-faint">近 7 日行程</p>
+          <p className="font-display text-lg font-bold text-jade-deep">{todayStats.weekEvents}</p>
         </div>
       </div>
 
       <SectionCard
-        title={`新增${kindMeta.label}`}
-        hint={kind === "event" ? "指定幾時去做（必填時間）" : "設定開始日期 · 由嗰日開始計生效時長"}
+        title="新增行程"
+        hint="指定幾時去做（必填時間）"
       >
         <form ref={formRef} onSubmit={addItem} className="space-y-2 p-3">
-          <div className="grid grid-cols-2 gap-1.5">
-            {KINDS.map((k) => (
-              <button
-                key={k.id}
-                type="button"
-                onClick={() => selectKind(k.id)}
-                className={`min-h-9 rounded-xl border px-2 text-xs font-bold transition active:scale-[0.98] ${
-                  kind === k.id ? "badge-active border-transparent" : "border-jade/15 bg-mist/60 text-ink-soft"
-                }`}
-              >
-                {k.icon} {k.label}
-              </button>
-            ))}
-          </div>
+          <p className="rounded-xl border border-jade/15 bg-jade-soft/40 px-3 py-2 text-xs font-bold text-jade-deep">
+            📅 新增行程（有時間嘅日程）
+          </p>
 
           <input
             ref={titleRef}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder={kind === "event" ? "幾時做咩？例如：食飯、開會…" : "备忘：要做嘅事…"}
+            placeholder="幾時做咩？例如：食飯、開會、睇醫生…"
             className="h-10 w-full rounded-xl border border-jade/15 bg-mist px-3 text-sm outline-none ring-jade focus:ring-2"
           />
 
           <div>
-            <p className="mb-1 text-[10px] font-bold text-ink-faint">{kind === "event" ? "日程日期" : "開始日期"}</p>
-            {kind === "todo" && (
-              <div className="mb-1.5 flex gap-1">
-                {QUICK_START_DATES.map(({ label, offset }) => {
-                  const dateId = shiftDateId(todayId, offset);
-                  const active = entryDate === dateId;
-                  return (
-                    <button
-                      key={label}
-                      type="button"
-                      onClick={() => setEntryDate(dateId)}
-                      className={`min-h-7 flex-1 rounded-lg border text-[11px] font-bold active:scale-[0.98] ${
-                        active ? "border-jade bg-jade-soft/60 text-jade-deep" : "border-jade/15 bg-white text-ink-soft"
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-            {kind === "event" && (
-              <div className="mb-1.5 flex gap-1">
+            <p className="mb-1 text-[10px] font-bold text-ink-faint">行程日期</p>
+            
+            <div className="mb-1.5 flex gap-1">
                 {[
                   { label: "今日", offset: 0 },
                   { label: "明日", offset: 1 },
@@ -757,7 +713,6 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
                   );
                 })}
               </div>
-            )}
             <input
               type="date"
               value={entryDate}
@@ -769,8 +724,7 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
             />
           </div>
 
-          {kind === "event" && (
-            <div>
+          <div>
               <p className="mb-1 text-[10px] font-bold text-ink-faint">
                 時間 <span className="text-coral">*</span>
               </p>
@@ -809,25 +763,14 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
                 </div>
               </div>
             </div>
-          )}
 
           <button type="submit" className="h-10 w-full rounded-xl bg-jade text-sm font-bold text-white">
-            加入{kindMeta.label}
+            加入行程
           </button>
         </form>
       </SectionCard>
 
-      {(filterKind === "all" || filterKind === "todo") && (
-        <ActiveTodosPanel
-          items={items}
-          todayId={todayId}
-          showCompleted={showCompleted}
-          onToggle={toggleItem}
-          onRemove={removeItem}
-        />
-      )}
-
-      {(filterKind === "all" || filterKind === "event") && (
+{(true) && (
         <SevenDayTimetable
           horizon={sevenDayHorizon}
           items={items}
@@ -844,33 +787,7 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
         />
       )}
 
-      {filterKind === "todo" && (
-        <div className="flex justify-end gap-1">
-          {FILTERS.map((f) => (
-            <button
-              key={f.id}
-              type="button"
-              onClick={() => setFilterKind(f.id)}
-              className={`rounded-lg border px-2 py-1 text-[10px] font-bold active:scale-[0.98] ${
-                filterKind === f.id ? "border-jade bg-jade-soft/60 text-jade-deep" : "border-jade/15 bg-white text-ink-soft"
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
-          <button
-            type="button"
-            onClick={() => setShowCompleted((v) => !v)}
-            className={`rounded-lg border px-2 py-1 text-[10px] font-bold active:scale-[0.98] ${
-              showCompleted ? "border-jade bg-jade-soft/60 text-jade-deep" : "border-jade/15 bg-white text-ink-soft"
-            }`}
-          >
-            {showCompleted ? "隱藏完成" : "完成"}
-          </button>
-        </div>
-      )}
-
-      {calendarOpen && (
+{calendarOpen && (
         <PersonalCalendar
           year={viewMonth.year}
           month={viewMonth.month}
