@@ -77,11 +77,32 @@ export function payerLabel(payer) {
 
 export function resolvePayerFields(entry) {
   const presetIds = new Set(PAYER_PRESETS.map((item) => item.id));
-  const payer = entry?.payer || DEFAULT_PAYER_ID;
+  let payer = entry?.payer || DEFAULT_PAYER_ID;
+  if (payer === "cash-pool" || payer === "cash") {
+    payer = DEFAULT_PAYER_ID;
+  }
   if (presetIds.has(payer)) {
     return { payer, customPayer: "" };
   }
   return { payer, customPayer: payer };
+}
+
+/** 記帳時：現金都歸 ppg／mo，唔再用「無人」共用袋 */
+export function resolvePayerForSave(payer, customPayer = "") {
+  const raw = customPayer.trim() || payer || DEFAULT_PAYER_ID;
+  if (raw === "cash-pool" || raw === "cash") return DEFAULT_PAYER_ID;
+  return raw;
+}
+
+/** 舊資料：payer 誤設為 cash-pool／cash → 改為 ppg + 現金支付 */
+export function normalizeExpensePayer(entry) {
+  if (!entry || typeof entry !== "object") return entry;
+  if (entry.payer !== "cash-pool" && entry.payer !== "cash") return entry;
+  return {
+    ...entry,
+    payer: DEFAULT_PAYER_ID,
+    paymentMethod: normalizePaymentMethod(entry.paymentMethod) || "cash",
+  };
 }
 
 export function lastPaymentDefaults(expenses) {
@@ -98,10 +119,15 @@ export function lastPaymentDefaults(expenses) {
     if (raw) {
       const saved = JSON.parse(raw);
       if (saved?.payer) {
+        const payer =
+          saved.payer === "cash-pool" || saved.payer === "cash" ? DEFAULT_PAYER_ID : saved.payer;
         return {
-          payer: saved.payer,
+          payer,
           customPayer: saved.customPayer || "",
-          paymentMethod: normalizePaymentMethod(saved.paymentMethod),
+          paymentMethod:
+            saved.payer === "cash-pool" || saved.payer === "cash"
+              ? "cash"
+              : normalizePaymentMethod(saved.paymentMethod),
         };
       }
     }
@@ -133,10 +159,10 @@ export function recentCustomPayers(expenses, limit = 4) {
 
 export function aggregateByPayer(expenses) {
   const map = {};
-  const order = ["ppg", "mo", "cash-pool", "shared"];
+  const order = ["ppg", "mo", "shared"];
   expenses.forEach((entry) => {
-    let key = entry.payer || DEFAULT_PAYER_ID;
-    if (key === "cash") key = "cash-pool";
+    const normalized = normalizeExpensePayer(entry);
+    let key = normalized.payer || DEFAULT_PAYER_ID;
     if (!map[key]) {
       map[key] = {
         key,
@@ -150,9 +176,9 @@ export function aggregateByPayer(expenses) {
         },
       };
     }
-    const amount = Number(entry.amount) || 0;
-    const hkd = Number(entry.baseAmount) || 0;
-    const method = normalizePaymentMethod(entry.paymentMethod);
+    const amount = Number(normalized.amount) || 0;
+    const hkd = Number(normalized.baseAmount) || 0;
+    const method = normalizePaymentMethod(normalized.paymentMethod);
     map[key].count += 1;
     map[key].amount += amount;
     map[key].hkd += hkd;
@@ -196,15 +222,12 @@ export function expenseMetaLine(entry) {
 }
 
 export function expenseEntryTags(entry) {
+  const normalized = normalizeExpensePayer(entry);
   const tags = [];
-  const payer = payerLabel(entry.payer);
-  const payment = paymentMethodLabel(entry.paymentMethod);
+  const payer = payerLabel(normalized.payer);
+  const payment = paymentMethodLabel(normalized.paymentMethod);
   if (payer) tags.push({ kind: "payer", label: payer });
-  // 共用現金袋已經用「現金」做付款人，唔使再重複顯示支付方式「現金」
-  const isCashPool = entry.payer === "cash-pool" || entry.payer === "cash";
-  if (payment && !(isCashPool && normalizePaymentMethod(entry.paymentMethod) === "cash")) {
-    tags.push({ kind: "payment", label: payment });
-  }
+  if (payment) tags.push({ kind: "payment", label: payment });
   return tags;
 }
 

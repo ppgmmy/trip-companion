@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { DEFAULT_PAYER_ID, DEFAULT_PAYMENT_METHOD, EXPENSE_CATEGORIES, RATE_TTL_MS, aggregateByPayer, aggregateByPaymentMethod, expenseEntryTags, formatHkd, formatMoney, lastPaymentDefaults, normalizePaymentMethod, payerLabel, paymentMethodLabel, recentCustomPayers, resolvePayerFields, savePayerPrefs, toDateId, tripDays } from "../data";
+import { DEFAULT_PAYER_ID, DEFAULT_PAYMENT_METHOD, EXPENSE_CATEGORIES, RATE_TTL_MS, aggregateByPayer, aggregateByPaymentMethod, expenseEntryTags, formatHkd, formatMoney, lastPaymentDefaults, normalizeExpensePayer, normalizePaymentMethod, payerLabel, paymentMethodLabel, recentCustomPayers, resolvePayerFields, resolvePayerForSave, savePayerPrefs, toDateId, tripDays } from "../data";
 import { isFeatureEnabled } from "../data/featureFlags";
 import { amountExpressionPreview, frequentAmounts, parseAmountExpression, suggestCategoryByHour } from "../utils/expenseInput";
 import { BarChart, DoughnutChart } from "./Charts";
@@ -173,7 +173,8 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
     }
     if (filterPayer !== "all") {
       list = list.filter((e) => {
-        const key = e.payer === "cash" ? "cash-pool" : (e.payer || DEFAULT_PAYER_ID);
+        const normalized = normalizeExpensePayer(e);
+        const key = normalized.payer || DEFAULT_PAYER_ID;
         return key === filterPayer;
       });
     }
@@ -257,7 +258,7 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
     const value = parseAmountExpression(amount);
     if (!Number.isFinite(value) || value <= 0) return;
     const date = entryDate || toDateId(new Date());
-    const resolvedPayer = customPayer.trim() || payer || DEFAULT_PAYER_ID;
+    const resolvedPayer = resolvePayerForSave(payer, customPayer);
     const before = expenses;
 
     if (editingId) {

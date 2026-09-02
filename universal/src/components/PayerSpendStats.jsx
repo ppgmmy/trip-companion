@@ -9,7 +9,7 @@ function paymentBits(row, currency) {
   return parts;
 }
 
-/** 簡潔：ppg／mo／現金／大家分攤；個人再拆卡／現金 */
+/** 簡潔：ppg／mo／大家分攤；再拆卡／現金 */
 export default function PayerSpendStats({ trip, payerTotals, onJumpToPayer }) {
   if (!payerTotals?.length) return null;
 
@@ -20,7 +20,7 @@ export default function PayerSpendStats({ trip, payerTotals, onJumpToPayer }) {
       </p>
       <ul className="mt-1.5 space-y-1">
         {payerTotals.map((row) => {
-          const bits = row.key === "cash-pool" || row.key === "cash" ? [] : paymentBits(row, trip.targetCurrency);
+          const bits = paymentBits(row, trip.targetCurrency);
           const inner = (
             <>
               <span className="font-bold text-ink">{row.label}</span>
@@ -62,7 +62,7 @@ export function payerSpendShareText(trip, payerTotals) {
   if (!payerTotals?.length) return "";
   const lines = [`📊 ${trip.flag || ""} ${trip.city} · 邊個用咗幾多`.trim()];
   payerTotals.forEach((row) => {
-    const bits = row.key === "cash-pool" || row.key === "cash" ? [] : paymentBits(row, trip.targetCurrency);
+    const bits = paymentBits(row, trip.targetCurrency);
     lines.push(
       `${row.label}：${formatMoney(row.amount, trip.targetCurrency)}（${formatHkd(row.hkd)}，${row.count} 筆）` +
         (bits.length ? `｜${bits.join(" · ")}` : ""),

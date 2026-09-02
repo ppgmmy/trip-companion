@@ -1679,7 +1679,7 @@ export function PayerPaymentBreakdown({ expenses, payerTotals, paymentTotals, to
       <AnalysisSectionTitle
         eyebrow="02b · 邊個用咗幾多"
         title="付款人同支付方式"
-        hint={`${payerHint}；${paymentHint}。「現金」唔屬 ppg／mo。`}
+        hint={`${payerHint}；${paymentHint}。現金都計入 ppg／mo。`}
       />
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="expense-section-card">

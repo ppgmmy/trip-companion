@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { REGISTRY_KEYS, tripKey, TRIP_SECTIONS } from "./storage";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 import { useExchangeRate } from "./hooks/useExchangeRate";
-import { uid, toDateId } from "./data";
+import { uid, toDateId, normalizeExpensePayer } from "./data";
 import TripSwitcher from "./components/TripSwitcher";
 import TripForm from "./components/TripForm";
 import BottomNav from "./components/BottomNav";
@@ -76,7 +76,7 @@ export default function App() {
     migrate: (v) => (v && typeof v === "object" && !Array.isArray(v) ? v : {}),
   });
   const [expenses, setExpenses] = useLocalStorage(tripId ? tripKey(tripId, TRIP_SECTIONS.expenses) : "universal_disabled", [], {
-    migrate: (v) => (Array.isArray(v) ? v : []),
+    migrate: (v) => (Array.isArray(v) ? v.map(normalizeExpensePayer) : []),
   });
   const [checklist, setChecklist] = useLocalStorage(tripId ? tripKey(tripId, TRIP_SECTIONS.checklist) : "universal_disabled", {}, {
     migrate: (v) => (v && typeof v === "object" && !Array.isArray(v) ? v : {}),
@@ -121,6 +121,19 @@ export default function App() {
       if (merged.length > 0) setPersonal(merged);
     } catch {}
   }, [personal.length, setPersonal, trips]);
+
+  // 舊版「現金」付款人（cash-pool）寫入 storage 後持久化為 ppg + 現金
+  useEffect(() => {
+    if (!tripId) return;
+    const key = tripKey(tripId, TRIP_SECTIONS.expenses);
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed) || !parsed.some((e) => e.payer === "cash-pool" || e.payer === "cash")) return;
+      setExpenses(parsed.map(normalizeExpensePayer));
+    } catch {}
+  }, [tripId, setExpenses]);
 
   function createTrip(trip) {
     setTrips((prev) => [...prev, trip]);

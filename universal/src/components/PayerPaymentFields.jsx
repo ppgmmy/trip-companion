@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { DEFAULT_PAYER_ID, PAYER_PRESETS, PAYMENT_METHODS, payerLabel } from "../data";
 
-/** 一撳付款人：ppg / mo / 現金 */
-const QUICK_PAYER_IDS = ["ppg", "mo", "cash-pool"];
-const CASH_POOL_ID = "cash-pool";
+/** 付款人：ppg / mo（現金都計入邊個人用） */
+const QUICK_PAYER_IDS = ["ppg", "mo"];
 
 export default function PayerPaymentFields({
   payer,
@@ -17,25 +16,13 @@ export default function PayerPaymentFields({
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const presetIds = new Set(PAYER_PRESETS.map((item) => item.id));
-  const activePreset = presetIds.has(payer) && !customPayer.trim() ? payer : "";
+  const activePreset =
+    presetIds.has(payer) && payer !== "cash-pool" && payer !== "cash" && !customPayer.trim() ? payer : "";
   const extraRecentPayers = recentPayers.filter((name) => !presetIds.has(name));
-  const isCashPool = activePreset === CASH_POOL_ID || payer === CASH_POOL_ID || payer === "cash";
 
   function selectPreset(id) {
     setPayer(id);
     setCustomPayer("");
-    if (id === CASH_POOL_ID) {
-      setPaymentMethod("cash");
-    }
-  }
-
-  function selectPayment(methodId) {
-    setPaymentMethod(methodId);
-    // 揀卡／個人現金時，改返 ppg
-    if (isCashPool) {
-      setPayer(DEFAULT_PAYER_ID);
-      setCustomPayer("");
-    }
   }
 
   const chipClass = (active) =>
@@ -45,7 +32,7 @@ export default function PayerPaymentFields({
 
   return (
     <div className="space-y-1.5">
-      <div className="grid grid-cols-3 gap-1.5">
+      <div className="grid grid-cols-2 gap-1.5">
         {QUICK_PAYER_IDS.map((id) => {
           const item = PAYER_PRESETS.find((p) => p.id === id);
           return (
@@ -56,23 +43,21 @@ export default function PayerPaymentFields({
         })}
       </div>
 
-      {!isCashPool && (
-        <div className="grid grid-cols-2 gap-1.5">
-          {PAYMENT_METHODS.map((method) => (
-            <button
-              key={method.id}
-              type="button"
-              onClick={() => selectPayment(method.id)}
-              className={chipClass(paymentMethod === method.id)}
-            >
-              {method.label}
-            </button>
-          ))}
-        </div>
-      )}
+      <div className="grid grid-cols-2 gap-1.5">
+        {PAYMENT_METHODS.map((method) => (
+          <button
+            key={method.id}
+            type="button"
+            onClick={() => setPaymentMethod(method.id)}
+            className={chipClass(paymentMethod === method.id)}
+          >
+            {method.label}
+          </button>
+        ))}
+      </div>
 
       <p className="px-0.5 text-[10px] leading-snug text-ink-faint">
-        {isCashPool ? "「現金」唔記入 ppg／mo" : "ppg／mo 可揀信用卡或現金"}
+        現金都會計入 ppg／mo · 邊個用咗幾多就睇付款人
       </p>
 
       <button
@@ -82,15 +67,16 @@ export default function PayerPaymentFields({
         aria-expanded={open}
       >
         <span className="text-[11px] font-semibold text-ink-soft">
-          其他：{customPayer.trim() || payerLabel(payer) || "ppg"}
-          {!isCashPool ? ` · ${paymentMethod === "card" ? "信用卡" : "現金"}` : ""}
+          其他：{customPayer.trim() || payerLabel(payer === "cash-pool" || payer === "cash" ? DEFAULT_PAYER_ID : payer) || "ppg"}
+          {" · "}
+          {paymentMethod === "card" ? "信用卡" : "現金"}
         </span>
         <span className="text-[10px] font-bold text-ink-faint">{open ? "收起" : "更多"}</span>
       </button>
 
       {open && (
         <div className="flex flex-wrap gap-1.5 rounded-xl border border-jade/10 bg-mist/30 p-2">
-          {PAYER_PRESETS.filter((item) => !QUICK_PAYER_IDS.includes(item.id)).map((item) => (
+          {PAYER_PRESETS.filter((item) => !QUICK_PAYER_IDS.includes(item.id) && item.id !== "cash-pool").map((item) => (
             <button key={item.id} type="button" onClick={() => selectPreset(item.id)} className={chipClass(activePreset === item.id)}>
               {item.label}
             </button>
