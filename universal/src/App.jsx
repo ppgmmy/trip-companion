@@ -217,7 +217,7 @@ export default function App() {
   }
 
   return (
-    <div className="bg-travel min-h-dvh w-full overflow-x-hidden">
+    <div id="tc-app" className="bg-travel min-h-dvh w-full overflow-x-hidden">
       <main className="safe-top mx-auto w-full max-w-lg box-border px-4 pb-32">
         {activeTrip && (
           <div className="mb-4 space-y-2">

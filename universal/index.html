@@ -5,18 +5,65 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#0d9488" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="mobile-web-app-capable" content="yes" />
     <link rel="manifest" href="/universal/manifest.webmanifest" />
     <link rel="apple-touch-icon" href="/icon-512.png" />
     <title>全球萬能旅行 Companion · Trip Companion</title>
+    <style>
+      html, body { margin: 0; min-height: 100%; background: #f2f8f6; color: #12211f; }
+      #root { min-height: 100dvh; }
+      .tc-boot {
+        min-height: 100dvh; display: flex; flex-direction: column; align-items: center;
+        justify-content: center; padding: 1.5rem; text-align: center;
+        font-family: "Figtree", system-ui, -apple-system, sans-serif;
+      }
+      .tc-boot h1 { font-size: 1.15rem; margin: 0 0 0.4rem; }
+      .tc-boot p { margin: 0; font-size: 0.85rem; color: #5b6b68; line-height: 1.5; }
+      .tc-boot button {
+        margin-top: 1rem; min-height: 2.75rem; width: min(100%, 16rem); border: 0;
+        border-radius: 1rem; background: #0d9488; color: #fff; font-weight: 700; font-size: 0.95rem;
+      }
+    </style>
+    <script>
+      // One-shot bust for stuck mobile PWAs holding old SW caches.
+      (function () {
+        var EPOCH = "9";
+        var KEY = "tc_sw_epoch";
+        try {
+          if (localStorage.getItem(KEY) === EPOCH) return;
+          localStorage.setItem(KEY, EPOCH);
+        } catch (e) {
+          return;
+        }
+        var done = function () {
+          location.reload();
+        };
+        var clear = async function () {
+          try {
+            if ("serviceWorker" in navigator) {
+              var regs = await navigator.serviceWorker.getRegistrations();
+              await Promise.all(regs.map(function (r) { return r.unregister(); }));
+            }
+            if (typeof caches !== "undefined") {
+              var keys = await caches.keys();
+              await Promise.all(keys.map(function (k) { return caches.delete(k); }));
+            }
+          } catch (e) {}
+          done();
+        };
+        clear();
+      })();
+    </script>
     <script>
       if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker.register("/sw.js").then((reg) => {
-            try {
-              reg.update();
-            } catch {}
-          }).catch(() => {});
+        window.addEventListener("load", function () {
+          navigator.serviceWorker
+            .register("/sw.js")
+            .then(function (reg) {
+              try { reg.update(); } catch (e) {}
+            })
+            .catch(function () {});
         });
       }
     </script>
@@ -29,35 +76,52 @@
     />
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="tc-boot" id="tc-boot">
+        <h1>Trip Companion</h1>
+        <p>載入中…</p>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
     <script>
-      // If React never mounts (stale SW / broken asset), show a recovery UI instead of endless white.
       (function () {
-        var booted = false;
         var root = document.getElementById("root");
         if (!root) return;
-        var obs = new MutationObserver(function () {
-          if (root.childNodes.length > 0) {
+        var booted = false;
+        var markBooted = function () {
+          // React mounted real UI (boot stub replaced or expanded beyond stub-only).
+          if (root.querySelector("[data-reactroot], .bg-travel, main, #tc-app")) {
             booted = true;
-            obs.disconnect();
+            return true;
           }
+          // createRoot replaces children — if boot node gone, React took over.
+          if (!document.getElementById("tc-boot") && root.childNodes.length > 0) {
+            booted = true;
+            return true;
+          }
+          return false;
+        };
+        var obs = new MutationObserver(function () {
+          if (markBooted()) obs.disconnect();
         });
-        obs.observe(root, { childList: true });
-        setTimeout(async function () {
-          if (booted || root.childNodes.length > 0) return;
+        obs.observe(root, { childList: true, subtree: true });
+        setTimeout(function () {
+          if (booted || markBooted()) {
+            obs.disconnect();
+            return;
+          }
           obs.disconnect();
           root.innerHTML =
-            '<div style="min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:1.5rem;font-family:system-ui,sans-serif;background:#f7faf9;color:#12211f;text-align:center">' +
-            '<div style="max-width:22rem">' +
-            "<h1 style=\"font-size:1.25rem;margin:0 0 .5rem\">載入唔到</h1>" +
-            "<p style=\"font-size:.875rem;line-height:1.5;color:#5b6b68;margin:0 0 1rem\">可能係舊版快取。請撳下面清快取再開。</p>" +
-            '<button id="tc-hard-reset" style="min-height:2.75rem;width:100%;border:0;border-radius:1rem;background:#0d9488;color:#fff;font-weight:700">清除快取後重開</button>' +
-            "</div></div>";
+            '<div class="tc-boot">' +
+            "<h1>載入唔到</h1>" +
+            "<p>手機 App 多數係舊快取。撳下面清走再開。</p>" +
+            '<button type="button" id="tc-hard-reset">清除快取後重開</button>' +
+            "</div>";
           var btn = document.getElementById("tc-hard-reset");
           if (!btn) return;
           btn.onclick = async function () {
             try {
+              try { localStorage.removeItem("tc_sw_epoch"); } catch (e) {}
               if ("serviceWorker" in navigator) {
                 var regs = await navigator.serviceWorker.getRegistrations();
                 await Promise.all(regs.map(function (r) { return r.unregister(); }));
@@ -69,9 +133,8 @@
             } catch (e) {}
             location.reload();
           };
-        }, 8000);
+        }, 3500);
       })();
     </script>
   </body>
 </html>
-
