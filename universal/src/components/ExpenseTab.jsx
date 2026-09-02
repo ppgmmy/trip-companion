@@ -53,12 +53,11 @@ function formatDayHeading(dateId) {
   return base;
 }
 
-export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxStatus, onRefreshRate, onApplyManualRate }) {
+export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxStatus, onRefreshRate }) {
   const [categoryId, setCategoryId] = useState(() => suggestCategoryByHour());
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
   const [entryDate, setEntryDate] = useState(() => toDateId(new Date()));
-  const [manualRate, setManualRate] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
   const [filterPayer, setFilterPayer] = useState("all");
   const [filterPaymentMethod, setFilterPaymentMethod] = useState("all");
@@ -72,7 +71,6 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
   const [payer, setPayer] = useState(() => lastPaymentDefaults(expenses).payer);
   const [customPayer, setCustomPayer] = useState(() => lastPaymentDefaults(expenses).customPayer);
   const [paymentMethod, setPaymentMethod] = useState(() => lastPaymentDefaults(expenses).paymentMethod);
-  const [fxOpen, setFxOpen] = useState(false);
   const [toast, setToast] = useState(null);
   const [listTodayOnly, setListTodayOnly] = useState(expenseUi.listTodayOnly !== false);
   const undoRef = useRef(null);
@@ -367,16 +365,14 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
     idle: "同步中…",
     loading: "更新中…",
     live: "即時匯率",
-    cached: rateState?.source === "manual" ? "手動匯率" : "使用快取",
+    cached: "使用快取",
     fallback: "離線預設",
   }[fxStatus] || "—";
 
   const rateUpdatedAt = rateState?.lastUpdated;
   const rateMeta = rateUpdatedAt
-    ? rateState?.source === "manual"
-      ? `手動設定於 ${formatRateWhen(rateUpdatedAt)} · 每 12 小時自動更新 · 亦可隨時改線上匯率`
-      : `線上更新 ${formatRateWhen(rateUpdatedAt)} · 下次約 ${formatRateWhen(rateUpdatedAt + RATE_TTL_MS)} · 亦可手動更新`
-    : "每 12 小時自動更新 · 亦可手動更新";
+    ? `線上更新 ${formatRateWhen(rateUpdatedAt)} · 下次約 ${formatRateWhen(rateUpdatedAt + RATE_TTL_MS)} · 每 12 小時自動更新`
+    : "每 12 小時自動更新";
 
   const doughnutCenter = topCat
     ? { label: "最多", value: topCat.label }
@@ -616,6 +612,8 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
               rate={rate}
               fxLabel={statusLabel}
               fxMeta={rateMeta}
+              onRefreshRate={onRefreshRate}
+              fxStatus={fxStatus}
             />
 
             <PayerSpendStats trip={trip} payerTotals={payerTotals} onJumpToPayer={jumpToLedgerPayer} />
@@ -723,53 +721,7 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
                 <button type="submit" className="min-h-10 flex-1 rounded-xl bg-jade text-sm font-bold text-white shadow-[var(--shadow-soft)] transition active:scale-[0.98]">
                   {editingId ? "儲存" : "記入"}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setFxOpen((v) => !v)}
-                  className="min-h-10 shrink-0 rounded-xl border border-jade/15 bg-white px-3 text-xs font-bold text-ink-soft"
-                  aria-expanded={fxOpen}
-                >
-                  匯率
-                </button>
               </div>
-
-              {fxOpen && (
-                <div className="space-y-2 rounded-xl border border-jade/10 bg-mist/50 p-2">
-                  <p className="text-[11px] leading-relaxed text-ink-soft">
-                    {rateMeta}
-                    {fxStatus === "loading" ? " · 正在更新匯率…" : ""}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={onRefreshRate}
-                    disabled={fxStatus === "loading"}
-                    className="min-h-9 w-full rounded-xl bg-jade-soft px-3 text-xs font-bold text-jade-deep disabled:opacity-60"
-                  >
-                    立即更新匯率
-                  </button>
-                  <div className="flex gap-1.5">
-                    <input
-                      value={manualRate}
-                      onChange={(e) => setManualRate(e.target.value)}
-                      type="number"
-                      step="0.0001"
-                      min="0"
-                      placeholder={`1 ${trip.targetCurrency} = ? HKD`}
-                      className="h-9 min-w-0 flex-1 rounded-xl border border-jade/15 bg-white px-2 text-sm outline-none ring-jade focus:ring-2"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        onApplyManualRate(Number(manualRate));
-                        setManualRate("");
-                      }}
-                      className="h-9 shrink-0 rounded-xl border border-jade/15 bg-white px-3 text-xs font-bold text-ink"
-                    >
-                      手動套用
-                    </button>
-                  </div>
-                </div>
-              )}
             </form>
 
             <ExpenseListExtras

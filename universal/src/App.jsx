@@ -94,7 +94,7 @@ export default function App() {
     migrate: (v) => (v && typeof v === "object" ? v : null),
   });
 
-  const { status: fxStatus, refresh: refreshRate, applyManual: applyManualRate } = useExchangeRate(activeTrip, rateState, setRateState);
+  const { status: fxStatus, refresh: refreshRate } = useExchangeRate(activeTrip, rateState, setRateState);
 
   const personalPending = useMemo(() => {
     const todayId = toDateId(new Date());
@@ -185,7 +185,6 @@ export default function App() {
                     rateState={rateState}
                     fxStatus={fxStatus}
                     onRefreshRate={refreshRate}
-                    onApplyManualRate={applyManualRate}
                   />
                 )}
                 {activeTab === "tools" && (

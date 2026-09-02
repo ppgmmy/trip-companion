@@ -70,17 +70,5 @@ export function useExchangeRate(trip, rateState, setRateState) {
     await sync({ force: true });
   }
 
-  function applyManual(perUnitBase) {
-    const rate = Number(perUnitBase);
-    if (!Number.isFinite(rate) || rate <= 0) return;
-    setRateState({
-      rate,
-      source: "manual",
-      lastUpdated: Date.now(),
-      currency: trip?.targetCurrency,
-    });
-    setStatus("cached");
-  }
-
-  return { status, refresh, applyManual };
+  return { status, refresh };
 }

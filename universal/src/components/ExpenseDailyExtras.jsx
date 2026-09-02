@@ -886,10 +886,11 @@ export function AnalysisStory({ trip, expenses, days, totalSpent, budget, elapse
   );
 }
 
-export function LedgerSummaryBar({ trip, expenses, visibleCount, todaySpent, totalSpent, totalHkd, rate, fxLabel, fxMeta }) {
+export function LedgerSummaryBar({ trip, expenses, visibleCount, todaySpent, totalSpent, totalHkd, rate, fxLabel, fxMeta, onRefreshRate, fxStatus }) {
+  const refreshing = fxStatus === "loading";
   return (
-    <div className="space-y-1">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl bg-jade-soft/40 px-3 py-2 text-[11px] font-semibold text-ink-soft">
+    <div className="space-y-1.5 rounded-xl bg-jade-soft/40 px-3 py-2">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-semibold text-ink-soft">
         <span>
           今日 <strong className="text-jade-deep">{formatMoney(todaySpent, trip.targetCurrency)}</strong>
         </span>
@@ -911,7 +912,17 @@ export function LedgerSummaryBar({ trip, expenses, visibleCount, todaySpent, tot
           </>
         )}
       </div>
-      {fxMeta && <p className="px-1 text-[10px] font-medium text-ink-faint">{fxMeta}</p>}
+      <div className="flex items-center justify-between gap-2">
+        {fxMeta ? <p className="min-w-0 flex-1 text-[10px] font-medium leading-relaxed text-ink-faint">{fxMeta}</p> : <span />}
+        <button
+          type="button"
+          onClick={onRefreshRate}
+          disabled={refreshing}
+          className="shrink-0 rounded-full border border-jade/20 bg-white px-3 py-1.5 text-[11px] font-bold text-jade-deep transition active:scale-95 disabled:opacity-60"
+        >
+          {refreshing ? "更新中…" : "更新匯率"}
+        </button>
+      </div>
     </div>
   );
 }
