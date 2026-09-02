@@ -1,11 +1,11 @@
 import { useRef, useState } from "react";
-import { DEFAULT_PAYER_ID, DEFAULT_PAYMENT_METHOD, EXPENSE_CATEGORIES, formatHkd, formatMoney, lastPaymentDefaults, normalizePaymentMethod, recentCustomPayers, resolvePayerForSave, savePayerPrefs, toDateId } from "../data";
+import { DEFAULT_PAYER_ID, DEFAULT_PAYMENT_METHOD, EXPENSE_CATEGORIES, formatHkd, formatMoney, lastExpensePrefs, lastPaymentDefaults, normalizePaymentMethod, recentCustomPayers, resolvePayerForSave, saveExpensePrefs, savePayerPrefs, toDateId } from "../data";
 import { amountExpressionPreview, frequentAmounts, parseAmountExpression, suggestCategoryByHour } from "../utils/expenseInput";
 import PayerPaymentFields from "./PayerPaymentFields";
 
 export default function QuickAddExpense({ trip, rate, expenses = [], onSave, onClose }) {
   const defaults = lastPaymentDefaults(expenses);
-  const [categoryId, setCategoryId] = useState(() => suggestCategoryByHour());
+  const [categoryId, setCategoryId] = useState(() => lastExpensePrefs().categoryId || suggestCategoryByHour());
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
   const [entryDate, setEntryDate] = useState(() => toDateId(new Date()));
@@ -39,6 +39,7 @@ export default function QuickAddExpense({ trip, rate, expenses = [], onSave, onC
       customPayer: customPayer.trim(),
       paymentMethod,
     });
+    saveExpensePrefs({ categoryId });
     setAmount("");
     setNote("");
     window.requestAnimationFrame(() => amountRef.current?.focus({ preventScroll: true }));

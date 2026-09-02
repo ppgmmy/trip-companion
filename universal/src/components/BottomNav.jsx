@@ -18,7 +18,7 @@ const TRAVEL_NAV = [
   )},
 ];
 
-export default function BottomNav({ travelActive, onTravelSelect, onLongPressExpenses }) {
+export default function BottomNav({ travelActive, onTravelSelect, onLongPressExpenses, expenseBadge = 0 }) {
   const pressTimer = useRef(null);
   const longPressFired = useRef(false);
 
@@ -56,6 +56,7 @@ export default function BottomNav({ travelActive, onTravelSelect, onLongPressExp
           {TRAVEL_NAV.map((item) => {
             const isActive = travelActive === item.id;
             const useLongPress = item.id === "expenses" && onLongPressExpenses;
+            const badge = item.id === "expenses" ? expenseBadge : 0;
             return (
               <button
                 key={item.id}
@@ -65,10 +66,18 @@ export default function BottomNav({ travelActive, onTravelSelect, onLongPressExp
                 onPointerUp={useLongPress ? () => handleExpensePointerUp(item) : undefined}
                 onPointerLeave={useLongPress ? clearPressTimer : undefined}
                 onPointerCancel={useLongPress ? clearPressTimer : undefined}
-                className={`nav-btn flex min-h-12 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl text-[11px] font-semibold transition ${isActive ? "is-active" : "text-ink-faint"}`}
+                className={`nav-btn relative flex min-h-12 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl text-[11px] font-semibold transition ${isActive ? "is-active" : "text-ink-faint"}`}
               >
                 <span className="nav-icon flex h-8 w-12 items-center justify-center rounded-xl transition">{item.icon(isActive)}</span>
                 {item.label}
+                {badge > 0 && (
+                  <span className="absolute right-1 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-coral px-1 text-[9px] font-bold text-white">
+                    {badge > 9 ? "9+" : badge}
+                  </span>
+                )}
+                {badge === -1 && (
+                  <span className="absolute right-2 top-1 h-2 w-2 rounded-full bg-coral" aria-label="今日尚未記帳" />
+                )}
               </button>
             );
           })}

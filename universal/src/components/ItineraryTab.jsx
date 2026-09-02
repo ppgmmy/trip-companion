@@ -7,6 +7,8 @@ import {
   slotsToItineraryItems,
 } from "../data/itineraryGuide";
 import { toDateId } from "../data";
+import { useLocalStorage } from "../hooks/useLocalStorage";
+import { tripKey, TRIP_SECTIONS } from "../storage";
 import TripMap from "./TripMap";
 
 const KIND_LABEL = { food: "食", spot: "景點" };
@@ -19,7 +21,11 @@ export { buildDays } from "./itineraryDays";
 
 export default function ItineraryTab({ trip, itinerary, setItinerary }) {
   const mapRef = useRef(null);
-  const [dayId, setDayId] = useState(null);
+  const todayId = toDateId(new Date());
+  const [itineraryUi, setItineraryUi] = useLocalStorage(tripKey(trip.id, TRIP_SECTIONS.itineraryUi), { dayId: null }, {
+    migrate: (v) => (v && typeof v === "object" ? v : { dayId: null }),
+  });
+  const [dayId, setDayId] = useState(itineraryUi.dayId);
   const [selectedMarkerId, setSelectedMarkerId] = useState(null);
   const [note, setNote] = useState("");
   const [time, setTime] = useState("10:00");
@@ -45,17 +51,8 @@ export default function ItineraryTab({ trip, itinerary, setItinerary }) {
   );
 
   useEffect(() => {
-    setSelectedMarkerId(null);
-  }, [activeDayId]);
-
-  useEffect(() => {
-    if (mapMarkers.length > 0 && !selectedMarkerId) {
-      setSelectedMarkerId(mapMarkers[0].id);
-    }
-  }, [mapMarkers, selectedMarkerId]);
-
-  const userItems = itinerary[activeDay?.id] || [];
-  const hasSuggestion = (dayPlan?.slots?.length || 0) > 0;
+    if (dayId) setItineraryUi((prev) => ({ ...prev, dayId }));
+  }, [dayId, setItineraryUi]);
 
   useEffect(() => {
     if (dayId || !days.length) return;
@@ -128,23 +125,34 @@ export default function ItineraryTab({ trip, itinerary, setItinerary }) {
         heightClass="h-56 sm:h-64"
       />
 
-      <div className="scroll-thin -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5">
-        {days.map((d) => {
-          const active = d.id === activeDayId;
-          return (
-            <button
-              key={d.id}
-              type="button"
-              onClick={() => setDayId(d.id)}
-              className={`shrink-0 rounded-2xl border px-3 py-2 text-left transition active:scale-[0.98] ${
-                active ? "border-jade bg-jade text-white shadow-[var(--shadow-soft)]" : "border-jade/15 bg-white/85 text-ink-soft"
-              }`}
-            >
-              <p className="text-[10px] font-bold opacity-80">Day {d.index}</p>
-              <p className={`text-xs font-bold ${active ? "text-white" : "text-ink"}`}>{d.dateLabel}</p>
-            </button>
-          );
-        })}
+      <div className="flex items-center gap-2">
+        <div className="scroll-thin -mx-1 flex flex-1 gap-1.5 overflow-x-auto px-1 pb-0.5">
+          {days.map((d) => {
+            const active = d.id === activeDayId;
+            return (
+              <button
+                key={d.id}
+                type="button"
+                onClick={() => setDayId(d.id)}
+                className={`shrink-0 rounded-2xl border px-3 py-2 text-left transition active:scale-[0.98] ${
+                  active ? "border-jade bg-jade text-white shadow-[var(--shadow-soft)]" : "border-jade/15 bg-white/85 text-ink-soft"
+                }`}
+              >
+                <p className="text-[10px] font-bold opacity-80">Day {d.index}</p>
+                <p className={`text-xs font-bold ${active ? "text-white" : "text-ink"}`}>{d.dateLabel}</p>
+              </button>
+            );
+          })}
+        </div>
+        {activeDayId !== todayId && days.some((d) => d.id === todayId) && (
+          <button
+            type="button"
+            onClick={() => setDayId(todayId)}
+            className="shrink-0 rounded-xl border border-jade/20 bg-jade-soft px-2.5 py-2 text-[10px] font-bold text-jade-deep"
+          >
+            今日
+          </button>
+        )}
       </div>
 
       {dayPlan && (

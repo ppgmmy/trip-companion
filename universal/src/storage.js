@@ -3,9 +3,12 @@ export const REGISTRY_KEYS = {
   trips: "universal_trips",
   active: "universal_active_trip",
   personal: "universal_personal",
+  personalUi: "universal_personal_ui",
   appMode: "universal_app_mode",
   activeTab: "universal_active_tab",
+  tripTabs: "universal_trip_tabs",
   expenseUi: "universal_expense_ui",
+  appHints: "universal_app_hints",
 };
 
 /** Per-trip data namespace — isolated so code updates never wipe another trip. */
@@ -22,4 +25,5 @@ export const TRIP_SECTIONS = {
   feedback: "feedback",
   adapt: "adapt",
   personal: "personal",
+  itineraryUi: "itinerary_ui",
 };

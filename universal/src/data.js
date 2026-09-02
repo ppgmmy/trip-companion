@@ -144,6 +144,30 @@ export function savePayerPrefs({ payer, customPayer, paymentMethod }) {
   } catch {}
 }
 
+export function saveExpensePrefs({ categoryId }) {
+  try {
+    const raw = localStorage.getItem("universal_last_expense_prefs");
+    const prev = raw ? JSON.parse(raw) : {};
+    localStorage.setItem(
+      "universal_last_expense_prefs",
+      JSON.stringify({ ...prev, categoryId: categoryId || prev.categoryId }),
+    );
+  } catch {}
+}
+
+export function lastExpensePrefs() {
+  try {
+    const raw = localStorage.getItem("universal_last_expense_prefs");
+    if (raw) {
+      const saved = JSON.parse(raw);
+      if (saved?.categoryId) return { categoryId: saved.categoryId };
+    }
+  } catch {}
+  const h = new Date().getHours();
+  const categoryId = h >= 5 && h < 11 ? "cafe" : h >= 15 && h < 18 ? "cafe" : "food";
+  return { categoryId };
+}
+
 export function recentCustomPayers(expenses, limit = 4) {
   const presetIds = new Set(PAYER_PRESETS.map((item) => item.id));
   const seen = new Set();

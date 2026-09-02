@@ -1,17 +1,11 @@
 import { useMemo } from "react";
 import { formatHkd, formatMoney, toDateId, todayIndex, tripDays, weatherForDay } from "../data";
-import { useLocalStorage } from "../hooks/useLocalStorage";
-import { tripKey, TRIP_SECTIONS } from "../storage";
 
 const LOW_COST = {
   default: ["市區公園散步", "Window Shopping", "免費觀景點", "安靜 Cafe 久坐"],
 };
 
-export default function DailyIntel({ trip, expenses, personal = [], onOpenPersonal, onOpenExpenses }) {
-  const [adapt, setAdapt] = useLocalStorage(tripKey(trip.id, TRIP_SECTIONS.adapt), false, {
-    migrate: (v) => v === true || v === "true" || v === 1,
-  });
-
+export default function DailyIntel({ trip, expenses, personal = [], adapt, setAdapt, onOpenPersonal, onOpenExpenses }) {
   const idx = todayIndex(trip);
   const days = tripDays(trip);
   const weather = weatherForDay(trip, idx);
@@ -135,7 +129,7 @@ export default function DailyIntel({ trip, expenses, personal = [], onOpenPerson
             </p>
           </div>
         </div>
-        {onOpenExpenses && <p className="mt-2 text-[11px] font-bold text-jade-deep">點擊開啟記帳 ›</p>}
+        {onOpenExpenses && <p className="mt-2 text-[11px] font-bold text-jade-deep">點擊開啟記帳概覽 ›</p>}
       </button>
     </section>
   );

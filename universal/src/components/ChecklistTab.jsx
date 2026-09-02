@@ -32,8 +32,16 @@ const DEFAULT_GROUPS = [
   },
 ];
 
-export default function ChecklistTab({ checked, setChecked }) {
-  const groups = DEFAULT_GROUPS;
+const ADAPT_ITEMS = [
+  { id: "adapt-umbrella", label: "摺疊傘／輕便雨具" },
+  { id: "adapt-indoor", label: "室內行程後備（商場／博物館）" },
+  { id: "adapt-sun", label: "防曬／補充水分計劃" },
+];
+
+export default function ChecklistTab({ checked, setChecked, adapt = false }) {
+  const groups = adapt
+    ? [{ category: "天氣適應 · 今日加強", items: ADAPT_ITEMS }, ...DEFAULT_GROUPS]
+    : DEFAULT_GROUPS;
   const total = groups.reduce((s, g) => s + g.items.length, 0);
   const done = groups.reduce((s, g) => s + g.items.filter((i) => checked[i.id]).length, 0);
   const pct = total ? (done / total) * 100 : 0;

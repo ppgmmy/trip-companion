@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { REGISTRY_KEYS, tripKey, TRIP_SECTIONS } from "./storage";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 import { useExchangeRate } from "./hooks/useExchangeRate";
@@ -7,6 +7,7 @@ import TripSwitcher from "./components/TripSwitcher";
 import TripForm from "./components/TripForm";
 import BottomNav from "./components/BottomNav";
 import ModeRail from "./components/ModeRail";
+import NavQuickHint from "./components/NavQuickHint";
 import ItineraryTab from "./components/ItineraryTab";
 import ChecklistTab from "./components/ChecklistTab";
 import SpotsTab from "./components/SpotsTab";
@@ -41,12 +42,17 @@ export default function App() {
   const [activeTab, setActiveTab] = useLocalStorage(REGISTRY_KEYS.activeTab, "expenses", {
     migrate: (v) => (["itinerary", "checklist", "spots", "expenses", "tools"].includes(v) ? v : "expenses"),
   });
+  const [tripTabs, setTripTabs] = useLocalStorage(REGISTRY_KEYS.tripTabs, {}, {
+    migrate: (v) => (v && typeof v === "object" && !Array.isArray(v) ? v : {}),
+  });
   const [appMode, setAppMode] = useLocalStorage(REGISTRY_KEYS.appMode, "travel", {
     migrate: (v) => (v === "personal" ? "personal" : "travel"),
   });
   const [expandedTool, setExpandedTool] = useState(null);
   const [quickAdd, setQuickAdd] = useState(false);
   const [personalAddTick, setPersonalAddTick] = useState(0);
+  const [expensePanelRequest, setExpensePanelRequest] = useState(null);
+  const prevTripIdRef = useRef(null);
 
   // PWA 捷徑（長撳 App 圖示 → 快速記帳）會帶 ?quick=add 入嚟
   useEffect(() => {
@@ -93,6 +99,11 @@ export default function App() {
   const [rateState, setRateState] = useLocalStorage(tripId ? tripKey(tripId, TRIP_SECTIONS.rate) : "universal_disabled", null, {
     migrate: (v) => (v && typeof v === "object" ? v : null),
   });
+  const [weatherAdapt, setWeatherAdapt] = useLocalStorage(
+    tripId ? tripKey(tripId, TRIP_SECTIONS.adapt) : "universal_disabled",
+    false,
+    { migrate: (v) => v === true || v === "true" || v === 1 },
+  );
 
   const { status: fxStatus, refresh: refreshRate } = useExchangeRate(activeTrip, rateState, setRateState);
 
@@ -100,6 +111,38 @@ export default function App() {
     const todayId = toDateId(new Date());
     return personal.filter((item) => item.date === todayId && !item.done).length;
   }, [personal]);
+
+  const todayId = toDateId(new Date());
+  const tripSpendSummary = useMemo(() => {
+    if (!activeTrip?.budget) return null;
+    const total = expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+    const pct = Math.min(999, Math.round((total / activeTrip.budget) * 100));
+    return { total, pct };
+  }, [activeTrip, expenses]);
+
+  const expenseNavBadge = useMemo(() => {
+    if (!activeTrip) return 0;
+    const inTrip = todayId >= activeTrip.startDate && todayId <= activeTrip.endDate;
+    if (!inTrip) return 0;
+    const todayCount = expenses.filter((e) => e.date === todayId).length;
+    if (todayCount === 0) return -1;
+    return todayCount;
+  }, [activeTrip, expenses, todayId]);
+
+  // 每個旅程記住上次開嘅分頁
+  useEffect(() => {
+    if (!tripId) return;
+    if (prevTripIdRef.current && prevTripIdRef.current !== tripId) {
+      const saved = tripTabs[tripId];
+      if (saved && saved !== activeTab) setActiveTab(saved);
+    }
+    prevTripIdRef.current = tripId;
+  }, [tripId, tripTabs, activeTab, setActiveTab]);
+
+  useEffect(() => {
+    if (!tripId || !activeTab) return;
+    setTripTabs((prev) => (prev[tripId] === activeTab ? prev : { ...prev, [tripId]: activeTab }));
+  }, [tripId, activeTab, setTripTabs]);
 
   // 將舊版「每旅程 personal」資料合併到全域個人儲存（一次性）
   useEffect(() => {
@@ -155,7 +198,18 @@ export default function App() {
   }
 
   function switchTrip(id) {
+    if (tripId && activeTab) {
+      setTripTabs((prev) => ({ ...prev, [tripId]: activeTab }));
+    }
     setActiveId(id);
+    const saved = tripTabs[id];
+    if (saved) setActiveTab(saved);
+  }
+
+  function openExpenses(panel = "ledger") {
+    setAppMode("travel");
+    setActiveTab("expenses");
+    setExpensePanelRequest(panel);
   }
 
   return (
@@ -166,7 +220,17 @@ export default function App() {
             <div className="flex justify-end">
               <ModeRail mode={appMode} onModeChange={setAppMode} personalPending={personalPending} />
             </div>
-            <TripSwitcher variant="banner" trips={trips} activeId={activeTrip?.id} onSwitch={switchTrip} onCreate={createTrip} onUpdate={updateTrip} onDelete={deleteTrip} />
+            <TripSwitcher
+              variant="banner"
+              trips={trips}
+              activeId={activeTrip?.id}
+              onSwitch={switchTrip}
+              onCreate={createTrip}
+              onUpdate={updateTrip}
+              onDelete={deleteTrip}
+              spendSummary={tripSpendSummary}
+              targetCurrency={activeTrip?.targetCurrency}
+            />
           </div>
         )}
         {!activeTrip ? (
@@ -183,15 +247,17 @@ export default function App() {
                       trip={activeTrip}
                       expenses={expenses}
                       personal={personal}
+                      adapt={weatherAdapt}
+                      setAdapt={setWeatherAdapt}
                       onOpenPersonal={() => setAppMode("personal")}
-                      onOpenExpenses={() => setActiveTab("expenses")}
+                      onOpenExpenses={() => openExpenses("overview")}
                     />
                     <DailyEvolution trip={activeTrip} onOpenTool={openTool} />
                     <ItineraryTab trip={activeTrip} itinerary={itinerary} setItinerary={setItinerary} />
                   </>
                 )}
-                {activeTab === "checklist" && <ChecklistTab checked={checklist} setChecked={setChecklist} />}
-                {activeTab === "spots" && <SpotsTab trip={activeTrip} spots={spots} setSpots={setSpots} />}
+                {activeTab === "checklist" && <ChecklistTab checked={checklist} setChecked={setChecklist} adapt={weatherAdapt} />}
+                {activeTab === "spots" && <SpotsTab trip={activeTrip} spots={spots} setSpots={setSpots} adapt={weatherAdapt} />}
                 {activeTab === "expenses" && (
                   <ExpenseTab
                     trip={activeTrip}
@@ -200,6 +266,8 @@ export default function App() {
                     rateState={rateState}
                     fxStatus={fxStatus}
                     onRefreshRate={refreshRate}
+                    initialPanel={expensePanelRequest}
+                    onInitialPanelApplied={() => setExpensePanelRequest(null)}
                   />
                 )}
                 {activeTab === "tools" && (
@@ -212,44 +280,38 @@ export default function App() {
       </main>
 
       {activeTrip && appMode === "personal" && (
-        <>
-          <nav className="fixed inset-x-0 bottom-0 z-40 w-full safe-bottom" aria-label="個人模式捷徑">
-            <div className="mx-auto flex max-w-lg gap-2 px-4 pb-3">
-              <button
-                type="button"
-                onClick={() => setAppMode("travel")}
-                className="flex min-h-12 flex-1 items-center justify-center rounded-2xl border border-jade/15 bg-white/85 text-sm font-bold text-ink shadow-[var(--shadow-nav)] backdrop-blur"
-              >
-                返回旅行
-              </button>
-              <button
-                type="button"
-                onClick={() => setPersonalAddTick((n) => n + 1)}
-                className="flex min-h-12 flex-1 items-center justify-center rounded-2xl bg-jade text-sm font-bold text-white shadow-[var(--shadow-soft)]"
-              >
-                ＋ 新增待辦
-              </button>
-            </div>
-          </nav>
-          <button
-            type="button"
-            onClick={() => setPersonalAddTick((n) => n + 1)}
-            aria-label="快速新增待辦"
-            className="fixed bottom-[calc(6.5rem+env(safe-area-inset-bottom,0px))] right-[max(1rem,env(safe-area-inset-right,0px))] z-30 flex h-14 w-14 items-center justify-center rounded-full bg-jade text-2xl text-white shadow-[var(--shadow-soft)] transition active:scale-90"
-          >
-            ＋
-          </button>
-        </>
+        <nav className="fixed inset-x-0 bottom-0 z-40 w-full safe-bottom" aria-label="個人模式捷徑">
+          <div className="mx-auto flex max-w-lg gap-2 px-4 pb-3">
+            <button
+              type="button"
+              onClick={() => setAppMode("travel")}
+              className="flex min-h-12 flex-1 items-center justify-center rounded-2xl border border-jade/15 bg-white/85 text-sm font-bold text-ink shadow-[var(--shadow-nav)] backdrop-blur"
+            >
+              返回旅行
+            </button>
+            <button
+              type="button"
+              onClick={() => setPersonalAddTick((n) => n + 1)}
+              className="flex min-h-12 flex-1 items-center justify-center rounded-2xl bg-jade text-sm font-bold text-white shadow-[var(--shadow-soft)]"
+            >
+              ＋ 新增待辦
+            </button>
+          </div>
+        </nav>
       )}
       {activeTrip && appMode === "travel" && (
-        <BottomNav
-          travelActive={activeTab}
-          onTravelSelect={setActiveTab}
-          onLongPressExpenses={() => {
-            setActiveTab("expenses");
-            setQuickAdd(true);
-          }}
-        />
+        <>
+          <NavQuickHint />
+          <BottomNav
+            travelActive={activeTab}
+            onTravelSelect={setActiveTab}
+            expenseBadge={expenseNavBadge}
+            onLongPressExpenses={() => {
+              setActiveTab("expenses");
+              setQuickAdd(true);
+            }}
+          />
+        </>
       )}
       {activeTrip && appMode === "travel" && (
         <button

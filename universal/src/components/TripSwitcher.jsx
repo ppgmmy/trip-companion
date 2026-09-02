@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
+import { formatMoney } from "../data";
 import TripForm from "./TripForm";
 
-export default function TripSwitcher({ trips, activeId, onSwitch, onCreate, onUpdate, onDelete, variant = "header" }) {
+export default function TripSwitcher({ trips, activeId, onSwitch, onCreate, onUpdate, onDelete, variant = "header", spendSummary = null, targetCurrency }) {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -41,6 +42,11 @@ export default function TripSwitcher({ trips, activeId, onSwitch, onCreate, onUp
               {active && (
                 <span className="block text-[11px] text-ink-faint">
                   {active.startDate} → {active.endDate} · {active.targetCurrency}
+                  {spendSummary && active.budget > 0 && (
+                    <span className="ml-1 font-bold text-jade-deep">
+                      · 已使 {spendSummary.pct}%（{formatMoney(spendSummary.total, targetCurrency || active.targetCurrency)}）
+                    </span>
+                  )}
                 </span>
               )}
             </span>

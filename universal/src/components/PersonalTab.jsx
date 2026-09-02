@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { formatPersonalDayLabel, shiftDateId, toDateId, uid } from "../data";
+import { useLocalStorage } from "../hooks/useLocalStorage";
+import { REGISTRY_KEYS } from "../storage";
+import UndoToast from "./UndoToast";
 
 const KINDS = [
   { id: "todo", label: "待辦", icon: "☑️" },
@@ -242,13 +245,27 @@ function DayTimetable({ dateId, items, onToggle, onRemove }) {
 export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 }) {
   const todayId = toDateId(new Date());
   const titleRef = useRef(null);
+  const undoRef = useRef(null);
+  const [toast, setToast] = useState(null);
+  const [personalUi, setPersonalUi] = useLocalStorage(REGISTRY_KEYS.personalUi, { selectedDate: todayId, viewMonth: null }, {
+    migrate: (v) => {
+      const base = v && typeof v === "object" ? v : {};
+      return {
+        selectedDate: base.selectedDate || todayId,
+        viewMonth: base.viewMonth && typeof base.viewMonth === "object" ? base.viewMonth : null,
+      };
+    },
+  });
   const [title, setTitle] = useState("");
-  const [entryDate, setEntryDate] = useState(todayId);
+  const [entryDate, setEntryDate] = useState(personalUi.selectedDate || todayId);
   const [entryTime, setEntryTime] = useState("");
   const [kind, setKind] = useState("todo");
   const [note, setNote] = useState("");
-  const [selectedDate, setSelectedDate] = useState(todayId);
+  const [selectedDate, setSelectedDate] = useState(personalUi.selectedDate || todayId);
   const [viewMonth, setViewMonth] = useState(() => {
+    if (personalUi.viewMonth?.year != null && personalUi.viewMonth?.month != null) {
+      return personalUi.viewMonth;
+    }
     const now = new Date();
     return { year: now.getFullYear(), month: now.getMonth() };
   });
@@ -256,6 +273,10 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
   const items = useMemo(() => (Array.isArray(personal) ? personal : []), [personal]);
   const selectedItems = useMemo(() => itemsForDate(items, selectedDate), [items, selectedDate]);
   const todayPending = itemsForDate(items, todayId).filter((i) => !i.done).length;
+
+  useEffect(() => {
+    setPersonalUi((prev) => ({ ...prev, selectedDate, viewMonth }));
+  }, [selectedDate, viewMonth, setPersonalUi]);
 
   useEffect(() => {
     if (focusAddTick > 0) {
@@ -304,11 +325,22 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
   }
 
   function removeItem(id) {
+    const before = items;
     setPersonal((prev) => (Array.isArray(prev) ? prev : []).filter((item) => item.id !== id));
+    undoRef.current = before;
+    setToast({ message: "已刪除待辦", undo: true });
+    window.setTimeout(() => setToast(null), 5000);
+  }
+
+  function undoRemove() {
+    if (undoRef.current) setPersonal(undoRef.current);
+    undoRef.current = null;
+    setToast(null);
   }
 
   return (
     <div className="space-y-3">
+      {toast && <UndoToast message={toast.message} onUndo={toast.undo ? undoRemove : null} />}
       <div>
         <p className="text-[11px] font-bold uppercase tracking-wider text-jade">個人</p>
         <h2 className="font-display text-xl font-bold text-ink">Schedule Book</h2>

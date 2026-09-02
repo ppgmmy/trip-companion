@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { DEFAULT_PAYER_ID, DEFAULT_PAYMENT_METHOD, EXPENSE_CATEGORIES, RATE_TTL_MS, aggregateByPayer, aggregateByPaymentMethod, expenseEntryTags, formatHkd, formatMoney, lastPaymentDefaults, normalizeExpensePayer, normalizePaymentMethod, payerLabel, paymentMethodLabel, recentCustomPayers, resolvePayerFields, resolvePayerForSave, savePayerPrefs, toDateId, tripDays } from "../data";
+import { DEFAULT_PAYER_ID, DEFAULT_PAYMENT_METHOD, EXPENSE_CATEGORIES, RATE_TTL_MS, aggregateByPayer, aggregateByPaymentMethod, expenseEntryTags, formatHkd, formatMoney, lastExpensePrefs, lastPaymentDefaults, normalizeExpensePayer, normalizePaymentMethod, payerLabel, paymentMethodLabel, recentCustomPayers, resolvePayerFields, resolvePayerForSave, saveExpensePrefs, savePayerPrefs, toDateId, tripDays } from "../data";
 import { isFeatureEnabled } from "../data/featureFlags";
 import { amountExpressionPreview, frequentAmounts, parseAmountExpression, suggestCategoryByHour } from "../utils/expenseInput";
 import { BarChart, DoughnutChart } from "./Charts";
@@ -28,6 +28,7 @@ import {
   TodayBudgetGauge,
 } from "./ExpenseDailyExtras";
 import PayerPaymentFields from "./PayerPaymentFields";
+import { useLocalStorage } from "../hooks/useLocalStorage";
 import { REGISTRY_KEYS } from "../storage";
 
 function formatRateWhen(ts) {
@@ -35,7 +36,6 @@ function formatRateWhen(ts) {
   const d = new Date(ts);
   return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
-import { useLocalStorage } from "../hooks/useLocalStorage";
 
 const PANELS = [
   { id: "ledger", label: "記帳" },
@@ -54,20 +54,42 @@ function formatDayHeading(dateId) {
   return base;
 }
 
-export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxStatus, onRefreshRate }) {
-  const [categoryId, setCategoryId] = useState(() => suggestCategoryByHour());
+function migrateExpenseUi(v) {
+  const base = v && typeof v === "object" ? v : {};
+  return {
+    panel: ["ledger", "analysis", "overview"].includes(base.panel) ? base.panel : "ledger",
+    listTodayOnly: base.listTodayOnly !== false,
+    showHkd: Boolean(base.showHkd),
+    filterCategory: base.filterCategory || "all",
+    filterPayer: base.filterPayer || "all",
+    filterPaymentMethod: base.filterPaymentMethod || "all",
+    search: typeof base.search === "string" ? base.search : "",
+  };
+}
+
+export default function ExpenseTab({
+  trip,
+  expenses,
+  setExpenses,
+  rateState,
+  fxStatus,
+  onRefreshRate,
+  initialPanel = null,
+  onInitialPanelApplied,
+}) {
+  const [categoryId, setCategoryId] = useState(() => lastExpensePrefs().categoryId || suggestCategoryByHour());
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
   const [entryDate, setEntryDate] = useState(() => toDateId(new Date()));
-  const [filterCategory, setFilterCategory] = useState("all");
-  const [filterPayer, setFilterPayer] = useState("all");
-  const [filterPaymentMethod, setFilterPaymentMethod] = useState("all");
-  const [search, setSearch] = useState("");
-  const [showHkd, setShowHkd] = useState(false);
-  const [expenseUi, setExpenseUi] = useLocalStorage(REGISTRY_KEYS.expenseUi, { panel: "ledger", listTodayOnly: true }, {
-    migrate: (v) => (v && typeof v === "object" ? v : { panel: "ledger", listTodayOnly: true }),
+  const [expenseUi, setExpenseUi] = useLocalStorage(REGISTRY_KEYS.expenseUi, migrateExpenseUi(null), {
+    migrate: migrateExpenseUi,
   });
   const [panel, setPanel] = useState(expenseUi.panel || "ledger");
+  const [filterCategory, setFilterCategory] = useState(expenseUi.filterCategory || "all");
+  const [filterPayer, setFilterPayer] = useState(expenseUi.filterPayer || "all");
+  const [filterPaymentMethod, setFilterPaymentMethod] = useState(expenseUi.filterPaymentMethod || "all");
+  const [search, setSearch] = useState(expenseUi.search || "");
+  const [showHkd, setShowHkd] = useState(Boolean(expenseUi.showHkd));
   const [editingId, setEditingId] = useState(null);
   const [payer, setPayer] = useState(() => lastPaymentDefaults(expenses).payer);
   const [customPayer, setCustomPayer] = useState(() => lastPaymentDefaults(expenses).customPayer);
@@ -82,8 +104,23 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
   const prevPanelRef = useRef(panel);
 
   useEffect(() => {
-    setExpenseUi((prev) => ({ ...prev, panel, listTodayOnly }));
-  }, [panel, listTodayOnly, setExpenseUi]);
+    setExpenseUi((prev) => ({
+      ...prev,
+      panel,
+      listTodayOnly,
+      showHkd,
+      filterCategory,
+      filterPayer,
+      filterPaymentMethod,
+      search,
+    }));
+  }, [panel, listTodayOnly, showHkd, filterCategory, filterPayer, filterPaymentMethod, search, setExpenseUi]);
+
+  useEffect(() => {
+    if (!initialPanel || !PANELS.some((p) => p.id === initialPanel)) return;
+    setPanel(initialPanel);
+    onInitialPanelApplied?.();
+  }, [initialPanel, onInitialPanelApplied]);
 
   useEffect(() => {
     const enteredLedger = panel === "ledger" && prevPanelRef.current !== "ledger";
@@ -297,6 +334,7 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
       createdAt: Date.now(),
     };
     savePayerPrefs({ payer: resolvedPayer, customPayer: customPayer.trim(), paymentMethod });
+    saveExpensePrefs({ categoryId });
     setExpenses((prev) => [...prev, entry]);
     showToast(date === todayId ? "已記入今日開支" : `已補記 ${formatDayHeading(date)}`, before);
     setAmount("");

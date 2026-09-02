@@ -1,9 +1,9 @@
-import { useState } from "react";
-import { DEFAULT_BADGES } from "../data";
+import { useMemo, useState } from "react";
+import { DEFAULT_BADGES, INDOOR_TAGS } from "../data";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { tripKey, TRIP_SECTIONS } from "../storage";
 
-export default function SpotsTab({ trip, spots, setSpots }) {
+export default function SpotsTab({ trip, spots, setSpots, adapt = false }) {
   const [name, setName] = useState("");
   const [area, setArea] = useState("");
   const [rating, setRating] = useState(0);
@@ -14,6 +14,23 @@ export default function SpotsTab({ trip, spots, setSpots }) {
   });
 
   const allBadges = [...DEFAULT_BADGES, ...customBadges.map((b) => ({ id: `custom-${b}`, label: b }))];
+
+  const sortedSpots = useMemo(() => {
+    const list = spots.slice();
+    const indoorRank = (s) => {
+      const tags = [...(s.badges || []), s.area || "", s.name || ""].join(" ");
+      const indoor = INDOOR_TAGS.some((t) => tags.includes(t)) || /cafe|咖啡|商場|museum|博物館/i.test(tags);
+      return indoor ? 1 : 0;
+    };
+    list.sort((a, b) => {
+      if (adapt) {
+        const diff = indoorRank(b) - indoorRank(a);
+        if (diff !== 0) return diff;
+      }
+      return b.rating - a.rating || b.createdAt - a.createdAt;
+    });
+    return list;
+  }, [spots, adapt]);
 
   function toggleBadge(id) {
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -55,7 +72,9 @@ export default function SpotsTab({ trip, spots, setSpots }) {
     <div className="space-y-4">
       <div>
         <h2 className="font-display text-xl font-bold text-ink">足跡</h2>
-        <p className="text-sm text-ink-soft">景點／Cafe／餐廳 · 依評分排序</p>
+        <p className="text-sm text-ink-soft">
+          景點／Cafe／餐廳 · 依評分排序{adapt ? " · 已優先室內" : ""}
+        </p>
       </div>
 
       <form onSubmit={submit} className="space-y-3 rounded-3xl bg-white/85 p-4 shadow-[var(--shadow-soft)]">
@@ -123,10 +142,7 @@ export default function SpotsTab({ trip, spots, setSpots }) {
         {spots.length === 0 ? (
           <li className="rounded-2xl border border-dashed border-jade/20 bg-white/50 px-4 py-8 text-center text-sm text-ink-faint">尚未記下任何足跡</li>
         ) : (
-          spots
-            .slice()
-            .sort((a, b) => b.rating - a.rating || b.createdAt - a.createdAt)
-            .map((s) => (
+          sortedSpots.map((s) => (
               <li key={s.id} className="rounded-2xl bg-white/85 px-4 py-3 shadow-[var(--shadow-soft)]">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
