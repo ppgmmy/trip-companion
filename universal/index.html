@@ -20,59 +20,11 @@
       }
       .tc-boot h1 { font-size: 1.2rem; margin: 0 0 0.5rem; }
       .tc-boot p { margin: 0; font-size: 0.875rem; color: #5b6b68; line-height: 1.55; }
-      .tc-boot .tc-err {
-        margin-top: 0.75rem; max-width: 22rem; max-height: 6rem; overflow: auto;
-        text-align: left; font-size: 0.7rem; line-height: 1.4; color: #9a3412;
-        background: #fff7ed; border-radius: 0.75rem; padding: 0.6rem 0.75rem;
-        word-break: break-word;
-      }
-      .tc-boot button {
-        margin-top: 1rem; min-height: 2.85rem; width: min(100%, 17rem); border: 0;
-        border-radius: 1rem; background: #0d9488; color: #fff; font-weight: 700; font-size: 0.95rem;
-      }
-      .tc-boot a.tc-link {
-        margin-top: 0.75rem; font-size: 0.8rem; font-weight: 700; color: #0f766e;
+      .tc-boot a {
+        margin-top: 1rem; display: inline-block; font-size: 0.85rem; font-weight: 700; color: #0f766e;
       }
     </style>
     <script>
-      // Kill broken SW once — no reload loop (session lock).
-      (function () {
-        var EPOCH = "10";
-        var KEY = "tc_sw_epoch";
-        var LOCK = "tc_sw_bust_lock";
-        window.__tcBootErrors = [];
-        window.addEventListener("error", function (ev) {
-          try {
-            window.__tcBootErrors.push(String((ev && ev.message) || "error"));
-          } catch (e) {}
-        });
-        window.addEventListener("unhandledrejection", function (ev) {
-          try {
-            var r = ev && ev.reason;
-            window.__tcBootErrors.push(String((r && r.message) || r || "promise"));
-          } catch (e) {}
-        });
-        try {
-          if (sessionStorage.getItem(LOCK) === EPOCH) return;
-          if (localStorage.getItem(KEY) === EPOCH) return;
-          sessionStorage.setItem(LOCK, EPOCH);
-          localStorage.setItem(KEY, EPOCH);
-        } catch (e) {
-          return;
-        }
-        if (!("serviceWorker" in navigator)) return;
-        navigator.serviceWorker.getRegistrations().then(function (regs) {
-          return Promise.all(regs.map(function (r) { return r.unregister(); }));
-        }).then(function () {
-          if (typeof caches === "undefined") return;
-          return caches.keys().then(function (keys) {
-            return Promise.all(keys.map(function (k) { return caches.delete(k); }));
-          });
-        }).catch(function () {});
-      })();
-    </script>
-    <script>
-      // Register pass-through SW only after load (replaces old broken workers).
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", function () {
           navigator.serviceWorker.register("/sw.js").catch(function () {});
@@ -90,7 +42,7 @@
   <body>
     <div id="root">
       <div class="tc-boot" id="tc-boot">
-        <h1>Trip Companion</h1>
+        <h1>全球萬能旅行</h1>
         <p>載入中…</p>
       </div>
     </div>
@@ -115,48 +67,20 @@
           if (markBooted()) obs.disconnect();
         });
         obs.observe(root, { childList: true, subtree: true });
-
-        function showFail() {
-          if (booted || markBooted()) return;
+        setTimeout(function () {
+          if (booted || markBooted()) {
+            obs.disconnect();
+            return;
+          }
           obs.disconnect();
-          var errs = (window.__tcBootErrors || []).slice(-3).join(" | ") || "主程式未啟動（可能仍被舊快取攔截）";
           root.innerHTML =
             '<div class="tc-boot">' +
-            "<h1>開唔到 App</h1>" +
-            "<p>唔好再用主畫面舊圖示。請用 Safari／Chrome 開下面連結，成功後再重新加入主畫面。</p>" +
-            '<div class="tc-err" id="tc-err"></div>' +
-            '<button type="button" id="tc-hard-reset">清除資料並重試</button>' +
-            '<a class="tc-link" href="https://trip-companion-pied.vercel.app/universal/?fresh=1">用瀏覽器開啟</a>' +
+            "<h1>載入較慢</h1>" +
+            "<p>請用 Safari 開一次，或返回選單揀其他 App。</p>" +
+            '<a href="/restore.html">還原主畫面 App →</a>' +
+            '<a href="/">返回 Trip Companion 選單 →</a>' +
             "</div>";
-          var errEl = document.getElementById("tc-err");
-          if (errEl) errEl.textContent = errs;
-          var btn = document.getElementById("tc-hard-reset");
-          if (!btn) return;
-          btn.onclick = function () {
-            var finish = function () {
-              location.href = "/universal/?fresh=" + Date.now();
-            };
-            try {
-              sessionStorage.removeItem("tc_sw_bust_lock");
-              localStorage.removeItem("tc_sw_epoch");
-            } catch (e) {}
-            var p = Promise.resolve();
-            if ("serviceWorker" in navigator) {
-              p = navigator.serviceWorker.getRegistrations().then(function (regs) {
-                return Promise.all(regs.map(function (r) { return r.unregister(); }));
-              });
-            }
-            p.then(function () {
-              if (typeof caches === "undefined") return;
-              return caches.keys().then(function (keys) {
-                return Promise.all(keys.map(function (k) { return caches.delete(k); }));
-              });
-            }).catch(function () {}).then(finish);
-          };
-        }
-
-        // Slow phones / first paint after SW wipe
-        setTimeout(showFail, 10000);
+        }, 12000);
       })();
     </script>
   </body>

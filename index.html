@@ -62,6 +62,9 @@
           <p class="mt-3 max-w-[20rem] text-sm leading-relaxed text-ink-soft">
             一個入口，全球行程。資料各自獨立保存在本機。
           </p>
+          <p class="mt-2">
+            <a href="./restore.html" class="text-xs font-bold text-jade underline underline-offset-2">主畫面 App 唔見咗？按此還原</a>
+          </p>
         </header>
 
         <nav class="mt-8 flex flex-1 flex-col gap-3" aria-label="選擇行程">
@@ -106,7 +109,38 @@
           </a>
         </nav>
 
-        <p class="mt-8 text-center text-xs text-ink-faint">
+        <details class="mt-6 rounded-[1.35rem] border border-jade/15 bg-white/80 p-4 shadow-sm open:shadow-md">
+          <summary class="cursor-pointer list-none text-sm font-bold text-jade-deep">
+            📲 主畫面 App 唔見咗？撳呢度還原
+          </summary>
+          <div class="mt-3 space-y-3 text-[13px] leading-relaxed text-ink-soft">
+            <p>
+              <strong class="text-ink">你嘅 App 仲喺度</strong>，只係主畫面圖示可能因更新／清快取而消失。跟下面做就得：
+            </p>
+            <ol class="list-decimal space-y-2 pl-5">
+              <li>用 <strong>Safari</strong>（iPhone）或 <strong>Chrome</strong>（Android）開呢個網址：<br />
+                <a class="font-bold text-jade-deep underline" href="https://trip-companion-pied.vercel.app/">trip-companion-pied.vercel.app</a>
+              </li>
+              <li>撳上面你想用嗰個行程（台北／東京／泰國／萬能版）</li>
+              <li>確認入到 App、見到正常畫面</li>
+              <li>
+                <strong>iPhone：</strong>分享 <span aria-hidden="true">⬆️</span> →「加入主畫面」<br />
+                <strong>Android：</strong>選單 ⋮ →「安裝應用程式」或「加入主畫面」
+              </li>
+            </ol>
+            <p class="rounded-xl bg-amber-50 px-3 py-2 text-[12px] text-amber-900">
+              ⚠️ 若你之前用「清除所有網站資料」，本機記帳／行程可能已刪除（台北／東京／泰國資料只存喺你部手機）。萬能版如有 Google 登入同步，登入後有機會從雲端載返。
+            </p>
+            <div class="grid grid-cols-2 gap-2 pt-1">
+              <a href="./taipei/" class="rounded-xl border border-jade/15 bg-jade-soft/40 px-3 py-2 text-center text-xs font-bold text-jade-deep">＋ 台北 App</a>
+              <a href="./tokyo/" class="rounded-xl border border-rose/20 bg-rose-soft/50 px-3 py-2 text-center text-xs font-bold text-rose-deep">＋ 東京 App</a>
+              <a href="./thailand/" class="rounded-xl border border-sand/25 bg-sand-soft/60 px-3 py-2 text-center text-xs font-bold text-sand-deep">＋ 泰國 App</a>
+              <a href="./universal/" class="rounded-xl border border-jade/20 bg-white px-3 py-2 text-center text-xs font-bold text-jade">＋ 萬能版 App</a>
+            </div>
+          </div>
+        </details>
+
+        <p class="mt-6 text-center text-xs text-ink-faint">
           全球萬能版 + 台北 · 東京 · 泰國各自使用獨立 localStorage
         </p>
       </main>
