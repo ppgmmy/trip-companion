@@ -263,6 +263,31 @@ export const DEFAULT_BADGES = [
   { id: "value", label: "高CP值" },
 ];
 
+/** 足跡地點類型 — 一眼識別去過咩類型 */
+export const PLACE_TYPES = [
+  { id: "spot", label: "景點", icon: "📍", tone: "bg-jade-soft/80 text-jade-deep border-jade/20" },
+  { id: "cafe", label: "Cafe", icon: "☕", tone: "bg-amber-50 text-amber-900 border-amber-200/80" },
+  { id: "food", label: "美食", icon: "🍜", tone: "bg-coral-soft text-coral border-coral/25" },
+  { id: "shop", label: "購物", icon: "🛍️", tone: "bg-violet-50 text-violet-900 border-violet-200/80" },
+  { id: "experience", label: "體驗", icon: "✨", tone: "bg-sky-50 text-sky-900 border-sky-200/80" },
+  { id: "other", label: "其他", icon: "🗺", tone: "bg-mist text-ink-soft border-jade/15" },
+];
+
+export function placeTypeMeta(typeId) {
+  return PLACE_TYPES.find((t) => t.id === typeId) || PLACE_TYPES[PLACE_TYPES.length - 1];
+}
+
+export function inferPlaceType(spot) {
+  if (spot?.type && PLACE_TYPES.some((t) => t.id === spot.type)) return spot.type;
+  const blob = `${spot?.name || ""} ${spot?.area || ""} ${(spot?.badges || []).join(" ")}`.toLowerCase();
+  if (/cafe|咖啡|喫茶|コーヒー/.test(blob)) return "cafe";
+  if (/餐廳|美食|拉麵|燒肉|sushi|食|餐|food|restaurant/.test(blob)) return "food";
+  if (/商場|outlet|購物|shop|百貨|超市/.test(blob)) return "shop";
+  if (/體驗|spa|溫泉|活動|workshop|夜遊/.test(blob)) return "experience";
+  if (/寺|塔|公園|博物館|museum|景點|觀景|castle|神社/.test(blob)) return "spot";
+  return "other";
+}
+
 export const INDOOR_TAGS = ["商場", "Cafe", "購物", "美食", "生活", "景點", "餐飲"];
 
 export const WEEKDAY_LABELS = ["日", "一", "二", "三", "四", "五", "六"];
