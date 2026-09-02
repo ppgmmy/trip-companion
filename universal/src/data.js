@@ -353,6 +353,39 @@ export function formatPersonalDayLabel(dateId, baseDate = new Date()) {
   return base;
 }
 
+export function personalTodoStartDate(item, fallbackDate = new Date()) {
+  if (!item || item.kind === "event") return item?.date || toDateId(fallbackDate);
+  if (item.startDate) return item.startDate;
+  if (item.date) return item.date;
+  if (item.createdAt) return toDateId(new Date(item.createdAt));
+  return toDateId(fallbackDate);
+}
+
+export function daysBetweenDateIds(fromId, toId) {
+  const [y1, m1, d1] = String(fromId || "").split("-").map(Number);
+  const [y2, m2, d2] = String(toId || "").split("-").map(Number);
+  if (!y1 || !m1 || !d1 || !y2 || !m2 || !d2) return 0;
+  const ms = new Date(y2, m2 - 1, d2).getTime() - new Date(y1, m1 - 1, d1).getTime();
+  return Math.max(0, Math.round(ms / 86400000));
+}
+
+export function formatTodoActiveLabel(startDate, todayId = toDateId(new Date())) {
+  const days = daysBetweenDateIds(startDate, todayId);
+  if (days === 0) return "今日開始";
+  if (days === 1) return "已 1 日";
+  if (days < 7) return `已 ${days} 日`;
+  const weeks = Math.floor(days / 7);
+  if (days < 30) return weeks <= 1 ? "已 1 週" : `已 ${weeks} 週`;
+  return `已 ${days} 日`;
+}
+
+export function todoPriorityTier(startDate, todayId = toDateId(new Date())) {
+  const days = daysBetweenDateIds(startDate, todayId);
+  if (days >= 7) return "high";
+  if (days >= 3) return "medium";
+  return "normal";
+}
+
 export function uid(prefix) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 }

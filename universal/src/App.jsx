@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { REGISTRY_KEYS, tripKey, TRIP_SECTIONS } from "./storage";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 import { useExchangeRate } from "./hooks/useExchangeRate";
-import { uid, toDateId, normalizeExpensePayer } from "./data";
+import { uid, toDateId, normalizeExpensePayer, personalTodoStartDate } from "./data";
 import TripSwitcher from "./components/TripSwitcher";
 import TripForm from "./components/TripForm";
 import BottomNav from "./components/BottomNav";
@@ -109,7 +109,11 @@ export default function App() {
 
   const personalPending = useMemo(() => {
     const todayId = toDateId(new Date());
-    return personal.filter((item) => item.date === todayId && !item.done).length;
+    return personal.filter((item) => {
+      if (item.done) return false;
+      if (item.kind === "event") return item.date === todayId;
+      return personalTodoStartDate(item) <= todayId;
+    }).length;
   }, [personal]);
 
   const todayId = toDateId(new Date());

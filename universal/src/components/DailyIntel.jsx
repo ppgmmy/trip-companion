@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { formatHkd, formatMoney, toDateId, todayIndex, tripDays, weatherForDay } from "../data";
+import { formatHkd, formatMoney, toDateId, todayIndex, tripDays, weatherForDay, personalTodoStartDate, daysBetweenDateIds } from "../data";
 
 const LOW_COST = {
   default: ["市區公園散步", "Window Shopping", "免費觀景點", "安靜 Cafe 久坐"],
@@ -22,9 +22,17 @@ export default function DailyIntel({ trip, expenses, personal = [], adapt, setAd
 
   const todayPersonal = useMemo(() => {
     const todayId = toDateId(new Date());
-    return (Array.isArray(personal) ? personal : [])
-      .filter((item) => item.date === todayId && !item.done)
+    const events = (Array.isArray(personal) ? personal : [])
+      .filter((item) => item.kind === "event" && item.date === todayId && !item.done)
       .sort((a, b) => (a.time || "99:99").localeCompare(b.time || "99:99"));
+    const todos = (Array.isArray(personal) ? personal : [])
+      .filter((item) => item.kind === "todo" && !item.done && personalTodoStartDate(item) <= todayId)
+      .sort(
+        (a, b) =>
+          daysBetweenDateIds(personalTodoStartDate(b), todayId) -
+          daysBetweenDateIds(personalTodoStartDate(a), todayId),
+      );
+    return [...events, ...todos];
   }, [personal]);
 
   const date = new Date(new Date(trip.startDate).getTime() + idx * 86400000);

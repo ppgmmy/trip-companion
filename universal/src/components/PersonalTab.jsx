@@ -1,5 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { formatPersonalDayLabel, shiftDateId, toDateId, uid } from "../data";
+import {
+  daysBetweenDateIds,
+  formatPersonalDayLabel,
+  formatTodoActiveLabel,
+  personalTodoStartDate,
+  shiftDateId,
+  toDateId,
+  todoPriorityTier,
+  uid,
+} from "../data";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { REGISTRY_KEYS } from "../storage";
 import UndoToast from "./UndoToast";
@@ -15,11 +24,7 @@ const FILTERS = [
   { id: "event", label: "日程" },
 ];
 
-const QUICK_DATES = [
-  { label: "今日", offset: 0 },
-  { label: "明日", offset: 1 },
-  { label: "後日", offset: 2 },
-];
+const QUICK_START_DATES = [{ label: "今日開始", offset: 0 }];
 
 const TIME_PRESETS = ["09:00", "12:00", "14:00", "18:00"];
 
@@ -32,25 +37,27 @@ function nextRoundedHour() {
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
-function sortItems(items) {
+function sortEvents(items) {
   return [...items].sort((a, b) => {
     if (a.date !== b.date) return a.date.localeCompare(b.date);
-    const aEvent = a.kind === "event";
-    const bEvent = b.kind === "event";
-    if (aEvent && bEvent) return (a.time || "99:99").localeCompare(b.time || "99:99");
-    if (aEvent !== bEvent) return aEvent ? -1 : 1;
-    return (b.createdAt || 0) - (a.createdAt || 0);
+    return (a.time || "99:99").localeCompare(b.time || "99:99");
   });
 }
 
-function itemsForDate(items, dateId, filterKind = "all") {
-  return sortItems(
-    items.filter((item) => {
-      if (item.date !== dateId) return false;
-      if (filterKind === "all") return true;
-      return item.kind === filterKind;
-    }),
-  );
+function eventsForDate(items, dateId) {
+  return sortEvents(items.filter((item) => item.kind === "event" && item.date === dateId));
+}
+
+function activeTodos(items, todayId) {
+  return items
+    .filter((item) => item.kind === "todo" && !item.done && personalTodoStartDate(item) <= todayId)
+    .sort((a, b) => {
+      const ageDiff =
+        daysBetweenDateIds(personalTodoStartDate(b), todayId) -
+        daysBetweenDateIds(personalTodoStartDate(a), todayId);
+      if (ageDiff !== 0) return ageDiff;
+      return (a.createdAt || 0) - (b.createdAt || 0);
+    });
 }
 
 function monthMatrix(year, month) {
@@ -64,6 +71,12 @@ function monthMatrix(year, month) {
   }
   while (cells.length % 7 !== 0) cells.push(null);
   return cells;
+}
+
+function priorityClass(tier) {
+  if (tier === "high") return "border-coral/35 bg-coral-soft/80 text-coral";
+  if (tier === "medium") return "border-amber-300/50 bg-amber-50 text-amber-900";
+  return "border-jade/20 bg-jade-soft/70 text-jade-deep";
 }
 
 function SectionCard({ title, hint, action, children, className = "" }) {
@@ -83,9 +96,12 @@ function SectionCard({ title, hint, action, children, className = "" }) {
   );
 }
 
-function TimetableItem({ item, onToggle, onRemove, onPostpone }) {
+function TimetableItem({ item, todayId, onToggle, onRemove, onPostpone }) {
   const kind = KINDS.find((k) => k.id === item.kind) || KINDS[0];
   const isEvent = item.kind === "event";
+  const startDate = personalTodoStartDate(item);
+  const tier = isEvent ? null : todoPriorityTier(startDate, todayId);
+  const activeLabel = isEvent ? null : formatTodoActiveLabel(startDate, todayId);
 
   return (
     <div
@@ -107,22 +123,26 @@ function TimetableItem({ item, onToggle, onRemove, onPostpone }) {
       >
         ✓
       </button>
-      {isEvent && (
+      {isEvent ? (
         <span className="w-11 shrink-0 text-[10px] font-bold tabular-nums text-jade-deep">{item.time || "—"}</span>
+      ) : (
+        <span
+          className={`shrink-0 rounded border px-1 py-0.5 text-[9px] font-bold ${item.done ? "text-ink-faint" : priorityClass(tier)}`}
+        >
+          {activeLabel}
+        </span>
       )}
-      <span
-        className={`shrink-0 rounded px-1 py-0.5 text-[9px] font-bold ${
-          isEvent ? "bg-sky/15 text-sky-900" : "bg-jade-soft/80 text-jade-deep"
-        }`}
-      >
-        {kind.label}
-      </span>
       <button type="button" onClick={() => onToggle(item.id)} className="min-w-0 flex-1 text-left active:opacity-80">
         <p className={`truncate text-xs font-bold ${item.done ? "text-ink-faint line-through" : "text-ink"}`}>
           {item.title}
         </p>
+        {!isEvent && !item.done && (
+          <p className="truncate text-[10px] text-ink-faint">
+            開始 {startDate.slice(5).replace("-", "/")}
+          </p>
+        )}
       </button>
-      {!item.done && onPostpone && (
+      {!item.done && isEvent && onPostpone && (
         <button
           type="button"
           onClick={() => onPostpone(item.id)}
@@ -144,7 +164,7 @@ function TimetableItem({ item, onToggle, onRemove, onPostpone }) {
   );
 }
 
-function ItemGroup({ label, items, onToggle, onRemove, onPostpone, muted = false }) {
+function ItemGroup({ label, items, todayId, onToggle, onRemove, onPostpone, muted = false }) {
   if (items.length === 0) return null;
   return (
     <div className={muted ? "opacity-80" : ""}>
@@ -154,6 +174,7 @@ function ItemGroup({ label, items, onToggle, onRemove, onPostpone, muted = false
           <TimetableItem
             key={item.id}
             item={item}
+            todayId={todayId}
             onToggle={onToggle}
             onRemove={onRemove}
             onPostpone={onPostpone}
@@ -164,31 +185,47 @@ function ItemGroup({ label, items, onToggle, onRemove, onPostpone, muted = false
   );
 }
 
-function DayBlock({
-  dateId,
-  items,
-  filterKind,
-  showCompleted,
-  active,
-  onSelectDay,
-  onToggle,
-  onRemove,
-  onPostpone,
-}) {
-  const dayItems = itemsForDate(items, dateId, filterKind);
-  const events = dayItems.filter((i) => i.kind === "event" && !i.done);
-  const todos = dayItems.filter((i) => i.kind === "todo" && !i.done);
-  const done = dayItems.filter((i) => i.done);
-  const pending = dayItems.filter((i) => !i.done);
-  const splitView = filterKind === "all";
-  const hasContent = showCompleted ? dayItems.length > 0 : pending.length > 0;
+function ActiveTodosPanel({ items, todayId, showCompleted, onToggle, onRemove }) {
+  const active = activeTodos(items, todayId);
+  const doneTodos = items.filter((item) => item.kind === "todo" && item.done);
 
   return (
-    <div
-      className={`border-l-[3px] px-3 py-2.5 ${
-        active ? "border-l-jade bg-jade-soft/20" : "border-l-transparent"
-      }`}
-    >
+    <SectionCard title="進行中待辦" hint="由開始日期計生效時長 · 越久越優先">
+      <div className="space-y-2 p-3">
+        {active.length === 0 ? (
+          <p className="text-center text-xs text-ink-faint">無進行中待辦</p>
+        ) : (
+          active.map((item) => (
+            <TimetableItem key={item.id} item={item} todayId={todayId} onToggle={onToggle} onRemove={onRemove} />
+          ))
+        )}
+        {showCompleted && doneTodos.length > 0 && (
+          <ItemGroup
+            label="✓ 已完成待辦"
+            items={doneTodos}
+            todayId={todayId}
+            onToggle={onToggle}
+            onRemove={onRemove}
+            muted
+          />
+        )}
+        {!showCompleted && doneTodos.length > 0 && active.length > 0 && (
+          <p className="text-[10px] text-ink-faint">另有 {doneTodos.length} 項已完成</p>
+        )}
+      </div>
+    </SectionCard>
+  );
+}
+
+function DayBlock({ dateId, items, showCompleted, active, onSelectDay, onToggle, onRemove, onPostpone, todayId }) {
+  const dayEvents = eventsForDate(items, dateId);
+  const pending = dayEvents.filter((i) => !i.done);
+  const done = dayEvents.filter((i) => i.done);
+  const visible = showCompleted ? dayEvents : pending;
+  const hasContent = visible.length > 0;
+
+  return (
+    <div className={`border-l-[3px] px-3 py-2.5 ${active ? "border-l-jade bg-jade-soft/20" : "border-l-transparent"}`}>
       <button
         type="button"
         onClick={() => onSelectDay(dateId)}
@@ -196,39 +233,18 @@ function DayBlock({
       >
         <span className="text-sm font-bold text-ink">{formatPersonalDayLabel(dateId)}</span>
         <span className={`text-[10px] font-bold ${pending.length > 0 ? "text-coral" : "text-ink-faint"}`}>
-          {pending.length > 0
-            ? `${pending.length} 項待做`
-            : dayItems.length > 0
-              ? "全部完成"
-              : "無安排"}
+          {pending.length > 0 ? `${pending.length} 個日程` : dayEvents.length > 0 ? "已完成" : "無日程"}
         </span>
       </button>
 
       {!hasContent ? (
         <p className="text-[11px] text-ink-faint">—</p>
-      ) : splitView ? (
-        <div className="space-y-2">
-          <ItemGroup label="📅 日程" items={events} onToggle={onToggle} onRemove={onRemove} onPostpone={onPostpone} />
-          <ItemGroup label="☑️ 待辦" items={todos} onToggle={onToggle} onRemove={onRemove} onPostpone={onPostpone} />
-          {showCompleted && (
-            <ItemGroup
-              label="✓ 已完成"
-              items={done}
-              onToggle={onToggle}
-              onRemove={onRemove}
-              onPostpone={onPostpone}
-              muted
-            />
-          )}
-          {!showCompleted && done.length > 0 && pending.length > 0 && (
-            <p className="text-[10px] text-ink-faint">另有 {done.length} 項已完成</p>
-          )}
-        </div>
       ) : (
         <div className="space-y-2">
           <ItemGroup
-            label="待做"
+            label="📅 日程"
             items={pending}
+            todayId={todayId}
             onToggle={onToggle}
             onRemove={onRemove}
             onPostpone={onPostpone}
@@ -237,6 +253,7 @@ function DayBlock({
             <ItemGroup
               label="✓ 已完成"
               items={done}
+              todayId={todayId}
               onToggle={onToggle}
               onRemove={onRemove}
               onPostpone={onPostpone}
@@ -244,7 +261,7 @@ function DayBlock({
             />
           )}
           {!showCompleted && done.length > 0 && pending.length > 0 && (
-            <p className="text-[10px] text-ink-faint">另有 {done.length} 項已完成</p>
+            <p className="text-[10px] text-ink-faint">另有 {done.length} 個已完成日程</p>
           )}
         </div>
       )}
@@ -256,19 +273,20 @@ function ThreeDayTimetable({
   horizon,
   items,
   selectedDate,
-  filterKind,
   showCompleted,
   onFilterKind,
   onShowCompleted,
+  filterKind,
   onSelectDay,
   onToggle,
   onRemove,
   onPostpone,
+  todayId,
 }) {
   return (
     <SectionCard
-      title="黎緊 3 日"
-      hint="按日分組 · 日程（有時間）在上、待辦（备忘）在下"
+      title="黎緊 3 日 · 日程"
+      hint="指定時間嘅安排"
       action={
         <div className="flex shrink-0 items-center gap-1">
           {FILTERS.map((f) => (
@@ -301,13 +319,13 @@ function ThreeDayTimetable({
             key={dateId}
             dateId={dateId}
             items={items}
-            filterKind={filterKind}
             showCompleted={showCompleted}
             active={dateId === selectedDate}
             onSelectDay={onSelectDay}
             onToggle={onToggle}
             onRemove={onRemove}
             onPostpone={onPostpone}
+            todayId={todayId}
           />
         ))}
       </div>
@@ -320,13 +338,15 @@ function PersonalCalendar({ year, month, selectedDate, todayId, items, onSelectD
   const counts = useMemo(() => {
     const map = {};
     items.forEach((item) => {
-      if (!item.done) map[item.date] = (map[item.date] || 0) + 1;
+      if (item.done) return;
+      const key = item.kind === "event" ? item.date : personalTodoStartDate(item);
+      if (key) map[key] = (map[key] || 0) + 1;
     });
     return map;
   }, [items]);
 
   return (
-    <SectionCard title="月曆" hint="紅點 = 該日有未完成項目">
+    <SectionCard title="月曆" hint="紅點 = 該日有日程或待辦開始">
       <div className="flex items-center justify-between border-b border-jade/10 bg-mist/30 px-3 py-2">
         <button
           type="button"
@@ -420,7 +440,7 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
   const [filterKind, setFilterKind] = useState(personalUi.filterKind || "all");
   const [showCompleted, setShowCompleted] = useState(Boolean(personalUi.showCompleted));
   const [title, setTitle] = useState("");
-  const [entryDate, setEntryDate] = useState(personalUi.selectedDate || todayId);
+  const [entryDate, setEntryDate] = useState(todayId);
   const [entryTime, setEntryTime] = useState("");
   const [selectedDate, setSelectedDate] = useState(personalUi.selectedDate || todayId);
   const [viewMonth, setViewMonth] = useState(() => {
@@ -435,20 +455,34 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
 
   useEffect(() => {
     if (!Array.isArray(personal)) return;
-    const needsStrip = personal.some((item) => item.kind === "todo" && item.time);
-    if (!needsStrip) return;
-    setPersonal(personal.map((item) => (item.kind === "todo" ? { ...item, time: "" } : item)));
-  }, [personal, setPersonal]);
+    let changed = false;
+    const fixed = personal.map((item) => {
+      let next = item;
+      if (item.kind === "todo" && item.time) {
+        next = { ...next, time: "" };
+        changed = true;
+      }
+      if (item.kind === "todo" && !item.startDate) {
+        const startDate = item.date || (item.createdAt ? toDateId(new Date(item.createdAt)) : todayId);
+        next = { ...next, startDate, date: startDate };
+        changed = true;
+      }
+      return next;
+    });
+    if (changed) setPersonal(fixed);
+  }, [personal, setPersonal, todayId]);
+
   const threeDayHorizon = useMemo(
     () => [todayId, shiftDateId(todayId, 1), shiftDateId(todayId, 2)],
     [todayId],
   );
   const todayStats = useMemo(() => {
-    const todayItems = itemsForDate(items, todayId);
+    const active = activeTodos(items, todayId);
+    const events = eventsForDate(items, todayId).filter((i) => !i.done);
     return {
-      pending: todayItems.filter((i) => !i.done).length,
-      events: todayItems.filter((i) => i.kind === "event" && !i.done).length,
-      todos: todayItems.filter((i) => i.kind === "todo" && !i.done).length,
+      activeTodos: active.length,
+      events: events.length,
+      highPriority: active.filter((i) => todoPriorityTier(personalTodoStartDate(i), todayId) === "high").length,
     };
   }, [items, todayId]);
 
@@ -465,7 +499,7 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
 
   function selectDay(dateId) {
     setSelectedDate(dateId);
-    setEntryDate(dateId);
+    if (kind === "event") setEntryDate(dateId);
     const [y, m] = dateId.split("-").map(Number);
     setViewMonth({ year: y, month: m - 1 });
   }
@@ -474,8 +508,10 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
     setKind(nextKind);
     setTimeError(false);
     if (nextKind === "event") {
+      setEntryDate(selectedDate || todayId);
       setEntryTime((t) => t || nextRoundedHour());
     } else {
+      setEntryDate(todayId);
       setEntryTime("");
     }
   }
@@ -496,20 +532,37 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
       return;
     }
     setTimeError(false);
-    const entry = {
-      id: uid("personal"),
-      title: trimmed,
-      date: entryDate || selectedDate || todayId,
-      time: kind === "event" ? entryTime.trim() : "",
-      kind: kind === "event" ? "event" : "todo",
-      note: "",
-      done: false,
-      createdAt: Date.now(),
-    };
+    const startDate = entryDate || todayId;
+    const entry =
+      kind === "event"
+        ? {
+            id: uid("personal"),
+            title: trimmed,
+            date: startDate,
+            time: entryTime.trim(),
+            kind: "event",
+            note: "",
+            done: false,
+            createdAt: Date.now(),
+          }
+        : {
+            id: uid("personal"),
+            title: trimmed,
+            startDate,
+            date: startDate,
+            time: "",
+            kind: "todo",
+            note: "",
+            done: false,
+            createdAt: Date.now(),
+          };
     setPersonal((prev) => [...(Array.isArray(prev) ? prev : []), entry]);
     setTitle("");
-    if (kind !== "event") setEntryTime("");
-    selectDay(entry.date);
+    if (kind === "event") {
+      selectDay(entry.date);
+    } else {
+      setEntryDate(todayId);
+    }
     titleRef.current?.focus({ preventScroll: true });
   }
 
@@ -522,7 +575,7 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
   function postponeItem(id) {
     setPersonal((prev) =>
       (Array.isArray(prev) ? prev : []).map((item) =>
-        item.id === id ? { ...item, date: shiftDateId(item.date, 1), done: false } : item,
+        item.kind === "event" && item.id === id ? { ...item, date: shiftDateId(item.date, 1), done: false } : item,
       ),
     );
   }
@@ -542,9 +595,8 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
   }
 
   const kindMeta = KINDS.find((k) => k.id === kind) || KINDS[0];
-  const outOfHorizonItems = selectedDate && !threeDayHorizon.includes(selectedDate)
-    ? itemsForDate(items, selectedDate, filterKind)
-    : [];
+  const outOfHorizonEvents =
+    selectedDate && !threeDayHorizon.includes(selectedDate) ? eventsForDate(items, selectedDate) : [];
 
   return (
     <div className="space-y-3">
@@ -553,7 +605,7 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
       <div className="flex items-start justify-between gap-2">
         <div>
           <h2 className="font-display text-lg font-bold text-ink">個人日程</h2>
-          <p className="text-[11px] text-ink-faint">待辦＝备忘 · 日程＝指定時間</p>
+          <p className="text-[11px] text-ink-faint">待辦＝開始日期計優先 · 日程＝指定時間</p>
         </div>
         <button
           type="button"
@@ -565,23 +617,23 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
       </div>
 
       <div className="grid grid-cols-3 gap-1.5">
-        <div className="rounded-xl border border-jade/15 bg-white px-2 py-2 text-center">
-          <p className="text-[10px] font-bold text-ink-faint">今日待做</p>
-          <p className="font-display text-lg font-bold text-coral">{todayStats.pending}</p>
+        <div className="rounded-xl border border-jade/15 bg-jade-soft/40 px-2 py-2 text-center">
+          <p className="text-[10px] font-bold text-ink-faint">進行中待辦</p>
+          <p className="font-display text-lg font-bold text-jade-deep">{todayStats.activeTodos}</p>
         </div>
         <div className="rounded-xl border border-sky/20 bg-sky/8 px-2 py-2 text-center">
-          <p className="text-[10px] font-bold text-ink-faint">日程</p>
+          <p className="text-[10px] font-bold text-ink-faint">今日日程</p>
           <p className="font-display text-lg font-bold text-ink">{todayStats.events}</p>
         </div>
-        <div className="rounded-xl border border-jade/15 bg-jade-soft/40 px-2 py-2 text-center">
-          <p className="text-[10px] font-bold text-ink-faint">待辦</p>
-          <p className="font-display text-lg font-bold text-jade-deep">{todayStats.todos}</p>
+        <div className="rounded-xl border border-coral/25 bg-coral-soft/60 px-2 py-2 text-center">
+          <p className="text-[10px] font-bold text-ink-faint">逾週待辦</p>
+          <p className="font-display text-lg font-bold text-coral">{todayStats.highPriority}</p>
         </div>
       </div>
 
       <SectionCard
         title={`新增${kindMeta.label}`}
-        hint={kind === "event" ? "指定幾時去做（必填時間）" : "記低要做嘅事，唔使填時間"}
+        hint={kind === "event" ? "指定幾時去做（必填時間）" : "設定開始日期 · 由嗰日開始計生效時長"}
       >
         <form ref={formRef} onSubmit={addItem} className="space-y-2 p-3">
           <div className="grid grid-cols-2 gap-1.5">
@@ -608,34 +660,60 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
           />
 
           <div>
-            <p className="mb-1 text-[10px] font-bold text-ink-faint">日期</p>
-            <div className="mb-1.5 flex gap-1">
-              {QUICK_DATES.map(({ label, offset }) => {
-                const dateId = shiftDateId(todayId, offset);
-                const active = entryDate === dateId;
-                return (
-                  <button
-                    key={label}
-                    type="button"
-                    onClick={() => {
-                      setEntryDate(dateId);
-                      setSelectedDate(dateId);
-                    }}
-                    className={`min-h-7 flex-1 rounded-lg border text-[11px] font-bold active:scale-[0.98] ${
-                      active ? "border-jade bg-jade-soft/60 text-jade-deep" : "border-jade/15 bg-white text-ink-soft"
-                    }`}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
+            <p className="mb-1 text-[10px] font-bold text-ink-faint">{kind === "event" ? "日程日期" : "開始日期"}</p>
+            {kind === "todo" && (
+              <div className="mb-1.5 flex gap-1">
+                {QUICK_START_DATES.map(({ label, offset }) => {
+                  const dateId = shiftDateId(todayId, offset);
+                  const active = entryDate === dateId;
+                  return (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={() => setEntryDate(dateId)}
+                      className={`min-h-7 flex-1 rounded-lg border text-[11px] font-bold active:scale-[0.98] ${
+                        active ? "border-jade bg-jade-soft/60 text-jade-deep" : "border-jade/15 bg-white text-ink-soft"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            {kind === "event" && (
+              <div className="mb-1.5 flex gap-1">
+                {[
+                  { label: "今日", offset: 0 },
+                  { label: "明日", offset: 1 },
+                  { label: "後日", offset: 2 },
+                ].map(({ label, offset }) => {
+                  const dateId = shiftDateId(todayId, offset);
+                  const active = entryDate === dateId;
+                  return (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={() => {
+                        setEntryDate(dateId);
+                        setSelectedDate(dateId);
+                      }}
+                      className={`min-h-7 flex-1 rounded-lg border text-[11px] font-bold active:scale-[0.98] ${
+                        active ? "border-jade bg-jade-soft/60 text-jade-deep" : "border-jade/15 bg-white text-ink-soft"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
             <input
               type="date"
               value={entryDate}
               onChange={(e) => {
                 setEntryDate(e.target.value);
-                setSelectedDate(e.target.value);
+                if (kind === "event") setSelectedDate(e.target.value);
               }}
               className="h-9 w-full rounded-xl border border-jade/15 bg-mist px-2 text-xs outline-none ring-jade focus:ring-2"
             />
@@ -689,19 +767,58 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
         </form>
       </SectionCard>
 
-      <ThreeDayTimetable
-        horizon={threeDayHorizon}
-        items={items}
-        selectedDate={selectedDate}
-        filterKind={filterKind}
-        showCompleted={showCompleted}
-        onFilterKind={setFilterKind}
-        onShowCompleted={setShowCompleted}
-        onSelectDay={selectDay}
-        onToggle={toggleItem}
-        onRemove={removeItem}
-        onPostpone={postponeItem}
-      />
+      {(filterKind === "all" || filterKind === "todo") && (
+        <ActiveTodosPanel
+          items={items}
+          todayId={todayId}
+          showCompleted={showCompleted}
+          onToggle={toggleItem}
+          onRemove={removeItem}
+        />
+      )}
+
+      {(filterKind === "all" || filterKind === "event") && (
+        <ThreeDayTimetable
+          horizon={threeDayHorizon}
+          items={items}
+          selectedDate={selectedDate}
+          showCompleted={showCompleted}
+          filterKind={filterKind}
+          onFilterKind={setFilterKind}
+          onShowCompleted={setShowCompleted}
+          onSelectDay={selectDay}
+          onToggle={toggleItem}
+          onRemove={removeItem}
+          onPostpone={postponeItem}
+          todayId={todayId}
+        />
+      )}
+
+      {filterKind === "todo" && (
+        <div className="flex justify-end gap-1">
+          {FILTERS.map((f) => (
+            <button
+              key={f.id}
+              type="button"
+              onClick={() => setFilterKind(f.id)}
+              className={`rounded-lg border px-2 py-1 text-[10px] font-bold active:scale-[0.98] ${
+                filterKind === f.id ? "border-jade bg-jade-soft/60 text-jade-deep" : "border-jade/15 bg-white text-ink-soft"
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => setShowCompleted((v) => !v)}
+            className={`rounded-lg border px-2 py-1 text-[10px] font-bold active:scale-[0.98] ${
+              showCompleted ? "border-jade bg-jade-soft/60 text-jade-deep" : "border-jade/15 bg-white text-ink-soft"
+            }`}
+          >
+            {showCompleted ? "隱藏完成" : "完成"}
+          </button>
+        </div>
+      )}
 
       {calendarOpen && (
         <PersonalCalendar
@@ -716,52 +833,18 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
         />
       )}
 
-      {outOfHorizonItems.length > 0 && (
-        <SectionCard title="其他日期" hint={formatPersonalDayLabel(selectedDate)}>
+      {outOfHorizonEvents.length > 0 && (
+        <SectionCard title="其他日期 · 日程" hint={formatPersonalDayLabel(selectedDate)}>
           <div className="space-y-2 p-3">
-            {filterKind === "all" ? (
-              <>
-                <ItemGroup
-                  label="📅 日程"
-                  items={outOfHorizonItems.filter((i) => i.kind === "event" && !i.done)}
-                  onToggle={toggleItem}
-                  onRemove={removeItem}
-                  onPostpone={postponeItem}
-                />
-                <ItemGroup
-                  label="☑️ 待辦"
-                  items={outOfHorizonItems.filter((i) => i.kind === "todo" && !i.done)}
-                  onToggle={toggleItem}
-                  onRemove={removeItem}
-                  onPostpone={postponeItem}
-                />
-                {showCompleted && (
-                  <ItemGroup
-                    label="✓ 已完成"
-                    items={outOfHorizonItems.filter((i) => i.done)}
-                    onToggle={toggleItem}
-                    onRemove={removeItem}
-                    onPostpone={postponeItem}
-                    muted
-                  />
-                )}
-              </>
-            ) : (
-              <ItemGroup
-                label="待做"
-                items={outOfHorizonItems.filter((i) => !i.done)}
-                onToggle={toggleItem}
-                onRemove={removeItem}
-                onPostpone={postponeItem}
-              />
-            )}
+            <ItemGroup
+              label="📅 日程"
+              items={showCompleted ? outOfHorizonEvents : outOfHorizonEvents.filter((i) => !i.done)}
+              todayId={todayId}
+              onToggle={toggleItem}
+              onRemove={removeItem}
+              onPostpone={postponeItem}
+            />
           </div>
-        </SectionCard>
-      )}
-
-      {selectedDate && !threeDayHorizon.includes(selectedDate) && outOfHorizonItems.length === 0 && (
-        <SectionCard title="其他日期" hint={formatPersonalDayLabel(selectedDate)}>
-          <p className="px-3 py-4 text-center text-xs text-ink-faint">呢日無安排</p>
         </SectionCard>
       )}
     </div>
