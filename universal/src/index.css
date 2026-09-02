@@ -57,7 +57,8 @@ body {
 }
 
 .mode-rail {
-  flex-shrink: 0;
+  padding-top: max(2.75rem, calc(env(safe-area-inset-top, 0px) + 1rem));
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
 }
 
 .mode-rail-card {

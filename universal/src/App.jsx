@@ -136,9 +136,9 @@ export default function App() {
   }
 
   return (
-    <div className="bg-travel flex min-h-dvh w-full overflow-x-hidden">
+    <div className="bg-travel min-h-dvh w-full overflow-x-hidden">
       {activeTrip && <ModeRail mode={appMode} onModeChange={setAppMode} />}
-      <div className="min-w-0 flex-1">
+      <div className={activeTrip ? "pl-[4.75rem]" : ""}>
       <main className="safe-top mx-auto w-full max-w-lg box-border px-4 pb-32">
         {activeTrip && (
           <div className="mb-4">
