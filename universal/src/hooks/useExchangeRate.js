@@ -64,7 +64,7 @@ export function useExchangeRate(trip, rateState, setRateState) {
       clearInterval(id);
       document.removeEventListener("visibilitychange", onVisible);
     };
-  }, [trip?.targetCurrency, sync]);
+  }, [trip?.id, trip?.targetCurrency, sync]);
 
   async function refresh() {
     await sync({ force: true });

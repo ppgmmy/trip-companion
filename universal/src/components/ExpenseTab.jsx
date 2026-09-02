@@ -615,6 +615,7 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
               totalHkd={totalHkd}
               rate={rate}
               fxLabel={statusLabel}
+              fxMeta={rateMeta}
             />
 
             <PayerSpendStats trip={trip} payerTotals={payerTotals} onJumpToPayer={jumpToLedgerPayer} />

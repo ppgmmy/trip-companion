@@ -886,29 +886,32 @@ export function AnalysisStory({ trip, expenses, days, totalSpent, budget, elapse
   );
 }
 
-export function LedgerSummaryBar({ trip, expenses, visibleCount, todaySpent, totalSpent, totalHkd, rate, fxLabel }) {
+export function LedgerSummaryBar({ trip, expenses, visibleCount, todaySpent, totalSpent, totalHkd, rate, fxLabel, fxMeta }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl bg-jade-soft/40 px-3 py-2 text-[11px] font-semibold text-ink-soft">
-      <span>
-        今日 <strong className="text-jade-deep">{formatMoney(todaySpent, trip.targetCurrency)}</strong>
-      </span>
-      <span className="text-ink-faint">·</span>
-      <span>
-        總計 <strong className="text-ink">{formatMoney(totalSpent, trip.targetCurrency)}</strong>
-        <span className="ml-1 text-ink-faint">({formatHkd(totalHkd)})</span>
-      </span>
-      <span className="text-ink-faint">·</span>
-      <span>
-        {visibleCount === expenses.length ? `${expenses.length} 筆` : `${visibleCount}/${expenses.length} 筆`}
-      </span>
-      {rate > 0 && (
-        <>
-          <span className="text-ink-faint">·</span>
-          <span className="text-ink-faint">
-            1 {trip.targetCurrency} ≈ {rate.toFixed(4)} HKD{fxLabel ? ` · ${fxLabel}` : ""}
-          </span>
-        </>
-      )}
+    <div className="space-y-1">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl bg-jade-soft/40 px-3 py-2 text-[11px] font-semibold text-ink-soft">
+        <span>
+          今日 <strong className="text-jade-deep">{formatMoney(todaySpent, trip.targetCurrency)}</strong>
+        </span>
+        <span className="text-ink-faint">·</span>
+        <span>
+          總計 <strong className="text-ink">{formatMoney(totalSpent, trip.targetCurrency)}</strong>
+          <span className="ml-1 text-ink-faint">({formatHkd(totalHkd)})</span>
+        </span>
+        <span className="text-ink-faint">·</span>
+        <span>
+          {visibleCount === expenses.length ? `${expenses.length} 筆` : `${visibleCount}/${expenses.length} 筆`}
+        </span>
+        {rate > 0 && (
+          <>
+            <span className="text-ink-faint">·</span>
+            <span className="text-ink-faint">
+              1 {trip.targetCurrency} ≈ {rate.toFixed(4)} HKD{fxLabel ? ` · ${fxLabel}` : ""}
+            </span>
+          </>
+        )}
+      </div>
+      {fxMeta && <p className="px-1 text-[10px] font-medium text-ink-faint">{fxMeta}</p>}
     </div>
   );
 }
