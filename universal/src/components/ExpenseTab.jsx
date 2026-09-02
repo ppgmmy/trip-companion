@@ -374,9 +374,9 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
   const rateUpdatedAt = rateState?.lastUpdated;
   const rateMeta = rateUpdatedAt
     ? rateState?.source === "manual"
-      ? `手動設定於 ${formatRateWhen(rateUpdatedAt)}`
-      : `線上更新 ${formatRateWhen(rateUpdatedAt)} · 下次約 ${formatRateWhen(rateUpdatedAt + RATE_TTL_MS)}`
-    : "每 12 小時自動更新 · 可手動調整";
+      ? `手動設定於 ${formatRateWhen(rateUpdatedAt)} · 每 12 小時自動更新 · 亦可隨時改線上匯率`
+      : `線上更新 ${formatRateWhen(rateUpdatedAt)} · 下次約 ${formatRateWhen(rateUpdatedAt + RATE_TTL_MS)} · 亦可手動更新`
+    : "每 12 小時自動更新 · 亦可手動更新";
 
   const doughnutCenter = topCat
     ? { label: "最多", value: topCat.label }
@@ -765,7 +765,7 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
                       }}
                       className="h-9 shrink-0 rounded-xl border border-jade/15 bg-white px-3 text-xs font-bold text-ink"
                     >
-                      套用
+                      手動套用
                     </button>
                   </div>
                 </div>
