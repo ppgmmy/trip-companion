@@ -57,8 +57,11 @@ body {
 }
 
 .mode-rail {
-  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
   flex-shrink: 0;
+}
+
+.mode-rail-card {
+  box-shadow: var(--shadow-nav);
 }
 
 .font-display {
