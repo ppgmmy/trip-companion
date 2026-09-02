@@ -1,6 +1,6 @@
 /**
  * 行程建議：食 → 景點 → 食 → 景點 交替節奏
- * 曼谷 Aug 30 – Sep 10 有精選日程；其他城市由 placesMeta 自動輪替。
+ * 大阪（堺筋本町基地）8/30–9/10 有精選日程；曼谷同其他城市另有模板。
  */
 
 import { guideForTrip } from "../placesMeta";
@@ -11,6 +11,21 @@ const SPOT_TAGS = new Set(["景點", "購物", "玩樂", "室內", "戶外", "�
 
 const SLOT_TIMES = ["10:30", "13:30", "17:00", "19:30"];
 const SLOT_KINDS = ["food", "spot", "food", "spot"];
+
+export const OSAKA_MAP = {
+  center: { lat: 34.6819, lng: 135.5068, zoom: 13, query: "堺筋本町駅 大阪" },
+  zones: [
+    { id: "hommachi", label: "堺筋本町", lat: 34.6819, lng: 135.5068, color: "#0d9488" },
+    { id: "shinsaibashi", label: "心齋橋", lat: 34.6717, lng: 135.5012, color: "#0ea5e9" },
+    { id: "dotonbori", label: "道頓堀", lat: 34.6686, lng: 135.5023, color: "#f59e0b" },
+    { id: "namba", label: "難波", lat: 34.6636, lng: 135.5019, color: "#f97316" },
+    { id: "kuromon", label: "黑門市場", lat: 34.6654, lng: 135.5062, color: "#ec4899" },
+    { id: "castle", label: "大阪城", lat: 34.6873, lng: 135.5262, color: "#8b5cf6" },
+    { id: "umeda", label: "梅田", lat: 34.7024, lng: 135.4959, color: "#14b8a6" },
+    { id: "tennoji", label: "天王寺", lat: 34.6462, lng: 135.5133, color: "#6366f1" },
+    { id: "nakanoshima", label: "中之島", lat: 34.6924, lng: 135.501, color: "#84cc16" },
+  ],
+};
 
 export const BANGKOK_MAP = {
   center: { lat: 13.7563, lng: 100.5018, zoom: 11 },
@@ -37,6 +52,142 @@ function slot(kind, time, title, detail, area, maps) {
     tag: kind === "food" ? "美食" : "景點",
   };
 }
+
+/** 大阪堺筋本町基地 · 8/30–9/10（食→景→食→景） */
+const OSAKA_CURATED = {
+  "2026-08-30": {
+    title: "安頓堺筋本町",
+    vibe: "熟悉基地＋心齋橋",
+    zone: "hommachi",
+    slots: [
+      slot("food", "10:30", "本町／心齋橋 Cafe", "堺筋本町步行或一站到心齋橋，先飲咖啡食輕食", "堺筋本町", "cafes near Sakaisuji-Hommachi Station Osaka"),
+      slot("spot", "13:30", "心齋橋筋商店街", "拱廊逛街，藥妝同服飾集中", "心齋橋", "Shinsaibashi-suji Shopping Street Osaka"),
+      slot("food", "17:00", "道頓堀午餐", "章魚燒、大阪燒或拉麵", "道頓堀", "Dotonbori food Osaka"),
+      slot("spot", "19:30", "道頓堀夜景", "固力果招牌同霓虹河散步", "道頓堀", "Dotonbori Osaka"),
+    ],
+  },
+  "2026-08-31": {
+    title: "黑門市場日",
+    vibe: "日本橋掃街",
+    zone: "kuromon",
+    slots: [
+      slot("food", "10:30", "黑門市場早餐", "即燒海鮮、和牛串、玉子燒", "黑門市場", "Kuromon Ichiba Market Osaka"),
+      slot("spot", "13:30", "日本橋電電街", "動漫模型電器，大阪秋葉原", "日本橋", "Nipponbashi Osaka"),
+      slot("food", "17:00", "難波食街", "食通天或百貨美食樓", "難波", "Namba Parks restaurant Osaka"),
+      slot("spot", "19:30", "難波 Parks", "商場散步同補貨", "難波", "Namba Parks Osaka"),
+    ],
+  },
+  "2026-09-01": {
+    title: "大阪城",
+    vibe: "從本町搭地鐵北上",
+    zone: "castle",
+    slots: [
+      slot("food", "10:30", "堺筋本町早餐", "出發前喺基地附近食", "堺筋本町", "breakfast near Sakaisuji-Hommachi Osaka"),
+      slot("spot", "13:30", "大阪城天守閣", "地標城堡同公園散步", "大阪城", "Osaka Castle Osaka"),
+      slot("food", "17:00", "大阪城公園周邊", "公園附近食午餐或下午茶", "大阪城", "restaurants near Osaka Castle"),
+      slot("spot", "19:30", "天滿宮／天神橋筋", "商店街傍晚行", "天神橋", "Tenjinbashi-suji Shopping Street Osaka"),
+    ],
+  },
+  "2026-09-02": {
+    title: "梅田一日",
+    vibe: "御堂筋線北上",
+    zone: "umeda",
+    slots: [
+      slot("food", "10:30", "梅田 Depachika", "百貨地下美食街早餐", "梅田", "depachika Umeda Osaka"),
+      slot("spot", "13:30", "Grand Front Osaka", "最新商場同空中花園", "梅田", "Grand Front Osaka"),
+      slot("food", "17:00", "梅田食街", "阪急百貨或 Lucua 餐廳", "梅田", "restaurants Umeda Osaka"),
+      slot("spot", "19:30", "梅田空中庭園", "173 米展望台睇日落", "梅田", "Umeda Sky Building Osaka"),
+    ],
+  },
+  "2026-09-03": {
+    title: "新世界",
+    vibe: "通天閣＋串炸",
+    zone: "tennoji",
+    slots: [
+      slot("food", "10:30", "本町 Cafe", "上午輕鬆出發", "堺筋本町", "cafes Sakaisuji-Hommachi Osaka"),
+      slot("spot", "13:30", "通天閣＋新世界", "昭和復古街區打卡", "新世界", "Tsutenkaku Osaka"),
+      slot("food", "17:00", "新世界串炸", "炸物放題或名店", "新世界", "kushikatsu Shinsekai Osaka"),
+      slot("spot", "19:30", "天王寺／阿倍野", "傍晚行 Q's Mall 或公園", "天王寺", "Tennoji Osaka"),
+    ],
+  },
+  "2026-09-04": {
+    title: "美國村＋心齋橋",
+    vibe: "潮牌同古著",
+    zone: "shinsaibashi",
+    slots: [
+      slot("food", "10:30", "心齋橋 Brunch", "三角公園附近 Cafe", "美國村", "cafes Amerikamura Osaka"),
+      slot("spot", "13:30", "美國村", "古著潮牌同街頭文化", "美國村", "Amerikamura Osaka"),
+      slot("food", "17:00", "心齋橋晚餐", "燒肉或居酒屋", "心齋橋", "restaurants Shinsaibashi Osaka"),
+      slot("spot", "19:30", "御堂筋夜景", "由心齋橋行返本町", "御堂筋", "Midosuji Avenue Osaka"),
+    ],
+  },
+  "2026-09-05": {
+    title: "海遊館日",
+    vibe: "大阪港遠征",
+    zone: "tennoji",
+    slots: [
+      slot("food", "10:30", "堺筋本町出發前", "輕食後搭地鐵去港區", "堺筋本町", "cafes near Hommachi Osaka"),
+      slot("spot", "13:30", "海遊館", "鯨鯊同企鵝，室內逛半日", "大阪港", "Osaka Aquarium Kaiyukan"),
+      slot("food", "17:00", "天保山 Marketplace", "港區商場食晚餐", "天保山", "Tempozan Marketplace Osaka"),
+      slot("spot", "19:30", "天保山大摩天輪", "透明車廂睇港灣夜景", "天保山", "Tempozan Ferris Wheel Osaka"),
+    ],
+  },
+  "2026-09-06": {
+    title: "基地慢活",
+    vibe: "本町休息＋補給",
+    zone: "hommachi",
+    slots: [
+      slot("food", "10:30", "本町咖啡", "久坐整理前幾日戰利品", "堺筋本町", "cafes Hommachi Osaka"),
+      slot("spot", "13:30", "大阪生活今昔館", "江戶街道實景，落雨都 OK", "天神橋", "Osaka Museum of Housing and Living"),
+      slot("food", "17:00", "黑門市場二訪", "補海鮮或手信食材", "黑門市場", "Kuromon Ichiba Market Osaka"),
+      slot("spot", "19:30", "道頓堀輕鬆行", "未食過嘅小食再掃", "道頓堀", "Dotonbori Osaka"),
+    ],
+  },
+  "2026-09-07": {
+    title: "中之島",
+    vibe: "河川＋文藝",
+    zone: "nakanoshima",
+    slots: [
+      slot("food", "10:30", "中之島 Cafe", "河畔咖啡開場", "中之島", "cafes Nakanoshima Osaka"),
+      slot("spot", "13:30", "中之島公園", "玫瑰園同河岸散步", "中之島", "Nakanoshima Park Osaka"),
+      slot("food", "17:00", "北新地食街", "高質午餐／晚餐", "北新地", "Kitashinchi restaurants Osaka"),
+      slot("spot", "19:30", "大阪市中央公會堂", "夜間建築同河畔影相", "中之島", "Osaka City Central Public Hall"),
+    ],
+  },
+  "2026-09-08": {
+    title: "阿倍野 Harukas",
+    vibe: "天王寺商圈",
+    zone: "tennoji",
+    slots: [
+      slot("food", "10:30", "堺筋本町出發", "天王寺方向", "堺筋本町", "breakfast Sakaisuji-Hommachi Osaka"),
+      slot("spot", "13:30", "阿倍野 HARUKAS 300", "日本第二高樓展望台", "天王寺", "Abeno Harukas Osaka"),
+      slot("food", "17:00", "天王寺 Mio 美食", "百貨內用餐", "天王寺", "Tennoji Mio Osaka"),
+      slot("spot", "19:30", "四天王寺", "傍晚寺院周邊散步", "天王寺", "Shitennoji Temple Osaka"),
+    ],
+  },
+  "2026-09-09": {
+    title: "環球影城",
+    vibe: "USJ 全日",
+    zone: "hommachi",
+    slots: [
+      slot("food", "10:30", "USJ 園內早餐", "入園後園內食", "環球影城", "Universal Studios Japan Osaka"),
+      slot("spot", "13:30", "任天堂世界等園區", "預留 Express 或早入園", "環球影城", "Super Nintendo World USJ"),
+      slot("food", "17:00", "USJ 園內晚餐", "園內餐廳", "環球影城", "restaurants Universal Studios Japan"),
+      slot("spot", "19:30", "夜間遊行／燈光", "睇完先返堺筋本町", "環球影城", "Universal Citywalk Osaka"),
+    ],
+  },
+  "2026-09-10": {
+    title: "告別大阪",
+    vibe: "手信＋最後一轉",
+    zone: "hommachi",
+    slots: [
+      slot("food", "10:30", "最愛 Cafe 回訪", "堺筋本町或心齋橋", "堺筋本町", "cafes Sakaisuji-Hommachi Osaka"),
+      slot("spot", "13:30", "心齋橋最後掃貨", "伴手禮同藥妝", "心齋橋", "Shinsaibashi Osaka"),
+      slot("food", "17:00", "最後一頓大阪燒", "道頓堀或難波", "道頓堀", "okonomiyaki Dotonbori Osaka"),
+      slot("spot", "19:30", "返堺筋本町整理", "行李同戰利品收尾", "堺筋本町", "Sakaisuji-Hommachi Station Osaka"),
+    ],
+  },
+};
 
 /** 曼谷 8/30–9/10 精選（食→景→食→景） */
 const BANGKOK_CURATED = {
@@ -174,6 +325,11 @@ const BANGKOK_CURATED = {
   },
 };
 
+function isOsakaTrip(trip) {
+  const city = (trip?.city || "").toLowerCase();
+  return city.includes("大阪") || city.includes("osaka") || city.includes("堺筋") || city.includes("本町");
+}
+
 function isBangkokTrip(trip) {
   const city = (trip?.city || "").toLowerCase();
   const country = (trip?.country || "").toLowerCase();
@@ -215,6 +371,9 @@ function autoDayPlan(trip, dayIndex) {
 }
 
 export function dayPlanForTrip(trip, dateId, dayIndex) {
+  if (isOsakaTrip(trip) && OSAKA_CURATED[dateId]) {
+    return OSAKA_CURATED[dateId];
+  }
   if (isBangkokTrip(trip) && BANGKOK_CURATED[dateId]) {
     return BANGKOK_CURATED[dateId];
   }
@@ -222,6 +381,19 @@ export function dayPlanForTrip(trip, dateId, dayIndex) {
 }
 
 export function mapConfigForTrip(trip, activeZoneId) {
+  if (isOsakaTrip(trip)) {
+    const zone = OSAKA_MAP.zones.find((z) => z.id === activeZoneId);
+    if (zone) {
+      return {
+        query: `${zone.label} 大阪`,
+        lat: zone.lat,
+        lng: zone.lng,
+        zoom: 14,
+        zones: OSAKA_MAP.zones,
+      };
+    }
+    return { ...OSAKA_MAP.center, zones: OSAKA_MAP.zones };
+  }
   if (isBangkokTrip(trip)) {
     const zone = BANGKOK_MAP.zones.find((z) => z.id === activeZoneId);
     if (zone) {

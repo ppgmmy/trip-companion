@@ -89,7 +89,10 @@ export default function ItineraryTab({ trip, itinerary, setItinerary }) {
       <div>
         <h2 className="font-display text-xl font-bold text-ink">行程地圖</h2>
         <p className="text-sm text-ink-soft">
-          {trip.startDate} → {trip.endDate} · 食 → 景點 → 食 → 景點
+          {trip.startDate} → {trip.endDate}
+          {trip.city?.includes("大阪") || (trip.city || "").toLowerCase().includes("osaka")
+            ? " · 堺筋本町基地 · 食→景點→食→景點"
+            : " · 食→景點→食→景點"}
         </p>
       </div>
 
