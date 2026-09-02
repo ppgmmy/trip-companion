@@ -104,10 +104,9 @@
     },
     {
       "date": "2026-09-02",
-      "id": "category-pct-labels",
-      "title": "分類百分比標籤",
-      "description": "分類排行旁顯示佔總支出百分比。",
-      "cycle": true
+      "id": "today-budget-gauge",
+      "title": "今日預算儀表",
+      "description": "概覽頁一眼睇今日已使同每日可用額，色階提示仲剩幾多，出門前心里有數。"
     }
   ]
 }

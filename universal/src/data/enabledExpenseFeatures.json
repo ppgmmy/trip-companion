@@ -21,9 +21,10 @@
     "remaining-days-chip",
     "category-pct-labels",
     "avg-per-category",
-    "fx-rate-impact"
+    "fx-rate-impact",
+    "today-budget-gauge"
   ],
-  "updatedAt": "2026-09-02T02:00:56.210Z",
-  "lastFeatureId": "category-pct-labels",
-  "lastTitle": "分類百分比標籤"
+  "updatedAt": "2026-09-02T02:04:00.000Z",
+  "lastFeatureId": "today-budget-gauge",
+  "lastTitle": "今日預算儀表"
 }

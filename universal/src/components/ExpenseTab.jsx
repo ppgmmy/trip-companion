@@ -25,6 +25,7 @@ import {
   PayerPaymentBreakdown,
   QuickAddHelpers,
   SevenDayTrendPanel,
+  TodayBudgetGauge,
 } from "./ExpenseDailyExtras";
 import PayerPaymentFields from "./PayerPaymentFields";
 import { REGISTRY_KEYS } from "../storage";
@@ -446,6 +447,14 @@ export default function ExpenseTab({ trip, expenses, setExpenses, rateState, fxS
               remainingDays={remainingDays}
               dailyAllowance={dailyAllowance}
               currency={trip.targetCurrency}
+            />
+
+            <TodayBudgetGauge
+              trip={trip}
+              expenses={expenses}
+              todaySpent={todaySpent}
+              dailyAllowance={dailyAllowance}
+              budget={budget}
             />
 
             {budget > 0 && (

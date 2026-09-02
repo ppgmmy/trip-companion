@@ -146,4 +146,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "對比記帳鎖定港幣同而家匯率重算嘅差額，了解匯率波動點影響總使費。",
     pillar: "stickiness",
   },
+  {
+    id: "today-budget-gauge",
+    title: "今日預算儀表",
+    description: "概覽頁一眼睇今日已使同每日可用額，色階提示仲剩幾多，出門前心里有數。",
+    pillar: "convenience",
+  },
 ];

@@ -1317,6 +1317,157 @@ export function PinnedBudgetAlert({
   );
 }
 
+export function TodayBudgetGauge({ trip, expenses, todaySpent, dailyAllowance, budget }) {
+  const [expanded, setExpanded] = useState(false);
+
+  const todayId = toDateId(new Date());
+
+  const todayBreakdown = useMemo(() => {
+    const map = {};
+    expenses
+      .filter((e) => e.date === todayId)
+      .forEach((e) => {
+        map[e.categoryId] = (map[e.categoryId] || 0) + (Number(e.amount) || 0);
+      });
+    return EXPENSE_CATEGORIES.filter((c) => map[c.id] > 0)
+      .map((c) => ({ ...c, value: map[c.id] }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 3);
+  }, [expenses, todayId]);
+
+  if (!isFeatureEnabled("today-budget-gauge") || budget <= 0 || dailyAllowance <= 0) return null;
+
+  const todayLeft = dailyAllowance - todaySpent;
+  const usagePct = dailyAllowance > 0 ? (todaySpent / dailyAllowance) * 100 : 0;
+  const barWidth = Math.min(100, usagePct);
+
+  let tier;
+  if (usagePct >= 100) {
+    tier = {
+      label: "已超今日",
+      badgeClass: "bg-coral/15 text-coral",
+      barClass: "bg-gradient-to-r from-coral to-[#dc2626]",
+      headlineClass: "text-coral",
+      insight: `超出 ${formatMoney(-todayLeft, trip.targetCurrency)} · 今日要收油`,
+    };
+  } else if (usagePct >= 85) {
+    tier = {
+      label: "快用盡",
+      badgeClass: "bg-[#fef3c7] text-[#b45309]",
+      barClass: "bg-gradient-to-r from-[#f59e0b] to-[#f97316]",
+      headlineClass: "text-[#b45309]",
+      insight: `仲剩 ${formatMoney(todayLeft, trip.targetCurrency)} · 非必要消費要諗清楚`,
+    };
+  } else if (usagePct >= 60) {
+    tier = {
+      label: "留意節奏",
+      badgeClass: "bg-[#fef3c7] text-[#b45309]",
+      barClass: "bg-gradient-to-r from-jade to-[#f59e0b]",
+      headlineClass: "text-ink",
+      insight: `仲剩 ${formatMoney(todayLeft, trip.targetCurrency)} · 節奏正常`,
+    };
+  } else {
+    tier = {
+      label: todaySpent > 0 ? "今日充裕" : "今日可用",
+      badgeClass: "bg-jade-soft text-jade-deep",
+      barClass: "bg-gradient-to-r from-[#34d399] to-jade",
+      headlineClass: "text-jade-deep",
+      insight: todaySpent > 0
+        ? `仲剩 ${formatMoney(todayLeft, trip.targetCurrency)} · 今日仲有餘力`
+        : `今日可用 ${formatMoney(dailyAllowance, trip.targetCurrency)} · 記第一筆就開始追蹤`,
+    };
+  }
+
+  const txCount = expenses.filter((e) => e.date === todayId).length;
+
+  return (
+    <div className="rounded-3xl bg-white p-4 shadow-[var(--shadow-soft)]">
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="flex w-full items-start gap-3 text-left transition active:scale-[0.99]"
+        aria-expanded={expanded}
+      >
+        <span className="mt-0.5 text-lg" aria-hidden="true">
+          {usagePct >= 100 ? "🔴" : usagePct >= 85 ? "🟠" : usagePct >= 60 ? "🟡" : "🟢"}
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-xs font-bold uppercase tracking-wider text-ink-soft">📅 今日預算儀表</p>
+            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${tier.badgeClass}`}>
+              {tier.label}
+            </span>
+          </div>
+          <div className="mt-2 flex items-baseline justify-between gap-2">
+            <p className={`font-display text-xl font-black ${tier.headlineClass}`}>
+              {formatMoney(todaySpent, trip.targetCurrency)}
+            </p>
+            <p className="text-sm font-semibold text-ink-faint">
+              / {formatMoney(dailyAllowance, trip.targetCurrency)}
+            </p>
+          </div>
+          <div className="mt-2.5 h-3 overflow-hidden rounded-full bg-[#efe9e0]">
+            <div
+              className={`h-full rounded-full transition-all duration-700 ${tier.barClass}`}
+              style={{ width: `${barWidth}%` }}
+            />
+          </div>
+          <p className="mt-2 text-xs font-semibold text-ink-soft">{tier.insight}</p>
+        </div>
+        <span className="shrink-0 rounded-full border border-jade/15 bg-shell px-2 py-1 text-[10px] font-bold text-jade-deep">
+          {expanded ? "收起" : "詳情"}
+        </span>
+      </button>
+
+      {expanded && (
+        <div className="mt-3 space-y-3 border-t border-jade/10 pt-3">
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="rounded-2xl bg-shell px-2 py-2.5">
+              <p className="text-[10px] font-semibold text-ink-faint">今日已使</p>
+              <p className="mt-0.5 text-sm font-black text-ink">{formatMoney(todaySpent, trip.targetCurrency)}</p>
+            </div>
+            <div className="rounded-2xl bg-shell px-2 py-2.5">
+              <p className="text-[10px] font-semibold text-ink-faint">每日可用</p>
+              <p className="mt-0.5 text-sm font-black text-ink">{formatMoney(dailyAllowance, trip.targetCurrency)}</p>
+            </div>
+            <div className="rounded-2xl bg-shell px-2 py-2.5">
+              <p className="text-[10px] font-semibold text-ink-faint">今日剩餘</p>
+              <p className={`mt-0.5 text-sm font-black ${todayLeft < 0 ? "text-coral" : "text-jade-deep"}`}>
+                {formatMoney(todayLeft, trip.targetCurrency)}
+              </p>
+            </div>
+          </div>
+
+          {todayBreakdown.length > 0 ? (
+            <div>
+              <p className="mb-2 text-[11px] font-semibold text-ink-faint">今日分類（Top {todayBreakdown.length}）</p>
+              <ul className="space-y-2">
+                {todayBreakdown.map((c) => {
+                  const share = todaySpent > 0 ? Math.round((c.value / todaySpent) * 100) : 0;
+                  return (
+                    <li key={c.id} className="flex items-center gap-2">
+                      <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: c.color }} />
+                      <span className="min-w-0 flex-1 truncate text-sm font-bold text-ink">{c.label}</span>
+                      <span className="text-sm font-black text-jade-deep">{formatMoney(c.value, trip.targetCurrency)}</span>
+                      <span className="w-9 text-right text-xs font-bold text-ink-faint">{share}%</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ) : (
+            <p className="text-center text-xs text-ink-faint">今日尚未記帳 · {txCount} 筆</p>
+          )}
+
+          <p className="text-center text-[10px] text-ink-faint">
+            每日可用 = 剩餘預算 ÷ 剩餘日數 · 已用 {usagePct.toFixed(0)}%
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function FxRateImpactPanel({ trip, expenses, currentRate }) {
   const [expanded, setExpanded] = useState(false);
 
