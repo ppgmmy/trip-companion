@@ -4,7 +4,9 @@ import {
   INDOOR_TAGS,
   PLACE_TYPES,
   inferPlaceType,
+  parseFootprintLogLine,
   placeTypeMeta,
+  sortFootprintsChronological,
   toDateId,
   tripDays,
   WEEKDAY_LABELS,
@@ -30,11 +32,19 @@ function buildTripDayOptions(trip) {
   return days;
 }
 
+const DAY_LOG_EXAMPLE = `1300 黎到大阪
+1500 堺筋本町 Roynet Premier 酒店 check-in
+食 頂七家拉麵
+踩電動滑板去心齋橋商店街
+食堺筋本町 Sukiya
+買水買糖返酒店`;
+
 function normalizeSpot(spot) {
   return {
     ...spot,
     type: inferPlaceType(spot),
     note: typeof spot.note === "string" ? spot.note : "",
+    time: typeof spot.time === "string" ? spot.time : "",
     dayId: spot.dayId || "",
     badges: Array.isArray(spot.badges) ? spot.badges : [],
   };
@@ -56,9 +66,12 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false }) {
     dayOptions.find((d) => d.id === todayId)?.id || dayOptions[0]?.id || "";
 
   const [formOpen, setFormOpen] = useState(false);
+  const [logOpen, setLogOpen] = useState(false);
   const [name, setName] = useState("");
   const [area, setArea] = useState("");
   const [note, setNote] = useState("");
+  const [visitTime, setVisitTime] = useState("");
+  const [logText, setLogText] = useState("");
   const [type, setType] = useState("spot");
   const [dayId, setDayId] = useState(defaultDay);
   const [rating, setRating] = useState(4);
@@ -72,7 +85,9 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false }) {
 
   useEffect(() => {
     if (!Array.isArray(spots)) return;
-    const needs = spots.some((s) => !s.type || s.note == null || !Array.isArray(s.badges));
+    const needs = spots.some(
+      (s) => !s.type || s.note == null || s.time == null || !Array.isArray(s.badges),
+    );
     if (!needs) return;
     setSpots(spots.map(normalizeSpot));
   }, [spots, setSpots]);
@@ -144,12 +159,12 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false }) {
     });
     const ordered = [];
     dayOptions.forEach((d) => {
-      if (map.has(d.id)) ordered.push({ day: d, spots: map.get(d.id) });
+      if (map.has(d.id)) ordered.push({ day: d, spots: sortFootprintsChronological(map.get(d.id)) });
     });
     if (map.has("_none")) {
       ordered.push({
         day: { id: "_none", index: null, label: "未標日子", short: "—" },
-        spots: map.get("_none"),
+        spots: sortFootprintsChronological(map.get("_none")),
       });
     }
     return ordered;
@@ -171,10 +186,40 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false }) {
     setName("");
     setArea("");
     setNote("");
+    setVisitTime("");
     setType("spot");
     setDayId(defaultDay);
     setRating(4);
     setSelected([]);
+  }
+
+  function importDayLog(e) {
+    e.preventDefault();
+    const lines = logText.split("\n").map((l) => l.trim()).filter(Boolean);
+    if (lines.length === 0) return;
+    const base = Date.now();
+    const entries = lines
+      .map((line, i) => {
+        const parsed = parseFootprintLogLine(line);
+        if (!parsed) return null;
+        return {
+          id: `spot-${base}-${i}`,
+          name: parsed.name,
+          area: parsed.area,
+          note: parsed.note,
+          time: parsed.time,
+          type: parsed.type,
+          dayId: dayId || defaultDay,
+          rating: 0,
+          badges: [],
+          createdAt: base + i,
+        };
+      })
+      .filter(Boolean);
+    if (entries.length === 0) return;
+    setSpots((prev) => [...prev, ...entries]);
+    setLogText("");
+    setLogOpen(false);
   }
 
   function submit(e) {
@@ -187,6 +232,7 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false }) {
         name: name.trim(),
         area: area.trim(),
         note: note.trim(),
+        time: visitTime.trim(),
         type,
         dayId: dayId || "",
         rating,
@@ -223,6 +269,7 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false }) {
               <div className="min-w-0">
                 <p className="truncate font-display text-sm font-bold text-ink">{spot.name}</p>
                 <p className="mt-0.5 text-[11px] text-ink-faint">
+                  {spot.time && <span className="font-bold text-jade-deep">{spot.time} </span>}
                   {day ? day.short : "未標日"}
                   {spot.area ? ` · ${spot.area}` : ""}
                   {spot.rating > 0 ? (
@@ -277,13 +324,28 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false }) {
                 {adapt ? " · 已優先室內" : ""}
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => setFormOpen((v) => !v)}
-              className="shrink-0 rounded-xl bg-jade px-3 py-2 text-[11px] font-bold text-white shadow-sm active:scale-95"
-            >
-              {formOpen ? "收起" : "＋ 記下"}
-            </button>
+            <div className="flex shrink-0 gap-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setLogOpen((v) => !v);
+                  setFormOpen(false);
+                }}
+                className="rounded-xl border border-jade/20 bg-white px-2.5 py-2 text-[11px] font-bold text-jade-deep shadow-sm active:scale-95"
+              >
+                {logOpen ? "收起" : "貼流水"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setFormOpen((v) => !v);
+                  setLogOpen(false);
+                }}
+                className="rounded-xl bg-jade px-3 py-2 text-[11px] font-bold text-white shadow-sm active:scale-95"
+              >
+                {formOpen ? "收起" : "＋ 記下"}
+              </button>
+            </div>
           </div>
 
           <div className="mt-3 grid grid-cols-4 gap-1.5">
@@ -319,6 +381,50 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false }) {
           )}
         </div>
       </div>
+
+      {logOpen && (
+        <form onSubmit={importDayLog} className="space-y-2.5 rounded-3xl border border-sky/20 bg-sky-50/30 p-3.5 shadow-[var(--shadow-soft)]">
+          <div>
+            <p className="text-xs font-bold text-ink">貼上一日流水</p>
+            <p className="text-[10px] text-ink-faint">每行一項 · 開頭可寫 1300 或 13:00 · 自動認類型</p>
+          </div>
+          {dayOptions.length > 0 && (
+            <div className="flex gap-1 overflow-x-auto pb-0.5">
+              {dayOptions.map((d) => (
+                <button
+                  key={d.id}
+                  type="button"
+                  onClick={() => setDayId(d.id)}
+                  className={`shrink-0 rounded-lg border px-2.5 py-1.5 text-[11px] font-bold active:scale-[0.98] ${
+                    dayId === d.id ? "border-jade bg-jade-soft/70 text-jade-deep" : "border-jade/15 bg-white text-ink-soft"
+                  }`}
+                >
+                  {d.label}
+                </button>
+              ))}
+            </div>
+          )}
+          <textarea
+            value={logText}
+            onChange={(e) => setLogText(e.target.value)}
+            rows={7}
+            placeholder={DAY_LOG_EXAMPLE}
+            className="w-full resize-none rounded-xl border border-jade/15 bg-white px-3 py-2.5 font-mono text-[12px] leading-relaxed outline-none ring-jade focus:ring-2"
+          />
+          <div className="flex gap-1.5">
+            <button
+              type="button"
+              onClick={() => setLogText(DAY_LOG_EXAMPLE)}
+              className="h-10 flex-1 rounded-xl border border-jade/15 bg-white text-[11px] font-bold text-ink-soft"
+            >
+              填入 D1 示例
+            </button>
+            <button type="submit" className="h-10 flex-1 rounded-xl bg-jade text-sm font-bold text-white">
+              匯入流水
+            </button>
+          </div>
+        </form>
+      )}
 
       {formOpen && (
         <form onSubmit={submit} className="space-y-2.5 rounded-3xl border border-jade/15 bg-white/95 p-3.5 shadow-[var(--shadow-soft)]">
@@ -360,9 +466,39 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false }) {
             value={note}
             onChange={(e) => setNote(e.target.value)}
             rows={2}
-            placeholder="當時做過咩／感覺？（例：排隊食炸雞、日落好靚、雨中漫步…）"
+            placeholder="當時做過咩／感覺？（例：排隊 20 分鐘、踩滑板過去…）"
             className="w-full resize-none rounded-xl border border-jade/15 bg-mist px-3 py-2.5 text-sm outline-none ring-jade focus:ring-2"
           />
+
+          <div className="grid grid-cols-2 gap-1.5">
+            <div>
+              <p className="mb-1 text-[10px] font-bold text-ink-faint">幾點（選填）</p>
+              <input
+                type="time"
+                value={visitTime}
+                onChange={(e) => setVisitTime(e.target.value)}
+                className="h-10 w-full rounded-xl border border-jade/15 bg-mist px-2 text-sm outline-none ring-jade focus:ring-2"
+              />
+            </div>
+            <div>
+              <p className="mb-1 text-[10px] font-bold text-ink-faint">評分</p>
+              <div className="flex h-10 items-center gap-1">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setRating(n)}
+                    className={`min-h-9 min-w-9 flex-1 rounded-lg text-sm transition ${
+                      n <= rating ? "bg-jade text-white" : "bg-mist text-ink-faint"
+                    }`}
+                    aria-label={`${n} 星`}
+                  >
+                    ★
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
 
           {dayOptions.length > 0 && (
             <div>
@@ -383,25 +519,6 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false }) {
               </div>
             </div>
           )}
-
-          <div>
-            <p className="mb-1 text-[10px] font-bold text-ink-faint">評分</p>
-            <div className="flex gap-1.5">
-              {[1, 2, 3, 4, 5].map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  onClick={() => setRating(n)}
-                  className={`min-h-10 min-w-10 rounded-xl text-base transition ${
-                    n <= rating ? "bg-jade text-white" : "bg-mist text-ink-faint"
-                  }`}
-                  aria-label={`${n} 星`}
-                >
-                  ★
-                </button>
-              ))}
-            </div>
-          </div>
 
           <div>
             <p className="mb-1 text-[10px] font-bold text-ink-faint">標籤（選填）</p>
@@ -524,6 +641,7 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false }) {
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-ink-faint">
+                    {spot.time && `${spot.time} · `}
                     {day?.short || "—"}
                     {spot.area ? ` · ${spot.area}` : ""}
                   </p>
@@ -546,9 +664,17 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false }) {
                   <p className="text-[10px] text-ink-faint">{group.spots.length} 個足跡</p>
                 </div>
               </div>
-              <div className="relative space-y-2 border-l-2 border-jade/20 pl-3 ml-3">
-                {group.spots.map((spot) => (
-                  <SpotCard key={spot.id} spot={spot} />
+              <div className="relative ml-2 space-y-2 border-l-2 border-jade/25 pl-2">
+                {group.spots.map((spot, idx) => (
+                  <div key={spot.id} className="relative flex gap-2">
+                    <span className="absolute -left-[calc(0.5rem+5px)] top-4 h-2.5 w-2.5 rounded-full border-2 border-white bg-jade shadow-sm" />
+                    <span className="w-11 shrink-0 pt-3 text-right text-[11px] font-bold tabular-nums text-jade-deep">
+                      {spot.time || (idx === 0 ? "—" : "")}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <SpotCard spot={spot} />
+                    </div>
+                  </div>
                 ))}
               </div>
             </section>

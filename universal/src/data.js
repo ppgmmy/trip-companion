@@ -265,6 +265,9 @@ export const DEFAULT_BADGES = [
 
 /** 足跡地點類型 — 一眼識別去過咩類型 */
 export const PLACE_TYPES = [
+  { id: "arrival", label: "抵達", icon: "🚄", tone: "bg-indigo-50 text-indigo-900 border-indigo-200/80" },
+  { id: "hotel", label: "酒店", icon: "🏨", tone: "bg-teal-50 text-teal-900 border-teal-200/80" },
+  { id: "move", label: "移動", icon: "🛴", tone: "bg-slate-100 text-slate-800 border-slate-200/80" },
   { id: "spot", label: "景點", icon: "📍", tone: "bg-jade-soft/80 text-jade-deep border-jade/20" },
   { id: "cafe", label: "Cafe", icon: "☕", tone: "bg-amber-50 text-amber-900 border-amber-200/80" },
   { id: "food", label: "美食", icon: "🍜", tone: "bg-coral-soft text-coral border-coral/25" },
@@ -279,13 +282,56 @@ export function placeTypeMeta(typeId) {
 
 export function inferPlaceType(spot) {
   if (spot?.type && PLACE_TYPES.some((t) => t.id === spot.type)) return spot.type;
-  const blob = `${spot?.name || ""} ${spot?.area || ""} ${(spot?.badges || []).join(" ")}`.toLowerCase();
+  const blob = `${spot?.name || ""} ${spot?.area || ""} ${spot?.note || ""} ${(spot?.badges || []).join(" ")}`.toLowerCase();
+  if (/抵達|到達|黎到|来到|入境|機場|机场|關西|关西|大阪站|新幹線|高铁/.test(blob)) return "arrival";
+  if (/酒店|hotel|check.?in|入住|roynet|民宿|旅館/.test(blob)) return "hotel";
   if (/cafe|咖啡|喫茶|コーヒー/.test(blob)) return "cafe";
-  if (/餐廳|美食|拉麵|燒肉|sushi|食|餐|food|restaurant/.test(blob)) return "food";
-  if (/商場|outlet|購物|shop|百貨|超市/.test(blob)) return "shop";
+  if (/餐廳|美食|拉麵|ramen|燒肉|sushi|食|餐|food|restaurant|sukiya|吉野|頂七/.test(blob)) return "food";
+  if (/買水|買糖|買嘢|便利店|convenience|lawson|7-11|商店街/.test(blob)) return "shop";
+  if (/滑板|單車|踩|行去|搭車|地鐵|電車|返酒店|移動/.test(blob)) return "move";
   if (/體驗|spa|溫泉|活動|workshop|夜遊/.test(blob)) return "experience";
   if (/寺|塔|公園|博物館|museum|景點|觀景|castle|神社/.test(blob)) return "spot";
   return "other";
+}
+
+export function parseFootprintLogLine(line) {
+  const trimmed = String(line || "").trim();
+  if (!trimmed) return null;
+
+  let time = "";
+  let rest = trimmed;
+  const colonMatch = trimmed.match(/^(\d{1,2})[:：.](\d{2})\s+(.+)$/);
+  const compactMatch = trimmed.match(/^(\d{3,4})\s+(.+)$/);
+
+  if (colonMatch) {
+    time = `${colonMatch[1].padStart(2, "0")}:${colonMatch[2]}`;
+    rest = colonMatch[3].trim();
+  } else if (compactMatch) {
+    const raw = compactMatch[1];
+    if (raw.length === 4) time = `${raw.slice(0, 2)}:${raw.slice(2)}`;
+    else if (raw.length === 3) time = `0${raw[0]}:${raw.slice(1)}`;
+    rest = compactMatch[2].trim();
+  }
+
+  let name = rest;
+  let area = "";
+  if (rest.includes("|")) {
+    const [a, b] = rest.split("|");
+    name = a.trim();
+    area = b.trim();
+  }
+
+  const draft = { name, area, note: "", time };
+  return { ...draft, type: inferPlaceType(draft) };
+}
+
+export function sortFootprintsChronological(spots) {
+  return [...spots].sort((a, b) => {
+    const ta = a.time || "99:99";
+    const tb = b.time || "99:99";
+    if (ta !== tb) return ta.localeCompare(tb);
+    return (a.createdAt || 0) - (b.createdAt || 0);
+  });
 }
 
 export const INDOOR_TAGS = ["商場", "Cafe", "購物", "美食", "生活", "景點", "餐飲"];
