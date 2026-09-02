@@ -294,7 +294,7 @@ export default function App() {
               onClick={() => setPersonalAddTick((n) => n + 1)}
               className="flex min-h-12 flex-1 items-center justify-center rounded-2xl bg-jade text-sm font-bold text-white shadow-[var(--shadow-soft)]"
             >
-              ＋ 新增待辦
+              ＋ 快速新增
             </button>
           </div>
         </nav>

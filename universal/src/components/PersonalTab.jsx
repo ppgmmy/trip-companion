@@ -9,7 +9,28 @@ const KINDS = [
   { id: "event", label: "日程", icon: "📅" },
 ];
 
+const FILTERS = [
+  { id: "all", label: "全部" },
+  { id: "todo", label: "待辦" },
+  { id: "event", label: "日程" },
+];
+
+const QUICK_DATES = [
+  { label: "今日", offset: 0 },
+  { label: "明日", offset: 1 },
+  { label: "後日", offset: 2 },
+];
+
+const TIME_PRESETS = ["09:00", "12:00", "14:00", "18:00"];
+
 const WEEKDAYS = ["日", "一", "二", "三", "四", "五", "六"];
+
+function nextRoundedHour() {
+  const d = new Date();
+  d.setMinutes(0, 0, 0);
+  d.setHours(d.getHours() + 1);
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
 
 function sortItems(items) {
   return [...items].sort((a, b) => {
@@ -21,8 +42,14 @@ function sortItems(items) {
   });
 }
 
-function itemsForDate(items, dateId) {
-  return sortItems(items.filter((item) => item.date === dateId));
+function itemsForDate(items, dateId, filterKind = "all") {
+  return sortItems(
+    items.filter((item) => {
+      if (item.date !== dateId) return false;
+      if (filterKind === "all") return true;
+      return item.kind === filterKind;
+    }),
+  );
 }
 
 function monthMatrix(year, month) {
@@ -38,13 +65,13 @@ function monthMatrix(year, month) {
   return cells;
 }
 
-function TimetableItem({ item, onToggle, onRemove, compact = false }) {
+function TimetableItem({ item, onToggle, onRemove, onPostpone, compact = false }) {
   const kind = KINDS.find((k) => k.id === item.kind) || KINDS[0];
   const isEvent = item.kind === "event";
 
   return (
     <div
-      className={`flex items-center gap-2 rounded-lg border px-2 py-1.5 ${
+      className={`flex items-center gap-1.5 rounded-lg border px-2 py-1.5 ${
         item.done
           ? "border-jade/10 bg-mist/40 opacity-75"
           : isEvent
@@ -65,21 +92,29 @@ function TimetableItem({ item, onToggle, onRemove, compact = false }) {
       {!compact && item.time && (
         <span className="w-10 shrink-0 text-[10px] font-bold tabular-nums text-jade-deep">{item.time}</span>
       )}
-      <div className="min-w-0 flex-1">
+      <button
+        type="button"
+        onClick={() => onToggle(item.id)}
+        className="min-w-0 flex-1 text-left active:opacity-80"
+      >
         <p className={`truncate text-xs font-bold ${item.done ? "text-ink-faint line-through" : "text-ink"}`}>
-          {compact ? (
-            item.time ? (
-              <span className="mr-1 text-jade-deep">{item.time}</span>
-            ) : (
-              <span className="mr-1">{kind.icon}</span>
-            )
-          ) : (
-            <span className="mr-0.5">{kind.icon}</span>
-          )}
+          <span className="mr-1">{kind.icon}</span>
+          {compact && item.time && <span className="mr-1 text-jade-deep">{item.time}</span>}
           {item.title}
         </p>
         {!compact && item.note && <p className="truncate text-[10px] text-ink-soft">{item.note}</p>}
-      </div>
+      </button>
+      {!item.done && onPostpone && (
+        <button
+          type="button"
+          onClick={() => onPostpone(item.id)}
+          className="shrink-0 rounded px-1 py-0.5 text-[9px] font-bold text-jade-deep active:scale-95"
+          aria-label="延後一日"
+          title="延後一日"
+        >
+          +1日
+        </button>
+      )}
       <button
         type="button"
         onClick={() => onRemove(item.id)}
@@ -92,7 +127,17 @@ function TimetableItem({ item, onToggle, onRemove, compact = false }) {
   );
 }
 
-function ThreeDayTimetable({ horizon, items, selectedDate, onSelectDay, onToggle, onRemove }) {
+function ThreeDayTimetable({
+  horizon,
+  items,
+  selectedDate,
+  filterKind,
+  showCompleted,
+  onSelectDay,
+  onToggle,
+  onRemove,
+  onPostpone,
+}) {
   return (
     <section className="overflow-hidden rounded-2xl border border-jade/15 bg-white shadow-[var(--shadow-soft)]">
       <div className="border-b border-jade/10 bg-mist/40 px-3 py-2">
@@ -101,8 +146,10 @@ function ThreeDayTimetable({ horizon, items, selectedDate, onSelectDay, onToggle
 
       <div className="divide-y divide-jade/10">
         {horizon.map((dateId) => {
-          const dayItems = itemsForDate(items, dateId);
+          const dayItems = itemsForDate(items, dateId, filterKind);
           const pending = dayItems.filter((i) => !i.done);
+          const done = dayItems.filter((i) => i.done);
+          const visible = showCompleted ? [...pending, ...done] : pending;
           const active = dateId === selectedDate;
 
           return (
@@ -118,15 +165,22 @@ function ThreeDayTimetable({ horizon, items, selectedDate, onSelectDay, onToggle
                 </span>
               </button>
 
-              {pending.length === 0 && dayItems.length === 0 ? (
+              {visible.length === 0 ? (
                 <p className="text-[11px] text-ink-faint">—</p>
               ) : (
                 <div className="space-y-1">
-                  {pending.map((item) => (
-                    <TimetableItem key={item.id} item={item} onToggle={onToggle} onRemove={onRemove} compact />
+                  {visible.map((item) => (
+                    <TimetableItem
+                      key={item.id}
+                      item={item}
+                      onToggle={onToggle}
+                      onRemove={onRemove}
+                      onPostpone={onPostpone}
+                      compact
+                    />
                   ))}
-                  {dayItems.filter((i) => i.done).length > 0 && pending.length > 0 && (
-                    <p className="pt-0.5 text-[10px] text-ink-faint">+{dayItems.filter((i) => i.done).length} 項已完成</p>
+                  {!showCompleted && done.length > 0 && pending.length > 0 && (
+                    <p className="pt-0.5 text-[10px] text-ink-faint">+{done.length} 項已完成</p>
                   )}
                 </div>
               )}
@@ -143,7 +197,7 @@ function PersonalCalendar({ year, month, selectedDate, todayId, items, onSelectD
   const counts = useMemo(() => {
     const map = {};
     items.forEach((item) => {
-      map[item.date] = (map[item.date] || 0) + 1;
+      if (!item.done) map[item.date] = (map[item.date] || 0) + 1;
     });
     return map;
   }, [items]);
@@ -218,19 +272,30 @@ function PersonalCalendar({ year, month, selectedDate, todayId, items, onSelectD
 export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 }) {
   const todayId = toDateId(new Date());
   const titleRef = useRef(null);
+  const formRef = useRef(null);
   const undoRef = useRef(null);
   const [toast, setToast] = useState(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [personalUi, setPersonalUi] = useLocalStorage(REGISTRY_KEYS.personalUi, { selectedDate: todayId, viewMonth: null }, {
-    migrate: (v) => {
-      const base = v && typeof v === "object" ? v : {};
-      return {
-        selectedDate: base.selectedDate || todayId,
-        viewMonth: base.viewMonth && typeof base.viewMonth === "object" ? base.viewMonth : null,
-      };
+  const [timeOpen, setTimeOpen] = useState(false);
+  const [personalUi, setPersonalUi] = useLocalStorage(
+    REGISTRY_KEYS.personalUi,
+    { selectedDate: todayId, viewMonth: null, kind: "todo", filterKind: "all", showCompleted: false },
+    {
+      migrate: (v) => {
+        const base = v && typeof v === "object" ? v : {};
+        return {
+          selectedDate: base.selectedDate || todayId,
+          viewMonth: base.viewMonth && typeof base.viewMonth === "object" ? base.viewMonth : null,
+          kind: base.kind === "event" ? "event" : "todo",
+          filterKind: ["all", "todo", "event"].includes(base.filterKind) ? base.filterKind : "all",
+          showCompleted: Boolean(base.showCompleted),
+        };
+      },
     },
-  });
-  const [kind, setKind] = useState("todo");
+  );
+  const [kind, setKind] = useState(personalUi.kind || "todo");
+  const [filterKind, setFilterKind] = useState(personalUi.filterKind || "all");
+  const [showCompleted, setShowCompleted] = useState(Boolean(personalUi.showCompleted));
   const [title, setTitle] = useState("");
   const [entryDate, setEntryDate] = useState(personalUi.selectedDate || todayId);
   const [entryTime, setEntryTime] = useState("");
@@ -244,19 +309,20 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
   });
 
   const items = useMemo(() => (Array.isArray(personal) ? personal : []), [personal]);
-  const horizon = useMemo(
-    () => [todayId, shiftDateId(todayId, 1), shiftDateId(todayId, 2), shiftDateId(todayId, 3)],
+  const threeDayHorizon = useMemo(
+    () => [todayId, shiftDateId(todayId, 1), shiftDateId(todayId, 2)],
     [todayId],
   );
-  const threeDayHorizon = horizon.slice(0, 3);
   const todayPending = itemsForDate(items, todayId).filter((i) => !i.done).length;
+  const todayEvents = itemsForDate(items, todayId, "event").filter((i) => !i.done).length;
 
   useEffect(() => {
-    setPersonalUi((prev) => ({ ...prev, selectedDate, viewMonth }));
-  }, [selectedDate, viewMonth, setPersonalUi]);
+    setPersonalUi((prev) => ({ ...prev, selectedDate, viewMonth, kind, filterKind, showCompleted }));
+  }, [selectedDate, viewMonth, kind, filterKind, showCompleted, setPersonalUi]);
 
   useEffect(() => {
     if (focusAddTick > 0) {
+      formRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
       titleRef.current?.focus({ preventScroll: true });
     }
   }, [focusAddTick]);
@@ -266,6 +332,14 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
     setEntryDate(dateId);
     const [y, m] = dateId.split("-").map(Number);
     setViewMonth({ year: y, month: m - 1 });
+  }
+
+  function selectKind(nextKind) {
+    setKind(nextKind);
+    if (nextKind === "event") {
+      setTimeOpen(true);
+      setEntryTime((t) => t || nextRoundedHour());
+    }
   }
 
   function shiftMonth(delta) {
@@ -283,7 +357,7 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
       id: uid("personal"),
       title: trimmed,
       date: entryDate || selectedDate || todayId,
-      time: entryTime.trim(),
+      time: kind === "event" || timeOpen ? entryTime.trim() : "",
       kind: kind === "event" ? "event" : "todo",
       note: "",
       done: false,
@@ -291,12 +365,26 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
     };
     setPersonal((prev) => [...(Array.isArray(prev) ? prev : []), entry]);
     setTitle("");
-    setEntryTime("");
+    if (kind !== "event") {
+      setEntryTime("");
+      setTimeOpen(false);
+    }
     selectDay(entry.date);
+    titleRef.current?.focus({ preventScroll: true });
   }
 
   function toggleItem(id) {
-    setPersonal((prev) => (Array.isArray(prev) ? prev : []).map((item) => (item.id === id ? { ...item, done: !item.done } : item)));
+    setPersonal((prev) =>
+      (Array.isArray(prev) ? prev : []).map((item) => (item.id === id ? { ...item, done: !item.done } : item)),
+    );
+  }
+
+  function postponeItem(id) {
+    setPersonal((prev) =>
+      (Array.isArray(prev) ? prev : []).map((item) =>
+        item.id === id ? { ...item, date: shiftDateId(item.date, 1), done: false } : item,
+      ),
+    );
   }
 
   function removeItem(id) {
@@ -313,6 +401,8 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
     setToast(null);
   }
 
+  const kindMeta = KINDS.find((k) => k.id === kind) || KINDS[0];
+
   return (
     <div className="space-y-2.5">
       {toast && <UndoToast message={toast.message} onUndo={toast.undo ? undoRemove : null} />}
@@ -320,7 +410,10 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
       <div className="flex items-end justify-between gap-2">
         <div>
           <h2 className="font-display text-lg font-bold text-ink">個人日程</h2>
-          <p className="text-xs text-ink-soft">今日 {todayPending > 0 ? `仲有 ${todayPending} 項` : "無待辦"}</p>
+          <p className="text-xs text-ink-soft">
+            今日 {todayPending > 0 ? `仲有 ${todayPending} 項` : "無待辦"}
+            {todayEvents > 0 && ` · ${todayEvents} 個日程`}
+          </p>
         </div>
         <button
           type="button"
@@ -336,7 +429,7 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
           <button
             key={k.id}
             type="button"
-            onClick={() => setKind(k.id)}
+            onClick={() => selectKind(k.id)}
             className={`min-h-9 rounded-xl border px-2 text-xs font-bold transition active:scale-[0.98] ${
               kind === k.id ? "badge-active border-transparent" : "border-jade/15 bg-white text-ink-soft"
             }`}
@@ -346,7 +439,11 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
         ))}
       </div>
 
-      <form onSubmit={addItem} className="rounded-2xl border border-jade/15 bg-white/90 p-2.5 shadow-[var(--shadow-soft)]">
+      <form
+        ref={formRef}
+        onSubmit={addItem}
+        className="rounded-2xl border border-jade/15 bg-white/90 p-2.5 shadow-[var(--shadow-soft)]"
+      >
         <input
           ref={titleRef}
           value={title}
@@ -354,7 +451,81 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
           placeholder={kind === "event" ? "日程標題…" : "待辦事項…"}
           className="mb-1.5 h-10 w-full rounded-xl border border-jade/15 bg-mist px-3 text-sm outline-none ring-jade focus:ring-2"
         />
-        <div className="grid grid-cols-[1fr_auto_auto] gap-1.5">
+
+        <div className="mb-1.5 flex gap-1">
+          {QUICK_DATES.map(({ label, offset }) => {
+            const dateId = shiftDateId(todayId, offset);
+            const active = entryDate === dateId;
+            return (
+              <button
+                key={label}
+                type="button"
+                onClick={() => {
+                  setEntryDate(dateId);
+                  setSelectedDate(dateId);
+                }}
+                className={`min-h-7 flex-1 rounded-lg border text-[11px] font-bold active:scale-[0.98] ${
+                  active ? "border-jade bg-jade-soft/60 text-jade-deep" : "border-jade/15 bg-white text-ink-soft"
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+
+        {(kind === "event" || timeOpen) && (
+          <div className="mb-1.5 space-y-1">
+            <div className="flex gap-1.5">
+              <input
+                type="time"
+                value={entryTime}
+                onChange={(e) => setEntryTime(e.target.value)}
+                className="h-9 min-w-0 flex-1 rounded-xl border border-jade/15 bg-mist px-2 text-xs outline-none ring-jade focus:ring-2"
+              />
+              {kind === "todo" && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTimeOpen(false);
+                    setEntryTime("");
+                  }}
+                  className="shrink-0 rounded-xl border border-jade/15 px-2 text-[10px] font-bold text-ink-faint"
+                >
+                  唔要時間
+                </button>
+              )}
+            </div>
+            {kind === "event" && (
+              <div className="flex flex-wrap gap-1">
+                {TIME_PRESETS.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setEntryTime(t)}
+                    className={`rounded-lg border px-2 py-0.5 text-[10px] font-bold active:scale-95 ${
+                      entryTime === t ? "border-jade bg-jade-soft/60 text-jade-deep" : "border-jade/15 bg-white text-ink-soft"
+                    }`}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {kind === "todo" && !timeOpen && (
+          <button
+            type="button"
+            onClick={() => setTimeOpen(true)}
+            className="mb-1.5 text-[11px] font-bold text-jade-deep"
+          >
+            ＋ 加時間（選填）
+          </button>
+        )}
+
+        <div className="grid grid-cols-[1fr_auto] gap-1.5">
           <input
             type="date"
             value={entryDate}
@@ -364,25 +535,48 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
             }}
             className="h-9 min-w-0 rounded-xl border border-jade/15 bg-mist px-2 text-xs outline-none ring-jade focus:ring-2"
           />
-          <input
-            type="time"
-            value={entryTime}
-            onChange={(e) => setEntryTime(e.target.value)}
-            className="h-9 w-[5.25rem] rounded-xl border border-jade/15 bg-mist px-1.5 text-xs outline-none ring-jade focus:ring-2"
-          />
-          <button type="submit" className="h-9 rounded-xl bg-jade px-3 text-xs font-bold text-white">
-            加入
+          <button type="submit" className="h-9 rounded-xl bg-jade px-4 text-xs font-bold text-white">
+            加入{kindMeta.label}
           </button>
         </div>
       </form>
+
+      <div className="flex items-center gap-1.5">
+        <div className="flex flex-1 gap-1">
+          {FILTERS.map((f) => (
+            <button
+              key={f.id}
+              type="button"
+              onClick={() => setFilterKind(f.id)}
+              className={`min-h-7 flex-1 rounded-lg border text-[10px] font-bold active:scale-[0.98] ${
+                filterKind === f.id ? "border-jade bg-jade-soft/60 text-jade-deep" : "border-jade/15 bg-white text-ink-soft"
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowCompleted((v) => !v)}
+          className={`shrink-0 rounded-lg border px-2 py-1 text-[10px] font-bold active:scale-[0.98] ${
+            showCompleted ? "border-jade bg-jade-soft/60 text-jade-deep" : "border-jade/15 bg-white text-ink-soft"
+          }`}
+        >
+          {showCompleted ? "隱藏完成" : "顯示完成"}
+        </button>
+      </div>
 
       <ThreeDayTimetable
         horizon={threeDayHorizon}
         items={items}
         selectedDate={selectedDate}
+        filterKind={filterKind}
+        showCompleted={showCompleted}
         onSelectDay={selectDay}
         onToggle={toggleItem}
         onRemove={removeItem}
+        onPostpone={postponeItem}
       />
 
       {calendarOpen && (
@@ -392,9 +586,7 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
           selectedDate={selectedDate}
           todayId={todayId}
           items={items}
-          onSelectDay={(id) => {
-            selectDay(id);
-          }}
+          onSelectDay={selectDay}
           onPrevMonth={() => shiftMonth(-1)}
           onNextMonth={() => shiftMonth(1)}
         />
@@ -404,11 +596,18 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
         <section className="rounded-2xl border border-jade/10 bg-white/85 px-3 py-2 shadow-[var(--shadow-soft)]">
           <p className="text-[10px] font-bold text-ink-faint">{formatPersonalDayLabel(selectedDate)}</p>
           <div className="mt-1.5 space-y-1">
-            {itemsForDate(items, selectedDate).length === 0 ? (
+            {itemsForDate(items, selectedDate, filterKind).length === 0 ? (
               <p className="text-xs text-ink-faint">無安排</p>
             ) : (
-              itemsForDate(items, selectedDate).map((item) => (
-                <TimetableItem key={item.id} item={item} onToggle={toggleItem} onRemove={removeItem} compact />
+              itemsForDate(items, selectedDate, filterKind).map((item) => (
+                <TimetableItem
+                  key={item.id}
+                  item={item}
+                  onToggle={toggleItem}
+                  onRemove={removeItem}
+                  onPostpone={postponeItem}
+                  compact
+                />
               ))
             )}
           </div>
