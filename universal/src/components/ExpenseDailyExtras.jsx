@@ -1468,6 +1468,167 @@ export function TodayBudgetGauge({ trip, expenses, todaySpent, dailyAllowance, b
   );
 }
 
+function formatRunwayDays(days) {
+  if (!Number.isFinite(days)) return "—";
+  if (days >= 99) return "99+";
+  if (days >= 10) return String(Math.round(days));
+  if (days >= 1) return days.toFixed(1).replace(/\.0$/, "");
+  return days.toFixed(1);
+}
+
+export function BudgetRunwayPanel({
+  trip,
+  totalSpent = 0,
+  budget = 0,
+  remaining = 0,
+  pace = 0,
+  remainingDays = 1,
+  elapsedDays = 1,
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  if (!isFeatureEnabled("budget-runway-days") || budget <= 0) return null;
+
+  const hasPace = pace > 0 && totalSpent > 0;
+  const runwayDays = hasPace && remaining > 0 ? remaining / pace : remaining > 0 ? remainingDays : 0;
+  const runwayRatio = remainingDays > 0 && runwayDays > 0 ? runwayDays / remainingDays : 0;
+  const barWidth = remainingDays > 0 ? Math.min(100, (runwayDays / remainingDays) * 100) : 0;
+
+  let tier;
+  if (remaining <= 0) {
+    tier = {
+      emoji: "🚨",
+      label: "已超預算",
+      badgeClass: "bg-coral/15 text-coral",
+      barClass: "bg-gradient-to-r from-coral to-[#dc2626]",
+      headlineClass: "text-coral",
+      insight: `已超 ${formatMoney(-remaining, trip.targetCurrency)} · 要即刻收油`,
+    };
+  } else if (!hasPace) {
+    tier = {
+      emoji: "📊",
+      label: "待記帳",
+      badgeClass: "bg-shell text-ink-soft",
+      barClass: "bg-gradient-to-r from-[#94a3b8] to-[#64748b]",
+      headlineClass: "text-ink",
+      insight: "記幾筆之後就會估算可用天數",
+    };
+  } else if (runwayRatio < 0.6) {
+    tier = {
+      emoji: "🔴",
+      label: "快用盡",
+      badgeClass: "bg-coral/15 text-coral",
+      barClass: "bg-gradient-to-r from-[#f97316] to-coral",
+      headlineClass: "text-coral",
+      insight: `比旅程剩餘日短 ${Math.max(1, Math.ceil(remainingDays - runwayDays))} 日 · 要收油`,
+    };
+  } else if (runwayRatio < 0.85) {
+    tier = {
+      emoji: "🟠",
+      label: "偏緊",
+      badgeClass: "bg-[#fef3c7] text-[#b45309]",
+      barClass: "bg-gradient-to-r from-[#f59e0b] to-[#f97316]",
+      headlineClass: "text-[#b45309]",
+      insight: "可用天數略少於旅程剩餘 · 留意非必要消費",
+    };
+  } else if (runwayRatio >= 1.15) {
+    tier = {
+      emoji: "🟢",
+      label: "充裕",
+      badgeClass: "bg-jade-soft text-jade-deep",
+      barClass: "bg-gradient-to-r from-[#34d399] to-jade",
+      headlineClass: "text-jade-deep",
+      insight: `比旅程剩餘日多 ${Math.max(0, Math.floor(runwayDays - remainingDays))} 日緩衝 · 節奏健康`,
+    };
+  } else {
+    tier = {
+      emoji: "🟡",
+      label: "剛剛好",
+      badgeClass: "bg-jade-soft text-jade-deep",
+      barClass: "bg-gradient-to-r from-jade to-[#34d399]",
+      headlineClass: "text-ink",
+      insight: "可用天數同旅程剩餘日數大致吻合",
+    };
+  }
+
+  const runwayLabel = remaining <= 0
+    ? "0"
+    : !hasPace
+      ? "—"
+      : formatRunwayDays(runwayDays);
+
+  return (
+    <div className="rounded-3xl bg-white p-4 shadow-[var(--shadow-soft)]">
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="flex w-full items-start gap-3 text-left transition active:scale-[0.99]"
+        aria-expanded={expanded}
+      >
+        <span className="mt-0.5 text-lg" aria-hidden="true">
+          {tier.emoji}
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-xs font-bold uppercase tracking-wider text-ink-soft">⏳ 預算可用天數</p>
+            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${tier.badgeClass}`}>
+              {tier.label}
+            </span>
+          </div>
+          <div className="mt-2 flex items-baseline justify-between gap-2">
+            <p className={`font-display text-xl font-black ${tier.headlineClass}`}>
+              {remaining <= 0 ? "已用盡" : !hasPace ? "— 日" : `${runwayLabel} 日`}
+            </p>
+            <p className="text-sm font-semibold text-ink-faint">
+              旅程剩 {remainingDays} 日
+            </p>
+          </div>
+          {hasPace && remaining > 0 && (
+            <div className="mt-2.5 h-3 overflow-hidden rounded-full bg-[#efe9e0]">
+              <div
+                className={`h-full rounded-full transition-all duration-700 ${tier.barClass}`}
+                style={{ width: `${barWidth}%` }}
+              />
+            </div>
+          )}
+          <p className="mt-2 text-xs font-semibold text-ink-soft">{tier.insight}</p>
+        </div>
+        <span className="shrink-0 rounded-full border border-jade/15 bg-shell px-2 py-1 text-[10px] font-bold text-jade-deep">
+          {expanded ? "收起" : "詳情"}
+        </span>
+      </button>
+
+      {expanded && (
+        <div className="mt-3 space-y-3 border-t border-jade/10 pt-3">
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="rounded-2xl bg-shell px-2 py-2.5">
+              <p className="text-[10px] font-semibold text-ink-faint">剩餘預算</p>
+              <p className={`mt-0.5 text-sm font-black ${remaining < 0 ? "text-coral" : "text-ink"}`}>
+                {formatMoney(remaining, trip.targetCurrency)}
+              </p>
+            </div>
+            <div className="rounded-2xl bg-shell px-2 py-2.5">
+              <p className="text-[10px] font-semibold text-ink-faint">實際日均</p>
+              <p className="mt-0.5 text-sm font-black text-ink">
+                {hasPace ? formatMoney(pace, trip.targetCurrency) : "—"}
+              </p>
+            </div>
+            <div className="rounded-2xl bg-shell px-2 py-2.5">
+              <p className="text-[10px] font-semibold text-ink-faint">已過日數</p>
+              <p className="mt-0.5 text-sm font-black text-ink">{elapsedDays} 日</p>
+            </div>
+          </div>
+          <p className="text-center text-[10px] leading-relaxed text-ink-faint">
+            {hasPace && remaining > 0
+              ? `可用天數 = 剩餘預算 ÷ 實際日均（${formatMoney(pace, trip.targetCurrency)}/日）`
+              : "記帳後會用「剩餘預算 ÷ 實際日均」估算可用天數"}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function FxRateImpactPanel({ trip, expenses, currentRate }) {
   const [expanded, setExpanded] = useState(false);
 

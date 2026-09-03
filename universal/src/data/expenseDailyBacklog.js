@@ -152,4 +152,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "概覽頁一眼睇今日已使同每日可用額，色階提示仲剩幾多，出門前心里有數。",
     pillar: "convenience",
   },
+  {
+    id: "budget-runway-days",
+    title: "預算可用天數",
+    description: "照而家使費速度，預算仲夠用幾多日；同旅程剩餘日數對比，一眼知要唔要收油。",
+    pillar: "stickiness",
+  },
 ];

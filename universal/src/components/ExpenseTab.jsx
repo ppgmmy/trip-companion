@@ -26,6 +26,7 @@ import {
   QuickAddHelpers,
   SevenDayTrendPanel,
   TodayBudgetGauge,
+  BudgetRunwayPanel,
 } from "./ExpenseDailyExtras";
 import PayerPaymentFields from "./PayerPaymentFields";
 import { useLocalStorage } from "../hooks/useLocalStorage";
@@ -494,6 +495,16 @@ export default function ExpenseTab({
               todaySpent={todaySpent}
               dailyAllowance={dailyAllowance}
               budget={budget}
+            />
+
+            <BudgetRunwayPanel
+              trip={trip}
+              totalSpent={totalSpent}
+              budget={budget}
+              remaining={remaining}
+              pace={pace}
+              remainingDays={remainingDays}
+              elapsedDays={elapsedDays}
             />
 
             {budget > 0 && (

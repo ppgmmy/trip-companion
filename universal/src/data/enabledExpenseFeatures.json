@@ -22,9 +22,10 @@
     "category-pct-labels",
     "avg-per-category",
     "fx-rate-impact",
-    "today-budget-gauge"
+    "today-budget-gauge",
+    "budget-runway-days"
   ],
-  "updatedAt": "2026-09-02T02:04:00.000Z",
-  "lastFeatureId": "today-budget-gauge",
-  "lastTitle": "今日預算儀表"
+  "updatedAt": "2026-09-03T02:00:00.000Z",
+  "lastFeatureId": "budget-runway-days",
+  "lastTitle": "預算可用天數"
 }
