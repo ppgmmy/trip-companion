@@ -51,8 +51,18 @@ export default function App() {
   const [expandedTool, setExpandedTool] = useState(null);
   const [quickAdd, setQuickAdd] = useState(false);
   const [personalAddTick, setPersonalAddTick] = useState(0);
-  const [expensePanelRequest, setExpensePanelRequest] = useState(null);
+  const [expensePanelRequest, setExpensePanelRequest] = useState("ledger");
   const prevTripIdRef = useRef(null);
+  const bootForcedRef = useRef(false);
+
+  // 每次開 App：即刻去記帳（旅行模式 + 記帳分頁 + 記帳面板）
+  useEffect(() => {
+    if (bootForcedRef.current) return;
+    bootForcedRef.current = true;
+    setAppMode("travel");
+    setActiveTab("expenses");
+    setExpensePanelRequest("ledger");
+  }, [setAppMode, setActiveTab]);
 
   // PWA 捷徑（長撳 App 圖示 → 快速記帳）會帶 ?quick=add 入嚟
   useEffect(() => {
@@ -61,9 +71,10 @@ export default function App() {
       setQuickAdd(true);
       setAppMode("travel");
       setActiveTab("expenses");
+      setExpensePanelRequest("ledger");
       window.history.replaceState({}, "", window.location.pathname);
     }
-  }, []);
+  }, [setAppMode, setActiveTab]);
 
   function openTool(toolId) {
     setExpandedTool(toolId);
