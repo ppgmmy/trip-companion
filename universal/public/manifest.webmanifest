@@ -2,7 +2,7 @@
   "name": "全球萬能旅行 Companion",
   "short_name": "萬能旅行",
   "description": "任何城市 · 任何幣種 · 多旅程切換 · 18 個神級外掛",
-  "start_url": "/universal/",
+  "start_url": "/universal/?tab=expenses",
   "scope": "/universal/",
   "display": "standalone",
   "orientation": "portrait",

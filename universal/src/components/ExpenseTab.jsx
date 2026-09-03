@@ -58,7 +58,8 @@ function formatDayHeading(dateId) {
 function migrateExpenseUi(v) {
   const base = v && typeof v === "object" ? v : {};
   return {
-    panel: ["ledger", "analysis", "overview"].includes(base.panel) ? base.panel : "ledger",
+    // 上碟：每次開 App 落「記帳」面板
+    panel: "ledger",
     listTodayOnly: base.listTodayOnly !== false,
     showHkd: Boolean(base.showHkd),
     filterCategory: base.filterCategory || "all",

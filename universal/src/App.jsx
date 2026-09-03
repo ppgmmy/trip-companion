@@ -40,35 +40,46 @@ export default function App() {
   const [trips, setTrips] = useLocalStorage(REGISTRY_KEYS.trips, [], { migrate: (v) => (Array.isArray(v) ? v : []) });
   const [activeId, setActiveId] = useLocalStorage(REGISTRY_KEYS.active, null, { migrate: (v) => (typeof v === "string" ? v : null) });
   const [activeTab, setActiveTab] = useLocalStorage(REGISTRY_KEYS.activeTab, "expenses", {
-    migrate: (v) => (["itinerary", "checklist", "spots", "expenses", "tools"].includes(v) ? v : "expenses"),
+    // 上碟：每次開 App 一律由記帳開始（唔跟上次留低嘅分頁）
+    migrate: () => "expenses",
   });
   const [tripTabs, setTripTabs] = useLocalStorage(REGISTRY_KEYS.tripTabs, {}, {
     migrate: (v) => (v && typeof v === "object" && !Array.isArray(v) ? v : {}),
   });
   const [appMode, setAppMode] = useLocalStorage(REGISTRY_KEYS.appMode, "travel", {
-    migrate: (v) => (v === "personal" ? "personal" : "travel"),
+    // 上碟：開機一律旅行模式（直接見記帳，唔入個人）
+    migrate: () => "travel",
   });
   const [expandedTool, setExpandedTool] = useState(null);
   const [quickAdd, setQuickAdd] = useState(false);
   const [personalAddTick, setPersonalAddTick] = useState(0);
   const [expensePanelRequest, setExpensePanelRequest] = useState("ledger");
   const prevTripIdRef = useRef(null);
-  const bootForcedRef = useRef(false);
 
-  // 每次開 App：即刻去記帳（旅行模式 + 記帳分頁 + 記帳面板）
+  // 開機再寫一次上碟，確保 localStorage 同畫面一致
   useEffect(() => {
-    if (bootForcedRef.current) return;
-    bootForcedRef.current = true;
     setAppMode("travel");
     setActiveTab("expenses");
     setExpensePanelRequest("ledger");
+    try {
+      localStorage.setItem(REGISTRY_KEYS.appMode, JSON.stringify("travel"));
+      localStorage.setItem(REGISTRY_KEYS.activeTab, JSON.stringify("expenses"));
+      const raw = localStorage.getItem(REGISTRY_KEYS.expenseUi);
+      const ui = raw ? JSON.parse(raw) : {};
+      localStorage.setItem(
+        REGISTRY_KEYS.expenseUi,
+        JSON.stringify({ ...(ui && typeof ui === "object" ? ui : {}), panel: "ledger" }),
+      );
+    } catch {}
   }, [setAppMode, setActiveTab]);
 
-  // PWA 捷徑（長撳 App 圖示 → 快速記帳）會帶 ?quick=add 入嚟
+  // PWA 捷徑／開機參數：?quick=add 或 ?tab=expenses
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("quick") === "add") {
-      setQuickAdd(true);
+    const quick = params.get("quick") === "add";
+    const tabExpenses = params.get("tab") === "expenses";
+    if (quick || tabExpenses) {
+      if (quick) setQuickAdd(true);
       setAppMode("travel");
       setActiveTab("expenses");
       setExpensePanelRequest("ledger");
