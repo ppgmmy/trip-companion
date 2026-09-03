@@ -40,8 +40,14 @@
     </script>
     <link rel="stylesheet" href="./hub.css" />
     <script>
+      // Unregister legacy Service Workers (they broke mobile PWA loads). Do not re-register.
       if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.getRegistrations().then((regs) => Promise.all(regs.map((r) => r.unregister()))).catch(() => {});
+          if (typeof caches !== "undefined") {
+            caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k)))).catch(() => {});
+          }
+        });
       }
     </script>
   </head>

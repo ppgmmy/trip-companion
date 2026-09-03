@@ -5,72 +5,91 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#0d9488" />
     <link rel="apple-touch-icon" href="/icon-512.png" />
-    <title>還原 Trip Companion · 主畫面 App</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Figtree:wght@500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <title>還原 Trip Companion · 開唔到 App</title>
     <style>
       * { box-sizing: border-box; }
       body {
-        margin: 0; min-height: 100dvh; font-family: Figtree, system-ui, sans-serif;
+        margin: 0; min-height: 100dvh; font-family: system-ui, -apple-system, "PingFang HK", sans-serif;
         background: linear-gradient(165deg, #f7fbfa, #ecfeff); color: #14262b;
         padding: max(1.25rem, env(safe-area-inset-top)) 1.25rem 2rem;
       }
       .wrap { max-width: 26rem; margin: 0 auto; }
-      h1 { font-size: 1.45rem; margin: 0 0 0.5rem; line-height: 1.25; }
+      h1 { font-size: 1.4rem; margin: 0.35rem 0 0.5rem; line-height: 1.25; }
       p, li { font-size: 0.9rem; line-height: 1.55; color: #3e5a62; }
       .card {
         margin-top: 1rem; background: #fff; border: 1px solid rgb(15 118 110 / 0.15);
-        border-radius: 1.25rem; padding: 1rem 1.1rem; box-shadow: 0 8px 24px rgb(20 38 43 / 0.06);
+        border-radius: 1.25rem; padding: 1rem 1.1rem;
       }
       .apps { display: grid; gap: 0.65rem; margin-top: 1rem; }
       .apps a {
         display: block; text-decoration: none; text-align: center; font-weight: 700;
-        padding: 0.85rem 1rem; border-radius: 1rem; color: #fff; font-size: 0.95rem;
+        padding: 0.9rem 1rem; border-radius: 1rem; color: #fff; font-size: 0.95rem;
       }
-      .a-taipei { background: linear-gradient(135deg, #084843, #0f766e); }
-      .a-tokyo { background: linear-gradient(135deg, #9f1239, #e11d48); }
-      .a-thailand { background: linear-gradient(135deg, #b45309, #d97706); }
-      .a-universal { background: linear-gradient(135deg, #0d9488, #2dd4bf); color: #084843; }
+      .a-taipei { background: #0f766e; }
+      .a-tokyo { background: #e11d48; }
+      .a-thailand { background: #d97706; }
+      .a-universal { background: #0d9488; }
       .a-hub { background: #fff; color: #0f766e; border: 2px solid #0f766e; }
       .warn {
         margin-top: 1rem; padding: 0.75rem; border-radius: 0.85rem;
-        background: #fffbeb; color: #92400e; font-size: 0.8rem; line-height: 1.5;
+        background: #fff7ed; color: #9a3412; font-size: 0.82rem; line-height: 1.5;
       }
       ol { padding-left: 1.2rem; margin: 0.5rem 0 0; }
-      ol li { margin-bottom: 0.45rem; }
+      ol li { margin-bottom: 0.5rem; }
+      strong { color: #14262b; }
     </style>
   </head>
   <body>
     <div class="wrap">
       <p style="font-size:0.7rem;font-weight:700;letter-spacing:0.18em;color:#0f766e;margin:0">TRIP COMPANION</p>
-      <h1>還原主畫面 App</h1>
-      <p>更新／清快取後，主畫面圖示可能消失，但<strong style="color:#14262b">App 本身仲喺伺服器</strong>，可以重新加入主畫面。</p>
+      <h1>開唔到 App？跟住做</h1>
+      <p>伺服器上嘅 App <strong>仲喺度</strong>。手機主畫面圖示多數卡咗舊快取，唔好再撳舊圖示。</p>
 
       <div class="card">
-        <p style="margin:0;font-weight:700;color:#14262b">iPhone 步驟</p>
+        <p style="margin:0;font-weight:700;color:#14262b">① 用瀏覽器開（最緊要）</p>
         <ol>
-          <li>用 <strong>Safari</strong> 撳下面你想用嗰個 App</li>
-          <li>等頁面完全載入（見到記帳／行程畫面）</li>
-          <li>撳底部分享 <strong>⬆️</strong> →「<strong>加入主畫面</strong>」→ 加入</li>
+          <li>完全關掉主畫面個舊 App（上滑清走）</li>
+          <li>開 <strong>Safari</strong>（iPhone）或 <strong>Chrome</strong>（Android）</li>
+          <li>撳下面其中一個連結，等見到正常畫面</li>
         </ol>
       </div>
 
       <div class="apps">
-        <a class="a-taipei" href="/taipei/">台北長住 App</a>
-        <a class="a-tokyo" href="/tokyo/">東京行程 App</a>
-        <a class="a-thailand" href="/thailand/">泰國行程 App</a>
-        <a class="a-universal" href="/universal/">全球萬能版 App</a>
-        <a class="a-hub" href="/">返回選單（四個一齊揀）</a>
+        <a class="a-universal" href="/universal/?fresh=1">開 · 全球萬能版</a>
+        <a class="a-taipei" href="/taipei/?fresh=1">開 · 台北</a>
+        <a class="a-tokyo" href="/tokyo/?fresh=1">開 · 東京</a>
+        <a class="a-thailand" href="/thailand/?fresh=1">開 · 泰國</a>
+        <a class="a-hub" href="/?fresh=1">開 · 總選單</a>
+      </div>
+
+      <div class="card">
+        <p style="margin:0;font-weight:700;color:#14262b">② 若 Safari 都開唔到</p>
+        <ol>
+          <li><strong>iPhone：</strong>設定 → Safari → 清除歷史記錄與網站資料（或進階 → 網站資料 → 刪 vercel.app）</li>
+          <li><strong>Android：</strong>Chrome → 設定 → 網站設定 → 搵 vercel.app → 清除並重設</li>
+          <li>再用 Safari／Chrome 開上面連結</li>
+        </ol>
+      </div>
+
+      <div class="card">
+        <p style="margin:0;font-weight:700;color:#14262b">③ 重新加返主畫面</p>
+        <ol>
+          <li>Safari 開到正常畫面後 → 分享 ⬆️ →「加入主畫面」</li>
+          <li>Android：選單 ⋮ →「安裝應用程式」</li>
+          <li>可以刪走舊圖示</li>
+        </ol>
       </div>
 
       <div class="warn">
-        <strong>資料會唔會冇咗？</strong><br />
-        若曾用 Safari「清除所有網站資料」，本機記帳／行程可能已刪除。台北／東京／泰國只存喺你部手機，清咗就無法自動還原。萬能版如有開 Google 登入，登入後可試「從雲端載入」。
+        若曾清除全部網站資料，本機記帳／行程可能一齊冇咗（只存喺手機）。萬能版如有 Google 登入，登入後可試雲端同步。
       </div>
     </div>
+    <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function (regs) {
+          return Promise.all(regs.map(function (r) { return r.unregister(); }));
+        }).catch(function () {});
+      }
+    </script>
   </body>
 </html>

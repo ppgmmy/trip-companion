@@ -19,17 +19,27 @@
         font-family: system-ui, -apple-system, "PingFang HK", "Noto Sans TC", sans-serif;
       }
       .tc-boot h1 { font-size: 1.2rem; margin: 0 0 0.5rem; }
-      .tc-boot p { margin: 0; font-size: 0.875rem; color: #5b6b68; line-height: 1.55; }
-      .tc-boot a {
-        margin-top: 1rem; display: inline-block; font-size: 0.85rem; font-weight: 700; color: #0f766e;
+      .tc-boot p { margin: 0.35rem 0 0; font-size: 0.875rem; color: #5b6b68; line-height: 1.55; max-width: 22rem; }
+      .tc-boot a, .tc-boot button {
+        margin-top: 0.85rem; display: inline-block; font-size: 0.9rem; font-weight: 700;
+        color: #fff; background: #0d9488; border: 0; border-radius: 1rem;
+        min-height: 2.75rem; padding: 0.65rem 1.1rem; text-decoration: none;
       }
+      .tc-boot a.tc-secondary { background: transparent; color: #0f766e; border: 1px solid #0d9488; }
     </style>
     <script>
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", function () {
-          navigator.serviceWorker.register("/sw.js").catch(function () {});
-        });
-      }
+      // Kill any leftover Service Worker — do NOT re-register.
+      (function () {
+        if (!("serviceWorker" in navigator)) return;
+        navigator.serviceWorker.getRegistrations().then(function (regs) {
+          return Promise.all(regs.map(function (r) { return r.unregister(); }));
+        }).then(function () {
+          if (typeof caches === "undefined") return;
+          return caches.keys().then(function (keys) {
+            return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+          });
+        }).catch(function () {});
+      })();
     </script>
     <script src="/storage-migration.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -75,12 +85,12 @@
           obs.disconnect();
           root.innerHTML =
             '<div class="tc-boot">' +
-            "<h1>載入較慢</h1>" +
-            "<p>請用 Safari 開一次，或返回選單揀其他 App。</p>" +
-            '<a href="/restore.html">還原主畫面 App →</a>' +
-            '<a href="/">返回 Trip Companion 選單 →</a>' +
+            "<h1>開唔到？</h1>" +
+            "<p>請唔好撳主畫面舊圖示。用 Safari／Chrome 開下面連結。</p>" +
+            '<a href="https://trip-companion-pied.vercel.app/universal/?fresh=' + Date.now() + '">用瀏覽器開啟</a>' +
+            '<a class="tc-secondary" href="/restore.html">還原主畫面 App</a>' +
             "</div>";
-        }, 12000);
+        }, 10000);
       })();
     </script>
   </body>

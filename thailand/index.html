@@ -14,7 +14,9 @@
     <title>Trip Companion · 泰國</title>
     <script>
       if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => navigator.serviceWorker.register("../sw.js"));
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.getRegistrations().then((regs) => Promise.all(regs.map((r) => r.unregister()))).catch(() => {});
+        });
       }
     </script>
     <script src="../storage-migration.js"></script>
