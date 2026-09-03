@@ -37,11 +37,11 @@ export default function ModeRail({ mode, onModeChange, personalPending = 0 }) {
             role="tab"
             aria-selected={isActive}
             onClick={() => onModeChange(item.id)}
-            className={`nav-btn relative flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold leading-none transition active:scale-95 ${
+            className={`nav-btn relative flex items-center gap-0.5 rounded-full px-2 py-1 text-[10px] font-bold leading-none transition active:scale-95 ${
               isActive ? "is-active bg-jade text-white shadow-sm" : "text-ink-faint"
             }`}
           >
-            <span className="nav-icon flex h-4 w-4 items-center justify-center">{item.icon(isActive)}</span>
+            <span className="nav-icon flex h-3.5 w-3.5 items-center justify-center">{item.icon(isActive)}</span>
             {item.label}
             {item.id === "personal" && personalPending > 0 && (
               <span className="absolute -right-0.5 -top-0.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-coral px-0.5 text-[8px] font-bold text-white">

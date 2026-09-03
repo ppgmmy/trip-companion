@@ -427,25 +427,25 @@ export default function ExpenseTab({
   const afterToday = todayLeft != null && entryDate === todayId ? todayLeft - (editingId ? 0 : draftAmount) : null;
 
   return (
-    <div className="w-full min-w-0 space-y-4 overflow-x-hidden">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <h2 className="font-display text-xl font-bold text-ink">開支儀表板</h2>
-          <p className="text-sm text-ink-soft">{trip.targetCurrency} → HKD 以記入當下匯率鎖定</p>
+    <div className="w-full min-w-0 space-y-2.5 overflow-x-hidden">
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <h2 className="font-display text-base font-bold leading-tight text-ink">開支儀表板</h2>
+          <p className="text-[11px] leading-tight text-ink-soft">{trip.targetCurrency} → HKD · 記入當下匯率</p>
         </div>
         {isFeatureEnabled("remaining-days-chip") && (
-          <span className="shrink-0 rounded-full bg-jade-soft px-3 py-1.5 text-xs font-bold text-jade-deep">
+          <span className="shrink-0 rounded-full bg-jade-soft px-2 py-1 text-[10px] font-bold text-jade-deep">
             剩 {remainingDays} 日
           </span>
         )}
       </div>
 
-      <div className="expense-panel-rail sticky top-0 z-20 bg-mist/90 py-2 backdrop-blur-md">
+      <div className="expense-panel-rail sticky top-0 z-20 -mx-0.5 bg-mist/90 px-0.5 py-1 backdrop-blur-md">
         <div
           ref={tabRailRef}
           role="tablist"
           aria-label="開支儀表板分類"
-          className="scroll-thin flex snap-x snap-mandatory gap-2 overflow-x-auto pb-0.5"
+          className="scroll-thin flex snap-x snap-mandatory gap-1.5 overflow-x-auto pb-0.5"
         >
           {PANELS.map((item) => {
             const isActive = panel === item.id;
@@ -459,7 +459,7 @@ export default function ExpenseTab({
                 role="tab"
                 aria-selected={isActive}
                 onClick={() => setPanel(item.id)}
-                className={`snap-start shrink-0 rounded-full px-4 py-2.5 text-sm font-bold transition active:scale-95 ${
+                className={`snap-start shrink-0 rounded-full px-3 py-1.5 text-xs font-bold transition active:scale-95 ${
                   isActive
                     ? "bg-jade text-white shadow-[var(--shadow-soft)]"
                     : "border border-jade/15 bg-white/85 text-ink-soft"
@@ -476,7 +476,7 @@ export default function ExpenseTab({
         <UndoToast message={toast.message} onUndo={toast.undo ? undoLastAction : null} />
       )}
 
-      <div key={panel} className="tab-panel space-y-5" role="tabpanel">
+      <div key={panel} className="tab-panel space-y-3" role="tabpanel">
         {panel === "overview" && (
           <>
             <DailyOptBanner />
@@ -663,7 +663,7 @@ export default function ExpenseTab({
         )}
 
         {panel === "ledger" && (
-          <div className="space-y-3">
+          <div className="space-y-2">
             <PwaQuickAddHint />
             <LedgerSummaryBar
               trip={trip}
@@ -681,7 +681,7 @@ export default function ExpenseTab({
 
             <PayerSpendStats trip={trip} payerTotals={payerTotals} onJumpToPayer={jumpToLedgerPayer} />
 
-            <form ref={formRef} onSubmit={submitExpense} className="expense-section-card-compact space-y-2">
+            <form ref={formRef} onSubmit={submitExpense} className="expense-section-card-compact space-y-1.5">
               {editingId && (
                 <div className="flex justify-end">
                   <button type="button" onClick={resetForm} className="text-[11px] font-bold text-ink-faint">
@@ -709,7 +709,7 @@ export default function ExpenseTab({
                 onChange={(e) => setAmount(e.target.value)}
                 onKeyDown={handleAmountKeyDown}
                 placeholder={`金額（${trip.targetCurrency}）`}
-                className="h-12 w-full rounded-xl border border-jade/15 bg-mist px-3 text-center font-display text-xl font-bold outline-none ring-jade focus:ring-2"
+                className="h-10 w-full rounded-xl border border-jade/15 bg-mist px-3 text-center font-display text-lg font-bold outline-none ring-jade focus:ring-2"
               />
 
               {suggestedAmounts.length > 0 && !amount && (

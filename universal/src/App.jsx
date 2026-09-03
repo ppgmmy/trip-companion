@@ -240,29 +240,29 @@ export default function App() {
 
   return (
     <div id="tc-app" className="bg-travel min-h-dvh w-full overflow-x-hidden">
-      <main className="safe-top mx-auto w-full max-w-lg box-border px-4 pb-32">
+      <main className="safe-top mx-auto w-full max-w-lg box-border px-3 pb-32 sm:px-4">
         {activeTrip && (
-          <div className="mb-4 space-y-2">
-            <div className="flex justify-end">
-              <ModeRail mode={appMode} onModeChange={setAppMode} personalPending={personalPending} />
+          <div className="mb-2 flex items-center gap-1.5">
+            <div className="min-w-0 flex-1">
+              <TripSwitcher
+                variant="banner"
+                trips={trips}
+                activeId={activeTrip?.id}
+                onSwitch={switchTrip}
+                onCreate={createTrip}
+                onUpdate={updateTrip}
+                onDelete={deleteTrip}
+                spendSummary={tripSpendSummary}
+                targetCurrency={activeTrip?.targetCurrency}
+              />
             </div>
-            <TripSwitcher
-              variant="banner"
-              trips={trips}
-              activeId={activeTrip?.id}
-              onSwitch={switchTrip}
-              onCreate={createTrip}
-              onUpdate={updateTrip}
-              onDelete={deleteTrip}
-              spendSummary={tripSpendSummary}
-              targetCurrency={activeTrip?.targetCurrency}
-            />
+            <ModeRail mode={appMode} onModeChange={setAppMode} personalPending={personalPending} />
           </div>
         )}
         {!activeTrip ? (
           <EmptyState onCreate={createTrip} />
         ) : (
-          <div className="tab-panel space-y-4">
+          <div className="tab-panel space-y-2.5">
             {appMode === "personal" ? (
               <PersonalTab personal={personal} setPersonal={setPersonal} focusAddTick={personalAddTick} />
             ) : (

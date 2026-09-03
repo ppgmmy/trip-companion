@@ -14,11 +14,11 @@ export default function PayerSpendStats({ trip, payerTotals, onJumpToPayer }) {
   if (!payerTotals?.length) return null;
 
   return (
-    <div className="rounded-xl border border-jade/15 bg-white px-3 py-2 shadow-[var(--shadow-soft)]">
+    <div className="rounded-lg border border-jade/15 bg-white px-2.5 py-1.5 shadow-[var(--shadow-soft)]">
       <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">
         邊個用咗幾多{onJumpToPayer ? " · 點擊篩選" : ""}
       </p>
-      <ul className="mt-1.5 space-y-1">
+      <ul className="mt-1 space-y-0.5">
         {payerTotals.map((row) => {
           const bits = paymentBits(row, trip.targetCurrency);
           const inner = (

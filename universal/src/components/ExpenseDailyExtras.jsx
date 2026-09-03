@@ -889,8 +889,8 @@ export function AnalysisStory({ trip, expenses, days, totalSpent, budget, elapse
 export function LedgerSummaryBar({ trip, expenses, visibleCount, todaySpent, totalSpent, totalHkd, rate, fxLabel, fxMeta, onRefreshRate, fxStatus }) {
   const refreshing = fxStatus === "loading";
   return (
-    <div className="space-y-1.5 rounded-xl bg-jade-soft/40 px-3 py-2">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-semibold text-ink-soft">
+    <div className="space-y-1 rounded-lg bg-jade-soft/40 px-2.5 py-1.5">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] font-semibold text-ink-soft">
         <span>
           今日 <strong className="text-jade-deep">{formatMoney(todaySpent, trip.targetCurrency)}</strong>
         </span>
