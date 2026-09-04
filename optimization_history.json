@@ -113,6 +113,13 @@
       "id": "budget-runway-days",
       "title": "預算可用天數",
       "description": "照而家使費速度，預算仲夠用幾多日；同旅程剩餘日數對比，一眼知要唔要收油。"
+    },
+    {
+      "date": "2026-09-04",
+      "id": "remaining-days-chip",
+      "title": "剩餘日數徽章",
+      "description": "標題旁顯示旅程剩餘日數，強化時間感。",
+      "cycle": true
     }
   ]
 }
