@@ -886,10 +886,56 @@ export function AnalysisStory({ trip, expenses, days, totalSpent, budget, elapse
   );
 }
 
-export function LedgerSummaryBar({ trip, expenses, visibleCount, todaySpent, totalSpent, totalHkd, rate, fxLabel, fxMeta, onRefreshRate, fxStatus }) {
+export function LedgerSummaryBar({
+  trip,
+  expenses,
+  visibleCount,
+  todaySpent,
+  totalSpent,
+  totalHkd,
+  rate,
+  fxLabel,
+  fxMeta,
+  onRefreshRate,
+  fxStatus,
+  remaining = null,
+  remainingDays = null,
+  dailyAllowance = null,
+  todayLeft = null,
+}) {
   const refreshing = fxStatus === "loading";
+  const budget = Number(trip.budget) || 0;
+  const showPace = budget > 0 && remaining != null && remainingDays != null && dailyAllowance != null;
+  const overToday = showPace && todayLeft != null && todayLeft < 0;
+
   return (
-    <div className="space-y-1 rounded-lg bg-jade-soft/40 px-2.5 py-1.5">
+    <div className="space-y-1.5 rounded-lg bg-jade-soft/40 px-2.5 py-1.5">
+      {showPace && (
+        <div className="flex items-stretch gap-1.5">
+          <div className="min-w-0 flex-1 rounded-md bg-white/80 px-2 py-1.5">
+            <p className="text-[9px] font-bold uppercase tracking-wide text-ink-faint">餘下日子</p>
+            <p className="font-display text-sm font-black leading-tight text-ink">{remainingDays} 日</p>
+          </div>
+          <div className="min-w-0 flex-[1.4] rounded-md bg-white/80 px-2 py-1.5">
+            <p className="text-[9px] font-bold uppercase tracking-wide text-ink-faint">日均仲可用</p>
+            <p className="font-display text-sm font-black leading-tight text-jade-deep">
+              {formatMoney(dailyAllowance, trip.targetCurrency)}
+            </p>
+          </div>
+          <div className="min-w-0 flex-[1.4] rounded-md bg-white/80 px-2 py-1.5">
+            <p className="text-[9px] font-bold uppercase tracking-wide text-ink-faint">今日仲剩</p>
+            <p
+              className={`font-display text-sm font-black leading-tight ${
+                overToday ? "text-coral" : "text-ink"
+              }`}
+            >
+              {todayLeft == null
+                ? "—"
+                : formatMoney(todayLeft, trip.targetCurrency)}
+            </p>
+          </div>
+        </div>
+      )}
       <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] font-semibold text-ink-soft">
         <span>
           今日 <strong className="text-jade-deep">{formatMoney(todaySpent, trip.targetCurrency)}</strong>
@@ -899,6 +945,14 @@ export function LedgerSummaryBar({ trip, expenses, visibleCount, todaySpent, tot
           總計 <strong className="text-ink">{formatMoney(totalSpent, trip.targetCurrency)}</strong>
           <span className="ml-1 text-ink-faint">({formatHkd(totalHkd)})</span>
         </span>
+        {showPace && (
+          <>
+            <span className="text-ink-faint">·</span>
+            <span>
+              預算剩 <strong className="text-ink">{formatMoney(Math.max(0, remaining), trip.targetCurrency)}</strong>
+            </span>
+          </>
+        )}
         <span className="text-ink-faint">·</span>
         <span>
           {visibleCount === expenses.length ? `${expenses.length} 筆` : `${visibleCount}/${expenses.length} 筆`}

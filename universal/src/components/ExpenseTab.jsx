@@ -683,6 +683,10 @@ export default function ExpenseTab({
               fxMeta={rateMeta}
               onRefreshRate={onRefreshRate}
               fxStatus={fxStatus}
+              remaining={remaining}
+              remainingDays={remainingDays}
+              dailyAllowance={dailyAllowance}
+              todayLeft={todayLeft}
             />
 
             <PayerSpendStats trip={trip} payerTotals={payerTotals} onJumpToPayer={jumpToLedgerPayer} />
