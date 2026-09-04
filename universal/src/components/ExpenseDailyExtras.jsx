@@ -1476,6 +1476,170 @@ function formatRunwayDays(days) {
   return days.toFixed(1);
 }
 
+export function SpendingTimelineAlignPanel({
+  trip,
+  totalSpent = 0,
+  budget = 0,
+  days = 1,
+  elapsedDays = 1,
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  if (!isFeatureEnabled("spending-vs-timeline") || budget <= 0 || days <= 0) return null;
+
+  const tripPct = Math.min(100, Math.round((elapsedDays / days) * 100));
+  const budgetPct = Math.min(100, Math.round((totalSpent / budget) * 100));
+  const gap = budgetPct - tripPct;
+  const remainingTripPct = Math.max(0, 100 - tripPct);
+  const remainingBudgetPct = Math.max(0, 100 - budgetPct);
+
+  let tier;
+  if (budgetPct >= 100) {
+    tier = {
+      emoji: "🚨",
+      label: "已超預算",
+      badgeClass: "bg-coral/15 text-coral",
+      barClass: "bg-gradient-to-r from-coral to-[#dc2626]",
+      headlineClass: "text-coral",
+      insight: `預算已用盡 · 旅程仲剩 ${remainingTripPct}% 時間`,
+    };
+  } else if (gap > 15) {
+    tier = {
+      emoji: "🔴",
+      label: "使費超前",
+      badgeClass: "bg-coral/15 text-coral",
+      barClass: "bg-gradient-to-r from-[#f97316] to-coral",
+      headlineClass: "text-coral",
+      insight: `預算比行程進度超前 ${gap}% · 後段要收油`,
+    };
+  } else if (gap > 5) {
+    tier = {
+      emoji: "🟠",
+      label: "略為超前",
+      badgeClass: "bg-[#fef3c7] text-[#b45309]",
+      barClass: "bg-gradient-to-r from-[#f59e0b] to-[#f97316]",
+      headlineClass: "text-[#b45309]",
+      insight: `預算超前行程 ${gap}% · 留意非必要消費`,
+    };
+  } else if (gap < -15) {
+    tier = {
+      emoji: "🟢",
+      label: "慳油中",
+      badgeClass: "bg-jade-soft text-jade-deep",
+      barClass: "bg-gradient-to-r from-[#34d399] to-jade",
+      headlineClass: "text-jade-deep",
+      insight: `預算落後行程 ${-gap}% · 仲有餘力`,
+    };
+  } else if (gap < -5) {
+    tier = {
+      emoji: "🟡",
+      label: "略為落後",
+      badgeClass: "bg-jade-soft text-jade-deep",
+      barClass: "bg-gradient-to-r from-jade to-[#34d399]",
+      headlineClass: "text-jade-deep",
+      insight: `預算落後行程 ${-gap}% · 節奏健康`,
+    };
+  } else {
+    tier = {
+      emoji: "✅",
+      label: "對齊行程",
+      badgeClass: "bg-jade-soft text-jade-deep",
+      barClass: "bg-gradient-to-r from-jade to-[#34d399]",
+      headlineClass: "text-ink",
+      insight: "使費進度同旅程時間大致吻合",
+    };
+  }
+
+  return (
+    <div className="rounded-3xl bg-white p-4 shadow-[var(--shadow-soft)]">
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="flex w-full items-start gap-3 text-left transition active:scale-[0.99]"
+        aria-expanded={expanded}
+      >
+        <span className="mt-0.5 text-lg" aria-hidden="true">
+          {tier.emoji}
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-xs font-bold uppercase tracking-wider text-ink-soft">📍 行程進度對齊</p>
+            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${tier.badgeClass}`}>
+              {tier.label}
+            </span>
+          </div>
+          <div className="mt-2 flex items-baseline justify-between gap-2">
+            <p className={`font-display text-xl font-black ${tier.headlineClass}`}>
+              {gap === 0 ? "同步" : gap > 0 ? `超前 ${gap}%` : `落後 ${-gap}%`}
+            </p>
+            <p className="text-sm font-semibold text-ink-faint">
+              第 {elapsedDays}/{days} 日
+            </p>
+          </div>
+
+          <div className="mt-3 space-y-2.5">
+            <div>
+              <div className="mb-1 flex items-baseline justify-between gap-2">
+                <p className="text-[10px] font-semibold text-ink-faint">旅程時間</p>
+                <p className="text-[11px] font-bold text-ink-soft">{tripPct}%</p>
+              </div>
+              <div className="h-2.5 overflow-hidden rounded-full bg-[#efe9e0]">
+                <div
+                  className="h-full rounded-full bg-[#94a3b8] transition-all duration-700"
+                  style={{ width: `${Math.max(4, tripPct)}%` }}
+                />
+              </div>
+            </div>
+            <div>
+              <div className="mb-1 flex items-baseline justify-between gap-2">
+                <p className="text-[10px] font-semibold text-ink-faint">預算消耗</p>
+                <p className={`text-[11px] font-bold ${budgetPct >= 85 ? "text-coral" : budgetPct >= 60 ? "text-[#b45309]" : "text-jade-deep"}`}>
+                  {budgetPct}%
+                </p>
+              </div>
+              <div className="h-2.5 overflow-hidden rounded-full bg-[#efe9e0]">
+                <div
+                  className={`h-full rounded-full transition-all duration-700 ${tier.barClass}`}
+                  style={{ width: `${Math.max(4, budgetPct)}%` }}
+                />
+              </div>
+            </div>
+          </div>
+
+          <p className="mt-2 text-xs font-semibold text-ink-soft">{tier.insight}</p>
+        </div>
+        <span className="shrink-0 rounded-full border border-jade/15 bg-shell px-2 py-1 text-[10px] font-bold text-jade-deep">
+          {expanded ? "收起" : "詳情"}
+        </span>
+      </button>
+
+      {expanded && (
+        <div className="mt-3 space-y-3 border-t border-jade/10 pt-3">
+          <div className="grid grid-cols-2 gap-2 text-center">
+            <div className="rounded-2xl bg-shell px-2 py-2.5">
+              <p className="text-[10px] font-semibold text-ink-faint">旅程剩餘</p>
+              <p className="mt-0.5 text-sm font-black text-ink">{remainingTripPct}%</p>
+              <p className="mt-0.5 text-[10px] text-ink-faint">{days - elapsedDays} 日</p>
+            </div>
+            <div className="rounded-2xl bg-shell px-2 py-2.5">
+              <p className="text-[10px] font-semibold text-ink-faint">預算剩餘</p>
+              <p className={`mt-0.5 text-sm font-black ${remainingBudgetPct <= 15 ? "text-coral" : "text-jade-deep"}`}>
+                {remainingBudgetPct}%
+              </p>
+              <p className="mt-0.5 text-[10px] text-ink-faint">
+                {formatMoney(Math.max(0, budget - totalSpent), trip.targetCurrency)}
+              </p>
+            </div>
+          </div>
+          <p className="text-center text-[10px] leading-relaxed text-ink-faint">
+            理想情況：預算消耗% 應接近旅程時間%。超前代表後段要收油，落後代表仲有餘力。
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function BudgetRunwayPanel({
   trip,
   totalSpent = 0,

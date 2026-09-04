@@ -158,4 +158,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "照而家使費速度，預算仲夠用幾多日；同旅程剩餘日數對比，一眼知要唔要收油。",
     pillar: "stickiness",
   },
+  {
+    id: "spending-vs-timeline",
+    title: "行程進度對齊",
+    description: "對比「旅程已過幾多%」同「預算已用幾多%」，一眼知使費超前定落後行程。",
+    pillar: "analysis",
+  },
 ];

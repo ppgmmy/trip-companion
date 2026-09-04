@@ -27,6 +27,7 @@ import {
   SevenDayTrendPanel,
   TodayBudgetGauge,
   BudgetRunwayPanel,
+  SpendingTimelineAlignPanel,
 } from "./ExpenseDailyExtras";
 import PayerPaymentFields from "./PayerPaymentFields";
 import { useLocalStorage } from "../hooks/useLocalStorage";
@@ -505,6 +506,14 @@ export default function ExpenseTab({
               remaining={remaining}
               pace={pace}
               remainingDays={remainingDays}
+              elapsedDays={elapsedDays}
+            />
+
+            <SpendingTimelineAlignPanel
+              trip={trip}
+              totalSpent={totalSpent}
+              budget={budget}
+              days={days}
               elapsedDays={elapsedDays}
             />
 
