@@ -104,7 +104,6 @@ export default function ExpenseTab({
   const tabRailRef = useRef(null);
   const formRef = useRef(null);
   const amountRef = useRef(null);
-  const prevPanelRef = useRef(panel);
 
   useEffect(() => {
     setExpenseUi((prev) => ({
@@ -124,14 +123,6 @@ export default function ExpenseTab({
     setPanel(initialPanel);
     onInitialPanelApplied?.();
   }, [initialPanel, onInitialPanelApplied]);
-
-  useEffect(() => {
-    const enteredLedger = panel === "ledger" && prevPanelRef.current !== "ledger";
-    prevPanelRef.current = panel;
-    if (enteredLedger && !editingId) {
-      amountRef.current?.focus({ preventScroll: true });
-    }
-  }, [panel, editingId]);
 
   useEffect(() => {
     const el = tabRefs.current[panel];
@@ -283,7 +274,7 @@ export default function ExpenseTab({
     showToast._t = window.setTimeout(() => {
       setToast(null);
       undoRef.current = null;
-    }, 5000);
+    }, 2800);
   }
 
   function undoLastAction() {
@@ -321,6 +312,7 @@ export default function ExpenseTab({
       );
       showToast("已更新呢筆開支");
       resetForm();
+      amountRef.current?.blur();
       return;
     }
 
@@ -342,7 +334,8 @@ export default function ExpenseTab({
     showToast(date === todayId ? "已記入今日開支" : `已補記 ${formatDayHeading(date)}`, before);
     setAmount("");
     setNote("");
-    window.requestAnimationFrame(() => amountRef.current?.focus({ preventScroll: true }));
+    // 唔自動彈數字鍵盤，避免遮住剛記入嘅內容
+    amountRef.current?.blur();
   }
 
   function removeExpense(id) {
@@ -474,7 +467,11 @@ export default function ExpenseTab({
       </div>
 
       {toast && (
-        <UndoToast message={toast.message} onUndo={toast.undo ? undoLastAction : null} />
+        <div className="pointer-events-none fixed inset-x-0 bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] z-40 mx-auto max-w-lg px-3">
+          <div className="pointer-events-auto">
+            <UndoToast message={toast.message} onUndo={toast.undo ? undoLastAction : null} />
+          </div>
+        </div>
       )}
 
       <div key={panel} className="tab-panel space-y-3" role="tabpanel">
