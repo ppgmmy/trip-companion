@@ -41,18 +41,20 @@ jobs:
       - name: Sync latest main
         run: git pull --rebase origin main
 
-      - name: Guard against unresolved merge conflicts
-        run: |
-          if git grep -nE '^(<<<<<<<|=======|>>>>>>>)' -- universal/src/data/enabledExpenseFeatures.json optimization_history.json; then
-            echo "::error::enabledExpenseFeatures.json / optimization_history.json 含未解決衝突標記，每日優化中止。"
-            exit 1
-          fi
-          node -e "JSON.parse(require('fs').readFileSync('universal/src/data/enabledExpenseFeatures.json','utf8')); JSON.parse(require('fs').readFileSync('optimization_history.json','utf8')); console.log('feature JSON ok')"
-
       - name: Run daily optimization script
         id: opt
         run: |
+          # 衝突標記／壞 JSON 由 run.mjs 自動合併或重建，唔再喺呢度硬失敗
+          if git grep -nE '^(<<<<<<<|=======|>>>>>>>)' -- universal/src/data/enabledExpenseFeatures.json optimization_history.json; then
+            echo "::warning::偵測到衝突標記，交由 run.mjs 自動修復。"
+          fi
           node scripts/daily-optimization/run.mjs
+          if [[ -f .daily-opt-repaired ]]; then
+            echo "repaired=true" >> "$GITHUB_OUTPUT"
+            echo "JSON auto-repaired."
+          else
+            echo "repaired=false" >> "$GITHUB_OUTPUT"
+          fi
           if [[ -f .daily-opt-skip ]]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
             echo "No new feature to enable."
@@ -65,14 +67,15 @@ jobs:
               echo "id=$ID" >> "$GITHUB_OUTPUT"
             fi
           fi
+          node -e "JSON.parse(require('fs').readFileSync('universal/src/data/enabledExpenseFeatures.json','utf8')); JSON.parse(require('fs').readFileSync('optimization_history.json','utf8')); console.log('feature JSON ok')"
 
       - name: Commit and push
-        if: steps.opt.outputs.skip == 'false'
+        if: steps.opt.outputs.skip == 'false' || steps.opt.outputs.repaired == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          rm -f .daily-opt-skip .daily-opt-result.json
+          rm -f .daily-opt-skip .daily-opt-result.json .daily-opt-repaired
 
           git add universal/src/data/enabledExpenseFeatures.json optimization_history.json
           if git diff --cached --quiet; then
@@ -80,14 +83,24 @@ jobs:
             exit 0
           fi
 
-          TITLE="${{ steps.opt.outputs.title }}"
-          ID="${{ steps.opt.outputs.id }}"
-          git commit -m "$(cat <<EOF
+          if [[ "${{ steps.opt.outputs.skip }}" == "false" ]]; then
+            TITLE="${{ steps.opt.outputs.title }}"
+            ID="${{ steps.opt.outputs.id }}"
+            MSG="$(cat <<EOF
           feat(daily): enable ${ID} — ${TITLE}
 
           Automated daily expense dashboard optimization.
           EOF
           )"
+          else
+            MSG="$(cat <<EOF
+          fix(daily): auto-repair expense feature JSON conflict markers
+
+          Automated recovery so daily optimization can continue.
+          EOF
+          )"
+          fi
+          git commit -m "$MSG"
 
           for attempt in 1 2 3; do
             git pull --rebase origin main && git push origin HEAD:${{ github.ref_name }} && exit 0
