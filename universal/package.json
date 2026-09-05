@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node ../scripts/daily-optimization/ensure-feature-json.mjs --repair",
     "build": "vite build",
     "preview": "vite preview"
   },

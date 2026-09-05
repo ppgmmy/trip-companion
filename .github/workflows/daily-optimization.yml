@@ -6,6 +6,7 @@
 # 3. workflow_dispatch（手動）
 #
 # 無限期運作：全部啟用後進入輪播，每日仍更新，永不停止。
+# 衝突標記／壞 JSON：run.mjs 會自動修復並 commit。
 
 name: Daily Optimization
 
@@ -44,7 +45,6 @@ jobs:
       - name: Run daily optimization script
         id: opt
         run: |
-          # 衝突標記／壞 JSON 由 run.mjs 自動合併或重建，唔再喺呢度硬失敗
           if git grep -nE '^(<<<<<<<|=======|>>>>>>>)' -- universal/src/data/enabledExpenseFeatures.json optimization_history.json; then
             echo "::warning::偵測到衝突標記，交由 run.mjs 自動修復。"
           fi
@@ -67,7 +67,7 @@ jobs:
               echo "id=$ID" >> "$GITHUB_OUTPUT"
             fi
           fi
-          node -e "JSON.parse(require('fs').readFileSync('universal/src/data/enabledExpenseFeatures.json','utf8')); JSON.parse(require('fs').readFileSync('optimization_history.json','utf8')); console.log('feature JSON ok')"
+          node scripts/daily-optimization/ensure-feature-json.mjs --check
 
       - name: Commit and push
         if: steps.opt.outputs.skip == 'false' || steps.opt.outputs.repaired == 'true'

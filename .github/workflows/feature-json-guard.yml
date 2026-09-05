@@ -1,0 +1,41 @@
+# Guard: never let broken daily-opt feature JSON land on main / break deploys.
+#
+# Fails when enabledExpenseFeatures.json or optimization_history.json contain
+# git conflict markers or are not valid JSON.
+
+name: Feature JSON Guard
+
+on:
+  pull_request:
+    paths:
+      - "universal/src/data/enabledExpenseFeatures.json"
+      - "optimization_history.json"
+      - "universal/src/data/expenseDailyBacklog.js"
+      - "scripts/daily-optimization/**"
+      - ".github/workflows/feature-json-guard.yml"
+  push:
+    branches: [main]
+    paths:
+      - "universal/src/data/enabledExpenseFeatures.json"
+      - "optimization_history.json"
+      - "universal/src/data/expenseDailyBacklog.js"
+      - "scripts/daily-optimization/**"
+      - ".github/workflows/feature-json-guard.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Reject conflict markers / invalid JSON
+        run: node scripts/daily-optimization/ensure-feature-json.mjs --check
