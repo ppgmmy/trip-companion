@@ -3,6 +3,10 @@
  *
  * Auth: Authorization: Bearer $CRON_SECRET
  * Env: CRON_SECRET, GH_WORKFLOW_TOKEN
+ *
+ * Schedules (UTC): 02:00 / 03:00 正常備援；04:20 晏晝後備閘門。
+ * GitHub workflow 本身亦有 primary 失敗 → backup-retry 自動再試。
+ * Query `?gate=backup` 可選，只影響日誌標記（冪等，重複 dispatch 安全）。
  */
 const OWNER = "ppgmmy";
 const REPO = "trip-companion";
@@ -68,13 +72,22 @@ export default async function handler(req, res) {
     return res.status(500).json({ ok: false, error: "GH_WORKFLOW_TOKEN not configured" });
   }
 
+  const gate =
+    typeof req.query?.gate === "string" && req.query.gate.trim()
+      ? req.query.gate.trim()
+      : "primary";
+
   try {
     await dispatchWorkflow(token);
     return res.status(200).json({
       ok: true,
       mode: "dispatch",
+      gate,
       today: todayHktYmd(),
-      message: "workflow_dispatch accepted",
+      message:
+        gate === "backup"
+          ? "backup gate workflow_dispatch accepted"
+          : "workflow_dispatch accepted",
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

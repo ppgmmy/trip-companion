@@ -37,6 +37,10 @@
     {
       "path": "/api/daily-opt-cron",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/daily-opt-cron?gate=backup",
+      "schedule": "20 4 * * *"
     }
   ]
 }

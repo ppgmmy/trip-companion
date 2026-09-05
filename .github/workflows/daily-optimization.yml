@@ -1,9 +1,14 @@
 # 每日開支儀表板優化：冪等（同一香港日最多啟用一項）
 #
 # 觸發來源：
-# 1. GitHub schedule：02:07 / 02:23 / 02:41 UTC ≈ HKT 10:07/10:23/10:41（唯一寫入者）
-# 2. Vercel Cron → workflow_dispatch（備援，唔直接 commit，避免雙寫衝突）
+# 1. GitHub schedule（早上三槽 + 晏晝後備一槽）
+#    02:07 / 02:23 / 02:41 UTC ≈ HKT 10:07/10:23/10:41
+#    04:15 UTC ≈ HKT 12:15（後備閘門：早上全敗仍有機會）
+# 2. Vercel Cron → workflow_dispatch（02:00 / 03:00 UTC 備援，唔直接 commit）
 # 3. workflow_dispatch（手動）
+#
+# 同一 run 內：primary 失敗會自動跑 backup-retry（等 90 秒再試），
+# 唔會因為第一次 fail 就完全冇機會。
 #
 # 無限期運作：全部啟用後進入輪播，每日仍更新，永不停止。
 # 衝突標記／壞 JSON：run.mjs 會自動修復並 commit。
@@ -15,6 +20,7 @@ on:
     - cron: "7 2 * * *"
     - cron: "23 2 * * *"
     - cron: "41 2 * * *"
+    - cron: "15 4 * * *" # HKT 12:15 backup gate
   workflow_dispatch:
 
 permissions:
@@ -25,8 +31,14 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  enable-next-feature:
+  primary:
+    name: Primary attempt
     runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.opt.outputs.skip }}
+      repaired: ${{ steps.opt.outputs.repaired }}
+      title: ${{ steps.opt.outputs.title }}
+      id: ${{ steps.opt.outputs.id }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -42,70 +54,54 @@ jobs:
       - name: Sync latest main
         run: git pull --rebase origin main
 
-      - name: Run daily optimization script
+      - name: Run daily optimization
         id: opt
-        run: |
-          if git grep -nE '^(<<<<<<<|=======|>>>>>>>)' -- universal/src/data/enabledExpenseFeatures.json optimization_history.json; then
-            echo "::warning::偵測到衝突標記，交由 run.mjs 自動修復。"
-          fi
-          node scripts/daily-optimization/run.mjs
-          if [[ -f .daily-opt-repaired ]]; then
-            echo "repaired=true" >> "$GITHUB_OUTPUT"
-            echo "JSON auto-repaired."
-          else
-            echo "repaired=false" >> "$GITHUB_OUTPUT"
-          fi
-          if [[ -f .daily-opt-skip ]]; then
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-            echo "No new feature to enable."
-          else
-            echo "skip=false" >> "$GITHUB_OUTPUT"
-            if [[ -f .daily-opt-result.json ]]; then
-              TITLE=$(node -e "console.log(JSON.parse(require('fs').readFileSync('.daily-opt-result.json','utf8')).title)")
-              ID=$(node -e "console.log(JSON.parse(require('fs').readFileSync('.daily-opt-result.json','utf8')).id)")
-              echo "title=$TITLE" >> "$GITHUB_OUTPUT"
-              echo "id=$ID" >> "$GITHUB_OUTPUT"
-            fi
-          fi
-          node scripts/daily-optimization/ensure-feature-json.mjs --check
+        run: bash scripts/daily-optimization/ci-run.sh
 
       - name: Commit and push
         if: steps.opt.outputs.skip == 'false' || steps.opt.outputs.repaired == 'true'
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          bash scripts/daily-optimization/ci-commit.sh \
+            "${{ steps.opt.outputs.skip }}" \
+            "${{ steps.opt.outputs.repaired }}" \
+            "${{ steps.opt.outputs.title }}" \
+            "${{ steps.opt.outputs.id }}"
 
-          rm -f .daily-opt-skip .daily-opt-result.json .daily-opt-repaired
+  # 後備閘門：第一次失敗唔等於今日完結 — 等陣再自動重試一次
+  backup-retry:
+    name: Backup retry gate
+    needs: primary
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait before backup retry
+        run: |
+          echo "Primary attempt failed — backup gate waiting 90s before retry…"
+          sleep 90
 
-          git add universal/src/data/enabledExpenseFeatures.json optimization_history.json
-          if git diff --cached --quiet; then
-            echo "Nothing to commit"
-            exit 0
-          fi
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
-          if [[ "${{ steps.opt.outputs.skip }}" == "false" ]]; then
-            TITLE="${{ steps.opt.outputs.title }}"
-            ID="${{ steps.opt.outputs.id }}"
-            MSG="$(cat <<EOF
-          feat(daily): enable ${ID} — ${TITLE}
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
 
-          Automated daily expense dashboard optimization.
-          EOF
-          )"
-          else
-            MSG="$(cat <<EOF
-          fix(daily): auto-repair expense feature JSON conflict markers
+      - name: Sync latest main
+        run: git pull --rebase origin main
 
-          Automated recovery so daily optimization can continue.
-          EOF
-          )"
-          fi
-          git commit -m "$MSG"
+      - name: Run daily optimization (backup)
+        id: opt
+        run: bash scripts/daily-optimization/ci-run.sh
 
-          for attempt in 1 2 3; do
-            git pull --rebase origin main && git push origin HEAD:${{ github.ref_name }} && exit 0
-            echo "Push conflict, retry $attempt..."
-            sleep 3
-          done
-          echo "Push failed after retries"
-          exit 1
+      - name: Commit and push (backup)
+        if: steps.opt.outputs.skip == 'false' || steps.opt.outputs.repaired == 'true'
+        run: |
+          bash scripts/daily-optimization/ci-commit.sh \
+            "${{ steps.opt.outputs.skip }}" \
+            "${{ steps.opt.outputs.repaired }}" \
+            "${{ steps.opt.outputs.title }}" \
+            "${{ steps.opt.outputs.id }}"
