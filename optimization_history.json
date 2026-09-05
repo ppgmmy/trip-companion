@@ -126,6 +126,12 @@
       "title": "分類日均",
       "description": "各分類平均每日使費，方便計劃餘下日子。",
       "cycle": true
+    },
+    {
+      "date": "2026-09-05",
+      "id": "budget-health-badge",
+      "title": "預算健康徽章",
+      "description": "儀表板各分頁顯示預算健康狀態徽章，超支／偏快即時醒目。"
     }
   ]
 }

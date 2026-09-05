@@ -27,13 +27,7 @@
     "spending-vs-timeline",
     "budget-health-badge"
   ],
-<<<<<<< HEAD
-  "updatedAt": "2026-09-05T02:00:54.357Z",
-  "lastFeatureId": "avg-per-category",
-  "lastTitle": "分類日均"
-=======
   "updatedAt": "2026-09-05T02:12:00.000Z",
   "lastFeatureId": "budget-health-badge",
   "lastTitle": "預算健康徽章"
->>>>>>> cursor/bc-4262a591-a3e4-4e7c-a180-a9b04cffb625-9dbe
 }

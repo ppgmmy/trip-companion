@@ -41,6 +41,14 @@ jobs:
       - name: Sync latest main
         run: git pull --rebase origin main
 
+      - name: Guard against unresolved merge conflicts
+        run: |
+          if git grep -nE '^(<<<<<<<|=======|>>>>>>>)' -- universal/src/data/enabledExpenseFeatures.json optimization_history.json; then
+            echo "::error::enabledExpenseFeatures.json / optimization_history.json 含未解決衝突標記，每日優化中止。"
+            exit 1
+          fi
+          node -e "JSON.parse(require('fs').readFileSync('universal/src/data/enabledExpenseFeatures.json','utf8')); JSON.parse(require('fs').readFileSync('optimization_history.json','utf8')); console.log('feature JSON ok')"
+
       - name: Run daily optimization script
         id: opt
         run: |
