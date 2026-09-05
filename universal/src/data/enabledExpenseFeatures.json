@@ -24,9 +24,10 @@
     "fx-rate-impact",
     "today-budget-gauge",
     "budget-runway-days",
-    "spending-vs-timeline"
+    "spending-vs-timeline",
+    "budget-health-badge"
   ],
-  "updatedAt": "2026-09-04T02:10:00.000Z",
-  "lastFeatureId": "spending-vs-timeline",
-  "lastTitle": "行程進度對齊"
+  "updatedAt": "2026-09-05T02:12:00.000Z",
+  "lastFeatureId": "budget-health-badge",
+  "lastTitle": "預算健康徽章"
 }

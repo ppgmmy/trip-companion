@@ -11,6 +11,7 @@ import UndoToast from "./UndoToast";
 import {
   AnalysisSectionTitle,
   AnalysisStory,
+  BudgetHealthBadge,
   CategoryRanking,
   DailyOptBanner,
   DuplicateLastPanel,
@@ -427,11 +428,18 @@ export default function ExpenseTab({
           <h2 className="font-display text-base font-bold leading-tight text-ink">開支儀表板</h2>
           <p className="text-[11px] leading-tight text-ink-soft">{trip.targetCurrency} → HKD · 記入當下匯率</p>
         </div>
-        {isFeatureEnabled("remaining-days-chip") && (
-          <span className="shrink-0 rounded-full bg-jade-soft px-2 py-1 text-[10px] font-bold text-jade-deep">
-            剩 {remainingDays} 日
-          </span>
-        )}
+        <div className="flex shrink-0 items-center gap-1.5">
+          <BudgetHealthBadge
+            budgetPct={budgetPct}
+            budget={budget}
+            onJumpOverview={() => setPanel("overview")}
+          />
+          {isFeatureEnabled("remaining-days-chip") && (
+            <span className="rounded-full bg-jade-soft px-2 py-1 text-[10px] font-bold text-jade-deep">
+              剩 {remainingDays} 日
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="expense-panel-rail sticky top-0 z-20 -mx-0.5 bg-mist/90 px-0.5 py-1 backdrop-blur-md">
