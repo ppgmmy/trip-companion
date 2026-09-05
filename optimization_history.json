@@ -119,6 +119,13 @@
       "id": "spending-vs-timeline",
       "title": "行程進度對齊",
       "description": "對比「旅程已過幾多%」同「預算已用幾多%」，一眼知使費超前定落後行程。"
+    },
+    {
+      "date": "2026-09-05",
+      "id": "avg-per-category",
+      "title": "分類日均",
+      "description": "各分類平均每日使費，方便計劃餘下日子。",
+      "cycle": true
     }
   ]
 }
