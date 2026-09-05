@@ -164,4 +164,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "對比「旅程已過幾多%」同「預算已用幾多%」，一眼知使費超前定落後行程。",
     pillar: "analysis",
   },
+  {
+    id: "budget-health-badge",
+    title: "預算健康徽章",
+    description: "儀表板標題旁常駐色階徽章，任何分頁都睇到預算狀態，撳一下跳概覽。",
+    pillar: "stickiness",
+  },
 ];

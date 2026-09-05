@@ -1238,6 +1238,82 @@ export function CategoryRanking({ catTotals, expenses, showPct, filterCategory, 
   );
 }
 
+function budgetHealthBadgeTier(budgetPct) {
+  if (budgetPct >= 100) {
+    return {
+      label: "超支",
+      pctClass: "text-coral",
+      ringClass: "stroke-coral",
+      badgeClass: "border-coral/25 bg-coral/10 text-coral",
+      pulse: true,
+    };
+  }
+  if (budgetPct >= 85) {
+    return {
+      label: "警戒",
+      pctClass: "text-[#b45309]",
+      ringClass: "stroke-[#f97316]",
+      badgeClass: "border-[#f97316]/25 bg-[#fff7ed] text-[#b45309]",
+      pulse: false,
+    };
+  }
+  if (budgetPct >= 60) {
+    return {
+      label: "留意",
+      pctClass: "text-[#b45309]",
+      ringClass: "stroke-[#f59e0b]",
+      badgeClass: "border-[#f59e0b]/25 bg-[#fffbeb] text-[#b45309]",
+      pulse: false,
+    };
+  }
+  return {
+    label: "健康",
+    pctClass: "text-jade-deep",
+    ringClass: "stroke-jade",
+    badgeClass: "border-jade/20 bg-jade-soft text-jade-deep",
+    pulse: false,
+  };
+}
+
+export function BudgetHealthBadge({ budgetPct, budget, onJumpOverview }) {
+  if (!isFeatureEnabled("budget-health-badge") || budget <= 0) return null;
+
+  const tier = budgetHealthBadgeTier(budgetPct);
+  const pctDisplay = Math.min(999, budgetPct).toFixed(0);
+  const ringPct = Math.min(100, budgetPct);
+  const r = 7;
+  const c = 2 * Math.PI * r;
+  const dash = (ringPct / 100) * c;
+
+  return (
+    <button
+      type="button"
+      onClick={onJumpOverview}
+      className={`flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-1 transition active:scale-95 ${tier.badgeClass} ${tier.pulse ? "animate-[pulse_2.5s_ease-in-out_infinite]" : ""}`}
+      aria-label={`預算${tier.label}，已用 ${pctDisplay}%，撳睇概覽`}
+      title={`已用 ${pctDisplay}% 預算 · 撳睇概覽`}
+    >
+      <svg width="18" height="18" viewBox="0 0 18 18" className="-rotate-90 shrink-0" aria-hidden="true">
+        <circle cx="9" cy="9" r={r} fill="none" stroke="#efe9e0" strokeWidth="2.5" />
+        <circle
+          cx="9"
+          cy="9"
+          r={r}
+          fill="none"
+          className={tier.ringClass}
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeDasharray={`${dash} ${c}`}
+        />
+      </svg>
+      <span className="text-[10px] font-bold leading-none">
+        {tier.label}
+        <span className={`ml-0.5 font-black ${tier.pctClass}`}>{pctDisplay}%</span>
+      </span>
+    </button>
+  );
+}
+
 function budgetHealthTier(budgetPct) {
   if (budgetPct >= 100) {
     return {
