@@ -17,9 +17,9 @@
     "duplicate-last",
     "pinned-budget-alert",
     "hkd-list-toggle",
+    "category-pct-labels",
     "empty-state-tips",
     "remaining-days-chip",
-    "category-pct-labels",
     "avg-per-category",
     "fx-rate-impact",
     "today-budget-gauge",
@@ -27,7 +27,7 @@
     "spending-vs-timeline",
     "budget-health-badge"
   ],
-  "updatedAt": "2026-09-05T02:12:00.000Z",
-  "lastFeatureId": "budget-health-badge",
-  "lastTitle": "預算健康徽章"
+  "updatedAt": "2026-09-06T02:01:00.428Z",
+  "lastFeatureId": "today-budget-gauge",
+  "lastTitle": "今日預算儀表"
 }

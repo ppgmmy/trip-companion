@@ -132,6 +132,13 @@
       "id": "budget-health-badge",
       "title": "預算健康徽章",
       "description": "儀表板各分頁顯示預算健康狀態徽章，超支／偏快即時醒目。"
+    },
+    {
+      "date": "2026-09-06",
+      "id": "today-budget-gauge",
+      "title": "今日預算儀表",
+      "description": "概覽頁一眼睇今日已使同每日可用額，色階提示仲剩幾多，出門前心里有數。",
+      "cycle": true
     }
   ]
 }
