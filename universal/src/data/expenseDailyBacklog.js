@@ -170,4 +170,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "儀表板標題旁常駐色階徽章，任何分頁都睇到預算狀態，撳一下跳概覽。",
     pillar: "stickiness",
   },
+  {
+    id: "expense-list-sort",
+    title: "列表排序切換",
+    description: "支出清單可按最新、最舊或金額高低排序，長清單搵大額消費更快。",
+    pillar: "convenience",
+  },
 ];

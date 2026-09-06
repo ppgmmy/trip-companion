@@ -18,6 +18,7 @@ import {
   EmptyStateTip,
   ExpenseInsightCards,
   ExpenseListExtras,
+  ExpenseListSortBar,
   ExportCsvPanel,
   FilteredCategorySummary,
   FxRateImpactPanel,
@@ -46,7 +47,10 @@ const PANELS = [
   { id: "overview", label: "概覽" },
 ];
 
-function formatDayHeading(dateId) {
+function formatDayHeading(dateId, listSort = "date-desc") {
+  if (dateId === "__amount__") {
+    return listSort === "amount-desc" ? "按金額 · 大至細" : "按金額 · 細至大";
+  }
   if (!dateId) return "未知日期";
   const today = toDateId(new Date());
   const yesterday = toDateId(new Date(Date.now() - 86400000));
@@ -68,6 +72,9 @@ function migrateExpenseUi(v) {
     filterPayer: base.filterPayer || "all",
     filterPaymentMethod: base.filterPaymentMethod || "all",
     search: typeof base.search === "string" ? base.search : "",
+    listSort: ["date-desc", "date-asc", "amount-desc", "amount-asc"].includes(base.listSort)
+      ? base.listSort
+      : "date-desc",
   };
 }
 
@@ -93,6 +100,7 @@ export default function ExpenseTab({
   const [filterPayer, setFilterPayer] = useState(expenseUi.filterPayer || "all");
   const [filterPaymentMethod, setFilterPaymentMethod] = useState(expenseUi.filterPaymentMethod || "all");
   const [search, setSearch] = useState(expenseUi.search || "");
+  const [listSort, setListSort] = useState(expenseUi.listSort || "date-desc");
   const [showHkd, setShowHkd] = useState(Boolean(expenseUi.showHkd));
   const [editingId, setEditingId] = useState(null);
   const [payer, setPayer] = useState(() => lastPaymentDefaults(expenses).payer);
@@ -116,8 +124,9 @@ export default function ExpenseTab({
       filterPayer,
       filterPaymentMethod,
       search,
+      listSort,
     }));
-  }, [panel, listTodayOnly, showHkd, filterCategory, filterPayer, filterPaymentMethod, search, setExpenseUi]);
+  }, [panel, listTodayOnly, showHkd, filterCategory, filterPayer, filterPaymentMethod, search, listSort, setExpenseUi]);
 
   useEffect(() => {
     if (!initialPanel || !PANELS.some((p) => p.id === initialPanel)) return;
@@ -230,10 +239,31 @@ export default function ExpenseTab({
     });
   }, [categoryFilteredExpenses, search]);
 
+  const isAmountSort = isFeatureEnabled("expense-list-sort") && (listSort === "amount-desc" || listSort === "amount-asc");
+
+  const sortedVisibleExpenses = useMemo(() => {
+    if (!isFeatureEnabled("expense-list-sort")) return visibleExpenses;
+    const list = visibleExpenses.slice();
+    switch (listSort) {
+      case "date-asc":
+        return list.reverse();
+      case "amount-desc":
+        return list.sort((a, b) => (Number(b.amount) || 0) - (Number(a.amount) || 0));
+      case "amount-asc":
+        return list.sort((a, b) => (Number(a.amount) || 0) - (Number(b.amount) || 0));
+      default:
+        return list;
+    }
+  }, [visibleExpenses, listSort]);
+
   const groupedExpenses = useMemo(() => {
+    if (isAmountSort) {
+      const sum = sortedVisibleExpenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+      return [{ date: "__amount__", items: sortedVisibleExpenses, sum }];
+    }
     const groups = [];
     const index = new Map();
-    visibleExpenses.forEach((entry) => {
+    sortedVisibleExpenses.forEach((entry) => {
       const key = entry.date || "unknown";
       if (!index.has(key)) {
         index.set(key, { date: key, items: [], sum: 0 });
@@ -244,12 +274,18 @@ export default function ExpenseTab({
       g.sum += Number(entry.amount) || 0;
     });
     return groups;
-  }, [visibleExpenses]);
+  }, [sortedVisibleExpenses, isAmountSort]);
 
   const displayGroups = useMemo(() => {
     if (!listTodayOnly || hasActiveListFilter) return groupedExpenses;
+    if (isAmountSort) {
+      const todayItems = sortedVisibleExpenses.filter((e) => e.date === todayId);
+      if (!todayItems.length) return [];
+      const sum = todayItems.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+      return [{ date: "__amount__", items: todayItems, sum }];
+    }
     return groupedExpenses.filter((group) => group.date === todayId);
-  }, [groupedExpenses, hasActiveListFilter, listTodayOnly, todayId]);
+  }, [groupedExpenses, hasActiveListFilter, isAmountSort, listTodayOnly, sortedVisibleExpenses, todayId]);
 
   const hiddenOlderCount = useMemo(() => {
     if (!listTodayOnly || hasActiveListFilter) return 0;
@@ -824,6 +860,8 @@ export default function ExpenseTab({
               setShowHkd={setShowHkd}
             />
 
+            <ExpenseListSortBar listSort={listSort} setListSort={setListSort} />
+
             <FilteredCategorySummary
               trip={trip}
               expenses={expenses}
@@ -855,7 +893,7 @@ export default function ExpenseTab({
                 displayGroups.map((group) => (
                   <section key={group.date} className="space-y-2.5">
                     <div className="expense-day-header py-1.5">
-                      <h3 className="text-xs font-bold text-ink">{formatDayHeading(group.date)}</h3>
+                      <h3 className="text-xs font-bold text-ink">{formatDayHeading(group.date, listSort)}</h3>
                       <div className="text-right">
                         <p className="font-display text-sm font-black text-jade-deep">{formatMoney(group.sum, trip.targetCurrency)}</p>
                         <p className="text-[10px] font-semibold text-ink-faint">{group.items.length} 筆</p>

@@ -135,10 +135,9 @@
     },
     {
       "date": "2026-09-06",
-      "id": "today-budget-gauge",
-      "title": "今日預算儀表",
-      "description": "概覽頁一眼睇今日已使同每日可用額，色階提示仲剩幾多，出門前心里有數。",
-      "cycle": true
+      "id": "expense-list-sort",
+      "title": "列表排序切換",
+      "description": "支出清單可按最新、最舊或金額高低排序，長清單搵大額消費更快。"
     }
   ]
 }

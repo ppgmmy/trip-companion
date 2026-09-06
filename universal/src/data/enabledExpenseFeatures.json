@@ -25,9 +25,10 @@
     "today-budget-gauge",
     "budget-runway-days",
     "spending-vs-timeline",
-    "budget-health-badge"
+    "budget-health-badge",
+    "expense-list-sort"
   ],
-  "updatedAt": "2026-09-06T02:01:00.428Z",
-  "lastFeatureId": "today-budget-gauge",
-  "lastTitle": "今日預算儀表"
+  "updatedAt": "2026-09-06T02:22:00.000Z",
+  "lastFeatureId": "expense-list-sort",
+  "lastTitle": "列表排序切換"
 }

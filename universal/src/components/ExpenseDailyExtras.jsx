@@ -2154,6 +2154,46 @@ export function PayerPaymentBreakdown({ expenses, payerTotals, paymentTotals, to
   );
 }
 
+const LIST_SORT_OPTIONS = [
+  { id: "date-desc", label: "最新", hint: "新記錄在上" },
+  { id: "date-asc", label: "最舊", hint: "舊記錄在上" },
+  { id: "amount-desc", label: "金額↓", hint: "大額優先" },
+  { id: "amount-asc", label: "金額↑", hint: "細額優先" },
+];
+
+export function ExpenseListSortBar({ listSort, setListSort }) {
+  if (!isFeatureEnabled("expense-list-sort")) return null;
+
+  const active = LIST_SORT_OPTIONS.find((o) => o.id === listSort) || LIST_SORT_OPTIONS[0];
+
+  return (
+    <div className="rounded-2xl border border-jade/10 bg-white/80 px-2.5 py-2 shadow-[var(--shadow-soft)]">
+      <div className="mb-1.5 flex items-center justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">排序</p>
+        <p className="text-[10px] font-semibold text-ink-soft">{active.hint}</p>
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {LIST_SORT_OPTIONS.map((opt) => {
+          const isActive = listSort === opt.id;
+          return (
+            <button
+              key={opt.id}
+              type="button"
+              onClick={() => setListSort(opt.id)}
+              className={`min-h-8 rounded-xl border px-2.5 text-xs font-bold transition active:scale-95 ${
+                isActive ? "badge-active border-transparent" : "border-jade/15 bg-mist text-ink-soft"
+              }`}
+              aria-pressed={isActive}
+            >
+              {opt.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function FilteredCategorySummary({ trip, expenses, filterCategory, totalSpent }) {
   if (!isFeatureEnabled("category-filter") || filterCategory === "all") return null;
 
