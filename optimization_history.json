@@ -141,10 +141,9 @@
     },
     {
       "date": "2026-09-07",
-      "id": "budget-runway-days",
-      "title": "預算可用天數",
-      "description": "照而家使費速度，預算仲夠用幾多日；同旅程剩餘日數對比，一眼知要唔要收油。",
-      "cycle": true
+      "id": "recent-3day-pace",
+      "title": "近 3 日使費節奏",
+      "description": "對比近 3 日日均同全程日均，及早察覺消費升溫或收油。"
     }
   ]
 }
