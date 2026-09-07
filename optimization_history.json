@@ -138,6 +138,13 @@
       "id": "expense-list-sort",
       "title": "列表排序切換",
       "description": "支出清單可按最新、最舊或金額高低排序，長清單搵大額消費更快。"
+    },
+    {
+      "date": "2026-09-07",
+      "id": "budget-runway-days",
+      "title": "預算可用天數",
+      "description": "照而家使費速度，預算仲夠用幾多日；同旅程剩餘日數對比，一眼知要唔要收油。",
+      "cycle": true
     }
   ]
 }
