@@ -557,6 +557,132 @@ function WeekOverWeekCompare({ trip, expenses }) {
   );
 }
 
+function Recent3DayPacePanel({ trip, expenses, elapsedDays = 1 }) {
+  const todayId = toDateId(new Date());
+  const last3Days = useMemo(
+    () =>
+      [0, -1, -2].map((offset) => {
+        const dateId = shiftDateId(todayId, offset);
+        const value = sumByDate(expenses, dateId);
+        return { dateId, value, label: offset === 0 ? "今日" : formatShortDate(dateId) };
+      }),
+    [expenses, todayId],
+  );
+
+  const last3Sum = last3Days.reduce((s, d) => s + d.value, 0);
+  const last3Avg = last3Sum / 3;
+  const totalSpent = useMemo(
+    () => expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0),
+    [expenses],
+  );
+  const tripPace = totalSpent / Math.max(1, elapsedDays);
+  const ratio = tripPace > 0 ? last3Avg / tripPace : 0;
+  const pacePct = Math.round(ratio * 100);
+  const delta = last3Avg - tripPace;
+
+  const maxBar = Math.max(last3Avg, tripPace, 1);
+  const recentBar = Math.max(8, Math.round((last3Avg / maxBar) * 100));
+  const tripBar = Math.max(8, Math.round((tripPace / maxBar) * 100));
+
+  const hasRecent = last3Sum > 0;
+
+  if (!isFeatureEnabled("recent-3day-pace")) return null;
+
+  let statusLabel = "節奏穩定";
+  let statusClass = "bg-jade-soft text-jade-deep";
+  let insight = "近 3 日同全程節奏一致";
+  let insightClass = "text-ink-faint";
+
+  if (hasRecent) {
+    if (ratio > 1.25) {
+      statusLabel = "近期升溫";
+      statusClass = "bg-coral/15 text-coral";
+      insight = `近 3 日日均比全程快 ${formatMoney(delta, trip.targetCurrency)}，要留意收油`;
+      insightClass = "text-coral";
+    } else if (ratio > 1.08) {
+      statusLabel = "略為加快";
+      statusClass = "bg-[#fef3c7] text-[#b45309]";
+      insight = `近 3 日日均略高過全程 ${formatMoney(delta, trip.targetCurrency)}`;
+      insightClass = "text-[#b45309]";
+    } else if (ratio < 0.85) {
+      statusLabel = "近期收油";
+      statusClass = "bg-jade-soft text-jade-deep";
+      insight = `近 3 日日均慳咗 ${formatMoney(-delta, trip.targetCurrency)}，做得好`;
+      insightClass = "text-jade";
+    }
+  }
+
+  return (
+    <div className="rounded-3xl bg-white/85 p-4 shadow-[var(--shadow-soft)]">
+      <div className="mb-3 flex items-start justify-between gap-2">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-ink-faint">近 3 日使費節奏</p>
+          <p className="mt-1 text-[11px] text-ink-faint">
+            對比近 3 日日均同第 1–{elapsedDays} 日全程日均
+          </p>
+        </div>
+        {hasRecent && (
+          <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${statusClass}`}>
+            {statusLabel} · {pacePct}%
+          </span>
+        )}
+      </div>
+
+      <div className="mb-3 flex gap-1.5">
+        {last3Days.map((day) => (
+          <div
+            key={day.dateId}
+            className={`min-w-0 flex-1 rounded-xl px-2 py-2 text-center ${
+              day.value > 0 ? "bg-jade-soft/60" : "bg-shell"
+            }`}
+          >
+            <p className="text-[9px] font-bold uppercase tracking-wide text-ink-faint">{day.label}</p>
+            <p className={`mt-0.5 text-xs font-black ${day.value > 0 ? "text-jade-deep" : "text-ink-faint"}`}>
+              {day.value > 0 ? formatMoney(day.value, trip.targetCurrency) : "—"}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {hasRecent ? (
+        <div className="space-y-3">
+          <div>
+            <div className="mb-1 flex items-baseline justify-between gap-2">
+              <p className="text-[11px] font-semibold text-ink-soft">近 3 日日均</p>
+              <p className={`font-display text-sm font-bold ${ratio > 1.08 ? "text-coral" : ratio < 0.85 ? "text-jade" : "text-ink"}`}>
+                {formatMoney(last3Avg, trip.targetCurrency)}
+              </p>
+            </div>
+            <div className="h-3 overflow-hidden rounded-full bg-[#efe9e0]">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-[#f59e0b] to-coral transition-all duration-700"
+                style={{ width: `${recentBar}%` }}
+              />
+            </div>
+          </div>
+
+          <div>
+            <div className="mb-1 flex items-baseline justify-between gap-2">
+              <p className="text-[11px] font-semibold text-ink-soft">全程日均（{elapsedDays} 日）</p>
+              <p className="font-display text-sm font-bold text-ink-faint">{formatMoney(tripPace, trip.targetCurrency)}</p>
+            </div>
+            <div className="h-3 overflow-hidden rounded-full bg-[#efe9e0]">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-jade to-[#34d399] transition-all duration-700"
+                style={{ width: `${tripBar}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      ) : (
+        <p className="py-2 text-center text-sm text-ink-faint">近 3 日未有記帳，記一筆就會顯示節奏對比</p>
+      )}
+
+      <p className={`mt-3 text-center text-xs font-semibold ${insightClass}`}>{insight}</p>
+    </div>
+  );
+}
+
 function Sparkline({ values, dateIds, formatValue }) {
   const [activeIdx, setActiveIdx] = useState(null);
   const max = Math.max(...values, 1);
@@ -1065,6 +1191,8 @@ export function ExpenseInsightCards({ trip, expenses, days, totalSpent, budget, 
       {isFeatureEnabled("week-over-week") && (
         <WeekOverWeekCompare trip={trip} expenses={expenses} />
       )}
+
+      <Recent3DayPacePanel trip={trip} expenses={expenses} elapsedDays={elapsedDays} />
 
       {showTrend && isFeatureEnabled("seven-day-sparkline") && (
         <div className="rounded-3xl bg-white/85 p-4 shadow-[var(--shadow-soft)]">

@@ -176,4 +176,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "支出清單可按最新、最舊或金額高低排序，長清單搵大額消費更快。",
     pillar: "convenience",
   },
+  {
+    id: "recent-3day-pace",
+    title: "近 3 日使費節奏",
+    description: "對比近 3 日日均同全程日均，及早察覺消費升溫或收油。",
+    pillar: "analysis",
+  },
 ];
