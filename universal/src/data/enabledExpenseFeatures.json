@@ -27,9 +27,10 @@
     "spending-vs-timeline",
     "budget-health-badge",
     "expense-list-sort",
-    "recent-3day-pace"
+    "recent-3day-pace",
+    "under-budget-streak"
   ],
-  "updatedAt": "2026-09-08T02:00:57.607Z",
-  "lastFeatureId": "spending-vs-timeline",
-  "lastTitle": "行程進度對齊"
+  "updatedAt": "2026-09-08T02:05:00.000Z",
+  "lastFeatureId": "under-budget-streak",
+  "lastTitle": "預算內連續日數"
 }

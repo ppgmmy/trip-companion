@@ -182,4 +182,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "對比近 3 日日均同全程日均，及早察覺消費升溫或收油。",
     pillar: "analysis",
   },
+  {
+    id: "under-budget-streak",
+    title: "預算內連續日數",
+    description: "顯示連續幾日使費喺當日可用額之內，養成收油習慣同成就感。",
+    pillar: "stickiness",
+  },
 ];

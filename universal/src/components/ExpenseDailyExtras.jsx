@@ -28,6 +28,57 @@ function loggingStreak(expenses) {
   return streak;
 }
 
+function daysInclusive(startDateId, endDateId) {
+  const start = new Date(`${startDateId}T12:00:00`).getTime();
+  const end = new Date(`${endDateId}T12:00:00`).getTime();
+  if (!Number.isFinite(start) || !Number.isFinite(end)) return 1;
+  return Math.max(1, Math.floor((end - start) / 86400000) + 1);
+}
+
+function dailyAllowanceForDate(expenses, trip, budget, dateId) {
+  const endDate = trip.endDate || toDateId(new Date());
+  const daysLeft = daysInclusive(dateId, endDate);
+  const spentBefore = expenses
+    .filter((e) => e.date && e.date < dateId)
+    .reduce((s, e) => s + (Number(e.amount) || 0), 0);
+  return (budget - spentBefore) / Math.max(1, daysLeft);
+}
+
+function underBudgetDayStatus(expenses, trip, budget, dateId) {
+  if (budget <= 0) return null;
+  const startDate = trip.startDate;
+  const endDate = trip.endDate || toDateId(new Date());
+  if (!dateId || dateId < startDate || dateId > endDate) return null;
+  const spent = sumByDate(expenses, dateId);
+  const allowance = dailyAllowanceForDate(expenses, trip, budget, dateId);
+  return {
+    dateId,
+    spent,
+    allowance,
+    under: spent <= allowance,
+    delta: allowance - spent,
+  };
+}
+
+function underBudgetStreak(expenses, trip, budget) {
+  if (budget <= 0) return 0;
+  const startDate = trip.startDate;
+  const endDate = trip.endDate || toDateId(new Date());
+  let cursor = toDateId(new Date());
+  if (cursor > endDate) cursor = endDate;
+  if (cursor < startDate) return 0;
+
+  let streak = 0;
+  while (cursor >= startDate) {
+    const status = underBudgetDayStatus(expenses, trip, budget, cursor);
+    if (!status) break;
+    if (!status.under) break;
+    streak += 1;
+    cursor = shiftDateId(cursor, -1);
+  }
+  return streak;
+}
+
 function weekBounds(offsetWeeks = 0) {
   const now = new Date();
   const day = (now.getDay() + 6) % 7; // Mon=0
@@ -683,6 +734,134 @@ function Recent3DayPacePanel({ trip, expenses, elapsedDays = 1 }) {
   );
 }
 
+function UnderBudgetStreakPanel({ trip, expenses, budget }) {
+  const todayId = toDateId(new Date());
+
+  const recentDays = useMemo(() => {
+    const days = [];
+    let cursor = todayId;
+    const startDate = trip.startDate;
+    const endDate = trip.endDate || todayId;
+    if (cursor > endDate) cursor = endDate;
+    for (let i = 0; i < 7 && cursor >= startDate; i += 1) {
+      const status = underBudgetDayStatus(expenses, trip, budget, cursor);
+      if (status) {
+        days.unshift({
+          ...status,
+          label: cursor === todayId ? "今日" : formatShortDate(cursor),
+        });
+      }
+      cursor = shiftDateId(cursor, -1);
+    }
+    return days;
+  }, [expenses, trip, budget, todayId]);
+
+  const streak = useMemo(() => underBudgetStreak(expenses, trip, budget), [expenses, trip, budget]);
+  const todayStatus = useMemo(
+    () => underBudgetDayStatus(expenses, trip, budget, todayId),
+    [expenses, trip, budget, todayId],
+  );
+
+  if (!isFeatureEnabled("under-budget-streak") || budget <= 0) return null;
+
+  const startDate = trip.startDate;
+  const endDate = trip.endDate || todayId;
+  const inTrip = todayId >= startDate && todayId <= endDate;
+
+  let statusLabel = "開始計";
+  let statusClass = "bg-shell text-ink-soft";
+  let insight = inTrip ? "今日使費喺可用額之內就 +1 日" : "旅程期間每日使費唔超過當日可用額就計入";
+  let insightClass = "text-ink-faint";
+
+  if (streak >= 5) {
+    statusLabel = "收油高手";
+    statusClass = "bg-jade-soft text-jade-deep";
+    insight = `連續 ${streak} 日喺預算內，節奏控制得好好`;
+    insightClass = "text-jade";
+  } else if (streak >= 3) {
+    statusLabel = "保持中";
+    statusClass = "bg-jade-soft text-jade-deep";
+    insight = `已連續 ${streak} 日喺預算內，繼續`;
+    insightClass = "text-jade";
+  } else if (streak >= 1) {
+    statusLabel = `${streak} 日連續`;
+    statusClass = "bg-jade-soft/80 text-jade-deep";
+    insight = streak === 1 ? "今日喺預算內，聽日繼續" : `連續 ${streak} 日喺預算內`;
+    insightClass = "text-jade";
+  } else if (todayStatus && !todayStatus.under) {
+    statusLabel = "今日超額";
+    statusClass = "bg-coral/15 text-coral";
+    insight = `今日超咗可用額 ${formatMoney(-todayStatus.delta, trip.targetCurrency)}，聽日收返少少`;
+    insightClass = "text-coral";
+  }
+
+  return (
+    <div className="rounded-3xl bg-white/85 p-4 shadow-[var(--shadow-soft)]">
+      <div className="mb-3 flex items-start justify-between gap-2">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-ink-faint">預算內連續日數</p>
+          <p className="mt-1 text-[11px] text-ink-faint">
+            每日使費 ≤ 當日可用額（剩餘預算 ÷ 剩餘日數）就計入
+          </p>
+        </div>
+        <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${statusClass}`}>
+          {statusLabel}
+        </span>
+      </div>
+
+      <div className="flex items-baseline gap-2">
+        <p className="font-display text-4xl font-black text-jade-deep">{streak}</p>
+        <p className="text-sm font-semibold text-ink-soft">日連續喺預算內</p>
+      </div>
+
+      {todayStatus && inTrip && (
+        <div className="mt-3 rounded-2xl bg-shell px-3 py-2.5">
+          <div className="flex items-baseline justify-between gap-2">
+            <p className="text-[11px] font-semibold text-ink-soft">今日 · 可用 {formatMoney(todayStatus.allowance, trip.targetCurrency)}</p>
+            <p className={`text-sm font-black ${todayStatus.under ? "text-jade" : "text-coral"}`}>
+              已使 {formatMoney(todayStatus.spent, trip.targetCurrency)}
+            </p>
+          </div>
+          <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-[#efe9e0]">
+            <div
+              className={`h-full rounded-full transition-all duration-700 ${
+                todayStatus.under ? "bg-gradient-to-r from-jade to-[#34d399]" : "bg-gradient-to-r from-[#f59e0b] to-coral"
+              }`}
+              style={{ width: `${Math.min(100, Math.max(8, Math.round((todayStatus.spent / Math.max(todayStatus.allowance, 1)) * 100)))}%` }}
+            />
+          </div>
+          <p className={`mt-1.5 text-[10px] font-semibold ${todayStatus.under ? "text-jade" : "text-coral"}`}>
+            {todayStatus.under
+              ? `仲剩 ${formatMoney(todayStatus.delta, trip.targetCurrency)} 可用`
+              : `超出 ${formatMoney(-todayStatus.delta, trip.targetCurrency)}`}
+          </p>
+        </div>
+      )}
+
+      {recentDays.length > 0 && (
+        <div className="mt-3 flex gap-1.5">
+          {recentDays.map((day) => (
+            <div
+              key={day.dateId}
+              className={`min-w-0 flex-1 rounded-xl px-1.5 py-2 text-center ${
+                day.under ? "bg-jade-soft/50" : "bg-coral/10"
+              }`}
+              title={`${day.label} · ${formatMoney(day.spent, trip.targetCurrency)} / ${formatMoney(day.allowance, trip.targetCurrency)}`}
+            >
+              <p className="text-[9px] font-bold uppercase tracking-wide text-ink-faint">{day.label}</p>
+              <p className={`mt-0.5 text-[10px] font-black ${day.under ? "text-jade-deep" : "text-coral"}`}>
+                {day.under ? "✓" : "!"}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <p className={`mt-3 text-center text-xs font-semibold ${insightClass}`}>{insight}</p>
+    </div>
+  );
+}
+
 function Sparkline({ values, dateIds, formatValue }) {
   const [activeIdx, setActiveIdx] = useState(null);
   const max = Math.max(...values, 1);
@@ -1193,6 +1372,8 @@ export function ExpenseInsightCards({ trip, expenses, days, totalSpent, budget, 
       )}
 
       <Recent3DayPacePanel trip={trip} expenses={expenses} elapsedDays={elapsedDays} />
+
+      <UnderBudgetStreakPanel trip={trip} expenses={expenses} budget={budget} />
 
       {showTrend && isFeatureEnabled("seven-day-sparkline") && (
         <div className="rounded-3xl bg-white/85 p-4 shadow-[var(--shadow-soft)]">
