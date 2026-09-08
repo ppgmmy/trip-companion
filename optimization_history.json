@@ -144,6 +144,13 @@
       "id": "recent-3day-pace",
       "title": "近 3 日使費節奏",
       "description": "對比近 3 日日均同全程日均，及早察覺消費升溫或收油。"
+    },
+    {
+      "date": "2026-09-08",
+      "id": "spending-vs-timeline",
+      "title": "行程進度對齊",
+      "description": "對比「旅程已過幾多%」同「預算已用幾多%」，一眼知使費超前定落後行程。",
+      "cycle": true
     }
   ]
 }
