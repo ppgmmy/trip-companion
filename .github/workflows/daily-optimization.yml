@@ -1,14 +1,19 @@
 # 每日開支儀表板優化：冪等（同一香港日最多啟用一項）
 #
-# 觸發來源：
-# 1. GitHub schedule（早上三槽 + 晏晝後備一槽）
+# 目標：盡量保證當日一定有成功 run（唔係 100% 對抗 GitHub/Vercel 全站故障，
+# 但單一失敗唔可以令全日冇機會）。
+#
+# 觸發來源（多閘門）：
+# 1. GitHub schedule
 #    02:07 / 02:23 / 02:41 UTC ≈ HKT 10:07/10:23/10:41
-#    04:15 UTC ≈ HKT 12:15（後備閘門：早上全敗仍有機會）
-# 2. Vercel Cron → workflow_dispatch（02:00 / 03:00 UTC 備援，唔直接 commit）
+#    04:15 UTC ≈ HKT 12:15（晏晝後備）
+#    10:05 UTC ≈ HKT 18:05（黃昏後備）
+#    13:10 UTC ≈ HKT 21:10（晚間最終後備）
+# 2. Vercel Cron → workflow_dispatch（02:00 / 03:00 / 04:20 / 10:00 / 13:00 UTC）
 # 3. workflow_dispatch（手動）
 #
-# 同一 run 內：primary 失敗會自動跑 backup-retry（等 90 秒再試），
-# 唔會因為第一次 fail 就完全冇機會。
+# 同一 run 內重試鏈（任一成功即整體成功）：
+#   primary →（失敗）backup-retry（90s）→（再失敗）final-safety-net（180s）→ ensure-success
 #
 # 無限期運作：全部啟用後進入輪播，每日仍更新，永不停止。
 # 衝突標記／壞 JSON：run.mjs 會自動修復並 commit。
@@ -20,7 +25,9 @@ on:
     - cron: "7 2 * * *"
     - cron: "23 2 * * *"
     - cron: "41 2 * * *"
-    - cron: "15 4 * * *" # HKT 12:15 backup gate
+    - cron: "15 4 * * *" # HKT 12:15
+    - cron: "5 10 * * *" # HKT 18:05
+    - cron: "10 13 * * *" # HKT 21:10 final catch-all
   workflow_dispatch:
 
 permissions:
@@ -34,11 +41,9 @@ jobs:
   primary:
     name: Primary attempt
     runs-on: ubuntu-latest
+    continue-on-error: true
     outputs:
-      skip: ${{ steps.opt.outputs.skip }}
-      repaired: ${{ steps.opt.outputs.repaired }}
-      title: ${{ steps.opt.outputs.title }}
-      id: ${{ steps.opt.outputs.id }}
+      result: ${{ steps.gate.outputs.result }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -67,16 +72,23 @@ jobs:
             "${{ steps.opt.outputs.title }}" \
             "${{ steps.opt.outputs.id }}"
 
-  # 後備閘門：第一次失敗唔等於今日完結 — 等陣再自動重試一次
+      - name: Mark primary result
+        id: gate
+        if: always()
+        run: echo "result=${{ job.status }}" >> "$GITHUB_OUTPUT"
+
   backup-retry:
     name: Backup retry gate
     needs: primary
-    if: failure()
+    if: needs.primary.outputs.result == 'failure'
     runs-on: ubuntu-latest
+    continue-on-error: true
+    outputs:
+      result: ${{ steps.gate.outputs.result }}
     steps:
       - name: Wait before backup retry
         run: |
-          echo "Primary attempt failed — backup gate waiting 90s before retry…"
+          echo "Primary failed — backup gate waiting 90s…"
           sleep 90
 
       - name: Checkout
@@ -105,3 +117,82 @@ jobs:
             "${{ steps.opt.outputs.repaired }}" \
             "${{ steps.opt.outputs.title }}" \
             "${{ steps.opt.outputs.id }}"
+
+      - name: Mark backup result
+        id: gate
+        if: always()
+        run: echo "result=${{ job.status }}" >> "$GITHUB_OUTPUT"
+
+  final-safety-net:
+    name: Final safety net
+    needs: [primary, backup-retry]
+    if: |
+      always() &&
+      needs.primary.outputs.result == 'failure' &&
+      (needs.backup-retry.result == 'failure' || needs.backup-retry.outputs.result == 'failure')
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    outputs:
+      result: ${{ steps.gate.outputs.result }}
+    steps:
+      - name: Wait before final safety net
+        run: |
+          echo "Backup also failed — final safety net waiting 180s…"
+          sleep 180
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Sync latest main
+        run: |
+          for i in 1 2 3 4 5; do
+            git pull --rebase origin main && exit 0
+            echo "pull failed, retry $i..."
+            sleep $((i * 5))
+          done
+          exit 1
+
+      - name: Run daily optimization (final)
+        id: opt
+        run: bash scripts/daily-optimization/ci-run.sh
+
+      - name: Commit and push (final)
+        if: steps.opt.outputs.skip == 'false' || steps.opt.outputs.repaired == 'true'
+        run: |
+          bash scripts/daily-optimization/ci-commit.sh \
+            "${{ steps.opt.outputs.skip }}" \
+            "${{ steps.opt.outputs.repaired }}" \
+            "${{ steps.opt.outputs.title }}" \
+            "${{ steps.opt.outputs.id }}"
+
+      - name: Mark final result
+        id: gate
+        if: always()
+        run: echo "result=${{ job.status }}" >> "$GITHUB_OUTPUT"
+
+  ensure-success:
+    name: Ensure at least one attempt succeeded
+    needs: [primary, backup-retry, final-safety-net]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Evaluate attempts
+        run: |
+          P="${{ needs.primary.outputs.result }}"
+          B="${{ needs.backup-retry.outputs.result }}"
+          F="${{ needs.final-safety-net.outputs.result }}"
+          echo "primary=$P backup=$B final=$F"
+          if [[ "$P" == "success" || "$B" == "success" || "$F" == "success" ]]; then
+            echo "Daily optimization landed via at least one gate."
+            exit 0
+          fi
+          echo "::error::All daily-opt gates failed in this run. Later schedules/Vercel crons will retry the same day."
+          exit 1
