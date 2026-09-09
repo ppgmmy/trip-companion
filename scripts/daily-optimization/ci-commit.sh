@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # Commit + push daily-opt JSON changes (enable or repair).
 # Env/inputs via args: $1=skip $2=repaired $3=title $4=id
+#
+# Push is retried aggressively — transient git/network conflicts must not
+# leave the day without a successful write when we have local changes.
 set -euo pipefail
 
 SKIP="${1:-true}"
@@ -42,10 +45,17 @@ fi
 git commit -m "$MSG"
 
 REF_NAME="${GITHUB_REF_NAME:-main}"
-for attempt in 1 2 3; do
-  git pull --rebase origin main && git push origin "HEAD:${REF_NAME}" && exit 0
-  echo "Push conflict, retry $attempt..."
-  sleep 3
+# Exponential-ish backoff: keep trying so one busy main push cannot kill the day.
+for attempt in 1 2 3 4 5 6 7 8; do
+  if git pull --rebase origin main && git push origin "HEAD:${REF_NAME}"; then
+    echo "Push succeeded on attempt ${attempt}"
+    exit 0
+  fi
+  wait_s=$(( attempt * 5 ))
+  echo "Push conflict/network issue, retry ${attempt}/8 after ${wait_s}s..."
+  sleep "${wait_s}"
+  # Re-stage in case rebase dropped index state oddly
+  git add universal/src/data/enabledExpenseFeatures.json optimization_history.json || true
 done
-echo "Push failed after retries"
+echo "Push failed after 8 retries"
 exit 1

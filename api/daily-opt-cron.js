@@ -4,8 +4,8 @@
  * Auth: Authorization: Bearer $CRON_SECRET
  * Env: CRON_SECRET, GH_WORKFLOW_TOKEN
  *
- * Schedules (UTC): 02:00 / 03:00 正常備援；04:20 晏晝後備閘門。
- * GitHub workflow 本身亦有 primary 失敗 → backup-retry 自動再試。
+ * Schedules (UTC): 02:00 / 03:00 / 04:20 / 10:00 / 13:00 — 多閘門備援。
+ * GitHub workflow：primary → backup-retry → final-safety-net。
  * Query `?gate=backup` 可選，只影響日誌標記（冪等，重複 dispatch 安全）。
  */
 const OWNER = "ppgmmy";
