@@ -150,6 +150,13 @@
       "id": "under-budget-streak",
       "title": "預算內連續日數",
       "description": "顯示連續幾日使費喺當日可用額之內，養成收油習慣同成就感。"
+    },
+    {
+      "date": "2026-09-09",
+      "id": "budget-health-badge",
+      "title": "預算健康徽章",
+      "description": "儀表板標題旁常駐色階徽章，任何分頁都睇到預算狀態，撳一下跳概覽。",
+      "cycle": true
     }
   ]
 }
