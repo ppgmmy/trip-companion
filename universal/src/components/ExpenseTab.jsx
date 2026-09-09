@@ -30,6 +30,7 @@ import {
   TodayBudgetGauge,
   BudgetRunwayPanel,
   SpendingTimelineAlignPanel,
+  TodayCategoryChips,
 } from "./ExpenseDailyExtras";
 import PayerPaymentFields from "./PayerPaymentFields";
 import { useLocalStorage } from "../hooks/useLocalStorage";
@@ -731,6 +732,13 @@ export default function ExpenseTab({
               remainingDays={remainingDays}
               dailyAllowance={dailyAllowance}
               todayLeft={todayLeft}
+            />
+
+            <TodayCategoryChips
+              trip={trip}
+              expenses={expenses}
+              filterCategory={filterCategory}
+              setFilterCategory={setFilterCategory}
             />
 
             <PayerSpendStats trip={trip} payerTotals={payerTotals} onJumpToPayer={jumpToLedgerPayer} />

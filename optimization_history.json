@@ -153,10 +153,9 @@
     },
     {
       "date": "2026-09-09",
-      "id": "budget-health-badge",
-      "title": "預算健康徽章",
-      "description": "儀表板標題旁常駐色階徽章，任何分頁都睇到預算狀態，撳一下跳概覽。",
-      "cycle": true
+      "id": "today-category-chips",
+      "title": "今日分類快篩",
+      "description": "記帳頁顯示今日各分類使費晶片，一撳即篩選該類支出，出街對帳更快。"
     }
   ]
 }

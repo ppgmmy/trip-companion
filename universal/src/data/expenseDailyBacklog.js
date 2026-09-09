@@ -188,4 +188,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "顯示連續幾日使費喺當日可用額之內，養成收油習慣同成就感。",
     pillar: "stickiness",
   },
+  {
+    id: "today-category-chips",
+    title: "今日分類快篩",
+    description: "記帳頁顯示今日各分類使費晶片，一撳即篩選該類支出，出街對帳更快。",
+    pillar: "convenience",
+  },
 ];

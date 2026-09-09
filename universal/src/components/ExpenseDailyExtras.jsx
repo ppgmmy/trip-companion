@@ -1191,6 +1191,85 @@ export function AnalysisStory({ trip, expenses, days, totalSpent, budget, elapse
   );
 }
 
+export function TodayCategoryChips({ trip, expenses, filterCategory, setFilterCategory }) {
+  const todayId = toDateId(new Date());
+
+  const chips = useMemo(() => {
+    const map = {};
+    expenses
+      .filter((e) => e.date === todayId)
+      .forEach((e) => {
+        map[e.categoryId] = (map[e.categoryId] || 0) + (Number(e.amount) || 0);
+      });
+    return EXPENSE_CATEGORIES.filter((c) => map[c.id] > 0)
+      .map((c) => ({ ...c, value: map[c.id] }))
+      .sort((a, b) => b.value - a.value);
+  }, [expenses, todayId]);
+
+  const todayTotal = useMemo(
+    () => expenses.filter((e) => e.date === todayId).reduce((s, e) => s + (Number(e.amount) || 0), 0),
+    [expenses, todayId],
+  );
+
+  if (!isFeatureEnabled("today-category-chips") || !chips.length) return null;
+
+  const activeIsToday = filterCategory === "all" || chips.some((c) => c.id === filterCategory);
+
+  function handleChipClick(catId) {
+    if (!setFilterCategory) return;
+    setFilterCategory((prev) => (prev === catId ? "all" : catId));
+  }
+
+  return (
+    <div className="rounded-2xl bg-white/90 p-3 shadow-[var(--shadow-soft)]">
+      <div className="mb-2 flex items-baseline justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">今日分類 · 撳一下篩選</p>
+        <p className="text-[11px] font-bold text-jade-deep">{formatMoney(todayTotal, trip.targetCurrency)}</p>
+      </div>
+      <div className="expense-chip-row">
+        <button
+          type="button"
+          onClick={() => handleChipClick("all")}
+          className={`shrink-0 rounded-xl border px-2.5 py-1.5 text-xs font-bold transition active:scale-95 ${
+            filterCategory === "all" || !activeIsToday
+              ? "badge-active border-transparent"
+              : "border-jade/15 bg-mist text-ink-soft"
+          }`}
+        >
+          全部
+        </button>
+        {chips.map((c) => {
+          const share = todayTotal > 0 ? Math.round((c.value / todayTotal) * 100) : 0;
+          const isActive = filterCategory === c.id;
+          return (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => handleChipClick(c.id)}
+              className={`shrink-0 rounded-xl border px-2.5 py-1.5 text-xs font-bold transition active:scale-95 ${
+                isActive ? "badge-active border-transparent" : "border-jade/15 bg-mist text-ink-soft"
+              }`}
+              aria-pressed={isActive}
+            >
+              <span className="inline-flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full" style={{ background: c.color }} aria-hidden="true" />
+                <span>{c.label}</span>
+                <span className={isActive ? "opacity-90" : "text-jade-deep"}>{formatMoney(c.value, trip.targetCurrency)}</span>
+                <span className={`text-[10px] ${isActive ? "opacity-75" : "text-ink-faint"}`}>{share}%</span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      {filterCategory !== "all" && activeIsToday && (
+        <p className="mt-2 text-center text-[10px] font-semibold text-jade-deep">
+          已篩選「{EXPENSE_CATEGORIES.find((c) => c.id === filterCategory)?.label || filterCategory}」· 再撳一次取消
+        </p>
+      )}
+    </div>
+  );
+}
+
 export function LedgerSummaryBar({
   trip,
   expenses,
