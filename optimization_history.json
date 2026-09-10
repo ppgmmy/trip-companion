@@ -187,10 +187,9 @@
     },
     {
       "date": "2026-09-10",
-      "id": "daily-opt-banner",
-      "title": "每日優化公告",
-      "description": "開支儀表板頂部顯示今日自動啟用的優化說明，方便追蹤成長。",
-      "cycle": true
+      "id": "ledger-daily-pulse",
+      "title": "記帳頁每日脈搏",
+      "description": "記帳頁頂部顯示今日 vs 昨日使費對比同記帳 streak，記帳時即刻掌握消費節奏。"
     }
   ]
 }

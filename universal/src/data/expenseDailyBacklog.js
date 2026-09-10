@@ -194,4 +194,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "記帳頁顯示今日各分類使費晶片，一撳即篩選該類支出，出街對帳更快。",
     pillar: "convenience",
   },
+  {
+    id: "ledger-daily-pulse",
+    title: "記帳頁每日脈搏",
+    description: "記帳頁頂部顯示今日 vs 昨日使費對比同記帳 streak，記帳時即刻掌握消費節奏。",
+    pillar: "analysis",
+  },
 ];

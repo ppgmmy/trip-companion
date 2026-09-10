@@ -22,6 +22,7 @@ import {
   ExportCsvPanel,
   FilteredCategorySummary,
   FxRateImpactPanel,
+  LedgerDailyPulse,
   LedgerSummaryBar,
   PinnedBudgetAlert,
   PayerPaymentBreakdown,
@@ -732,6 +733,12 @@ export default function ExpenseTab({
               remainingDays={remainingDays}
               dailyAllowance={dailyAllowance}
               todayLeft={todayLeft}
+            />
+
+            <LedgerDailyPulse
+              trip={trip}
+              expenses={expenses}
+              dailyAllowance={budget > 0 ? dailyAllowance : null}
             />
 
             <TodayCategoryChips

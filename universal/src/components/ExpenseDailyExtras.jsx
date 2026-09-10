@@ -1191,6 +1191,90 @@ export function AnalysisStory({ trip, expenses, days, totalSpent, budget, elapse
   );
 }
 
+export function LedgerDailyPulse({ trip, expenses, dailyAllowance = null }) {
+  const todayId = toDateId(new Date());
+  const yesterdayId = shiftDateId(todayId, -1);
+  const todaySum = useMemo(() => sumByDate(expenses, todayId), [expenses, todayId]);
+  const yesterdaySum = useMemo(() => sumByDate(expenses, yesterdayId), [expenses, yesterdayId]);
+  const delta = todaySum - yesterdaySum;
+  const streak = useMemo(() => loggingStreak(expenses), [expenses]);
+
+  if (!isFeatureEnabled("ledger-daily-pulse")) return null;
+  if (todaySum === 0 && yesterdaySum === 0 && streak === 0) return null;
+
+  const maxBar = Math.max(todaySum, yesterdaySum, 1);
+  const todayBar = Math.max(6, Math.round((todaySum / maxBar) * 100));
+  const yesterdayBar = Math.max(6, Math.round((yesterdaySum / maxBar) * 100));
+
+  let deltaLabel = "同昨日一樣";
+  let deltaClass = "text-ink-faint";
+  if (delta > 0) {
+    deltaLabel = `↑ ${formatMoney(delta, trip.targetCurrency)}`;
+    deltaClass = "text-coral";
+  } else if (delta < 0) {
+    deltaLabel = `↓ ${formatMoney(-delta, trip.targetCurrency)}`;
+    deltaClass = "text-jade";
+  }
+
+  const overDaily = dailyAllowance != null && dailyAllowance > 0 && todaySum > dailyAllowance;
+
+  return (
+    <div className="rounded-2xl bg-white/90 p-3 shadow-[var(--shadow-soft)]">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">每日脈搏 · 今日 vs 昨日</p>
+          <div className="mt-2 grid grid-cols-2 gap-3">
+            <div>
+              <p className="text-[10px] font-semibold text-ink-faint">今日</p>
+              <p className={`font-display text-lg font-black leading-tight ${overDaily ? "text-coral" : "text-jade-deep"}`}>
+                {formatMoney(todaySum, trip.targetCurrency)}
+              </p>
+              <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-[#efe9e0]">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${overDaily ? "bg-gradient-to-r from-[#f97316] to-coral" : "bg-gradient-to-r from-jade to-[#34d399]"}`}
+                  style={{ width: `${todayBar}%` }}
+                />
+              </div>
+            </div>
+            <div>
+              <p className="text-[10px] font-semibold text-ink-faint">昨日</p>
+              <p className="font-display text-lg font-black leading-tight text-ink-soft">
+                {formatMoney(yesterdaySum, trip.targetCurrency)}
+              </p>
+              <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-[#efe9e0]">
+                <div
+                  className="h-full rounded-full bg-[#cbd5e1] transition-all duration-500"
+                  style={{ width: `${yesterdayBar}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        {streak > 0 && (
+          <div className="shrink-0 rounded-xl bg-jade-soft px-2.5 py-2 text-center">
+            <p className="text-[9px] font-bold uppercase tracking-wide text-jade">🔥 streak</p>
+            <p className="font-display text-xl font-black text-jade-deep">{streak}</p>
+            <p className="text-[9px] font-semibold text-jade">日連續</p>
+          </div>
+        )}
+      </div>
+      <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] font-semibold">
+        <span className={deltaClass}>{deltaLabel}</span>
+        {dailyAllowance != null && dailyAllowance > 0 && todaySum > 0 && (
+          <>
+            <span className="text-ink-faint">·</span>
+            <span className={overDaily ? "text-coral" : "text-ink-soft"}>
+              {overDaily
+                ? `超過日均 ${formatMoney(todaySum - dailyAllowance, trip.targetCurrency)}`
+                : `仲可用 ${formatMoney(Math.max(0, dailyAllowance - todaySum), trip.targetCurrency)}`}
+            </span>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function TodayCategoryChips({ trip, expenses, filterCategory, setFilterCategory }) {
   const todayId = toDateId(new Date());
 
