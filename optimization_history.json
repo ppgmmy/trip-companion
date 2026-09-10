@@ -156,6 +156,41 @@
       "id": "today-category-chips",
       "title": "今日分類快篩",
       "description": "記帳頁顯示今日各分類使費晶片，一撳即篩選該類支出，出街對帳更快。"
+    },
+    {
+      "date": "1970-01-01",
+      "id": "hkd-list-toggle",
+      "title": "列表幣種切換",
+      "description": "支出列表可切換顯示當地幣或港幣。",
+      "backfill": true
+    },
+    {
+      "date": "1970-01-01",
+      "id": "category-pct-labels",
+      "title": "分類百分比標籤",
+      "description": "分類排行旁顯示佔總支出百分比。",
+      "backfill": true
+    },
+    {
+      "date": "1970-01-01",
+      "id": "empty-state-tips",
+      "title": "空狀態引導",
+      "description": "未記帳時顯示實用提示，降低第一筆門檻。",
+      "backfill": true
+    },
+    {
+      "date": "1970-01-01",
+      "id": "remaining-days-chip",
+      "title": "剩餘日數徽章",
+      "description": "標題旁顯示旅程剩餘日數，強化時間感。",
+      "backfill": true
+    },
+    {
+      "date": "2026-09-10",
+      "id": "daily-opt-banner",
+      "title": "每日優化公告",
+      "description": "開支儀表板頂部顯示今日自動啟用的優化說明，方便追蹤成長。",
+      "cycle": true
     }
   ]
 }
