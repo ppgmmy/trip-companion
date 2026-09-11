@@ -106,6 +106,11 @@ function formatShortDate(dateId) {
   return `${Number(m)}/${Number(d)}`;
 }
 
+function weekdayLabel(dateId) {
+  const wd = new Date(`${dateId}T12:00:00`).getDay();
+  return ["日", "一", "二", "三", "四", "五", "六"][wd];
+}
+
 function tripDayNumber(tripStartDate, dateId) {
   const start = new Date(`${tripStartDate}T12:00:00`).getTime();
   const target = new Date(`${dateId}T12:00:00`).getTime();
@@ -1271,6 +1276,64 @@ export function LedgerDailyPulse({ trip, expenses, dailyAllowance = null }) {
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+export function SevenDayLoggingDots({ expenses }) {
+  const todayId = toDateId(new Date());
+  const days = useMemo(() => {
+    const loggedDates = new Set(expenses.map((e) => e.date).filter(Boolean));
+    return Array.from({ length: 7 }, (_, i) => {
+      const dateId = shiftDateId(todayId, i - 6);
+      return {
+        dateId,
+        logged: loggedDates.has(dateId),
+        isToday: dateId === todayId,
+      };
+    });
+  }, [expenses, todayId]);
+
+  if (!isFeatureEnabled("seven-day-logging-dots")) return null;
+
+  const loggedCount = days.filter((d) => d.logged).length;
+  let insight = "記一筆就亮起今日圓點";
+  if (loggedCount >= 6) insight = "近一週記帳好密，旅行帳目唔會漏";
+  else if (loggedCount >= 4) insight = "記帳節奏唔錯，有空檔可以補返";
+  else if (loggedCount >= 1) insight = "有記低就唔怕忘，試吓填滿更多日";
+
+  return (
+    <div className="rounded-2xl bg-white/90 px-3 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">近 7 日記帳</p>
+        <span className="rounded-full bg-jade-soft px-2 py-0.5 text-[10px] font-bold text-jade-deep">
+          {loggedCount}/7 日
+        </span>
+      </div>
+      <div className="mt-2.5 flex justify-between gap-1">
+        {days.map((d) => (
+          <div key={d.dateId} className="flex min-w-0 flex-1 flex-col items-center gap-1">
+            <span
+              className={`flex h-9 w-9 items-center justify-center rounded-full border-2 text-[11px] font-black transition-all ${
+                d.logged
+                  ? d.isToday
+                    ? "border-jade bg-jade text-white shadow-[0_2px_8px_rgba(45,125,108,0.35)]"
+                    : "border-jade/40 bg-jade-soft text-jade-deep"
+                  : d.isToday
+                    ? "border-dashed border-jade/50 bg-white text-ink-faint"
+                    : "border-transparent bg-[#efe9e0] text-ink-faint"
+              }`}
+              title={`${formatShortDate(d.dateId)}${d.logged ? " · 有記帳" : " · 未記"}`}
+            >
+              {d.logged ? "✓" : "·"}
+            </span>
+            <span className={`text-[9px] font-semibold ${d.isToday ? "text-jade-deep" : "text-ink-faint"}`}>
+              {weekdayLabel(d.dateId)}
+            </span>
+          </div>
+        ))}
+      </div>
+      <p className="mt-2 text-center text-[11px] font-semibold text-ink-soft">{insight}</p>
     </div>
   );
 }

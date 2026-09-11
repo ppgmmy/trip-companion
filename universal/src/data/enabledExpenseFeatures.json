@@ -30,9 +30,10 @@
     "recent-3day-pace",
     "under-budget-streak",
     "today-category-chips",
-    "ledger-daily-pulse"
+    "ledger-daily-pulse",
+    "seven-day-logging-dots"
   ],
-  "updatedAt": "2026-09-10T16:58:29.779Z",
-  "lastFeatureId": "daily-opt-banner",
-  "lastTitle": "每日優化公告"
+  "updatedAt": "2026-09-11T02:05:00.000Z",
+  "lastFeatureId": "seven-day-logging-dots",
+  "lastTitle": "近 7 日記帳圓點"
 }

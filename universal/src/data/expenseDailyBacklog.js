@@ -200,4 +200,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "記帳頁頂部顯示今日 vs 昨日使費對比同記帳 streak，記帳時即刻掌握消費節奏。",
     pillar: "analysis",
   },
+  {
+    id: "seven-day-logging-dots",
+    title: "近 7 日記帳圓點",
+    description: "七粒圓點顯示最近一週邊幾日有記帳，一眼睇記帳密度，唔使只靠連續 streak。",
+    pillar: "stickiness",
+  },
 ];

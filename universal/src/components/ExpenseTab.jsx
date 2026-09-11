@@ -23,6 +23,7 @@ import {
   FilteredCategorySummary,
   FxRateImpactPanel,
   LedgerDailyPulse,
+  SevenDayLoggingDots,
   LedgerSummaryBar,
   PinnedBudgetAlert,
   PayerPaymentBreakdown,
@@ -740,6 +741,8 @@ export default function ExpenseTab({
               expenses={expenses}
               dailyAllowance={budget > 0 ? dailyAllowance : null}
             />
+
+            <SevenDayLoggingDots expenses={expenses} />
 
             <TodayCategoryChips
               trip={trip}
