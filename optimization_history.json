@@ -25,6 +25,12 @@
       "description": "標題旁顯示旅程剩餘日數，強化時間感。"
     },
     {
+      "date": "1970-01-01",
+      "id": "seven-day-logging-dots",
+      "title": "近 7 日記帳圓點",
+      "description": "七粒圓點顯示最近一週邊幾日有記帳，一眼睇記帳密度，唔使只靠連續 streak。"
+    },
+    {
       "date": "2026-08-16",
       "id": "daily-opt-banner",
       "title": "每日優化公告",
@@ -195,11 +201,11 @@
       "cycle": true
     },
     {
-      "date": "1970-01-01",
-      "id": "seven-day-logging-dots",
-      "title": "近 7 日記帳圓點",
-      "description": "七粒圓點顯示最近一週邊幾日有記帳，一眼睇記帳密度，唔使只靠連續 streak。",
-      "backfill": true
+      "date": "2026-09-12",
+      "id": "today-vs-yesterday",
+      "title": "今日 vs 昨日使費",
+      "description": "一眼對比今日與昨日支出，即時察覺消費節奏。",
+      "cycle": true
     }
   ]
 }
