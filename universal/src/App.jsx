@@ -25,8 +25,8 @@ function EmptyState({ onCreate }) {
       <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-jade text-3xl text-white shadow-[var(--shadow-soft)]">
         🌍
       </div>
-      <h1 className="mt-4 font-display text-2xl font-bold text-ink">全球萬能旅行 Companion</h1>
-      <p className="mt-2 max-w-sm text-sm leading-relaxed text-ink-soft">
+      <h1 className="mt-4 font-display text-2xl font-extrabold text-ink">全球萬能旅行 Companion</h1>
+      <p className="mt-2 max-w-sm text-[15px] leading-relaxed text-ink-soft">
         一次支援全世界任何城市——建立旅程後，行程、記帳、足跡、清單都會依該旅程獨立儲存，永不互相覆蓋。
       </p>
       <div className="mt-6 w-full max-w-md rounded-3xl border border-jade/15 bg-white p-5 text-left shadow-[var(--shadow-soft)] sm:max-w-2xl">
@@ -240,9 +240,9 @@ export default function App() {
 
   return (
     <div id="tc-app" className="bg-travel min-h-dvh w-full overflow-x-hidden">
-      <main className="safe-top mx-auto w-full max-w-lg box-border px-3 pb-32 sm:px-4">
+      <main className="safe-top mx-auto w-full max-w-lg box-border px-3.5 pb-36 sm:px-4">
         {activeTrip && (
-          <div className="mb-2 flex items-center gap-1.5">
+          <div className="mb-3 flex items-center gap-2">
             <div className="min-w-0 flex-1">
               <TripSwitcher
                 variant="banner"
@@ -262,7 +262,7 @@ export default function App() {
         {!activeTrip ? (
           <EmptyState onCreate={createTrip} />
         ) : (
-          <div className="tab-panel space-y-2.5">
+          <div className="tab-panel space-y-3">
             {appMode === "personal" ? (
               <PersonalTab personal={personal} setPersonal={setPersonal} focusAddTick={personalAddTick} />
             ) : (
@@ -311,14 +311,14 @@ export default function App() {
             <button
               type="button"
               onClick={() => setAppMode("travel")}
-              className="flex min-h-12 flex-1 items-center justify-center rounded-2xl border border-jade/15 bg-white/85 text-sm font-bold text-ink shadow-[var(--shadow-nav)] backdrop-blur"
+              className="flex min-h-12 flex-1 items-center justify-center rounded-2xl border border-jade/12 bg-white/95 text-[15px] font-extrabold text-ink shadow-[var(--shadow-nav)] backdrop-blur"
             >
               返回旅行
             </button>
             <button
               type="button"
               onClick={() => setPersonalAddTick((n) => n + 1)}
-              className="flex min-h-12 flex-1 items-center justify-center rounded-2xl bg-jade text-sm font-bold text-white shadow-[var(--shadow-soft)]"
+              className="flex min-h-12 flex-1 items-center justify-center rounded-2xl bg-jade text-[15px] font-extrabold text-white shadow-[var(--shadow-soft)]"
             >
               ＋ 快速新增
             </button>
@@ -344,9 +344,9 @@ export default function App() {
           type="button"
           onClick={() => setQuickAdd(true)}
           aria-label="快速記帳"
-          className="fixed bottom-[calc(6.5rem+env(safe-area-inset-bottom,0px))] right-[max(1rem,env(safe-area-inset-right,0px))] z-30 flex h-14 w-14 items-center justify-center rounded-full bg-jade text-2xl text-white shadow-[var(--shadow-soft)] transition active:scale-90"
+          className="fab-quick-add fixed bottom-[calc(6.75rem+env(safe-area-inset-bottom,0px))] right-[max(1rem,env(safe-area-inset-right,0px))] z-30 flex h-14 w-14 items-center justify-center rounded-full text-2xl font-bold text-white transition active:scale-90"
         >
-          ⚡
+          ＋
         </button>
       )}
       {activeTrip && quickAdd && (

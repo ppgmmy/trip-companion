@@ -461,11 +461,11 @@ export default function ExpenseTab({
   const afterToday = todayLeft != null && entryDate === todayId ? todayLeft - (editingId ? 0 : draftAmount) : null;
 
   return (
-    <div className="w-full min-w-0 space-y-2.5 overflow-x-hidden">
+    <div className="w-full min-w-0 space-y-3 overflow-x-hidden">
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
-          <h2 className="font-display text-base font-bold leading-tight text-ink">開支儀表板</h2>
-          <p className="text-[11px] leading-tight text-ink-soft">{trip.targetCurrency} → HKD · 記入當下匯率</p>
+          <h2 className="page-title">記帳</h2>
+          <p className="page-subtitle">{trip.targetCurrency} → HKD · 記入時鎖定匯率</p>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
           <BudgetHealthBadge
@@ -474,19 +474,19 @@ export default function ExpenseTab({
             onJumpOverview={() => setPanel("overview")}
           />
           {isFeatureEnabled("remaining-days-chip") && (
-            <span className="rounded-full bg-jade-soft px-2 py-1 text-[10px] font-bold text-jade-deep">
+            <span className="rounded-full bg-jade-soft px-2.5 py-1 text-[12px] font-extrabold text-jade-deep">
               剩 {remainingDays} 日
             </span>
           )}
         </div>
       </div>
 
-      <div className="expense-panel-rail sticky top-0 z-20 -mx-0.5 bg-mist/90 px-0.5 py-1 backdrop-blur-md">
+      <div className="expense-panel-rail sticky top-0 z-20 -mx-0.5 bg-mist/80 px-0.5 py-1.5 backdrop-blur-md">
         <div
           ref={tabRailRef}
           role="tablist"
           aria-label="開支儀表板分類"
-          className="scroll-thin flex snap-x snap-mandatory gap-1.5 overflow-x-auto pb-0.5"
+          className="expense-panel-tabs"
         >
           {PANELS.map((item) => {
             const isActive = panel === item.id;
@@ -500,11 +500,7 @@ export default function ExpenseTab({
                 role="tab"
                 aria-selected={isActive}
                 onClick={() => setPanel(item.id)}
-                className={`snap-start shrink-0 rounded-full px-3 py-1.5 text-xs font-bold transition active:scale-95 ${
-                  isActive
-                    ? "bg-jade text-white shadow-[var(--shadow-soft)]"
-                    : "border border-jade/15 bg-white/85 text-ink-soft"
-                }`}
+                className={`expense-panel-tab active:scale-[0.98] ${isActive ? "is-active" : "text-ink-soft"}`}
               >
                 {item.label}
               </button>
@@ -781,7 +777,7 @@ export default function ExpenseTab({
                 onChange={(e) => setAmount(e.target.value)}
                 onKeyDown={handleAmountKeyDown}
                 placeholder={`金額（${trip.targetCurrency}）`}
-                className="h-10 w-full rounded-xl border border-jade/15 bg-mist px-3 text-center font-display text-lg font-bold outline-none ring-jade focus:ring-2"
+                className="h-12 w-full rounded-2xl border border-jade/15 bg-white px-3 text-center font-display text-xl font-extrabold outline-none ring-jade placeholder:text-ink-faint focus:ring-2"
               />
 
               {suggestedAmounts.length > 0 && !amount && (
@@ -853,8 +849,8 @@ export default function ExpenseTab({
               />
 
               <div className="flex gap-1.5">
-                <button type="submit" className="min-h-10 flex-1 rounded-xl bg-jade text-sm font-bold text-white shadow-[var(--shadow-soft)] transition active:scale-[0.98]">
-                  {editingId ? "儲存" : "記入"}
+                <button type="submit" className="min-h-12 flex-1 rounded-2xl bg-jade text-[15px] font-extrabold text-white shadow-[var(--shadow-soft)] transition active:scale-[0.98]">
+                  {editingId ? "儲存修改" : "記入呢筆"}
                 </button>
               </div>
             </form>

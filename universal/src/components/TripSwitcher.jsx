@@ -30,27 +30,27 @@ export default function TripSwitcher({ trips, activeId, onSwitch, onCreate, onUp
             document.activeElement?.blur?.();
             setOpen(true);
           }}
-          className="flex w-full items-center justify-between gap-1.5 rounded-xl border border-jade/15 bg-white/80 px-2.5 py-1.5 text-left shadow-[var(--shadow-soft)] transition active:scale-[0.99]"
+          className="trip-banner flex w-full items-center justify-between gap-2 px-3 py-2 text-left transition active:scale-[0.99]"
         >
-          <span className="flex min-w-0 items-center gap-1.5">
-            <span className="text-base leading-none">{active?.flag || "🌍"}</span>
+          <span className="flex min-w-0 items-center gap-2">
+            <span className="text-lg leading-none">{active?.flag || "🌍"}</span>
             <span className="min-w-0">
-              <span className="block truncate text-[13px] font-bold leading-tight text-ink">
+              <span className="block truncate text-[15px] font-extrabold leading-tight text-ink">
                 {active ? `${active.city}${active.country ? ` · ${active.country}` : ""}` : "選擇／建立旅程"}
               </span>
               {active && (
-                <span className="block truncate text-[10px] leading-tight text-ink-faint">
+                <span className="mt-0.5 block truncate text-[12px] leading-snug text-ink-soft">
                   {active.startDate} → {active.endDate} · {active.targetCurrency}
                   {spendSummary && active.budget > 0 && (
-                    <span className="ml-1 font-bold text-jade-deep">
-                      · {spendSummary.pct}%
+                    <span className="ml-1 font-extrabold text-jade-deep">
+                      · 已用 {spendSummary.pct}%
                     </span>
                   )}
                 </span>
               )}
             </span>
           </span>
-          <span className="shrink-0 text-[10px] font-bold text-jade-deep">切換 ›</span>
+          <span className="shrink-0 rounded-full bg-jade-soft px-2.5 py-1 text-[11px] font-extrabold text-jade-deep">切換</span>
         </button>
       ) : (
       <div className="flex items-center gap-2">
