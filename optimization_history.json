@@ -202,16 +202,23 @@
     },
     {
       "date": "2026-09-12",
+      "id": "today-entry-pace",
+      "title": "今日記帳節奏",
+      "description": "對比今日記帳筆數同旅程日均，兼顯示平均每筆使費，分辨細碎消費日同大單日。"
+    },
+    {
+      "date": "2026-09-12",
       "id": "today-vs-yesterday",
       "title": "今日 vs 昨日使費",
       "description": "一眼對比今日與昨日支出，即時察覺消費節奏。",
       "cycle": true
     },
     {
-      "date": "2026-09-12",
-      "id": "today-entry-pace",
-      "title": "今日記帳節奏",
-      "description": "對比今日記帳筆數同旅程日均，兼顯示平均每筆使費，分辨細碎消費日同大單日。"
+      "date": "2026-09-13",
+      "id": "logging-streak",
+      "title": "記帳連續日數",
+      "description": "顯示連續有記帳嘅日數，養成每日記帳習慣。",
+      "cycle": true
     }
   ]
 }
