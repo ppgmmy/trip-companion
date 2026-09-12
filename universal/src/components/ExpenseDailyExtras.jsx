@@ -1338,6 +1338,92 @@ export function SevenDayLoggingDots({ expenses }) {
   );
 }
 
+export function TodayEntryPacePanel({ trip, expenses }) {
+  const todayId = toDateId(new Date());
+
+  const stats = useMemo(() => {
+    const endCap = trip.endDate && trip.endDate < todayId ? trip.endDate : todayId;
+    const startDate = trip.startDate;
+    if (!startDate || endCap < startDate) {
+      return { todayCount: 0, todaySpent: 0, avgEntriesPerDay: 0, tripAvgPerEntry: 0, elapsedDays: 1 };
+    }
+    const elapsedDays = daysInclusive(startDate, endCap);
+    const todayEntries = expenses.filter((e) => e.date === todayId);
+    const todayCount = todayEntries.length;
+    const todaySpent = todayEntries.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+    const totalCount = expenses.length;
+    const totalSpent = expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+    const avgEntriesPerDay = totalCount / Math.max(1, elapsedDays);
+    const tripAvgPerEntry = totalCount > 0 ? totalSpent / totalCount : 0;
+    const todayAvgPerEntry = todayCount > 0 ? todaySpent / todayCount : 0;
+    return {
+      todayCount,
+      todaySpent,
+      avgEntriesPerDay,
+      tripAvgPerEntry,
+      todayAvgPerEntry,
+      elapsedDays,
+      totalCount,
+    };
+  }, [expenses, trip.startDate, trip.endDate, todayId]);
+
+  if (!isFeatureEnabled("today-entry-pace")) return null;
+  if (stats.totalCount === 0 && stats.todayCount === 0) return null;
+
+  const { todayCount, todaySpent, avgEntriesPerDay, tripAvgPerEntry, todayAvgPerEntry } = stats;
+  const entryDelta = todayCount - avgEntriesPerDay;
+
+  let paceLabel = "接近旅程平均";
+  let paceTone = "text-ink-soft";
+  if (todayCount === 0 && avgEntriesPerDay >= 0.5) {
+    paceLabel = "今日未記帳，補一筆就唔會漏";
+    paceTone = "text-ink-faint";
+  } else if (entryDelta >= 2) {
+    paceLabel = "今日筆數偏多，可能係細碎消費";
+    paceTone = "text-[#b45309]";
+  } else if (entryDelta <= -1.5 && todayCount > 0) {
+    paceLabel = "今日筆數少，可能係大單日";
+    paceTone = "text-jade-deep";
+  } else if (todayCount > 0 && todayAvgPerEntry > tripAvgPerEntry * 1.35 && tripAvgPerEntry > 0) {
+    paceLabel = "平均每筆高過旅程慣常，留意大額";
+    paceTone = "text-[#b45309]";
+  }
+
+  return (
+    <div className="rounded-2xl border border-jade/10 bg-gradient-to-br from-white to-jade-soft/30 px-3 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">今日記帳節奏</p>
+        <span className="rounded-full bg-white/80 px-2 py-0.5 text-[10px] font-bold text-jade-deep">
+          日均 {avgEntriesPerDay.toFixed(1)} 筆
+        </span>
+      </div>
+      <div className="mt-2 grid grid-cols-2 gap-2">
+        <div className="rounded-xl bg-white/90 px-2.5 py-2">
+          <p className="text-[10px] font-semibold text-ink-faint">今日筆數</p>
+          <p className="font-display text-2xl font-black text-ink">{todayCount}</p>
+          {todayCount > 0 && (
+            <p className="mt-0.5 text-[10px] font-semibold text-ink-soft">
+              共 {formatMoney(todaySpent, trip.targetCurrency)}
+            </p>
+          )}
+        </div>
+        <div className="rounded-xl bg-white/90 px-2.5 py-2">
+          <p className="text-[10px] font-semibold text-ink-faint">平均每筆</p>
+          <p className="font-display text-2xl font-black text-ink">
+            {todayCount > 0 ? formatMoney(todayAvgPerEntry, trip.targetCurrency) : "—"}
+          </p>
+          {tripAvgPerEntry > 0 && (
+            <p className="mt-0.5 text-[10px] font-semibold text-ink-soft">
+              旅程平均 {formatMoney(tripAvgPerEntry, trip.targetCurrency)}
+            </p>
+          )}
+        </div>
+      </div>
+      <p className={`mt-2 text-center text-[11px] font-semibold ${paceTone}`}>{paceLabel}</p>
+    </div>
+  );
+}
+
 export function TodayCategoryChips({ trip, expenses, filterCategory, setFilterCategory }) {
   const todayId = toDateId(new Date());
 

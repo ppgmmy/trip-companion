@@ -24,6 +24,7 @@ import {
   FxRateImpactPanel,
   LedgerDailyPulse,
   SevenDayLoggingDots,
+  TodayEntryPacePanel,
   LedgerSummaryBar,
   PinnedBudgetAlert,
   PayerPaymentBreakdown,
@@ -739,6 +740,8 @@ export default function ExpenseTab({
             />
 
             <SevenDayLoggingDots expenses={expenses} />
+
+            <TodayEntryPacePanel trip={trip} expenses={expenses} />
 
             <TodayCategoryChips
               trip={trip}

@@ -206,4 +206,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "七粒圓點顯示最近一週邊幾日有記帳，一眼睇記帳密度，唔使只靠連續 streak。",
     pillar: "stickiness",
   },
+  {
+    id: "today-entry-pace",
+    title: "今日記帳節奏",
+    description: "對比今日記帳筆數同旅程日均，兼顯示平均每筆使費，分辨細碎消費日同大單日。",
+    pillar: "convenience",
+  },
 ];
