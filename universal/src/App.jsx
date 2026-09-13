@@ -46,9 +46,9 @@ export default function App() {
   const [tripTabs, setTripTabs] = useLocalStorage(REGISTRY_KEYS.tripTabs, {}, {
     migrate: (v) => (v && typeof v === "object" && !Array.isArray(v) ? v : {}),
   });
-  const [appMode, setAppMode] = useLocalStorage(REGISTRY_KEYS.appMode, "travel", {
-    // 上碟：開機一律旅行模式（直接見記帳，唔入個人）
-    migrate: () => "travel",
+  const [appMode, setAppMode] = useLocalStorage(REGISTRY_KEYS.appMode, "personal", {
+    // 上碟：開機一律個人模式（唔入旅遊記帳）
+    migrate: () => "personal",
   });
   const [expandedTool, setExpandedTool] = useState(null);
   const [quickAdd, setQuickAdd] = useState(false);
@@ -58,20 +58,11 @@ export default function App() {
 
   // 開機再寫一次上碟，確保 localStorage 同畫面一致
   useEffect(() => {
-    setAppMode("travel");
-    setActiveTab("expenses");
-    setExpensePanelRequest("ledger");
+    setAppMode("personal");
     try {
-      localStorage.setItem(REGISTRY_KEYS.appMode, JSON.stringify("travel"));
-      localStorage.setItem(REGISTRY_KEYS.activeTab, JSON.stringify("expenses"));
-      const raw = localStorage.getItem(REGISTRY_KEYS.expenseUi);
-      const ui = raw ? JSON.parse(raw) : {};
-      localStorage.setItem(
-        REGISTRY_KEYS.expenseUi,
-        JSON.stringify({ ...(ui && typeof ui === "object" ? ui : {}), panel: "ledger" }),
-      );
+      localStorage.setItem(REGISTRY_KEYS.appMode, JSON.stringify("personal"));
     } catch {}
-  }, [setAppMode, setActiveTab]);
+  }, [setAppMode]);
 
   // PWA 捷徑／開機參數：?quick=add 或 ?tab=expenses
   useEffect(() => {
