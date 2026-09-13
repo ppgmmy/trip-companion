@@ -457,7 +457,7 @@ function PersonalCalendar({
           <p className="font-display text-sm font-bold text-ink">
             {year} 年 {month + 1} 月
           </p>
-          <p className="text-[10px] text-ink-faint">月曆直接顯示行程 · 橙旅程 · 藍個人</p>
+          <p className="text-[10px] text-ink-faint">有約日子會高亮 · 橙旅程 · 藍個人</p>
         </div>
         <button
           type="button"
@@ -485,30 +485,57 @@ function PersonalCalendar({
           const isToday = dateId === todayId;
           const isSelected = dateId === selectedDate;
           const entries = agendaByDate[dateId] || [];
+          const hasPlan = entries.length > 0;
           const visible = entries.slice(0, 3);
           const extra = entries.length - visible.length;
+          const dayNum = Number(dateId.split("-")[2]);
 
           return (
             <button
               key={dateId}
               type="button"
               onClick={() => onSelectDay(dateId)}
-              className={`flex min-h-[4.75rem] flex-col rounded-lg border p-0.5 text-left transition active:scale-[0.98] sm:min-h-[5.5rem] sm:rounded-xl sm:p-1 ${
+              aria-label={
+                hasPlan
+                  ? `${dayNum}號，有 ${entries.length} 項行程`
+                  : `${dayNum}號，未有行程`
+              }
+              className={`relative flex min-h-[4.75rem] flex-col rounded-lg border p-0.5 text-left transition active:scale-[0.98] sm:min-h-[5.5rem] sm:rounded-xl sm:p-1 ${
                 isSelected
                   ? "border-jade bg-jade text-white shadow-md"
-                  : isToday
-                    ? "border-jade/40 bg-white text-ink ring-1 ring-jade/40"
-                    : entries.length > 0
-                      ? "border-jade/15 bg-white text-ink"
-                      : "border-transparent bg-white/70 text-ink-soft"
+                  : hasPlan
+                    ? isToday
+                      ? "border-coral/45 bg-coral-soft/35 text-ink shadow-sm ring-2 ring-coral/30"
+                      : "border-coral/30 bg-coral-soft/25 text-ink shadow-sm"
+                    : isToday
+                      ? "border-jade/35 bg-white text-ink ring-1 ring-jade/35"
+                      : "border-transparent bg-white/55 text-ink-soft opacity-70"
               }`}
             >
-              <span
-                className={`mb-0.5 text-[10px] font-extrabold leading-none sm:text-[11px] ${
-                  isSelected ? "text-white" : isToday ? "text-jade-deep" : "text-ink"
-                }`}
-              >
-                {Number(dateId.split("-")[2])}
+              <span className="mb-0.5 flex items-center justify-between gap-0.5">
+                <span
+                  className={`flex h-4 min-w-4 items-center justify-center rounded-full text-[10px] font-extrabold leading-none sm:h-5 sm:min-w-5 sm:text-[11px] ${
+                    isSelected
+                      ? "bg-white/20 text-white"
+                      : hasPlan
+                        ? "bg-coral text-white"
+                        : isToday
+                          ? "bg-jade-soft text-jade-deep"
+                          : "text-ink-soft"
+                  }`}
+                >
+                  {dayNum}
+                </span>
+                {hasPlan && !isSelected && (
+                  <span className="rounded-full bg-coral px-1 text-[8px] font-extrabold leading-none text-white">
+                    {entries.length}
+                  </span>
+                )}
+                {hasPlan && isSelected && (
+                  <span className="rounded-full bg-white/25 px-1 text-[8px] font-extrabold leading-none text-white">
+                    {entries.length}
+                  </span>
+                )}
               </span>
               <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-hidden">
                 {visible.map((entry) => (
@@ -530,7 +557,7 @@ function PersonalCalendar({
                   </span>
                 ))}
                 {extra > 0 && (
-                  <span className={`text-[8px] font-bold ${isSelected ? "text-white/85" : "text-ink-faint"}`}>
+                  <span className={`text-[8px] font-bold ${isSelected ? "text-white/85" : "text-coral"}`}>
                     +{extra}
                   </span>
                 )}
