@@ -97,19 +97,19 @@ function TripItineraryList({ items, tripLabel }) {
   if (!items?.length) return null;
   return (
     <div>
-      <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-amber-800/80">
-        ✈️ 旅程行程{tripLabel ? ` · ${tripLabel}` : ""}
+      <p className="mb-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-800/80">
+        ✈️ 旅程{tripLabel ? ` · ${tripLabel}` : ""}
       </p>
-      <div className="space-y-1">
+      <div className="space-y-0.5">
         {items.map((item) => (
           <div
             key={item.id || `${item.time}-${item.text}`}
-            className="flex items-center gap-2 rounded-lg border border-amber-300/40 bg-amber-50/80 px-2 py-1.5"
+            className="flex items-center gap-1.5 rounded-md border border-amber-300/40 bg-amber-50/80 px-1.5 py-1"
           >
-            <span className="w-11 shrink-0 text-[10px] font-bold tabular-nums text-amber-900">
+            <span className="w-10 shrink-0 text-[9px] font-bold tabular-nums text-amber-900">
               {item.time || "—"}
             </span>
-            <p className="min-w-0 flex-1 truncate text-xs font-bold text-ink">{item.text || item.title || "行程"}</p>
+            <p className="min-w-0 flex-1 truncate text-[11px] font-bold text-ink">{item.text || item.title || "行程"}</p>
           </div>
         ))}
       </div>
@@ -151,12 +151,12 @@ function priorityClass(tier) {
 
 function SectionCard({ title, hint, action, children, className = "" }) {
   return (
-    <section className={`overflow-hidden rounded-2xl border border-jade/15 bg-white shadow-[var(--shadow-soft)] ${className}`}>
+    <section className={`overflow-hidden rounded-xl border border-jade/15 bg-white shadow-[var(--shadow-soft)] ${className}`}>
       {(title || action) && (
-        <div className="flex items-center justify-between gap-2 border-b border-jade/10 bg-mist/40 px-3 py-2">
+        <div className="flex items-center justify-between gap-1.5 border-b border-jade/10 bg-mist/40 px-2.5 py-1.5">
           <div className="min-w-0">
-            {title && <p className="text-xs font-bold text-ink">{title}</p>}
-            {hint && <p className="text-[10px] text-ink-faint">{hint}</p>}
+            {title && <p className="text-[11px] font-bold text-ink">{title}</p>}
+            {hint && <p className="text-[9px] leading-tight text-ink-faint">{hint}</p>}
           </div>
           {action}
         </div>
@@ -175,7 +175,7 @@ function TimetableItem({ item, todayId, onToggle, onRemove, onPostpone }) {
 
   return (
     <div
-      className={`flex items-center gap-2 rounded-lg border px-2 py-1.5 ${
+      className={`flex items-center gap-1.5 rounded-md border px-1.5 py-1 ${
         item.done
           ? "border-jade/10 bg-mist/35"
           : isEvent
@@ -186,7 +186,7 @@ function TimetableItem({ item, todayId, onToggle, onRemove, onPostpone }) {
       <button
         type="button"
         onClick={() => onToggle(item.id)}
-        className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[9px] font-bold ${
+        className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded border text-[8px] font-bold ${
           item.done ? "border-jade bg-jade text-white" : "border-jade/30 bg-white text-transparent"
         }`}
         aria-label={item.done ? "標記未完成" : "標記完成"}
@@ -194,20 +194,20 @@ function TimetableItem({ item, todayId, onToggle, onRemove, onPostpone }) {
         ✓
       </button>
       {isEvent ? (
-        <span className="w-11 shrink-0 text-[10px] font-bold tabular-nums text-jade-deep">{item.time || "—"}</span>
+        <span className="w-10 shrink-0 text-[9px] font-bold tabular-nums text-jade-deep">{item.time || "—"}</span>
       ) : (
         <span
-          className={`shrink-0 rounded border px-1 py-0.5 text-[9px] font-bold ${item.done ? "text-ink-faint" : priorityClass(tier)}`}
+          className={`shrink-0 rounded border px-1 py-px text-[8px] font-bold ${item.done ? "text-ink-faint" : priorityClass(tier)}`}
         >
           {activeLabel}
         </span>
       )}
       <button type="button" onClick={() => onToggle(item.id)} className="min-w-0 flex-1 text-left active:opacity-80">
-        <p className={`truncate text-xs font-bold ${item.done ? "text-ink-faint line-through" : "text-ink"}`}>
+        <p className={`truncate text-[11px] font-bold ${item.done ? "text-ink-faint line-through" : "text-ink"}`}>
           {item.title}
         </p>
         {!isEvent && !item.done && (
-          <p className="truncate text-[10px] text-ink-faint">
+          <p className="truncate text-[9px] text-ink-faint">
             開始 {startDate.slice(5).replace("-", "/")}
           </p>
         )}
@@ -238,8 +238,8 @@ function ItemGroup({ label, items, todayId, onToggle, onRemove, onPostpone, mute
   if (items.length === 0) return null;
   return (
     <div className={muted ? "opacity-80" : ""}>
-      <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-ink-faint">{label}</p>
-      <div className="space-y-1">
+      <p className="mb-0.5 text-[9px] font-bold uppercase tracking-wide text-ink-faint">{label}</p>
+      <div className="space-y-0.5">
         {items.map((item) => (
           <TimetableItem
             key={item.id}
@@ -261,9 +261,9 @@ function ActiveTodosPanel({ items, todayId, showCompleted, onToggle, onRemove })
 
   return (
     <SectionCard title="進行中待辦" hint="由開始日期計生效時長 · 越久越優先">
-      <div className="space-y-2 p-3">
+      <div className="space-y-1.5 p-2">
         {active.length === 0 ? (
-          <p className="text-center text-xs text-ink-faint">無進行中待辦</p>
+          <p className="text-center text-[11px] text-ink-faint">無進行中待辦</p>
         ) : (
           active.map((item) => (
             <TimetableItem key={item.id} item={item} todayId={todayId} onToggle={onToggle} onRemove={onRemove} />
@@ -280,7 +280,7 @@ function ActiveTodosPanel({ items, todayId, showCompleted, onToggle, onRemove })
           />
         )}
         {!showCompleted && doneTodos.length > 0 && active.length > 0 && (
-          <p className="text-[10px] text-ink-faint">另有 {doneTodos.length} 項已完成</p>
+          <p className="text-[9px] text-ink-faint">另有 {doneTodos.length} 項已完成</p>
         )}
       </div>
     </SectionCard>
@@ -308,14 +308,14 @@ function DayBlock({
   const totalPending = pending.length + tripItems.length;
 
   return (
-    <div className={`border-l-[3px] px-3 py-2.5 ${active ? "border-l-jade bg-jade-soft/20" : "border-l-transparent"}`}>
+    <div className={`border-l-[3px] px-2.5 py-1.5 ${active ? "border-l-jade bg-jade-soft/20" : "border-l-transparent"}`}>
       <button
         type="button"
         onClick={() => onSelectDay(dateId)}
-        className="mb-2 flex w-full items-center justify-between text-left"
+        className="mb-1 flex w-full items-center justify-between text-left"
       >
-        <span className="text-sm font-bold text-ink">{formatPersonalDayLabel(dateId)}</span>
-        <span className={`text-[10px] font-bold ${totalPending > 0 ? "text-coral" : "text-ink-faint"}`}>
+        <span className="text-[12px] font-bold text-ink">{formatPersonalDayLabel(dateId)}</span>
+        <span className={`text-[9px] font-bold ${totalPending > 0 ? "text-coral" : "text-ink-faint"}`}>
           {totalPending > 0
             ? `${totalPending} 項`
             : dayEvents.length > 0
@@ -325,9 +325,9 @@ function DayBlock({
       </button>
 
       {!hasContent ? (
-        <p className="text-[11px] text-ink-faint">—</p>
+        <p className="text-[10px] text-ink-faint">—</p>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <TripItineraryList items={tripItems} tripLabel={tripLabel} />
           <ItemGroup
             label="📅 個人日程"
@@ -349,7 +349,7 @@ function DayBlock({
             />
           )}
           {!showCompleted && done.length > 0 && pending.length > 0 && (
-            <p className="text-[10px] text-ink-faint">另有 {done.length} 個已完成日程</p>
+            <p className="text-[9px] text-ink-faint">另有 {done.length} 個已完成日程</p>
           )}
         </div>
       )}
@@ -448,50 +448,50 @@ function PersonalCalendar({
   }, [cells, items, itinerary]);
 
   return (
-    <section className="overflow-hidden rounded-3xl border border-jade/15 bg-gradient-to-b from-jade-soft/35 to-white shadow-[var(--shadow-soft)]">
-      <div className="flex items-center justify-between px-3 py-3 sm:px-4">
+    <section className="overflow-hidden rounded-2xl border border-jade/15 bg-gradient-to-b from-jade-soft/35 to-white shadow-[var(--shadow-soft)]">
+      <div className="flex items-center justify-between px-2 py-1.5 sm:px-3">
         <button
           type="button"
           onClick={onPrevMonth}
-          className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/80 bg-white/90 text-base font-bold text-jade-deep shadow-sm active:scale-95"
+          className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/80 bg-white/90 text-sm font-bold text-jade-deep shadow-sm active:scale-95"
           aria-label="上個月"
         >
           ‹
         </button>
         <div className="text-center">
-          <p className="font-display text-sm font-bold text-ink">
+          <p className="font-display text-[13px] font-bold text-ink">
             {year} 年 {month + 1} 月
           </p>
-          <p className="text-[10px] text-ink-faint">有約日子會高亮（完成都保留）· 橙旅程 · 藍個人</p>
+          <p className="text-[9px] text-ink-faint">有約高亮 · 橙旅程 · 藍個人</p>
         </div>
         <button
           type="button"
           onClick={onNextMonth}
-          className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/80 bg-white/90 text-base font-bold text-jade-deep shadow-sm active:scale-95"
+          className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/80 bg-white/90 text-sm font-bold text-jade-deep shadow-sm active:scale-95"
           aria-label="下個月"
         >
           ›
         </button>
       </div>
 
-      <div className="grid grid-cols-7 gap-0.5 px-1.5 pb-1 sm:gap-1 sm:px-3">
+      <div className="grid grid-cols-7 gap-px px-1 pb-0.5 sm:px-2">
         {WEEKDAYS.map((w) => (
-          <div key={w} className="py-1 text-center text-[10px] font-bold text-jade-deep">
+          <div key={w} className="py-0.5 text-center text-[9px] font-bold text-jade-deep">
             {w}
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-7 gap-0.5 px-1.5 pb-3 sm:gap-1 sm:px-3">
+      <div className="grid grid-cols-7 gap-px px-1 pb-1.5 sm:px-2">
         {cells.map((dateId, idx) => {
           if (!dateId) {
-            return <div key={`empty-${idx}`} className="min-h-[4.75rem] sm:min-h-[5.5rem]" />;
+            return <div key={`empty-${idx}`} className="min-h-[3.25rem] sm:min-h-[3.75rem]" />;
           }
           const isToday = dateId === todayId;
           const isSelected = dateId === selectedDate;
           const entries = agendaByDate[dateId] || [];
           const hasPlan = entries.length > 0;
-          const visible = entries.slice(0, 3);
+          const visible = entries.slice(0, 2);
           const extra = entries.length - visible.length;
           const dayNum = Number(dateId.split("-")[2]);
 
@@ -505,21 +505,21 @@ function PersonalCalendar({
                   ? `${dayNum}號，有 ${entries.length} 項行程`
                   : `${dayNum}號，未有行程`
               }
-              className={`relative flex min-h-[4.75rem] flex-col rounded-lg border p-0.5 text-left transition active:scale-[0.98] sm:min-h-[5.5rem] sm:rounded-xl sm:p-1 ${
+              className={`relative flex min-h-[3.25rem] flex-col rounded-md border p-px text-left transition active:scale-[0.98] sm:min-h-[3.75rem] sm:rounded-lg sm:p-0.5 ${
                 isSelected
                   ? "border-jade bg-jade text-white shadow-md"
                   : hasPlan
                     ? isToday
-                      ? "border-coral/45 bg-coral-soft/35 text-ink shadow-sm ring-2 ring-coral/30"
+                      ? "border-coral/45 bg-coral-soft/35 text-ink shadow-sm ring-1 ring-coral/30"
                       : "border-coral/30 bg-coral-soft/25 text-ink shadow-sm"
                     : isToday
                       ? "border-jade/35 bg-white text-ink ring-1 ring-jade/35"
                       : "border-transparent bg-white/55 text-ink-soft opacity-70"
               }`}
             >
-              <span className="mb-0.5 flex items-center justify-between gap-0.5">
+              <span className="mb-px flex items-center justify-between gap-0.5">
                 <span
-                  className={`flex h-4 min-w-4 items-center justify-center rounded-full text-[10px] font-extrabold leading-none sm:h-5 sm:min-w-5 sm:text-[11px] ${
+                  className={`flex h-3.5 min-w-3.5 items-center justify-center rounded-full text-[9px] font-extrabold leading-none sm:h-4 sm:min-w-4 sm:text-[10px] ${
                     isSelected
                       ? "bg-white/20 text-white"
                       : hasPlan
@@ -532,21 +532,21 @@ function PersonalCalendar({
                   {dayNum}
                 </span>
                 {hasPlan && !isSelected && (
-                  <span className="rounded-full bg-coral px-1 text-[8px] font-extrabold leading-none text-white">
+                  <span className="rounded-full bg-coral px-0.5 text-[7px] font-extrabold leading-none text-white">
                     {entries.length}
                   </span>
                 )}
                 {hasPlan && isSelected && (
-                  <span className="rounded-full bg-white/25 px-1 text-[8px] font-extrabold leading-none text-white">
+                  <span className="rounded-full bg-white/25 px-0.5 text-[7px] font-extrabold leading-none text-white">
                     {entries.length}
                   </span>
                 )}
               </span>
-              <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-hidden">
+              <div className="flex min-h-0 flex-1 flex-col gap-px overflow-hidden">
                 {visible.map((entry) => (
                   <span
                     key={entry.key}
-                    className={`block truncate rounded px-0.5 py-px text-[8px] font-bold leading-tight sm:text-[9px] ${
+                    className={`block truncate rounded px-0.5 text-[7px] font-bold leading-tight sm:text-[8px] ${
                       entry.done
                         ? isSelected
                           ? "bg-white/15 text-white/75 line-through"
@@ -567,7 +567,7 @@ function PersonalCalendar({
                   </span>
                 ))}
                 {extra > 0 && (
-                  <span className={`text-[8px] font-bold ${isSelected ? "text-white/85" : "text-coral"}`}>
+                  <span className={`text-[7px] font-bold ${isSelected ? "text-white/85" : "text-coral"}`}>
                     +{extra}
                   </span>
                 )}
@@ -587,6 +587,7 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
   const undoRef = useRef(null);
   const [toast, setToast] = useState(null);
   const [calendarOpen, setCalendarOpen] = useState(true);
+  const [addFormOpen, setAddFormOpen] = useState(false);
   const [timeError, setTimeError] = useState(false);
   const [personalUi, setPersonalUi] = useLocalStorage(
     REGISTRY_KEYS.personalUi,
@@ -674,10 +675,13 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
   }, [section]);
 
   useEffect(() => {
-    if (focusAddTick > 0) {
+    if (focusAddTick <= 0) return;
+    setAddFormOpen(true);
+    const t = window.setTimeout(() => {
       formRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
       titleRef.current?.focus({ preventScroll: true });
-    }
+    }, 40);
+    return () => window.clearTimeout(t);
   }, [focusAddTick]);
 
   function selectDay(dateId) {
@@ -777,34 +781,43 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
   const activeView = PERSONAL_VIEWS.find((v) => v.id === section) || PERSONAL_VIEWS[0];
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {toast && <UndoToast message={toast.message} onUndo={toast.undo ? undoRemove : null} />}
 
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <h2 className="font-display text-lg font-bold text-ink">
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <h2 className="font-display text-base font-bold leading-tight text-ink">
             {section === "mine" ? "行程" : section === "shared" ? "To-Do" : section === "daily" ? "每日" : "個人"}
           </h2>
-          <p className="text-[11px] text-ink-faint">{activeView.hint}</p>
+          <p className="truncate text-[10px] text-ink-faint">{activeView.hint}</p>
         </div>
         {section === "mine" && (
-          <button
-            type="button"
-            onClick={() => setCalendarOpen((v) => !v)}
-            className="shrink-0 rounded-xl border border-jade/15 bg-white px-2.5 py-1.5 text-[11px] font-bold text-jade-deep"
-          >
-            {calendarOpen ? "收起月曆總覽" : "打開月曆總覽"}
-          </button>
+          <div className="flex shrink-0 items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setAddFormOpen((v) => !v)}
+              className="rounded-lg border border-jade/15 bg-white px-2 py-1 text-[10px] font-bold text-jade-deep"
+            >
+              {addFormOpen ? "收起新增" : "+ 新增"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setCalendarOpen((v) => !v)}
+              className="rounded-lg border border-jade/15 bg-white px-2 py-1 text-[10px] font-bold text-jade-deep"
+            >
+              {calendarOpen ? "收起月曆" : "月曆"}
+            </button>
+          </div>
         )}
       </div>
 
-      <div className="grid grid-cols-3 gap-1.5">
+      <div className="grid grid-cols-3 gap-1">
         {PERSONAL_VIEWS.map((v) => (
           <button
             key={v.id}
             type="button"
             onClick={() => setSection(v.id)}
-            className={`min-h-10 rounded-xl border px-2 text-xs font-bold transition active:scale-[0.98] ${
+            className={`min-h-8 rounded-lg border px-1.5 text-[11px] font-bold transition active:scale-[0.98] ${
               section === v.id ? "badge-active border-transparent" : "border-jade/15 bg-white text-ink-soft"
             }`}
           >
@@ -818,14 +831,14 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
 
       {section === "mine" && (
         <>
-      <div className="grid grid-cols-2 gap-1.5">
-        <div className="rounded-xl border border-sky/20 bg-sky/8 px-2 py-2 text-center">
-          <p className="text-[10px] font-bold text-ink-faint">今日行程</p>
-          <p className="font-display text-lg font-bold text-ink">{todayStats.events}</p>
+      <div className="grid grid-cols-2 gap-1">
+        <div className="rounded-lg border border-sky/20 bg-sky/8 px-2 py-1 text-center">
+          <p className="text-[9px] font-bold text-ink-faint">今日</p>
+          <p className="font-display text-base font-bold leading-tight text-ink">{todayStats.events}</p>
         </div>
-        <div className="rounded-xl border border-jade/15 bg-jade-soft/40 px-2 py-2 text-center">
-          <p className="text-[10px] font-bold text-ink-faint">近 7 日行程</p>
-          <p className="font-display text-lg font-bold text-jade-deep">{todayStats.weekEvents}</p>
+        <div className="rounded-lg border border-jade/15 bg-jade-soft/40 px-2 py-1 text-center">
+          <p className="text-[9px] font-bold text-ink-faint">近 7 日</p>
+          <p className="font-display text-base font-bold leading-tight text-jade-deep">{todayStats.weekEvents}</p>
         </div>
       </div>
 
@@ -844,27 +857,23 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
         />
       )}
 
+      {addFormOpen && (
       <SectionCard
         title="新增行程"
-        hint="指定幾時去做（必填時間）"
+        hint="必填時間"
       >
-        <form ref={formRef} onSubmit={addItem} className="space-y-2 p-3">
-          <p className="rounded-xl border border-jade/15 bg-jade-soft/40 px-3 py-2 text-xs font-bold text-jade-deep">
-            📅 新增行程（有時間嘅日程）
-          </p>
-
+        <form ref={formRef} onSubmit={addItem} className="space-y-1.5 p-2">
           <input
             ref={titleRef}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="幾時做咩？例如：食飯、開會、睇醫生…"
-            className="h-10 w-full rounded-xl border border-jade/15 bg-mist px-3 text-sm outline-none ring-jade focus:ring-2"
+            placeholder="幾時做咩？例如：食飯、開會…"
+            className="h-8 w-full rounded-lg border border-jade/15 bg-mist px-2.5 text-[13px] outline-none ring-jade focus:ring-2"
           />
 
-          <div>
-            <p className="mb-1 text-[10px] font-bold text-ink-faint">行程日期</p>
-            
-            <div className="mb-1.5 flex gap-1">
+          <div className="grid grid-cols-[1fr_auto] gap-1.5">
+            <div>
+              <div className="mb-1 flex gap-1">
                 {[
                   { label: "今日", offset: 0 },
                   { label: "明日", offset: 1 },
@@ -880,7 +889,7 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
                         setEntryDate(dateId);
                         setSelectedDate(dateId);
                       }}
-                      className={`min-h-7 flex-1 rounded-lg border text-[11px] font-bold active:scale-[0.98] ${
+                      className={`min-h-6 flex-1 rounded-md border text-[10px] font-bold active:scale-[0.98] ${
                         active ? "border-jade bg-jade-soft/60 text-jade-deep" : "border-jade/15 bg-white text-ink-soft"
                       }`}
                     >
@@ -889,62 +898,58 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
                   );
                 })}
               </div>
-            <input
-              type="date"
-              value={entryDate}
-              onChange={(e) => {
-                setEntryDate(e.target.value);
-                if (kind === "event") setSelectedDate(e.target.value);
-              }}
-              className="h-9 w-full rounded-xl border border-jade/15 bg-mist px-2 text-xs outline-none ring-jade focus:ring-2"
-            />
-          </div>
-
-          <div>
-              <p className="mb-1 text-[10px] font-bold text-ink-faint">
-                時間 <span className="text-coral">*</span>
-              </p>
-              <div className="space-y-1">
-                <input
-                  type="time"
-                  value={entryTime}
-                  onChange={(e) => {
-                    setEntryTime(e.target.value);
-                    setTimeError(false);
-                  }}
-                  required
-                  className={`h-9 w-full rounded-xl border bg-mist px-2 text-xs outline-none ring-jade focus:ring-2 ${
-                    timeError ? "border-coral ring-coral" : "border-jade/15"
-                  }`}
-                />
-                {timeError && <p className="text-[10px] font-bold text-coral">日程需要指定時間</p>}
-                <div className="flex flex-wrap gap-1">
-                  {TIME_PRESETS.map((t) => (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => {
-                        setEntryTime(t);
-                        setTimeError(false);
-                      }}
-                      className={`rounded-lg border px-2 py-0.5 text-[10px] font-bold active:scale-95 ${
-                        entryTime === t
-                          ? "border-jade bg-jade-soft/60 text-jade-deep"
-                          : "border-jade/15 bg-white text-ink-soft"
-                      }`}
-                    >
-                      {t}
-                    </button>
-                  ))}
-                </div>
+              <input
+                type="date"
+                value={entryDate}
+                onChange={(e) => {
+                  setEntryDate(e.target.value);
+                  if (kind === "event") setSelectedDate(e.target.value);
+                }}
+                className="h-8 w-full rounded-lg border border-jade/15 bg-mist px-2 text-[11px] outline-none ring-jade focus:ring-2"
+              />
+            </div>
+            <div className="w-[6.5rem]">
+              <input
+                type="time"
+                value={entryTime}
+                onChange={(e) => {
+                  setEntryTime(e.target.value);
+                  setTimeError(false);
+                }}
+                required
+                className={`h-8 w-full rounded-lg border bg-mist px-1.5 text-[11px] outline-none ring-jade focus:ring-2 ${
+                  timeError ? "border-coral ring-coral" : "border-jade/15"
+                }`}
+              />
+              {timeError && <p className="mt-0.5 text-[9px] font-bold text-coral">要時間</p>}
+              <div className="mt-1 flex flex-wrap gap-0.5">
+                {TIME_PRESETS.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => {
+                      setEntryTime(t);
+                      setTimeError(false);
+                    }}
+                    className={`rounded border px-1 py-px text-[9px] font-bold active:scale-95 ${
+                      entryTime === t
+                        ? "border-jade bg-jade-soft/60 text-jade-deep"
+                        : "border-jade/15 bg-white text-ink-soft"
+                    }`}
+                  >
+                    {t}
+                  </button>
+                ))}
               </div>
             </div>
+          </div>
 
-          <button type="submit" className="h-10 w-full rounded-xl bg-jade text-sm font-bold text-white">
+          <button type="submit" className="h-8 w-full rounded-lg bg-jade text-[13px] font-bold text-white">
             加入行程
           </button>
         </form>
       </SectionCard>
+      )}
 
 
 
@@ -970,7 +975,7 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
           title={calendarOpen ? "當日行程" : "其他日期 · 行程"}
           hint={formatPersonalDayLabel(selectedDate)}
         >
-          <div className="space-y-2 p-3">
+          <div className="space-y-1.5 p-2">
             <TripItineraryList items={selectedTripItems} tripLabel={tripLabel} />
             <ItemGroup
               label="📅 個人日程"

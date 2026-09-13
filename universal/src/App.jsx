@@ -231,7 +231,7 @@ export default function App() {
 
   return (
     <div id="tc-app" className="bg-travel min-h-dvh w-full overflow-x-hidden">
-      <main className="safe-top mx-auto w-full max-w-lg box-border px-3.5 pb-36 sm:px-4">
+      <main className="safe-top mx-auto w-full max-w-lg box-border px-3 pb-32 sm:px-4">
         {activeTrip && (
           <div className="mb-3 flex items-center gap-2">
             <div className="min-w-0 flex-1">
@@ -253,7 +253,7 @@ export default function App() {
         {!activeTrip ? (
           <EmptyState onCreate={createTrip} />
         ) : (
-          <div className="tab-panel space-y-3">
+          <div className="tab-panel space-y-2">
             {appMode === "personal" ? (
               <PersonalTab personal={personal} setPersonal={setPersonal} focusAddTick={personalAddTick} trip={activeTrip} itinerary={itinerary} />
             ) : (
