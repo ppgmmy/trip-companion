@@ -75,16 +75,21 @@ function dayAgendaEntries(items, itinerary, dateId) {
     time: entry.time || "",
     title: entry.text || entry.title || "旅程行程",
     source: "trip",
+    done: false,
   }));
-  const personal = eventsForDate(items, dateId)
-    .filter((entry) => !entry.done)
-    .map((entry) => ({
-      key: entry.id,
-      time: entry.time || "",
-      title: entry.title || "個人日程",
-      source: "personal",
-    }));
-  return [...trip, ...personal].sort((a, b) => String(a.time || "99:99").localeCompare(String(b.time || "99:99")));
+  // 月曆：已完成都照顯示，方便回睇當日有過咩約
+  const personal = eventsForDate(items, dateId).map((entry) => ({
+    key: entry.id,
+    time: entry.time || "",
+    title: entry.title || "個人日程",
+    source: "personal",
+    done: Boolean(entry.done),
+  }));
+  return [...trip, ...personal].sort((a, b) => {
+    // 未完成排前，已完成排後；同組再按時間
+    if (Boolean(a.done) !== Boolean(b.done)) return a.done ? 1 : -1;
+    return String(a.time || "99:99").localeCompare(String(b.time || "99:99"));
+  });
 }
 
 
@@ -457,7 +462,7 @@ function PersonalCalendar({
           <p className="font-display text-sm font-bold text-ink">
             {year} 年 {month + 1} 月
           </p>
-          <p className="text-[10px] text-ink-faint">有約日子會高亮 · 橙旅程 · 藍個人</p>
+          <p className="text-[10px] text-ink-faint">有約日子會高亮（完成都保留）· 橙旅程 · 藍個人</p>
         </div>
         <button
           type="button"
@@ -542,16 +547,21 @@ function PersonalCalendar({
                   <span
                     key={entry.key}
                     className={`block truncate rounded px-0.5 py-px text-[8px] font-bold leading-tight sm:text-[9px] ${
-                      isSelected
-                        ? entry.source === "trip"
-                          ? "bg-amber-100/90 text-amber-950"
-                          : "bg-white/25 text-white"
-                        : entry.source === "trip"
-                          ? "bg-amber-100 text-amber-900"
-                          : "bg-sky-100 text-sky-900"
+                      entry.done
+                        ? isSelected
+                          ? "bg-white/15 text-white/75 line-through"
+                          : "bg-mist text-ink-faint line-through"
+                        : isSelected
+                          ? entry.source === "trip"
+                            ? "bg-amber-100/90 text-amber-950"
+                            : "bg-white/25 text-white"
+                          : entry.source === "trip"
+                            ? "bg-amber-100 text-amber-900"
+                            : "bg-sky-100 text-sky-900"
                     }`}
-                    title={`${entry.time ? `${entry.time} ` : ""}${entry.title}`}
+                    title={`${entry.done ? "已完成 · " : ""}${entry.time ? `${entry.time} ` : ""}${entry.title}`}
                   >
+                    {entry.done ? "✓ " : ""}
                     {entry.time ? `${entry.time} ` : ""}
                     {entry.title}
                   </span>
