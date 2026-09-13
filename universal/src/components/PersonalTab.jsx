@@ -69,6 +69,24 @@ function itineraryCountMap(itinerary) {
   return map;
 }
 
+function dayAgendaEntries(items, itinerary, dateId) {
+  const trip = itineraryForDate(itinerary, dateId).map((entry) => ({
+    key: entry.id || `trip-${entry.time}-${entry.text}`,
+    time: entry.time || "",
+    title: entry.text || entry.title || "旅程行程",
+    source: "trip",
+  }));
+  const personal = eventsForDate(items, dateId)
+    .filter((entry) => !entry.done)
+    .map((entry) => ({
+      key: entry.id,
+      time: entry.time || "",
+      title: entry.title || "個人日程",
+      source: "personal",
+    }));
+  return [...trip, ...personal].sort((a, b) => String(a.time || "99:99").localeCompare(String(b.time || "99:99")));
+}
+
 
 function TripItineraryList({ items, tripLabel }) {
   if (!items?.length) return null;
@@ -414,28 +432,19 @@ function PersonalCalendar({
   onNextMonth,
 }) {
   const cells = useMemo(() => monthMatrix(year, month), [year, month]);
-  const eventCounts = useMemo(() => {
+  const agendaByDate = useMemo(() => {
     const map = {};
-    items.forEach((item) => {
-      if (item.done || item.kind !== "event") return;
-      map[item.date] = (map[item.date] || 0) + 1;
+    cells.forEach((dateId) => {
+      if (!dateId) return;
+      const entries = dayAgendaEntries(items, itinerary, dateId);
+      if (entries.length) map[dateId] = entries;
     });
     return map;
-  }, [items]);
-  const todoStarts = useMemo(() => {
-    const map = {};
-    items.forEach((item) => {
-      if (item.done || item.kind !== "todo") return;
-      const key = personalTodoStartDate(item);
-      if (key) map[key] = (map[key] || 0) + 1;
-    });
-    return map;
-  }, [items]);
-  const tripCounts = useMemo(() => itineraryCountMap(itinerary), [itinerary]);
+  }, [cells, items, itinerary]);
 
   return (
     <section className="overflow-hidden rounded-3xl border border-jade/15 bg-gradient-to-b from-jade-soft/35 to-white shadow-[var(--shadow-soft)]">
-      <div className="flex items-center justify-between px-4 py-3">
+      <div className="flex items-center justify-between px-3 py-3 sm:px-4">
         <button
           type="button"
           onClick={onPrevMonth}
@@ -448,7 +457,7 @@ function PersonalCalendar({
           <p className="font-display text-sm font-bold text-ink">
             {year} 年 {month + 1} 月
           </p>
-          <p className="text-[10px] text-ink-faint">有就顯示：藍個人 · 橙旅程 · 綠待辦</p>
+          <p className="text-[10px] text-ink-faint">月曆直接顯示行程 · 橙旅程 · 藍個人</p>
         </div>
         <button
           type="button"
@@ -460,7 +469,7 @@ function PersonalCalendar({
         </button>
       </div>
 
-      <div className="grid grid-cols-7 gap-1 px-3 pb-1">
+      <div className="grid grid-cols-7 gap-0.5 px-1.5 pb-1 sm:gap-1 sm:px-3">
         {WEEKDAYS.map((w) => (
           <div key={w} className="py-1 text-center text-[10px] font-bold text-jade-deep">
             {w}
@@ -468,45 +477,64 @@ function PersonalCalendar({
         ))}
       </div>
 
-      <div className="grid grid-cols-7 gap-1 px-3 pb-4">
+      <div className="grid grid-cols-7 gap-0.5 px-1.5 pb-3 sm:gap-1 sm:px-3">
         {cells.map((dateId, idx) => {
           if (!dateId) {
-            return <div key={`empty-${idx}`} className="aspect-square" />;
+            return <div key={`empty-${idx}`} className="min-h-[4.75rem] sm:min-h-[5.5rem]" />;
           }
           const isToday = dateId === todayId;
           const isSelected = dateId === selectedDate;
-          const ev = eventCounts[dateId] || 0;
-          const td = todoStarts[dateId] || 0;
-          const tr = tripCounts[dateId] || 0;
-          // 只有當日有行程／日程／待辦先標點，唔預先標成個旅程日期範圍
+          const entries = agendaByDate[dateId] || [];
+          const visible = entries.slice(0, 3);
+          const extra = entries.length - visible.length;
 
           return (
             <button
               key={dateId}
               type="button"
               onClick={() => onSelectDay(dateId)}
-              className={`relative flex aspect-square flex-col items-center justify-center rounded-xl text-[12px] transition active:scale-95 ${
+              className={`flex min-h-[4.75rem] flex-col rounded-lg border p-0.5 text-left transition active:scale-[0.98] sm:min-h-[5.5rem] sm:rounded-xl sm:p-1 ${
                 isSelected
-                  ? "bg-jade text-white shadow-md"
+                  ? "border-jade bg-jade text-white shadow-md"
                   : isToday
-                    ? "bg-white text-jade-deep ring-2 ring-jade/50"
-                    : "bg-white/85 text-ink hover:bg-jade-soft/40"
+                    ? "border-jade/40 bg-white text-ink ring-1 ring-jade/40"
+                    : entries.length > 0
+                      ? "border-jade/15 bg-white text-ink"
+                      : "border-transparent bg-white/70 text-ink-soft"
               }`}
             >
-              <span className={`font-bold ${isSelected ? "text-white" : ""}`}>{Number(dateId.split("-")[2])}</span>
-              {(ev > 0 || td > 0 || tr > 0) && (
-                <span className="mt-0.5 flex gap-0.5">
-                  {ev > 0 && (
-                    <span className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-sky-500"}`} />
-                  )}
-                  {tr > 0 && (
-                    <span className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-amber-100" : "bg-amber-500"}`} />
-                  )}
-                  {td > 0 && (
-                    <span className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-jade-soft" : "bg-jade"}`} />
-                  )}
-                </span>
-              )}
+              <span
+                className={`mb-0.5 text-[10px] font-extrabold leading-none sm:text-[11px] ${
+                  isSelected ? "text-white" : isToday ? "text-jade-deep" : "text-ink"
+                }`}
+              >
+                {Number(dateId.split("-")[2])}
+              </span>
+              <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-hidden">
+                {visible.map((entry) => (
+                  <span
+                    key={entry.key}
+                    className={`block truncate rounded px-0.5 py-px text-[8px] font-bold leading-tight sm:text-[9px] ${
+                      isSelected
+                        ? entry.source === "trip"
+                          ? "bg-amber-100/90 text-amber-950"
+                          : "bg-white/25 text-white"
+                        : entry.source === "trip"
+                          ? "bg-amber-100 text-amber-900"
+                          : "bg-sky-100 text-sky-900"
+                    }`}
+                    title={`${entry.time ? `${entry.time} ` : ""}${entry.title}`}
+                  >
+                    {entry.time ? `${entry.time} ` : ""}
+                    {entry.title}
+                  </span>
+                ))}
+                {extra > 0 && (
+                  <span className={`text-[8px] font-bold ${isSelected ? "text-white/85" : "text-ink-faint"}`}>
+                    +{extra}
+                  </span>
+                )}
+              </div>
             </button>
           );
         })}
@@ -521,7 +549,7 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
   const formRef = useRef(null);
   const undoRef = useRef(null);
   const [toast, setToast] = useState(null);
-  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(true);
   const [timeError, setTimeError] = useState(false);
   const [personalUi, setPersonalUi] = useLocalStorage(
     REGISTRY_KEYS.personalUi,
@@ -728,7 +756,7 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
             onClick={() => setCalendarOpen((v) => !v)}
             className="shrink-0 rounded-xl border border-jade/15 bg-white px-2.5 py-1.5 text-[11px] font-bold text-jade-deep"
           >
-            {calendarOpen ? "收起月曆" : "月曆"}
+            {calendarOpen ? "收起月曆總覽" : "打開月曆總覽"}
           </button>
         )}
       </div>
@@ -763,6 +791,21 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
           <p className="font-display text-lg font-bold text-jade-deep">{todayStats.weekEvents}</p>
         </div>
       </div>
+
+      
+      {calendarOpen && (
+        <PersonalCalendar
+          year={viewMonth.year}
+          month={viewMonth.month}
+          selectedDate={selectedDate}
+          todayId={todayId}
+          items={items}
+          itinerary={tripItinerary}
+          onSelectDay={selectDay}
+          onPrevMonth={() => shiftMonth(-1)}
+          onNextMonth={() => shiftMonth(1)}
+        />
+      )}
 
       <SectionCard
         title="新增行程"
@@ -866,8 +909,9 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
         </form>
       </SectionCard>
 
-{(true) && (
-        <SevenDayTimetable
+
+
+      <SevenDayTimetable
           horizon={sevenDayHorizon}
           items={items}
           itinerary={tripItinerary}
@@ -883,21 +927,6 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
           onPostpone={postponeItem}
           todayId={todayId}
         />
-      )}
-
-{calendarOpen && (
-        <PersonalCalendar
-          year={viewMonth.year}
-          month={viewMonth.month}
-          selectedDate={selectedDate}
-          todayId={todayId}
-          items={items}
-          itinerary={tripItinerary}
-          onSelectDay={selectDay}
-          onPrevMonth={() => shiftMonth(-1)}
-          onNextMonth={() => shiftMonth(1)}
-        />
-      )}
 
       {showSelectedDayPanel && (
         <SectionCard
