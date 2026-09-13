@@ -255,7 +255,7 @@ export default function App() {
         ) : (
           <div className="tab-panel space-y-3">
             {appMode === "personal" ? (
-              <PersonalTab personal={personal} setPersonal={setPersonal} focusAddTick={personalAddTick} />
+              <PersonalTab personal={personal} setPersonal={setPersonal} focusAddTick={personalAddTick} trip={activeTrip} itinerary={itinerary} />
             ) : (
               <>
                 {activeTab === "itinerary" && (
