@@ -54,6 +54,52 @@ function eventsForDate(items, dateId) {
   return sortEvents(items.filter((item) => item.kind === "event" && item.date === dateId));
 }
 
+function itineraryForDate(itinerary, dateId) {
+  const list = itinerary?.[dateId];
+  if (!Array.isArray(list) || list.length === 0) return [];
+  return [...list].sort((a, b) => String(a.time || "").localeCompare(String(b.time || "")));
+}
+
+function itineraryCountMap(itinerary) {
+  const map = {};
+  if (!itinerary || typeof itinerary !== "object") return map;
+  Object.entries(itinerary).forEach(([dateId, list]) => {
+    if (Array.isArray(list) && list.length > 0) map[dateId] = list.length;
+  });
+  return map;
+}
+
+function isTripDay(trip, dateId) {
+  if (!trip?.startDate || !dateId) return false;
+  const end = trip.endDate || trip.startDate;
+  return dateId >= trip.startDate && dateId <= end;
+}
+
+function TripItineraryList({ items, tripLabel }) {
+  if (!items?.length) return null;
+  return (
+    <div>
+      <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-amber-800/80">
+        ✈️ 旅程行程{tripLabel ? ` · ${tripLabel}` : ""}
+      </p>
+      <div className="space-y-1">
+        {items.map((item) => (
+          <div
+            key={item.id || `${item.time}-${item.text}`}
+            className="flex items-center gap-2 rounded-lg border border-amber-300/40 bg-amber-50/80 px-2 py-1.5"
+          >
+            <span className="w-11 shrink-0 text-[10px] font-bold tabular-nums text-amber-900">
+              {item.time || "—"}
+            </span>
+            <p className="min-w-0 flex-1 truncate text-xs font-bold text-ink">{item.text || item.title || "行程"}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
 function activeTodos(items, todayId) {
   return items
     .filter((item) => item.kind === "todo" && !item.done && personalTodoStartDate(item) <= todayId)
@@ -223,12 +269,25 @@ function ActiveTodosPanel({ items, todayId, showCompleted, onToggle, onRemove })
   );
 }
 
-function DayBlock({ dateId, items, showCompleted, active, onSelectDay, onToggle, onRemove, onPostpone, todayId }) {
+function DayBlock({
+  dateId,
+  items,
+  tripItems = [],
+  tripLabel = "",
+  showCompleted,
+  active,
+  onSelectDay,
+  onToggle,
+  onRemove,
+  onPostpone,
+  todayId,
+}) {
   const dayEvents = eventsForDate(items, dateId);
   const pending = dayEvents.filter((i) => !i.done);
   const done = dayEvents.filter((i) => i.done);
   const visible = showCompleted ? dayEvents : pending;
-  const hasContent = visible.length > 0;
+  const hasContent = visible.length > 0 || tripItems.length > 0;
+  const totalPending = pending.length + tripItems.length;
 
   return (
     <div className={`border-l-[3px] px-3 py-2.5 ${active ? "border-l-jade bg-jade-soft/20" : "border-l-transparent"}`}>
@@ -238,8 +297,12 @@ function DayBlock({ dateId, items, showCompleted, active, onSelectDay, onToggle,
         className="mb-2 flex w-full items-center justify-between text-left"
       >
         <span className="text-sm font-bold text-ink">{formatPersonalDayLabel(dateId)}</span>
-        <span className={`text-[10px] font-bold ${pending.length > 0 ? "text-coral" : "text-ink-faint"}`}>
-          {pending.length > 0 ? `${pending.length} 個日程` : dayEvents.length > 0 ? "已完成" : "無日程"}
+        <span className={`text-[10px] font-bold ${totalPending > 0 ? "text-coral" : "text-ink-faint"}`}>
+          {totalPending > 0
+            ? `${totalPending} 項`
+            : dayEvents.length > 0
+              ? "已完成"
+              : "無行程"}
         </span>
       </button>
 
@@ -247,8 +310,9 @@ function DayBlock({ dateId, items, showCompleted, active, onSelectDay, onToggle,
         <p className="text-[11px] text-ink-faint">—</p>
       ) : (
         <div className="space-y-2">
+          <TripItineraryList items={tripItems} tripLabel={tripLabel} />
           <ItemGroup
-            label="📅 日程"
+            label="📅 個人日程"
             items={pending}
             todayId={todayId}
             onToggle={onToggle}
@@ -278,6 +342,8 @@ function DayBlock({ dateId, items, showCompleted, active, onSelectDay, onToggle,
 function SevenDayTimetable({
   horizon,
   items,
+  itinerary = {},
+  tripLabel = "",
   selectedDate,
   showCompleted,
   onFilterKind,
@@ -292,7 +358,7 @@ function SevenDayTimetable({
   return (
     <SectionCard
       title="黎緊 7 日 · 日程"
-      hint="指定時間嘅安排"
+      hint="個人日程＋旅程行程"
       action={
         <div className="flex shrink-0 items-center gap-1">
           {FILTERS.map((f) => (
@@ -325,6 +391,8 @@ function SevenDayTimetable({
             key={dateId}
             dateId={dateId}
             items={items}
+            tripItems={itineraryForDate(itinerary, dateId)}
+            tripLabel={tripLabel}
             showCompleted={showCompleted}
             active={dateId === selectedDate}
             onSelectDay={onSelectDay}
@@ -339,7 +407,18 @@ function SevenDayTimetable({
   );
 }
 
-function PersonalCalendar({ year, month, selectedDate, todayId, items, onSelectDay, onPrevMonth, onNextMonth }) {
+function PersonalCalendar({
+  year,
+  month,
+  selectedDate,
+  todayId,
+  items,
+  itinerary = {},
+  trip = null,
+  onSelectDay,
+  onPrevMonth,
+  onNextMonth,
+}) {
   const cells = useMemo(() => monthMatrix(year, month), [year, month]);
   const eventCounts = useMemo(() => {
     const map = {};
@@ -358,6 +437,7 @@ function PersonalCalendar({ year, month, selectedDate, todayId, items, onSelectD
     });
     return map;
   }, [items]);
+  const tripCounts = useMemo(() => itineraryCountMap(itinerary), [itinerary]);
 
   return (
     <section className="overflow-hidden rounded-3xl border border-jade/15 bg-gradient-to-b from-jade-soft/35 to-white shadow-[var(--shadow-soft)]">
@@ -374,7 +454,7 @@ function PersonalCalendar({ year, month, selectedDate, todayId, items, onSelectD
           <p className="font-display text-sm font-bold text-ink">
             {year} 年 {month + 1} 月
           </p>
-          <p className="text-[10px] text-ink-faint">藍點日程 · 綠點待辦開始</p>
+          <p className="text-[10px] text-ink-faint">藍個人 · 橙旅程 · 綠待辦</p>
         </div>
         <button
           type="button"
@@ -401,8 +481,10 @@ function PersonalCalendar({ year, month, selectedDate, todayId, items, onSelectD
           }
           const isToday = dateId === todayId;
           const isSelected = dateId === selectedDate;
+          const inTrip = isTripDay(trip, dateId);
           const ev = eventCounts[dateId] || 0;
           const td = todoStarts[dateId] || 0;
+          const tr = tripCounts[dateId] || 0;
 
           return (
             <button
@@ -414,14 +496,19 @@ function PersonalCalendar({ year, month, selectedDate, todayId, items, onSelectD
                   ? "bg-jade text-white shadow-md"
                   : isToday
                     ? "bg-white text-jade-deep ring-2 ring-jade/50"
-                    : "bg-white/85 text-ink hover:bg-jade-soft/40"
+                    : inTrip
+                      ? "bg-amber-50/90 text-ink ring-1 ring-amber-200/80"
+                      : "bg-white/85 text-ink hover:bg-jade-soft/40"
               }`}
             >
               <span className={`font-bold ${isSelected ? "text-white" : ""}`}>{Number(dateId.split("-")[2])}</span>
-              {(ev > 0 || td > 0) && (
+              {(ev > 0 || td > 0 || tr > 0) && (
                 <span className="mt-0.5 flex gap-0.5">
                   {ev > 0 && (
                     <span className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-sky-500"}`} />
+                  )}
+                  {tr > 0 && (
+                    <span className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-amber-100" : "bg-amber-500"}`} />
                   )}
                   {td > 0 && (
                     <span className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-jade-soft" : "bg-jade"}`} />
@@ -436,7 +523,7 @@ function PersonalCalendar({ year, month, selectedDate, todayId, items, onSelectD
   );
 }
 
-export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 }) {
+export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, trip = null, itinerary = {} }) {
   const todayId = toDateId(new Date());
   const titleRef = useRef(null);
   const formRef = useRef(null);
@@ -478,6 +565,11 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
   });
 
   const items = useMemo(() => (Array.isArray(personal) ? personal : []), [personal]);
+  const tripItinerary = useMemo(
+    () => (itinerary && typeof itinerary === "object" ? itinerary : {}),
+    [itinerary],
+  );
+  const tripLabel = trip?.city || trip?.name || trip?.title || "";
 
   useEffect(() => {
     if (!Array.isArray(personal)) return;
@@ -504,11 +596,13 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
     const weekEvents = items.filter(
       (i) => i.kind === "event" && !i.done && sevenDayHorizon.includes(i.date),
     ).length;
+    const todayTrip = itineraryForDate(tripItinerary, todayId).length;
+    const weekTrip = sevenDayHorizon.reduce((sum, id) => sum + itineraryForDate(tripItinerary, id).length, 0);
     return {
-      events: events.length,
-      weekEvents,
+      events: events.length + todayTrip,
+      weekEvents: weekEvents + weekTrip,
     };
-  }, [items, todayId, sevenDayHorizon]);
+  }, [items, todayId, sevenDayHorizon, tripItinerary]);
 
   useEffect(() => {
     setPersonalUi((prev) => ({ ...prev, selectedDate, viewMonth, kind, filterKind, showCompleted, section }));
@@ -612,6 +706,12 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
   const kindMeta = KINDS.find((k) => k.id === kind) || KINDS[0];
   const outOfHorizonEvents =
     selectedDate && !sevenDayHorizon.includes(selectedDate) ? eventsForDate(items, selectedDate) : [];
+  const selectedTripItems = selectedDate ? itineraryForDate(tripItinerary, selectedDate) : [];
+  // 7 日內已喺時間表顯示；呢度只補「月曆揀咗 7 日外」嘅行程／日程
+  const showSelectedDayPanel =
+    Boolean(selectedDate) &&
+    !sevenDayHorizon.includes(selectedDate) &&
+    (selectedTripItems.length > 0 || outOfHorizonEvents.length > 0);
 
   const activeView = PERSONAL_VIEWS.find((v) => v.id === section) || PERSONAL_VIEWS[0];
 
@@ -774,6 +874,8 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
         <SevenDayTimetable
           horizon={sevenDayHorizon}
           items={items}
+          itinerary={tripItinerary}
+          tripLabel={tripLabel}
           selectedDate={selectedDate}
           showCompleted={showCompleted}
           filterKind={filterKind}
@@ -794,23 +896,32 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0 })
           selectedDate={selectedDate}
           todayId={todayId}
           items={items}
+          itinerary={tripItinerary}
+          trip={trip}
           onSelectDay={selectDay}
           onPrevMonth={() => shiftMonth(-1)}
           onNextMonth={() => shiftMonth(1)}
         />
       )}
 
-      {outOfHorizonEvents.length > 0 && (
-        <SectionCard title="其他日期 · 日程" hint={formatPersonalDayLabel(selectedDate)}>
+      {showSelectedDayPanel && (
+        <SectionCard
+          title={calendarOpen ? "選中日期 · 行程" : "其他日期 · 行程"}
+          hint={formatPersonalDayLabel(selectedDate)}
+        >
           <div className="space-y-2 p-3">
+            <TripItineraryList items={selectedTripItems} tripLabel={tripLabel} />
             <ItemGroup
-              label="📅 日程"
+              label="📅 個人日程"
               items={showCompleted ? outOfHorizonEvents : outOfHorizonEvents.filter((i) => !i.done)}
               todayId={todayId}
               onToggle={toggleItem}
               onRemove={removeItem}
               onPostpone={postponeItem}
             />
+            {selectedTripItems.length === 0 && outOfHorizonEvents.length === 0 && (
+              <p className="text-[11px] text-ink-faint">呢日未有個人日程或旅程行程</p>
+            )}
           </div>
         </SectionCard>
       )}
