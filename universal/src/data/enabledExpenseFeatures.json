@@ -32,9 +32,10 @@
     "today-category-chips",
     "ledger-daily-pulse",
     "seven-day-logging-dots",
-    "today-entry-pace"
+    "today-entry-pace",
+    "today-vs-median-day"
   ],
-  "updatedAt": "2026-09-12T16:15:15.764Z",
-  "lastFeatureId": "logging-streak",
-  "lastTitle": "記帳連續日數"
+  "updatedAt": "2026-09-13T02:25:00.000Z",
+  "lastFeatureId": "today-vs-median-day",
+  "lastTitle": "今日 vs 旅程中位日"
 }

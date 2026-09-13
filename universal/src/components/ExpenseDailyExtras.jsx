@@ -111,6 +111,26 @@ function weekdayLabel(dateId) {
   return ["日", "一", "二", "三", "四", "五", "六"][wd];
 }
 
+function median(values) {
+  if (!values.length) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  if (sorted.length % 2 === 0) return (sorted[mid - 1] + sorted[mid]) / 2;
+  return sorted[mid];
+}
+
+function dailySpendTotalsInTrip(expenses, trip) {
+  const start = trip.startDate;
+  const end = trip.endDate || toDateId(new Date());
+  if (!start) return [];
+  const byDate = {};
+  expenses.forEach((e) => {
+    if (!e.date || e.date < start || e.date > end) return;
+    byDate[e.date] = (byDate[e.date] || 0) + (Number(e.amount) || 0);
+  });
+  return Object.values(byDate);
+}
+
 function tripDayNumber(tripStartDate, dateId) {
   const start = new Date(`${tripStartDate}T12:00:00`).getTime();
   const target = new Date(`${dateId}T12:00:00`).getTime();
@@ -1420,6 +1440,88 @@ export function TodayEntryPacePanel({ trip, expenses }) {
         </div>
       </div>
       <p className={`mt-2 text-center text-[11px] font-semibold ${paceTone}`}>{paceLabel}</p>
+    </div>
+  );
+}
+
+export function TodayVsMedianDayPanel({ trip, expenses }) {
+  const todayId = toDateId(new Date());
+
+  const stats = useMemo(() => {
+    const dailyTotals = dailySpendTotalsInTrip(expenses, trip);
+    const medianDay = median(dailyTotals);
+    const todaySum = sumByDate(expenses, todayId);
+    const sampleDays = dailyTotals.length;
+    const ratio = medianDay > 0 ? todaySum / medianDay : 0;
+    const delta = todaySum - medianDay;
+    const sorted = [...dailyTotals].sort((a, b) => a - b);
+    let percentile = null;
+    if (sampleDays >= 3 && todaySum > 0) {
+      const below = sorted.filter((v) => v < todaySum).length;
+      percentile = Math.round((below / sampleDays) * 100);
+    }
+    return { medianDay, todaySum, sampleDays, ratio, delta, percentile };
+  }, [expenses, trip, todayId]);
+
+  if (!isFeatureEnabled("today-vs-median-day")) return null;
+  if (stats.sampleDays < 2) return null;
+
+  const { medianDay, todaySum, sampleDays, ratio, delta, percentile } = stats;
+
+  const maxBar = Math.max(medianDay, todaySum, 1);
+  const medianBar = Math.max(6, Math.round((medianDay / maxBar) * 100));
+  const todayBar = Math.max(6, Math.round((todaySum / maxBar) * 100));
+
+  let insight = "今日同旅程典型一日接近";
+  let insightClass = "text-ink-soft";
+  if (todaySum === 0 && medianDay > 0) {
+    insight = `旅程典型一日約 ${formatMoney(medianDay, trip.targetCurrency)}，今日未記帳`;
+    insightClass = "text-ink-faint";
+  } else if (ratio >= 1.5) {
+    insight = `比中位日多 ${formatMoney(delta, trip.targetCurrency)}，今日偏豪`;
+    insightClass = "text-coral";
+  } else if (ratio >= 1.15) {
+    insight = `略高過典型一日 ${formatMoney(delta, trip.targetCurrency)}`;
+    insightClass = "text-[#b45309]";
+  } else if (ratio <= 0.65 && todaySum > 0) {
+    insight = `慳咗 ${formatMoney(-delta, trip.targetCurrency)}，低過旅程典型一日`;
+    insightClass = "text-jade-deep";
+  } else if (ratio <= 0.85 && todaySum > 0) {
+    insight = `比典型一日少 ${formatMoney(-delta, trip.targetCurrency)}，節奏健康`;
+    insightClass = "text-jade";
+  }
+
+  const badge =
+    percentile != null
+      ? `高過 ${percentile}% 行程日`
+      : `基於 ${sampleDays} 個有記帳日`;
+
+  return (
+    <div className="rounded-2xl bg-white/90 px-3 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">今日 vs 旅程中位日</p>
+        <span className="rounded-full bg-[#f1f5f4] px-2 py-0.5 text-[10px] font-bold text-ink-soft">{badge}</span>
+      </div>
+      <div className="mt-2.5 grid grid-cols-2 gap-2">
+        <div>
+          <p className="text-[10px] font-semibold text-ink-faint">典型一日</p>
+          <p className="font-display text-lg font-black text-ink">{formatMoney(medianDay, trip.targetCurrency)}</p>
+          <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-[#efe9e0]">
+            <div className="h-full rounded-full bg-ink-faint/40" style={{ width: `${medianBar}%` }} />
+          </div>
+        </div>
+        <div>
+          <p className="text-[10px] font-semibold text-jade-deep">今日</p>
+          <p className="font-display text-lg font-black text-ink">{formatMoney(todaySum, trip.targetCurrency)}</p>
+          <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-[#efe9e0]">
+            <div
+              className={`h-full rounded-full ${ratio > 1.15 ? "bg-coral" : ratio < 0.85 && todaySum > 0 ? "bg-jade" : "bg-jade/70"}`}
+              style={{ width: `${todayBar}%` }}
+            />
+          </div>
+        </div>
+      </div>
+      <p className={`mt-2 text-center text-[11px] font-semibold ${insightClass}`}>{insight}</p>
     </div>
   );
 }

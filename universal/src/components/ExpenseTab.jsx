@@ -25,6 +25,7 @@ import {
   LedgerDailyPulse,
   SevenDayLoggingDots,
   TodayEntryPacePanel,
+  TodayVsMedianDayPanel,
   LedgerSummaryBar,
   PinnedBudgetAlert,
   PayerPaymentBreakdown,
@@ -742,6 +743,8 @@ export default function ExpenseTab({
             <SevenDayLoggingDots expenses={expenses} />
 
             <TodayEntryPacePanel trip={trip} expenses={expenses} />
+
+            <TodayVsMedianDayPanel trip={trip} expenses={expenses} />
 
             <TodayCategoryChips
               trip={trip}

@@ -212,4 +212,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "對比今日記帳筆數同旅程日均，兼顯示平均每筆使費，分辨細碎消費日同大單日。",
     pillar: "convenience",
   },
+  {
+    id: "today-vs-median-day",
+    title: "今日 vs 旅程中位日",
+    description: "將今日使費同旅程「典型一日」（中位日）對比，一眼知今日偏高定偏低，唔使只靠感覺。",
+    pillar: "analysis",
+  },
 ];
