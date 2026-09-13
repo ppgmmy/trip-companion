@@ -59,7 +59,7 @@ export default function DailyTodosPanel() {
     },
   );
 
-  // 一次性種入每日習慣；今日慶祝：做運動已完成
+  // 一次性種入每日習慣；今日將做運動當普通完成項打勾
   useEffect(() => {
     try {
       if (localStorage.getItem(SEED_KEY) === "1") return;
@@ -85,7 +85,6 @@ export default function DailyTodosPanel() {
 
       const log = { ...(prev.log || {}) };
       const todaySet = new Set(Array.isArray(log[todayId]) ? log[todayId] : []);
-      // 搵做運動項目（seed id 或標題匹配）
       const exercise =
         templates.find((t) => t.id === EXERCISE_ID) ||
         templates.find((t) => normalizeTitle(t.title).includes(normalizeTitle("做運動")));
@@ -100,13 +99,6 @@ export default function DailyTodosPanel() {
   const log = store.log || {};
   const todayDone = useMemo(() => new Set(Array.isArray(log[todayId]) ? log[todayId] : []), [log, todayId]);
   const stats = useMemo(() => dailyTodosMonthStats(templates, log, todayId), [templates, log, todayId]);
-
-  const exerciseDoneToday = useMemo(() => {
-    const exercise =
-      templates.find((t) => t.id === EXERCISE_ID) ||
-      templates.find((t) => normalizeTitle(t.title).includes(normalizeTitle("做運動")));
-    return Boolean(exercise && todayDone.has(exercise.id));
-  }, [templates, todayDone]);
 
   function addTemplate(e) {
     e.preventDefault();
@@ -145,13 +137,6 @@ export default function DailyTodosPanel() {
 
   return (
     <div className="space-y-2">
-      {exerciseDoneToday && (
-        <div className="rounded-xl border border-coral/25 bg-gradient-to-r from-coral-soft/50 to-amber-50 px-2.5 py-2 text-center shadow-[var(--shadow-soft)]">
-          <p className="text-[13px] font-extrabold text-coral">今日做咗運動！！🎉💪</p>
-          <p className="text-[10px] font-bold text-ink-soft">超值得慶祝 · 繼續保持呢個勢頭</p>
-        </div>
-      )}
-
       <SectionCard title="今月完成紀錄" hint={`${stats.monthLabel} · 全日打勾算 1 日`}>
         <div className="flex items-center gap-3 p-2.5">
           <div
@@ -172,7 +157,7 @@ export default function DailyTodosPanel() {
               今日 {doneCount}/{templates.length || 0} · 一日全部打勾就計入完成日
             </p>
             {todayAllDone && (
-              <p className="mt-1 text-[10px] font-bold text-jade-deep">今日已全部完成 🎉</p>
+              <p className="mt-1 text-[10px] font-bold text-jade-deep">今日已全部完成</p>
             )}
           </div>
         </div>
@@ -185,27 +170,18 @@ export default function DailyTodosPanel() {
           ) : (
             templates.map((item) => {
               const done = todayDone.has(item.id);
-              const isExercise = item.id === EXERCISE_ID || normalizeTitle(item.title).includes(normalizeTitle("做運動"));
               return (
                 <div
                   key={item.id}
                   className={`flex items-center gap-1.5 rounded-lg border px-2 py-1.5 ${
-                    done
-                      ? isExercise
-                        ? "border-coral/30 bg-coral-soft/40"
-                        : "border-jade/20 bg-jade-soft/40"
-                      : "border-jade/15 bg-white"
+                    done ? "border-jade/20 bg-jade-soft/40" : "border-jade/15 bg-white"
                   }`}
                 >
                   <button
                     type="button"
                     onClick={() => toggleToday(item.id)}
                     className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[9px] font-bold ${
-                      done
-                        ? isExercise
-                          ? "border-coral bg-coral text-white"
-                          : "border-jade bg-jade text-white"
-                        : "border-jade/30 bg-white text-transparent"
+                      done ? "border-jade bg-jade text-white" : "border-jade/30 bg-white text-transparent"
                     }`}
                   >
                     ✓
@@ -216,7 +192,6 @@ export default function DailyTodosPanel() {
                     className={`min-w-0 flex-1 text-left text-[13px] font-bold ${done ? "text-ink-faint line-through" : "text-ink"}`}
                   >
                     {item.title}
-                    {done && isExercise ? " 💪" : ""}
                   </button>
                   <button
                     type="button"
