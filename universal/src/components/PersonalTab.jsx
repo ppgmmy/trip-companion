@@ -69,11 +69,6 @@ function itineraryCountMap(itinerary) {
   return map;
 }
 
-function isTripDay(trip, dateId) {
-  if (!trip?.startDate || !dateId) return false;
-  const end = trip.endDate || trip.startDate;
-  return dateId >= trip.startDate && dateId <= end;
-}
 
 function TripItineraryList({ items, tripLabel }) {
   if (!items?.length) return null;
@@ -414,7 +409,6 @@ function PersonalCalendar({
   todayId,
   items,
   itinerary = {},
-  trip = null,
   onSelectDay,
   onPrevMonth,
   onNextMonth,
@@ -454,7 +448,7 @@ function PersonalCalendar({
           <p className="font-display text-sm font-bold text-ink">
             {year} 年 {month + 1} 月
           </p>
-          <p className="text-[10px] text-ink-faint">藍個人 · 橙旅程 · 綠待辦</p>
+          <p className="text-[10px] text-ink-faint">有就顯示：藍個人 · 橙旅程 · 綠待辦</p>
         </div>
         <button
           type="button"
@@ -481,10 +475,10 @@ function PersonalCalendar({
           }
           const isToday = dateId === todayId;
           const isSelected = dateId === selectedDate;
-          const inTrip = isTripDay(trip, dateId);
           const ev = eventCounts[dateId] || 0;
           const td = todoStarts[dateId] || 0;
           const tr = tripCounts[dateId] || 0;
+          // 只有當日有行程／日程／待辦先標點，唔預先標成個旅程日期範圍
 
           return (
             <button
@@ -496,9 +490,7 @@ function PersonalCalendar({
                   ? "bg-jade text-white shadow-md"
                   : isToday
                     ? "bg-white text-jade-deep ring-2 ring-jade/50"
-                    : inTrip
-                      ? "bg-amber-50/90 text-ink ring-1 ring-amber-200/80"
-                      : "bg-white/85 text-ink hover:bg-jade-soft/40"
+                    : "bg-white/85 text-ink hover:bg-jade-soft/40"
               }`}
             >
               <span className={`font-bold ${isSelected ? "text-white" : ""}`}>{Number(dateId.split("-")[2])}</span>
@@ -707,11 +699,15 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
   const outOfHorizonEvents =
     selectedDate && !sevenDayHorizon.includes(selectedDate) ? eventsForDate(items, selectedDate) : [];
   const selectedTripItems = selectedDate ? itineraryForDate(tripItinerary, selectedDate) : [];
-  // 7 日內已喺時間表顯示；呢度只補「月曆揀咗 7 日外」嘅行程／日程
+  const selectedPersonalEvents = selectedDate ? eventsForDate(items, selectedDate) : [];
+  const selectedPersonalVisible = showCompleted
+    ? selectedPersonalEvents
+    : selectedPersonalEvents.filter((i) => !i.done);
+  // 果日有行程／日程先 show；月曆打開時撳日子即睇當日內容
   const showSelectedDayPanel =
     Boolean(selectedDate) &&
-    !sevenDayHorizon.includes(selectedDate) &&
-    (selectedTripItems.length > 0 || outOfHorizonEvents.length > 0);
+    (selectedTripItems.length > 0 || selectedPersonalVisible.length > 0) &&
+    (calendarOpen || !sevenDayHorizon.includes(selectedDate));
 
   const activeView = PERSONAL_VIEWS.find((v) => v.id === section) || PERSONAL_VIEWS[0];
 
@@ -897,7 +893,6 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
           todayId={todayId}
           items={items}
           itinerary={tripItinerary}
-          trip={trip}
           onSelectDay={selectDay}
           onPrevMonth={() => shiftMonth(-1)}
           onNextMonth={() => shiftMonth(1)}
@@ -906,22 +901,19 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
 
       {showSelectedDayPanel && (
         <SectionCard
-          title={calendarOpen ? "選中日期 · 行程" : "其他日期 · 行程"}
+          title={calendarOpen ? "當日行程" : "其他日期 · 行程"}
           hint={formatPersonalDayLabel(selectedDate)}
         >
           <div className="space-y-2 p-3">
             <TripItineraryList items={selectedTripItems} tripLabel={tripLabel} />
             <ItemGroup
               label="📅 個人日程"
-              items={showCompleted ? outOfHorizonEvents : outOfHorizonEvents.filter((i) => !i.done)}
+              items={selectedPersonalVisible}
               todayId={todayId}
               onToggle={toggleItem}
               onRemove={removeItem}
               onPostpone={postponeItem}
             />
-            {selectedTripItems.length === 0 && outOfHorizonEvents.length === 0 && (
-              <p className="text-[11px] text-ink-faint">呢日未有個人日程或旅程行程</p>
-            )}
           </div>
         </SectionCard>
       )}
