@@ -225,6 +225,13 @@
       "id": "today-vs-median-day",
       "title": "今日 vs 旅程中位日",
       "description": "將今日使費同旅程「典型一日」（中位日）對比，一眼知今日偏高定偏低，唔使只靠感覺。"
+    },
+    {
+      "date": "2026-09-14",
+      "id": "biggest-expense",
+      "title": "單筆最高消費",
+      "description": "突出本旅程最大一筆開支，方便回顧大手消費。",
+      "cycle": true
     }
   ]
 }
