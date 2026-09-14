@@ -31,6 +31,12 @@
       "description": "七粒圓點顯示最近一週邊幾日有記帳，一眼睇記帳密度，唔使只靠連續 streak。"
     },
     {
+      "date": "1970-01-01",
+      "id": "today-pace-projection",
+      "title": "今日節奏延續預估",
+      "description": "假設餘下旅程每日都跟今日使費，預估總支出同距離預算仲有几遠，購物前心里有底。"
+    },
+    {
       "date": "2026-08-16",
       "id": "daily-opt-banner",
       "title": "每日優化公告",
@@ -234,11 +240,11 @@
       "cycle": true
     },
     {
-      "date": "1970-01-01",
-      "id": "today-pace-projection",
-      "title": "今日節奏延續預估",
-      "description": "假設餘下旅程每日都跟今日使費，預估總支出同距離預算仲有几遠，購物前心里有底。",
-      "backfill": true
+      "date": "2026-09-15",
+      "id": "seven-day-sparkline",
+      "title": "近 7 日趨勢",
+      "description": "迷你折線圖顯示最近一星期每日使費走勢。",
+      "cycle": true
     }
   ]
 }
