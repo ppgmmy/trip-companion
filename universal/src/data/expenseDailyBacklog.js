@@ -218,4 +218,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "將今日使費同旅程「典型一日」（中位日）對比，一眼知今日偏高定偏低，唔使只靠感覺。",
     pillar: "analysis",
   },
+  {
+    id: "today-pace-projection",
+    title: "今日節奏延續預估",
+    description: "假設餘下旅程每日都跟今日使費，預估總支出同距離預算仲有几遠，購物前心里有底。",
+    pillar: "stickiness",
+  },
 ];

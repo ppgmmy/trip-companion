@@ -33,9 +33,10 @@
     "ledger-daily-pulse",
     "seven-day-logging-dots",
     "today-entry-pace",
-    "today-vs-median-day"
+    "today-vs-median-day",
+    "today-pace-projection"
   ],
-  "updatedAt": "2026-09-13T16:57:10.144Z",
-  "lastFeatureId": "biggest-expense",
-  "lastTitle": "單筆最高消費"
+  "updatedAt": "2026-09-14T02:10:00.000Z",
+  "lastFeatureId": "today-pace-projection",
+  "lastTitle": "今日節奏延續預估"
 }

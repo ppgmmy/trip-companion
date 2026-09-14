@@ -1526,6 +1526,83 @@ export function TodayVsMedianDayPanel({ trip, expenses }) {
   );
 }
 
+export function TodayPaceProjectionPanel({ trip, expenses, budget }) {
+  const todayId = toDateId(new Date());
+
+  const stats = useMemo(() => {
+    const startDate = trip.startDate;
+    const endDate = trip.endDate || todayId;
+    if (!startDate || todayId < startDate || todayId > endDate) return null;
+
+    const remainingTripDays = daysInclusive(todayId, endDate);
+    const todaySum = sumByDate(expenses, todayId);
+    if (todaySum <= 0) return null;
+
+    const totalSpent = expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+    const projectedTotal = totalSpent + todaySum * Math.max(0, remainingTripDays - 1);
+    const vsBudget = budget - projectedTotal;
+    const pctOfBudget = budget > 0 ? (projectedTotal / budget) * 100 : 0;
+
+    return { todaySum, remainingTripDays, projectedTotal, vsBudget, pctOfBudget, totalSpent };
+  }, [expenses, trip, todayId, budget]);
+
+  if (!isFeatureEnabled("today-pace-projection")) return null;
+  if (budget <= 0 || !stats) return null;
+
+  const { todaySum, remainingTripDays, projectedTotal, vsBudget, pctOfBudget } = stats;
+
+  let insight = "照今日節奏，旅程結束時應該喺預算內";
+  let insightClass = "text-jade-deep";
+  if (vsBudget < 0) {
+    insight =
+      remainingTripDays <= 1
+        ? `今日已超預算 ${formatMoney(-vsBudget, trip.targetCurrency)}`
+        : `若餘下 ${remainingTripDays} 日都跟今日，會超預算 ${formatMoney(-vsBudget, trip.targetCurrency)}`;
+    insightClass = "text-coral";
+  } else if (pctOfBudget >= 95) {
+    insight = `預估會用晒 ${Math.round(pctOfBudget)}% 預算，尾段要收油`;
+    insightClass = "text-[#b45309]";
+  } else if (vsBudget > 0 && pctOfBudget < 85) {
+    insight = `預估仲剩 ${formatMoney(vsBudget, trip.targetCurrency)} 緩衝，節奏健康`;
+    insightClass = "text-jade";
+  }
+
+  const barPct = Math.min(100, Math.max(0, pctOfBudget));
+
+  return (
+    <div className="rounded-2xl border border-amber-200/60 bg-gradient-to-br from-[#fffbeb]/90 to-white px-3 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">今日節奏延續預估</p>
+        <span className="rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+          餘 {remainingTripDays} 日 × {formatMoney(todaySum, trip.targetCurrency)}
+        </span>
+      </div>
+      <div className="mt-2 flex items-end justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-semibold text-ink-faint">預估旅程總使費</p>
+          <p className="font-display text-2xl font-black text-ink">{formatMoney(projectedTotal, trip.targetCurrency)}</p>
+          <p className="mt-0.5 text-[10px] font-semibold text-ink-soft">
+            預算 {formatMoney(budget, trip.targetCurrency)}
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-[10px] font-semibold text-ink-faint">{vsBudget >= 0 ? "預估結餘" : "預估超支"}</p>
+          <p className={`font-display text-xl font-black ${vsBudget >= 0 ? "text-jade-deep" : "text-coral"}`}>
+            {formatMoney(Math.abs(vsBudget), trip.targetCurrency)}
+          </p>
+        </div>
+      </div>
+      <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#efe9e0]">
+        <div
+          className={`h-full rounded-full transition-all ${pctOfBudget >= 100 ? "bg-coral" : pctOfBudget >= 90 ? "bg-[#f59e0b]" : "bg-jade"}`}
+          style={{ width: `${barPct}%` }}
+        />
+      </div>
+      <p className={`mt-2 text-center text-[11px] font-semibold ${insightClass}`}>{insight}</p>
+    </div>
+  );
+}
+
 export function TodayCategoryChips({ trip, expenses, filterCategory, setFilterCategory }) {
   const todayId = toDateId(new Date());
 
