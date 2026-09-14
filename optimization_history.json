@@ -232,6 +232,13 @@
       "title": "單筆最高消費",
       "description": "突出本旅程最大一筆開支，方便回顧大手消費。",
       "cycle": true
+    },
+    {
+      "date": "1970-01-01",
+      "id": "today-pace-projection",
+      "title": "今日節奏延續預估",
+      "description": "假設餘下旅程每日都跟今日使費，預估總支出同距離預算仲有几遠，購物前心里有底。",
+      "backfill": true
     }
   ]
 }
