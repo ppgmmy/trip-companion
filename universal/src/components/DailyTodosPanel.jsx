@@ -99,6 +99,10 @@ export default function DailyTodosPanel() {
   const log = store.log || {};
   const todayDone = useMemo(() => new Set(Array.isArray(log[todayId]) ? log[todayId] : []), [log, todayId]);
   const stats = useMemo(() => dailyTodosMonthStats(templates, log, todayId), [templates, log, todayId]);
+  const habitStatsById = useMemo(
+    () => Object.fromEntries((stats.perHabit || []).map((h) => [h.id, h])),
+    [stats.perHabit],
+  );
 
   function addTemplate(e) {
     e.preventDefault();
@@ -132,12 +136,11 @@ export default function DailyTodosPanel() {
     });
   }
 
-  const todayAllDone = templates.length > 0 && templates.every((item) => todayDone.has(item.id));
   const doneCount = templates.filter((item) => todayDone.has(item.id)).length;
 
   return (
     <div className="space-y-2">
-      <SectionCard title="今月完成紀錄" hint={`${stats.monthLabel} · 全日打勾算 1 日`}>
+      <SectionCard title="今月完成紀錄" hint={`${stats.monthLabel} · 每項獨立計算`}>
         <div className="flex items-center gap-3 p-2.5">
           <div
             className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full"
@@ -151,25 +154,23 @@ export default function DailyTodosPanel() {
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-[13px] font-bold text-ink">
-              {stats.perfectDays} / {stats.eligibleDays} 日全完成
+              打勾 {stats.doneChecks} / {stats.possibleChecks} 次
             </p>
             <p className="mt-0.5 text-[10px] leading-snug text-ink-soft">
-              今日 {doneCount}/{templates.length || 0} · 一日全部打勾就計入完成日
+              今日 {doneCount}/{templates.length || 0} · 做一項就計一項，唔使全做晒
             </p>
-            {todayAllDone && (
-              <p className="mt-1 text-[10px] font-bold text-jade-deep">今日已全部完成</p>
-            )}
           </div>
         </div>
       </SectionCard>
 
-      <SectionCard title="今日每日待辦" hint="打勾只記今日 · 聽日重新計">
+      <SectionCard title="今日每日待辦" hint="打勾只記今日 · 聽日重新計 · 每項各自累積">
         <div className="space-y-1 p-2">
           {templates.length === 0 ? (
             <p className="py-1 text-center text-[11px] text-ink-faint">未設定每日項目 · 下面加入</p>
           ) : (
             templates.map((item) => {
               const done = todayDone.has(item.id);
+              const habitStat = habitStatsById[item.id];
               return (
                 <div
                   key={item.id}
@@ -189,9 +190,16 @@ export default function DailyTodosPanel() {
                   <button
                     type="button"
                     onClick={() => toggleToday(item.id)}
-                    className={`min-w-0 flex-1 text-left text-[13px] font-bold ${done ? "text-ink-faint line-through" : "text-ink"}`}
+                    className={`min-w-0 flex-1 text-left ${done ? "text-ink-faint" : "text-ink"}`}
                   >
-                    {item.title}
+                    <span className={`block text-[13px] font-bold ${done ? "line-through" : ""}`}>
+                      {item.title}
+                    </span>
+                    {habitStat && (
+                      <span className="mt-0.5 block text-[9px] font-bold text-ink-faint">
+                        今月 {habitStat.doneDays}/{habitStat.eligibleDays} 日 · {habitStat.pct}%
+                      </span>
+                    )}
                   </button>
                   <button
                     type="button"

@@ -474,18 +474,49 @@ export function monthDateIds(year, month, capAtDateId = null) {
 export function dailyTodosMonthStats(templates, log, todayId = toDateId(new Date())) {
   const list = Array.isArray(templates) ? templates : [];
   if (list.length === 0) {
-    return { eligibleDays: 0, perfectDays: 0, pct: 0, monthLabel: "" };
+    return {
+      eligibleDays: 0,
+      doneChecks: 0,
+      possibleChecks: 0,
+      pct: 0,
+      monthLabel: "",
+      perHabit: [],
+    };
   }
   const [y, m] = todayId.split("-").map(Number);
   const days = monthDateIds(y, m - 1, todayId);
-  let perfectDays = 0;
-  days.forEach((dateId) => {
-    const doneIds = Array.isArray(log?.[dateId]) ? log[dateId] : [];
-    if (list.every((item) => doneIds.includes(item.id))) perfectDays += 1;
-  });
   const eligibleDays = days.length;
-  const pct = eligibleDays > 0 ? Math.round((perfectDays / eligibleDays) * 100) : 0;
-  return { eligibleDays, perfectDays, pct, monthLabel: `${y} 年 ${m} 月` };
+  const doneByHabit = Object.fromEntries(list.map((item) => [item.id, 0]));
+
+  days.forEach((dateId) => {
+    const doneIds = new Set(Array.isArray(log?.[dateId]) ? log[dateId] : []);
+    list.forEach((item) => {
+      if (doneIds.has(item.id)) doneByHabit[item.id] += 1;
+    });
+  });
+
+  const doneChecks = Object.values(doneByHabit).reduce((sum, n) => sum + n, 0);
+  const possibleChecks = eligibleDays * list.length;
+  const pct = possibleChecks > 0 ? Math.round((doneChecks / possibleChecks) * 100) : 0;
+  const perHabit = list.map((item) => {
+    const doneDays = doneByHabit[item.id] || 0;
+    return {
+      id: item.id,
+      title: item.title,
+      doneDays,
+      eligibleDays,
+      pct: eligibleDays > 0 ? Math.round((doneDays / eligibleDays) * 100) : 0,
+    };
+  });
+
+  return {
+    eligibleDays,
+    doneChecks,
+    possibleChecks,
+    pct,
+    monthLabel: `${y} 年 ${m} 月`,
+    perHabit,
+  };
 }
 
 export const SHARED_TODO_MEMBERS = [
