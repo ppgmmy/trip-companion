@@ -251,6 +251,13 @@
       "id": "today-biggest-entry",
       "title": "今日最大單筆",
       "description": "記帳頁突出今日最高一筆消費，顯示分類、備註同佔今日比例，大額支出一眼識別。"
+    },
+    {
+      "date": "2026-09-16",
+      "id": "category-ranking",
+      "title": "分類排行榜",
+      "description": "按金額列出 Top 分類，快速搵到最大使費類別。",
+      "cycle": true
     }
   ]
 }
