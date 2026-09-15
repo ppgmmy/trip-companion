@@ -224,4 +224,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "假設餘下旅程每日都跟今日使費，預估總支出同距離預算仲有几遠，購物前心里有底。",
     pillar: "stickiness",
   },
+  {
+    id: "today-biggest-entry",
+    title: "今日最大單筆",
+    description: "記帳頁突出今日最高一筆消費，顯示分類、備註同佔今日比例，大額支出一眼識別。",
+    pillar: "convenience",
+  },
 ];

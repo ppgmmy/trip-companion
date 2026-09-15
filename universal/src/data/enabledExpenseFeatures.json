@@ -34,9 +34,10 @@
     "seven-day-logging-dots",
     "today-entry-pace",
     "today-vs-median-day",
-    "today-pace-projection"
+    "today-pace-projection",
+    "today-biggest-entry"
   ],
-  "updatedAt": "2026-09-14T16:18:53.794Z",
-  "lastFeatureId": "seven-day-sparkline",
-  "lastTitle": "近 7 日趨勢"
+  "updatedAt": "2026-09-15T02:15:00.000Z",
+  "lastFeatureId": "today-biggest-entry",
+  "lastTitle": "今日最大單筆"
 }

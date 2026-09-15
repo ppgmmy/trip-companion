@@ -27,6 +27,7 @@ import {
   TodayEntryPacePanel,
   TodayVsMedianDayPanel,
   TodayPaceProjectionPanel,
+  TodayBiggestEntryPanel,
   LedgerSummaryBar,
   PinnedBudgetAlert,
   PayerPaymentBreakdown,
@@ -748,6 +749,8 @@ export default function ExpenseTab({
             <TodayVsMedianDayPanel trip={trip} expenses={expenses} />
 
             <TodayPaceProjectionPanel trip={trip} expenses={expenses} budget={budget} />
+
+            <TodayBiggestEntryPanel trip={trip} expenses={expenses} />
 
             <TodayCategoryChips
               trip={trip}

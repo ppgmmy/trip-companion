@@ -245,6 +245,12 @@
       "title": "近 7 日趨勢",
       "description": "迷你折線圖顯示最近一星期每日使費走勢。",
       "cycle": true
+    },
+    {
+      "date": "2026-09-15",
+      "id": "today-biggest-entry",
+      "title": "今日最大單筆",
+      "description": "記帳頁突出今日最高一筆消費，顯示分類、備註同佔今日比例，大額支出一眼識別。"
     }
   ]
 }

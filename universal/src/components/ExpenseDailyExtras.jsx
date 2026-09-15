@@ -1526,6 +1526,92 @@ export function TodayVsMedianDayPanel({ trip, expenses }) {
   );
 }
 
+export function TodayBiggestEntryPanel({ trip, expenses }) {
+  const todayId = toDateId(new Date());
+
+  const stats = useMemo(() => {
+    const todayEntries = expenses.filter((e) => e.date === todayId);
+    if (!todayEntries.length) return null;
+
+    const top = todayEntries.reduce((best, e) => {
+      const amt = Number(e.amount) || 0;
+      if (!best || amt > Number(best.amount)) return e;
+      return best;
+    }, null);
+    if (!top) return null;
+
+    const todayTotal = sumByDate(expenses, todayId);
+    const topAmount = Number(top.amount) || 0;
+    const share = todayTotal > 0 ? (topAmount / todayTotal) * 100 : 0;
+    const cat = EXPENSE_CATEGORIES.find((c) => c.id === top.categoryId);
+    const entryCount = todayEntries.length;
+
+    return { top, todayTotal, topAmount, share, cat, entryCount };
+  }, [expenses, todayId]);
+
+  if (!isFeatureEnabled("today-biggest-entry")) return null;
+  if (!stats) return null;
+
+  const { top, todayTotal, topAmount, share, cat, entryCount } = stats;
+  const meta = expenseMetaLine(top);
+  const isDominant = share >= 55 && entryCount >= 2;
+
+  let insight = entryCount === 1 ? "今日只得一筆，就係呢個數" : `佔今日使費 ${Math.round(share)}%`;
+  let insightClass = "text-ink-soft";
+  if (isDominant) {
+    insight = `今日 ${Math.round(share)}% 使費集中喺呢一筆，留意大額`;
+    insightClass = "text-[#b45309]";
+  } else if (share >= 40 && entryCount >= 3) {
+    insight = "今日有幾筆細項，呢筆係最大頭";
+    insightClass = "text-jade-deep";
+  }
+
+  return (
+    <div
+      className={`rounded-2xl border px-3 py-2.5 shadow-[var(--shadow-soft)] ${
+        isDominant
+          ? "border-coral/25 bg-gradient-to-br from-[#fff5f3]/95 to-white"
+          : "border-jade/15 bg-gradient-to-br from-white to-jade-soft/25"
+      }`}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">今日最大單筆</p>
+        <span className="rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-bold text-ink-soft">
+          今日 {entryCount} 筆 · {formatMoney(todayTotal, trip.targetCurrency)}
+        </span>
+      </div>
+      <div className="mt-2 flex items-start gap-3">
+        <div
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-lg font-black text-white shadow-sm"
+          style={{ backgroundColor: cat?.color || "#0d9488" }}
+          aria-hidden
+        >
+          {(cat?.label || "?").slice(0, 1)}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="font-display text-2xl font-black leading-none text-ink">
+            {formatMoney(topAmount, trip.targetCurrency)}
+          </p>
+          <p className="mt-1 truncate text-sm font-semibold text-ink">
+            {cat?.label || "其他"}
+            {top.note ? ` · ${top.note}` : ""}
+          </p>
+          {meta && <p className="mt-0.5 truncate text-[10px] font-semibold text-ink-faint">{meta}</p>}
+        </div>
+        {entryCount >= 2 && (
+          <div className="shrink-0 text-right">
+            <p className="text-[10px] font-semibold text-ink-faint">佔今日</p>
+            <p className={`font-display text-xl font-black ${isDominant ? "text-coral" : "text-jade-deep"}`}>
+              {Math.round(share)}%
+            </p>
+          </div>
+        )}
+      </div>
+      <p className={`mt-2 text-center text-[11px] font-semibold ${insightClass}`}>{insight}</p>
+    </div>
+  );
+}
+
 export function TodayPaceProjectionPanel({ trip, expenses, budget }) {
   const todayId = toDateId(new Date());
 
