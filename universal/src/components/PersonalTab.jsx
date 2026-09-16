@@ -17,7 +17,8 @@ import DailyTodosPanel from "./DailyTodosPanel";
 import SharedTodoPanel from "./SharedTodoPanel";
 
 const PERSONAL_VIEWS = [
-  { id: "mine", label: "行程", hint: "個人行程／日程時間表" },
+  { id: "mine", label: "行程", hint: "月曆＋近 7 日日程" },
+  { id: "log", label: "Log", hint: "完整行程紀錄 · 可改可刪" },
   { id: "daily", label: "每日", hint: "每日習慣＋本月%" },
   { id: "shared", label: "To-Do", hint: "共用 To-Do List（C M S P）" },
 ];
@@ -166,8 +167,7 @@ function SectionCard({ title, hint, action, children, className = "" }) {
   );
 }
 
-function TimetableItem({ item, todayId, onToggle, onRemove, onPostpone }) {
-  const kind = KINDS.find((k) => k.id === item.kind) || KINDS[0];
+function TimetableItem({ item, todayId, onToggle, onRemove, onPostpone, onEdit }) {
   const isEvent = item.kind === "event";
   const startDate = personalTodoStartDate(item);
   const tier = isEvent ? null : todoPriorityTier(startDate, todayId);
@@ -202,8 +202,12 @@ function TimetableItem({ item, todayId, onToggle, onRemove, onPostpone }) {
           {activeLabel}
         </span>
       )}
-      <button type="button" onClick={() => onToggle(item.id)} className="min-w-0 flex-1 text-left active:opacity-80">
-        <p className={`truncate text-[11px] font-bold ${item.done ? "text-ink-faint line-through" : "text-ink"}`}>
+      <button
+        type="button"
+        onClick={() => (onEdit ? onEdit(item) : onToggle(item.id))}
+        className="min-w-0 flex-1 text-left active:opacity-80"
+      >
+        <p className={`break-words text-[11px] font-bold leading-snug ${item.done ? "text-ink-faint line-through" : "text-ink"}`}>
           {item.title}
         </p>
         {!isEvent && !item.done && (
@@ -212,6 +216,16 @@ function TimetableItem({ item, todayId, onToggle, onRemove, onPostpone }) {
           </p>
         )}
       </button>
+      {isEvent && onEdit && (
+        <button
+          type="button"
+          onClick={() => onEdit(item)}
+          className="shrink-0 rounded px-1 py-0.5 text-[9px] font-bold text-jade-deep active:scale-95"
+          aria-label="編輯"
+        >
+          改
+        </button>
+      )}
       {!item.done && isEvent && onPostpone && (
         <button
           type="button"
@@ -234,7 +248,7 @@ function TimetableItem({ item, todayId, onToggle, onRemove, onPostpone }) {
   );
 }
 
-function ItemGroup({ label, items, todayId, onToggle, onRemove, onPostpone, muted = false }) {
+function ItemGroup({ label, items, todayId, onToggle, onRemove, onPostpone, onEdit, muted = false }) {
   if (items.length === 0) return null;
   return (
     <div className={muted ? "opacity-80" : ""}>
@@ -248,6 +262,7 @@ function ItemGroup({ label, items, todayId, onToggle, onRemove, onPostpone, mute
             onToggle={onToggle}
             onRemove={onRemove}
             onPostpone={onPostpone}
+            onEdit={onEdit}
           />
         ))}
       </div>
@@ -255,7 +270,7 @@ function ItemGroup({ label, items, todayId, onToggle, onRemove, onPostpone, mute
   );
 }
 
-function ActiveTodosPanel({ items, todayId, showCompleted, onToggle, onRemove }) {
+function ActiveTodosPanel({ items, todayId, showCompleted, onToggle, onRemove, onEdit }) {
   const active = activeTodos(items, todayId);
   const doneTodos = items.filter((item) => item.kind === "todo" && item.done);
 
@@ -266,7 +281,14 @@ function ActiveTodosPanel({ items, todayId, showCompleted, onToggle, onRemove })
           <p className="text-center text-[11px] text-ink-faint">無進行中待辦</p>
         ) : (
           active.map((item) => (
-            <TimetableItem key={item.id} item={item} todayId={todayId} onToggle={onToggle} onRemove={onRemove} />
+            <TimetableItem
+              key={item.id}
+              item={item}
+              todayId={todayId}
+              onToggle={onToggle}
+              onRemove={onRemove}
+              onEdit={onEdit}
+            />
           ))
         )}
         {showCompleted && doneTodos.length > 0 && (
@@ -276,6 +298,7 @@ function ActiveTodosPanel({ items, todayId, showCompleted, onToggle, onRemove })
             todayId={todayId}
             onToggle={onToggle}
             onRemove={onRemove}
+            onEdit={onEdit}
             muted
           />
         )}
@@ -298,6 +321,7 @@ function DayBlock({
   onToggle,
   onRemove,
   onPostpone,
+  onEdit,
   todayId,
 }) {
   const dayEvents = eventsForDate(items, dateId);
@@ -336,6 +360,7 @@ function DayBlock({
             onToggle={onToggle}
             onRemove={onRemove}
             onPostpone={onPostpone}
+            onEdit={onEdit}
           />
           {showCompleted && (
             <ItemGroup
@@ -345,6 +370,7 @@ function DayBlock({
               onToggle={onToggle}
               onRemove={onRemove}
               onPostpone={onPostpone}
+              onEdit={onEdit}
               muted
             />
           )}
@@ -371,6 +397,7 @@ function SevenDayTimetable({
   onToggle,
   onRemove,
   onPostpone,
+  onEdit,
   todayId,
 }) {
   return (
@@ -417,9 +444,104 @@ function SevenDayTimetable({
             onToggle={onToggle}
             onRemove={onRemove}
             onPostpone={onPostpone}
+            onEdit={onEdit}
             todayId={todayId}
           />
         ))}
+      </div>
+    </SectionCard>
+  );
+}
+
+function ItineraryLog({
+  items,
+  todayId,
+  filter,
+  onFilterChange,
+  onToggle,
+  onRemove,
+  onPostpone,
+  onEdit,
+}) {
+  const events = useMemo(
+    () =>
+      sortEvents(items.filter((item) => item.kind === "event")).sort((a, b) => {
+        if (a.date !== b.date) return b.date.localeCompare(a.date);
+        return (a.time || "99:99").localeCompare(b.time || "99:99");
+      }),
+    [items],
+  );
+
+  const filtered = useMemo(() => {
+    if (filter === "past") return events.filter((item) => item.date < todayId);
+    if (filter === "upcoming") return events.filter((item) => item.date >= todayId);
+    return events;
+  }, [events, filter, todayId]);
+
+  const groups = useMemo(() => {
+    const map = new Map();
+    filtered.forEach((item) => {
+      if (!map.has(item.date)) map.set(item.date, []);
+      map.get(item.date).push(item);
+    });
+    return [...map.entries()];
+  }, [filtered]);
+
+  const filters = [
+    { id: "all", label: "全部" },
+    { id: "past", label: "以往" },
+    { id: "upcoming", label: "將嚟" },
+  ];
+
+  return (
+    <SectionCard
+      title="行程 Log"
+      hint="完整紀錄 · 可改可刪 · 唔使靠月曆格仔"
+      action={
+        <div className="flex shrink-0 items-center gap-1">
+          {filters.map((f) => (
+            <button
+              key={f.id}
+              type="button"
+              onClick={() => onFilterChange(f.id)}
+              className={`rounded-lg border px-1.5 py-0.5 text-[9px] font-bold active:scale-[0.98] ${
+                filter === f.id ? "border-jade bg-jade-soft/60 text-jade-deep" : "border-jade/15 bg-white text-ink-soft"
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      }
+    >
+      <div className="max-h-[70dvh] divide-y divide-jade/10 overflow-y-auto">
+        {groups.length === 0 ? (
+          <p className="px-2.5 py-4 text-center text-[11px] text-ink-faint">
+            {filter === "past" ? "未有以往行程紀錄" : filter === "upcoming" ? "未有將嚟行程" : "未有行程紀錄"}
+          </p>
+        ) : (
+          groups.map(([dateId, dayItems]) => (
+            <div key={dateId} className="px-2.5 py-1.5">
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <p className="text-[12px] font-bold text-ink">{formatPersonalDayLabel(dateId)}</p>
+                <p className="text-[9px] font-bold text-ink-faint">{dayItems.length} 項</p>
+              </div>
+              <div className="space-y-0.5">
+                {dayItems.map((item) => (
+                  <TimetableItem
+                    key={item.id}
+                    item={item}
+                    todayId={todayId}
+                    onToggle={onToggle}
+                    onRemove={onRemove}
+                    onPostpone={dateId >= todayId ? onPostpone : undefined}
+                    onEdit={onEdit}
+                  />
+                ))}
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </SectionCard>
   );
@@ -601,7 +723,7 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
           kind: "event",
           filterKind: "event",
           showCompleted: Boolean(base.showCompleted),
-          section: ["mine", "daily", "shared"].includes(base.section) ? base.section : "mine",
+          section: ["mine", "log", "daily", "shared"].includes(base.section) ? base.section : "mine",
         };
       },
     },
@@ -610,6 +732,8 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
   const [kind, setKind] = useState("event");
   const [filterKind, setFilterKind] = useState("event");
   const [showCompleted, setShowCompleted] = useState(Boolean(personalUi.showCompleted));
+  const [logFilter, setLogFilter] = useState("all");
+  const [editingId, setEditingId] = useState(null);
   const [title, setTitle] = useState("");
   const [entryDate, setEntryDate] = useState(todayId);
   const [entryTime, setEntryTime] = useState("");
@@ -667,7 +791,7 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
   }, [selectedDate, viewMonth, kind, filterKind, showCompleted, section, setPersonalUi]);
 
   useEffect(() => {
-    if (section === "mine") {
+    if (section === "mine" || section === "log") {
       setKind("event");
       setFilterKind("event");
       setEntryTime((t) => t || nextRoundedHour());
@@ -720,6 +844,26 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
     }
     setTimeError(false);
     const startDate = entryDate || todayId;
+    if (editingId) {
+      setPersonal((prev) =>
+        (Array.isArray(prev) ? prev : []).map((item) =>
+          item.id === editingId
+            ? {
+                ...item,
+                title: trimmed,
+                date: startDate,
+                time: entryTime.trim(),
+                kind: "event",
+              }
+            : item,
+        ),
+      );
+      setEditingId(null);
+      setTitle("");
+      selectDay(startDate);
+      setAddFormOpen(false);
+      return;
+    }
     const entry = {
       id: uid("personal"),
       title: trimmed,
@@ -734,6 +878,29 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
     setTitle("");
     selectDay(entry.date);
     titleRef.current?.focus({ preventScroll: true });
+  }
+
+  function startEdit(item) {
+    if (!item || item.kind !== "event") return;
+    setEditingId(item.id);
+    setTitle(item.title || "");
+    setEntryDate(item.date || todayId);
+    setEntryTime(item.time || nextRoundedHour());
+    setSelectedDate(item.date || todayId);
+    setKind("event");
+    setTimeError(false);
+    setAddFormOpen(true);
+    // 喺 Log 欄改就留喺 Log；喺行程欄改就留喺行程，避免跳嚟跳去
+    window.setTimeout(() => {
+      formRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      titleRef.current?.focus({ preventScroll: true });
+    }, 40);
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setTitle("");
+    setTimeError(false);
   }
 
   function toggleItem(id) {
@@ -753,6 +920,7 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
   function removeItem(id) {
     const before = items;
     setPersonal((prev) => (Array.isArray(prev) ? prev : []).filter((item) => item.id !== id));
+    if (editingId === id) cancelEdit();
     undoRef.current = before;
     setToast({ message: "已刪除", undo: true });
     window.setTimeout(() => setToast(null), 5000);
@@ -766,15 +934,149 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
 
   const activeView = PERSONAL_VIEWS.find((v) => v.id === section) || PERSONAL_VIEWS[0];
 
+  const sectionTitle =
+    section === "mine" ? "行程" : section === "log" ? "Log" : section === "shared" ? "To-Do" : section === "daily" ? "每日" : "個人";
+
+  function renderAddForm() {
+    if (!addFormOpen) {
+      return (
+        <button
+          type="button"
+          onClick={() => {
+            cancelEdit();
+            setAddFormOpen(true);
+          }}
+          className="h-9 w-full rounded-xl border border-dashed border-jade/25 bg-white text-[13px] font-bold text-jade-deep active:scale-[0.99]"
+        >
+          + 新增行程
+        </button>
+      );
+    }
+    return (
+      <SectionCard
+        title={editingId ? "編輯行程" : "新增行程"}
+        hint={editingId ? "改完撳儲存 · 以往日子都得" : "必填時間 · 可揀以往日子"}
+        action={
+          <button
+            type="button"
+            onClick={() => {
+              cancelEdit();
+              setAddFormOpen(false);
+            }}
+            className="rounded-md border border-jade/15 bg-white px-1.5 py-0.5 text-[9px] font-bold text-ink-soft"
+          >
+            收起
+          </button>
+        }
+      >
+        <form ref={formRef} onSubmit={addItem} className="space-y-1.5 p-2">
+          <input
+            ref={titleRef}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="幾時做咩？例如：食飯、開會…"
+            className="h-8 w-full rounded-lg border border-jade/15 bg-mist px-2.5 text-[13px] outline-none ring-jade focus:ring-2"
+          />
+
+          <div className="grid grid-cols-[1fr_auto] gap-1.5">
+            <div>
+              <div className="mb-1 flex gap-1">
+                {[
+                  { label: "今日", offset: 0 },
+                  { label: "明日", offset: 1 },
+                  { label: "後日", offset: 2 },
+                ].map(({ label, offset }) => {
+                  const dateId = shiftDateId(todayId, offset);
+                  const active = entryDate === dateId;
+                  return (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={() => {
+                        setEntryDate(dateId);
+                        setSelectedDate(dateId);
+                      }}
+                      className={`min-h-6 flex-1 rounded-md border text-[10px] font-bold active:scale-[0.98] ${
+                        active ? "border-jade bg-jade-soft/60 text-jade-deep" : "border-jade/15 bg-white text-ink-soft"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+              <input
+                type="date"
+                value={entryDate}
+                onChange={(e) => {
+                  setEntryDate(e.target.value);
+                  if (kind === "event") setSelectedDate(e.target.value);
+                }}
+                className="h-8 w-full rounded-lg border border-jade/15 bg-mist px-2 text-[11px] outline-none ring-jade focus:ring-2"
+              />
+            </div>
+            <div className="w-[6.5rem]">
+              <input
+                type="time"
+                value={entryTime}
+                onChange={(e) => {
+                  setEntryTime(e.target.value);
+                  setTimeError(false);
+                }}
+                required
+                className={`h-8 w-full rounded-lg border bg-mist px-1.5 text-[11px] outline-none ring-jade focus:ring-2 ${
+                  timeError ? "border-coral ring-coral" : "border-jade/15"
+                }`}
+              />
+              {timeError && <p className="mt-0.5 text-[9px] font-bold text-coral">要時間</p>}
+              <div className="mt-1 flex flex-wrap gap-0.5">
+                {TIME_PRESETS.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => {
+                      setEntryTime(t);
+                      setTimeError(false);
+                    }}
+                    className={`rounded border px-1 py-px text-[9px] font-bold active:scale-95 ${
+                      entryTime === t
+                        ? "border-jade bg-jade-soft/60 text-jade-deep"
+                        : "border-jade/15 bg-white text-ink-soft"
+                    }`}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-1.5">
+            {editingId && (
+              <button
+                type="button"
+                onClick={cancelEdit}
+                className="h-8 flex-1 rounded-lg border border-jade/15 bg-white text-[13px] font-bold text-ink-soft"
+              >
+                取消
+              </button>
+            )}
+            <button type="submit" className="h-8 flex-[2] rounded-lg bg-jade text-[13px] font-bold text-white">
+              {editingId ? "儲存修改" : "加入行程"}
+            </button>
+          </div>
+        </form>
+      </SectionCard>
+    );
+  }
+
   return (
     <div className="space-y-2">
       {toast && <UndoToast message={toast.message} onUndo={toast.undo ? undoRemove : null} />}
 
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
-          <h2 className="font-display text-base font-bold leading-tight text-ink">
-            {section === "mine" ? "行程" : section === "shared" ? "To-Do" : section === "daily" ? "每日" : "個人"}
-          </h2>
+          <h2 className="font-display text-base font-bold leading-tight text-ink">{sectionTitle}</h2>
           <p className="truncate text-[10px] text-ink-faint">{activeView.hint}</p>
         </div>
         {section === "mine" && (
@@ -788,13 +1090,13 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
         )}
       </div>
 
-      <div className="grid grid-cols-3 gap-1">
+      <div className="grid grid-cols-4 gap-1">
         {PERSONAL_VIEWS.map((v) => (
           <button
             key={v.id}
             type="button"
             onClick={() => setSection(v.id)}
-            className={`min-h-8 rounded-lg border px-1.5 text-[11px] font-bold transition active:scale-[0.98] ${
+            className={`min-h-8 rounded-lg border px-1 text-[11px] font-bold transition active:scale-[0.98] ${
               section === v.id ? "badge-active border-transparent" : "border-jade/15 bg-white text-ink-soft"
             }`}
           >
@@ -805,6 +1107,22 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
 
       {section === "daily" && <DailyTodosPanel />}
       {section === "shared" && <SharedTodoPanel />}
+
+      {section === "log" && (
+        <>
+          <ItineraryLog
+            items={items}
+            todayId={todayId}
+            filter={logFilter}
+            onFilterChange={setLogFilter}
+            onToggle={toggleItem}
+            onRemove={removeItem}
+            onPostpone={postponeItem}
+            onEdit={startEdit}
+          />
+          {renderAddForm()}
+        </>
+      )}
 
       {section === "mine" && (
         <>
@@ -834,6 +1152,28 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
         />
       )}
 
+      {!sevenDayHorizon.includes(selectedDate) && (
+        <SectionCard
+          title={selectedDate < todayId ? "選中以往日子" : "選中日子"}
+          hint="以往行程一樣可以改同刪"
+        >
+          <DayBlock
+            dateId={selectedDate}
+            items={items}
+            tripItems={itineraryForDate(tripItinerary, selectedDate)}
+            tripLabel={tripLabel}
+            showCompleted
+            active
+            onSelectDay={selectDay}
+            onToggle={toggleItem}
+            onRemove={removeItem}
+            onPostpone={postponeItem}
+            onEdit={startEdit}
+            todayId={todayId}
+          />
+        </SectionCard>
+      )}
+
       <SevenDayTimetable
           horizon={sevenDayHorizon}
           items={items}
@@ -848,119 +1188,11 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
           onToggle={toggleItem}
           onRemove={removeItem}
           onPostpone={postponeItem}
+          onEdit={startEdit}
           todayId={todayId}
         />
 
-      {!addFormOpen ? (
-        <button
-          type="button"
-          onClick={() => setAddFormOpen(true)}
-          className="h-9 w-full rounded-xl border border-dashed border-jade/25 bg-white text-[13px] font-bold text-jade-deep active:scale-[0.99]"
-        >
-          + 新增行程
-        </button>
-      ) : (
-        <SectionCard
-          title="新增行程"
-          hint="必填時間"
-          action={
-            <button
-              type="button"
-              onClick={() => setAddFormOpen(false)}
-              className="rounded-md border border-jade/15 bg-white px-1.5 py-0.5 text-[9px] font-bold text-ink-soft"
-            >
-              收起
-            </button>
-          }
-        >
-          <form ref={formRef} onSubmit={addItem} className="space-y-1.5 p-2">
-            <input
-              ref={titleRef}
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="幾時做咩？例如：食飯、開會…"
-              className="h-8 w-full rounded-lg border border-jade/15 bg-mist px-2.5 text-[13px] outline-none ring-jade focus:ring-2"
-            />
-
-            <div className="grid grid-cols-[1fr_auto] gap-1.5">
-              <div>
-                <div className="mb-1 flex gap-1">
-                  {[
-                    { label: "今日", offset: 0 },
-                    { label: "明日", offset: 1 },
-                    { label: "後日", offset: 2 },
-                  ].map(({ label, offset }) => {
-                    const dateId = shiftDateId(todayId, offset);
-                    const active = entryDate === dateId;
-                    return (
-                      <button
-                        key={label}
-                        type="button"
-                        onClick={() => {
-                          setEntryDate(dateId);
-                          setSelectedDate(dateId);
-                        }}
-                        className={`min-h-6 flex-1 rounded-md border text-[10px] font-bold active:scale-[0.98] ${
-                          active ? "border-jade bg-jade-soft/60 text-jade-deep" : "border-jade/15 bg-white text-ink-soft"
-                        }`}
-                      >
-                        {label}
-                      </button>
-                    );
-                  })}
-                </div>
-                <input
-                  type="date"
-                  value={entryDate}
-                  onChange={(e) => {
-                    setEntryDate(e.target.value);
-                    if (kind === "event") setSelectedDate(e.target.value);
-                  }}
-                  className="h-8 w-full rounded-lg border border-jade/15 bg-mist px-2 text-[11px] outline-none ring-jade focus:ring-2"
-                />
-              </div>
-              <div className="w-[6.5rem]">
-                <input
-                  type="time"
-                  value={entryTime}
-                  onChange={(e) => {
-                    setEntryTime(e.target.value);
-                    setTimeError(false);
-                  }}
-                  required
-                  className={`h-8 w-full rounded-lg border bg-mist px-1.5 text-[11px] outline-none ring-jade focus:ring-2 ${
-                    timeError ? "border-coral ring-coral" : "border-jade/15"
-                  }`}
-                />
-                {timeError && <p className="mt-0.5 text-[9px] font-bold text-coral">要時間</p>}
-                <div className="mt-1 flex flex-wrap gap-0.5">
-                  {TIME_PRESETS.map((t) => (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => {
-                        setEntryTime(t);
-                        setTimeError(false);
-                      }}
-                      className={`rounded border px-1 py-px text-[9px] font-bold active:scale-95 ${
-                        entryTime === t
-                          ? "border-jade bg-jade-soft/60 text-jade-deep"
-                          : "border-jade/15 bg-white text-ink-soft"
-                      }`}
-                    >
-                      {t}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <button type="submit" className="h-8 w-full rounded-lg bg-jade text-[13px] font-bold text-white">
-              加入行程
-            </button>
-          </form>
-        </SectionCard>
-      )}
+      {renderAddForm()}
         </>
       )}
     </div>

@@ -29,16 +29,22 @@ export default function ItineraryTab({ trip, itinerary, setItinerary }) {
   const [selectedMarkerId, setSelectedMarkerId] = useState(null);
   const [note, setNote] = useState("");
   const [time, setTime] = useState("10:00");
+  const [editingId, setEditingId] = useState(null);
 
   const days = useMemo(() => buildTripDayList(trip), [trip]);
   const activeDayId = dayId && days.some((d) => d.id === dayId) ? dayId : days[0]?.id;
   const activeDay = days.find((d) => d.id === activeDayId) || days[0];
   const dayIndex = activeDay ? activeDay.index - 1 : 0;
+  const userItems = useMemo(
+    () => [...(itinerary?.[activeDayId] || [])].sort((a, b) => String(a.time || "").localeCompare(String(b.time || ""))),
+    [itinerary, activeDayId],
+  );
 
   const dayPlan = useMemo(
     () => (trip && activeDayId ? dayPlanForTrip(trip, activeDayId, dayIndex) : null),
     [trip, activeDayId, dayIndex],
   );
+  const hasSuggestion = Boolean(dayPlan?.slots?.length);
 
   const mapConfig = useMemo(
     () => mapConfigForTrip(trip, dayPlan?.zone),
@@ -65,6 +71,17 @@ export default function ItineraryTab({ trip, itinerary, setItinerary }) {
     e.preventDefault();
     const trimmed = note.trim();
     if (!trimmed || !activeDay) return;
+    if (editingId) {
+      setItinerary((prev) => ({
+        ...prev,
+        [activeDay.id]: [...(prev[activeDay.id] || [])]
+          .map((item) => (item.id === editingId ? { ...item, time, text: trimmed } : item))
+          .sort((a, b) => a.time.localeCompare(b.time)),
+      }));
+      setEditingId(null);
+      setNote("");
+      return;
+    }
     setItinerary((prev) => ({
       ...prev,
       [activeDay.id]: [...(prev[activeDay.id] || []), { id: `it-${Date.now()}`, time, text: trimmed }].sort((a, b) =>
@@ -74,11 +91,23 @@ export default function ItineraryTab({ trip, itinerary, setItinerary }) {
     setNote("");
   }
 
+  function startEdit(item) {
+    setEditingId(item.id);
+    setNote(item.text || "");
+    setTime(item.time || "10:00");
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setNote("");
+  }
+
   function removeItem(dayIdStr, itemId) {
     setItinerary((prev) => ({
       ...prev,
       [dayIdStr]: (prev[dayIdStr] || []).filter((x) => x.id !== itemId),
     }));
+    if (editingId === itemId) cancelEdit();
   }
 
   function focusOnMap(markerId) {
@@ -209,7 +238,9 @@ export default function ItineraryTab({ trip, itinerary, setItinerary }) {
       )}
 
       <section className="space-y-2">
-        <p className="text-[11px] font-bold uppercase tracking-wider text-ink-faint">我的手動行程</p>
+        <p className="text-[11px] font-bold uppercase tracking-wider text-ink-faint">
+          我的手動行程{activeDayId && activeDayId < todayId ? " · 以往日子都可改可刪" : ""}
+        </p>
         <form onSubmit={addItem} className="flex gap-2 rounded-3xl bg-white/85 p-3 shadow-[var(--shadow-soft)]">
           <input
             type="time"
@@ -220,11 +251,20 @@ export default function ItineraryTab({ trip, itinerary, setItinerary }) {
           <input
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="加一項行程"
+            placeholder={editingId ? "修改呢項行程" : "加一項行程"}
             className="h-11 min-w-0 flex-1 rounded-2xl border border-jade/15 bg-mist px-3 text-sm outline-none ring-jade focus:ring-2"
           />
+          {editingId && (
+            <button
+              type="button"
+              onClick={cancelEdit}
+              className="h-11 shrink-0 rounded-2xl border border-jade/15 bg-white px-3 text-sm font-bold text-ink-soft"
+            >
+              取消
+            </button>
+          )}
           <button type="submit" className="h-11 shrink-0 rounded-2xl bg-jade px-4 text-sm font-bold text-white transition active:scale-95">
-            加
+            {editingId ? "儲存" : "加"}
           </button>
         </form>
 
@@ -235,9 +275,22 @@ export default function ItineraryTab({ trip, itinerary, setItinerary }) {
             </li>
           ) : (
             userItems.map((item) => (
-              <li key={item.id} className="flex items-center gap-3 rounded-2xl bg-white/85 px-4 py-3 shadow-[var(--shadow-soft)]">
+              <li
+                key={item.id}
+                className={`flex items-center gap-3 rounded-2xl px-4 py-3 shadow-[var(--shadow-soft)] ${
+                  editingId === item.id ? "bg-jade-soft/50 ring-2 ring-jade/25" : "bg-white/85"
+                }`}
+              >
                 <span className="w-12 shrink-0 text-xs font-bold text-jade-deep">{item.time}</span>
-                <span className="min-w-0 flex-1 text-sm text-ink">{item.text}</span>
+                <span className="min-w-0 flex-1 break-words text-sm text-ink">{item.text}</span>
+                <button
+                  type="button"
+                  onClick={() => startEdit(item)}
+                  className="shrink-0 rounded-lg px-2 py-1 text-[11px] font-bold text-jade-deep active:scale-95"
+                  aria-label="編輯"
+                >
+                  改
+                </button>
                 <button
                   type="button"
                   onClick={() => removeItem(activeDay.id, item.id)}
