@@ -56,14 +56,17 @@ function slot(kind, time, title, detail, area, maps) {
 /** 大阪堺筋本町基地 · 8/30–9/10（食→景→食→景） */
 const OSAKA_CURATED = {
   "2026-08-30": {
-    title: "安頓堺筋本町",
-    vibe: "熟悉基地＋心齋橋",
+    title: "香港出發 → 大阪安頓",
+    vibe: "凌晨出門 · 關西機場 · 堺筋本町 check-in · 心齋橋 LUUP",
     zone: "hommachi",
     slots: [
-      slot("food", "10:30", "本町／心齋橋 Cafe", "堺筋本町步行或一站到心齋橋，先飲咖啡食輕食", "堺筋本町", "cafes near Sakaisuji-Hommachi Station Osaka"),
-      slot("spot", "13:30", "心齋橋筋商店街", "拱廊逛街，藥妝同服飾集中", "心齋橋", "Shinsaibashi-suji Shopping Street Osaka"),
-      slot("food", "17:00", "道頓堀午餐", "章魚燒、大阪燒或拉麵", "道頓堀", "Dotonbori food Osaka"),
-      slot("spot", "19:30", "道頓堀夜景", "固力果招牌同霓虹河散步", "道頓堀", "Dotonbori Osaka"),
+      slot("spot", "04:30", "NA52 → 機場 T2", "凌晨起床出門，搭 NA52 巴士去機場 Terminal 2", "香港", "Hong Kong Airport Terminal 2"),
+      slot("food", "05:30", "N記熱香餅", "完成登機登記後食早餐", "香港機場", "restaurants Hong Kong Airport Terminal 2"),
+      slot("spot", "08:15", "起飛香港", "前往大阪；過關後喺 200 幾號閘口一帶等機", "空中", "Kansai Airport Osaka"),
+      slot("spot", "13:15", "抵達關西機場", "早到約一小時；南海電鐵入市", "關西機場", "Kansai Airport Nankai Railway"),
+      slot("spot", "15:00", "酒店 check-in", "難波→日本橋→堺筋本町 12 號出口 · Daiwa Roynet Premier · 1011 房", "堺筋本町", "Daiwa Roynet Hotel Premier Sakaisuji-Hommachi"),
+      slot("spot", "16:00", "心齋橋＋LUUP", "行心齋橋由頭到中、租 LUUP 滑板／電動單車踩", "心齋橋", "Shinsaibashi Osaka LUUP"),
+      slot("food", "19:30", "Sukiya 牛肉飯", "返酒店附近收工食一餐", "堺筋本町", "Sukiya Sakaisuji-Hommachi Osaka"),
     ],
   },
   "2026-08-31": {

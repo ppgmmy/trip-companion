@@ -3,6 +3,12 @@ import { REGISTRY_KEYS, tripKey, TRIP_SECTIONS } from "./storage";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 import { useExchangeRate } from "./hooks/useExchangeRate";
 import { uid, toDateId, normalizeExpensePayer, personalTodoStartDate } from "./data";
+import {
+  isOsakaTrip,
+  mergeOsakaDayFootprints,
+  mergeOsakaDayItinerary,
+  osakaLogSeedKey,
+} from "./data/osakaTripLog";
 import TripSwitcher from "./components/TripSwitcher";
 import TripForm from "./components/TripForm";
 import BottomNav from "./components/BottomNav";
@@ -117,6 +123,25 @@ export default function App() {
     false,
     { migrate: (v) => v === true || v === "true" || v === 1 },
   );
+
+  // 大阪旅程：種入 8/30 真實出發日紀錄（行程＋足跡）；8/31–9/10 之後再補
+  useEffect(() => {
+    if (!tripId || !activeTrip || !isOsakaTrip(activeTrip)) return;
+    try {
+      if (localStorage.getItem(osakaLogSeedKey(tripId)) === "1") return;
+      localStorage.setItem(osakaLogSeedKey(tripId), "1");
+    } catch {
+      return;
+    }
+    setItinerary((prev) => {
+      const { itinerary: next, changed } = mergeOsakaDayItinerary(prev);
+      return changed ? next : prev;
+    });
+    setSpots((prev) => {
+      const { spots: next, changed } = mergeOsakaDayFootprints(prev);
+      return changed ? next : prev;
+    });
+  }, [tripId, activeTrip, setItinerary, setSpots]);
 
   const { status: fxStatus, refresh: refreshRate } = useExchangeRate(activeTrip, rateState, setRateState);
 
