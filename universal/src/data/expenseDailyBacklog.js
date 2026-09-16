@@ -230,4 +230,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "記帳頁突出今日最高一筆消費，顯示分類、備註同佔今日比例，大額支出一眼識別。",
     pillar: "convenience",
   },
+  {
+    id: "today-vs-seven-day-avg",
+    title: "今日 vs 近 7 日平均",
+    description: "將今日使費同過去 7 日（不含今日）日均對比，附迷你走勢，快速知今日係咪異常消費日。",
+    pillar: "analysis",
+  },
 ];

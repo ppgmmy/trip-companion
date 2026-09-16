@@ -1526,6 +1526,112 @@ export function TodayVsMedianDayPanel({ trip, expenses }) {
   );
 }
 
+export function TodayVsSevenDayAvgPanel({ trip, expenses }) {
+  const todayId = toDateId(new Date());
+
+  const stats = useMemo(() => {
+    const priorDays = Array.from({ length: 7 }, (_, i) => {
+      const dateId = shiftDateId(todayId, -(i + 1));
+      return { dateId, value: sumByDate(expenses, dateId) };
+    }).reverse();
+    const priorValues = priorDays.map((d) => d.value);
+    const priorSum = priorValues.reduce((s, v) => s + v, 0);
+    const avg7 = priorSum / 7;
+    const todaySum = sumByDate(expenses, todayId);
+    const ratio = avg7 > 0 ? todaySum / avg7 : todaySum > 0 ? 2 : 0;
+    const delta = todaySum - avg7;
+    const activePriorDays = priorValues.filter((v) => v > 0).length;
+    return { priorDays, avg7, todaySum, ratio, delta, activePriorDays, priorSum };
+  }, [expenses, todayId]);
+
+  if (!isFeatureEnabled("today-vs-seven-day-avg")) return null;
+
+  const { priorDays, avg7, todaySum, ratio, delta, activePriorDays } = stats;
+  const priorHasData = activePriorDays > 0;
+  if (!priorHasData && todaySum === 0) return null;
+
+  const maxBar = Math.max(avg7, todaySum, ...priorDays.map((d) => d.value), 1);
+  const avgBar = Math.max(6, Math.round((avg7 / maxBar) * 100));
+  const todayBar = Math.max(6, Math.round((todaySum / maxBar) * 100));
+
+  let insight = priorHasData ? "今日同近一週平均接近" : "過去 7 日未記帳，今日係第一個參考點";
+  let insightClass = "text-ink-soft";
+  if (priorHasData && todaySum === 0) {
+    insight = `近 7 日日均約 ${formatMoney(avg7, trip.targetCurrency)}，今日未記帳`;
+    insightClass = "text-ink-faint";
+  } else if (priorHasData && ratio >= 1.45) {
+    insight = `比近 7 日平均多 ${formatMoney(delta, trip.targetCurrency)}，今日明顯偏高`;
+    insightClass = "text-coral";
+  } else if (priorHasData && ratio >= 1.12) {
+    insight = `略高過近 7 日平均 ${formatMoney(delta, trip.targetCurrency)}`;
+    insightClass = "text-[#b45309]";
+  } else if (priorHasData && ratio <= 0.7 && todaySum > 0) {
+    insight = `慳咗 ${formatMoney(-delta, trip.targetCurrency)}，低過近一週平均`;
+    insightClass = "text-jade-deep";
+  } else if (priorHasData && ratio <= 0.88 && todaySum > 0) {
+    insight = `比近 7 日平均少 ${formatMoney(-delta, trip.targetCurrency)}，節奏健康`;
+    insightClass = "text-jade";
+  }
+
+  const sparkMax = Math.max(...priorDays.map((d) => d.value), todaySum, 1);
+
+  return (
+    <div className="rounded-2xl border border-jade/10 bg-gradient-to-br from-white to-[#f0f9ff]/40 px-3 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">今日 vs 近 7 日平均</p>
+        <span className="rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-bold text-ink-soft">
+          {activePriorDays}/7 日有記帳
+        </span>
+      </div>
+      <div className="mt-2 flex items-end gap-0.5">
+        {priorDays.map((day) => {
+          const h = day.value > 0 ? Math.max(4, Math.round((day.value / sparkMax) * 36)) : 3;
+          return (
+            <div key={day.dateId} className="flex min-w-0 flex-1 flex-col items-center gap-0.5">
+              <div
+                className={`w-full max-w-[18px] rounded-t-md ${day.value > 0 ? "bg-jade/45" : "bg-[#efe9e0]"}`}
+                style={{ height: `${h}px` }}
+                title={`${formatShortDate(day.dateId)} · ${formatMoney(day.value, trip.targetCurrency)}`}
+              />
+              <span className="text-[8px] font-bold text-ink-faint">{weekdayLabel(day.dateId)}</span>
+            </div>
+          );
+        })}
+        <div className="flex min-w-0 flex-1 flex-col items-center gap-0.5">
+          <div
+            className={`w-full max-w-[18px] rounded-t-md ${todaySum > 0 ? "bg-coral/80" : "bg-[#efe9e0]"}`}
+            style={{ height: `${todaySum > 0 ? Math.max(4, Math.round((todaySum / sparkMax) * 36)) : 3}px` }}
+            title={`今日 · ${formatMoney(todaySum, trip.targetCurrency)}`}
+          />
+          <span className="text-[8px] font-bold text-coral">今</span>
+        </div>
+      </div>
+      <div className="mt-2.5 grid grid-cols-2 gap-2">
+        <div>
+          <p className="text-[10px] font-semibold text-ink-faint">近 7 日日均</p>
+          <p className="font-display text-lg font-black text-ink">
+            {priorHasData ? formatMoney(avg7, trip.targetCurrency) : "—"}
+          </p>
+          <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-[#efe9e0]">
+            <div className="h-full rounded-full bg-ink-faint/35" style={{ width: `${avgBar}%` }} />
+          </div>
+        </div>
+        <div>
+          <p className="text-[10px] font-semibold text-jade-deep">今日</p>
+          <p className="font-display text-lg font-black text-ink">{formatMoney(todaySum, trip.targetCurrency)}</p>
+          <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-[#efe9e0]">
+            <div
+              className={`h-full rounded-full ${ratio > 1.12 ? "bg-coral" : ratio < 0.88 && todaySum > 0 ? "bg-jade" : "bg-jade/70"}`}
+              style={{ width: `${todayBar}%` }}
+            />
+          </div>
+        </div>
+      </div>
+      <p className={`mt-2 text-center text-[11px] font-semibold ${insightClass}`}>{insight}</p>
+    </div>
+  );
+}
+
 export function TodayBiggestEntryPanel({ trip, expenses }) {
   const todayId = toDateId(new Date());
 

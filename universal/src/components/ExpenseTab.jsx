@@ -26,6 +26,7 @@ import {
   SevenDayLoggingDots,
   TodayEntryPacePanel,
   TodayVsMedianDayPanel,
+  TodayVsSevenDayAvgPanel,
   TodayPaceProjectionPanel,
   TodayBiggestEntryPanel,
   LedgerSummaryBar,
@@ -747,6 +748,8 @@ export default function ExpenseTab({
             <TodayEntryPacePanel trip={trip} expenses={expenses} />
 
             <TodayVsMedianDayPanel trip={trip} expenses={expenses} />
+
+            <TodayVsSevenDayAvgPanel trip={trip} expenses={expenses} />
 
             <TodayPaceProjectionPanel trip={trip} expenses={expenses} budget={budget} />
 

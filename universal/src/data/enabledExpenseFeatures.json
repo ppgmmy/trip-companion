@@ -35,9 +35,10 @@
     "today-entry-pace",
     "today-vs-median-day",
     "today-pace-projection",
-    "today-biggest-entry"
+    "today-biggest-entry",
+    "today-vs-seven-day-avg"
   ],
-  "updatedAt": "2026-09-15T17:39:01.984Z",
-  "lastFeatureId": "category-ranking",
-  "lastTitle": "分類排行榜"
+  "updatedAt": "2026-09-16T02:15:00.000Z",
+  "lastFeatureId": "today-vs-seven-day-avg",
+  "lastTitle": "今日 vs 近 7 日平均"
 }
