@@ -161,24 +161,24 @@ export default function ItineraryTab({ trip, itinerary, setItinerary }) {
       </div>
 
       {dayPlan && (
-        <section className="rounded-3xl border border-jade/20 bg-white/90 p-3 shadow-[var(--shadow-soft)]">
-          <div className="flex items-start justify-between gap-2">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-jade">今日建議</p>
-              <h3 className="font-display text-base font-bold text-ink">{dayPlan.title}</h3>
-              <p className="text-xs text-ink-soft">{dayPlan.vibe}</p>
+        <section className="rounded-2xl border border-jade/20 bg-white/90 p-2.5 shadow-sm">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-jade">今日建議</p>
+              <h3 className="truncate font-display text-sm font-bold text-ink">{dayPlan.title}</h3>
+              <p className="truncate text-[10px] text-ink-soft">{dayPlan.vibe}</p>
             </div>
             <button
               type="button"
               onClick={applySuggestion}
               disabled={!hasSuggestion}
-              className="shrink-0 rounded-xl bg-jade px-3 py-2 text-[11px] font-bold text-white disabled:opacity-40"
+              className="shrink-0 rounded-lg bg-jade px-2.5 py-1.5 text-[10px] font-bold text-white disabled:opacity-40"
             >
               套用
             </button>
           </div>
 
-          <ol className="mt-3 space-y-2">
+          <ol className="mt-2 divide-y divide-jade/10 overflow-hidden rounded-xl border border-jade/10">
             {dayPlan.slots.map((s) => {
               const markerId = `${s.time}-${s.title}`;
               const active = selectedMarkerId === markerId;
@@ -187,23 +187,22 @@ export default function ItineraryTab({ trip, itinerary, setItinerary }) {
                 <button
                   type="button"
                   onClick={() => focusOnMap(markerId)}
-                  className={`w-full rounded-2xl px-3 py-2.5 text-left transition active:scale-[0.99] ${
-                    active ? "bg-jade-soft/70 ring-2 ring-jade/30" : "bg-mist/70"
+                  className={`w-full px-2 py-1.5 text-left transition active:scale-[0.99] ${
+                    active ? "bg-jade-soft/70" : "bg-white"
                   }`}
                 >
-                <div className="flex items-start gap-2">
-                  <span className="w-10 shrink-0 text-xs font-bold text-jade-deep">{s.time}</span>
+                <div className="flex items-start gap-1.5">
+                  <span className="w-9 shrink-0 text-[10px] font-bold tabular-nums text-jade-deep">{s.time}</span>
                   <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${KIND_STYLE[s.kind]}`}>
+                    <div className="flex flex-wrap items-center gap-1">
+                      <span className={`rounded px-1 py-px text-[9px] font-bold ${KIND_STYLE[s.kind]}`}>
                         {KIND_LABEL[s.kind]}
                       </span>
-                      <p className="text-sm font-bold text-ink">{s.title}</p>
+                      <p className="text-[12px] font-bold text-ink">{s.title}</p>
                     </div>
-                    <p className="mt-0.5 text-xs text-ink-soft">{s.detail}</p>
-                    {s.area && <p className="mt-0.5 text-[10px] font-semibold text-ink-faint">{s.area}</p>}
+                    <p className="mt-0.5 line-clamp-1 text-[10px] text-ink-soft">{s.detail}{s.area ? ` · ${s.area}` : ""}</p>
                   </div>
-                  {active && <span className="shrink-0 text-[10px] font-bold text-jade-deep">↑ 地圖</span>}
+                  {active && <span className="shrink-0 text-[9px] font-bold text-jade-deep">↑</span>}
                 </div>
                 </button>
               </li>
@@ -213,43 +212,43 @@ export default function ItineraryTab({ trip, itinerary, setItinerary }) {
         </section>
       )}
 
-      <section className="space-y-2">
-        <p className="text-[11px] font-bold uppercase tracking-wider text-ink-faint">我的手動行程</p>
-        <form onSubmit={addItem} className="flex gap-2 rounded-3xl bg-white/85 p-3 shadow-[var(--shadow-soft)]">
+      <section className="space-y-1.5">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">我的手動行程</p>
+        <form onSubmit={addItem} className="flex gap-1.5 rounded-2xl bg-white/85 p-2 shadow-sm">
           <input
             type="time"
             value={time}
             onChange={(e) => setTime(e.target.value)}
-            className="h-11 w-24 shrink-0 rounded-2xl border border-jade/15 bg-mist px-2 text-center text-sm outline-none ring-jade focus:ring-2"
+            className="h-9 w-20 shrink-0 rounded-xl border border-jade/15 bg-mist px-1.5 text-center text-xs outline-none ring-jade focus:ring-2"
           />
           <input
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="加一項行程"
-            className="h-11 min-w-0 flex-1 rounded-2xl border border-jade/15 bg-mist px-3 text-sm outline-none ring-jade focus:ring-2"
+            className="h-9 min-w-0 flex-1 rounded-xl border border-jade/15 bg-mist px-2.5 text-sm outline-none ring-jade focus:ring-2"
           />
-          <button type="submit" className="h-11 shrink-0 rounded-2xl bg-jade px-4 text-sm font-bold text-white transition active:scale-95">
+          <button type="submit" className="h-9 shrink-0 rounded-xl bg-jade px-3 text-xs font-bold text-white transition active:scale-95">
             加
           </button>
         </form>
 
-        <ol className="space-y-2">
+        <ol className="divide-y divide-jade/10 overflow-hidden rounded-2xl border border-jade/10 bg-white/90 shadow-sm">
           {userItems.length === 0 ? (
-            <li className="rounded-2xl border border-dashed border-jade/20 bg-white/50 px-4 py-6 text-center text-sm text-ink-faint">
+            <li className="px-3 py-4 text-center text-[12px] text-ink-faint">
               此日暫無手動行程，可按「套用」加入建議，或自行新增。
             </li>
           ) : (
             userItems.map((item) => (
-              <li key={item.id} className="flex items-center gap-3 rounded-2xl bg-white/85 px-4 py-3 shadow-[var(--shadow-soft)]">
-                <span className="w-12 shrink-0 text-xs font-bold text-jade-deep">{item.time}</span>
-                <span className="min-w-0 flex-1 text-sm text-ink">{item.text}</span>
+              <li key={item.id} className="flex items-start gap-2 px-2.5 py-1.5">
+                <span className="w-10 shrink-0 pt-0.5 text-[11px] font-bold tabular-nums text-jade-deep">{item.time}</span>
+                <span className="min-w-0 flex-1 text-[12px] leading-snug text-ink">{item.text}</span>
                 <button
                   type="button"
                   onClick={() => removeItem(activeDay.id, item.id)}
-                  className="shrink-0 text-ink-faint transition active:scale-90"
+                  className="shrink-0 pt-0.5 text-ink-faint transition active:scale-90"
                   aria-label="刪除"
                 >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>

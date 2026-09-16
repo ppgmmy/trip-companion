@@ -53,38 +53,40 @@ function normalizeSpot(spot) {
 function Stars({ value }) {
   if (!value || value <= 0) return null;
   return (
-    <span className="tabular-nums text-[11px] font-bold tracking-tight text-amber-700" aria-label={`${value} 星`}>
+    <span className="tabular-nums text-[9px] font-bold tracking-tight text-amber-700" aria-label={`${value} 星`}>
       {"★".repeat(value)}
-      <span className="text-ink-faint/60">{"☆".repeat(5 - value)}</span>
+      <span className="text-ink-faint/50">{"☆".repeat(5 - value)}</span>
     </span>
   );
 }
 
 function TimePill({ time }) {
-  if (time) return <span className="footprint-time-pill">{time}</span>;
-  return <span className="footprint-time-muted">···</span>;
+  if (time) return <span className="footprint-time-pill footprint-time-pill--compact">{time}</span>;
+  return <span className="footprint-time-muted footprint-time-muted--compact">···</span>;
 }
 
 function SpotCard({ spot, variant = "default", dayOptions, allBadges, onRemove }) {
   const meta = placeTypeMeta(spot.type);
   const accent = meta.accent || "border-l-jade";
   const day = dayOptions.find((d) => d.id === spot.dayId);
+  const [noteOpen, setNoteOpen] = useState(false);
 
   if (variant === "timeline") {
+    const hasNote = Boolean(spot.note);
     return (
       <article
-        className={`overflow-hidden rounded-2xl border border-jade/10 border-l-[4px] ${accent} bg-white/95 shadow-[var(--shadow-soft)] transition hover:-translate-y-px hover:shadow-md`}
+        className={`overflow-hidden rounded-lg border border-jade/10 border-l-[3px] ${accent} bg-white/95`}
       >
-        <div className="flex items-start gap-2.5 p-3">
-          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border text-xl shadow-sm ${meta.tone}`}>
+        <div className="flex items-start gap-1.5 px-2 py-1.5">
+          <span className="mt-0.5 text-sm leading-none" aria-hidden="true">
             {meta.icon}
-          </div>
+          </span>
           <div className="min-w-0 flex-1">
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <p className="font-display text-[15px] font-bold leading-snug text-ink">{spot.name}</p>
-                <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[10px] font-bold text-ink-faint">
-                  <span className={`rounded-md border px-1.5 py-0.5 ${meta.tone}`}>{meta.label}</span>
+            <div className="flex items-start gap-1">
+              <div className="min-w-0 flex-1">
+                <p className="text-[12px] font-bold leading-snug text-ink">{spot.name}</p>
+                <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[9px] font-semibold text-ink-faint">
+                  <span className={`rounded px-1 py-px ${meta.tone}`}>{meta.label}</span>
                   {spot.area && <span>{spot.area}</span>}
                   <Stars value={spot.rating} />
                 </p>
@@ -92,23 +94,34 @@ function SpotCard({ spot, variant = "default", dayOptions, allBadges, onRemove }
               <button
                 type="button"
                 onClick={() => onRemove(spot.id)}
-                className="shrink-0 rounded-lg p-1 text-ink-faint opacity-60 transition hover:bg-mist hover:opacity-100 active:scale-90"
+                className="shrink-0 rounded p-0.5 text-[10px] text-ink-faint opacity-50 transition hover:opacity-100 active:scale-90"
                 aria-label="刪除"
               >
                 ✕
               </button>
             </div>
-            {spot.note && (
-              <p className="mt-2 rounded-xl bg-mist/70 px-2.5 py-2 text-[12px] leading-relaxed text-ink-soft">
-                {spot.note}
-              </p>
+            {hasNote && (
+              <button
+                type="button"
+                onClick={() => setNoteOpen((v) => !v)}
+                className="mt-1 w-full rounded-md bg-mist/60 px-1.5 py-1 text-left active:opacity-80"
+              >
+                <p
+                  className={`text-[11px] leading-snug text-ink-soft ${noteOpen ? "" : "line-clamp-1"}`}
+                >
+                  {spot.note}
+                </p>
+                <p className="mt-0.5 text-[9px] font-bold text-jade-deep">
+                  {noteOpen ? "收起詳情" : "詳情"}
+                </p>
+              </button>
             )}
             {spot.badges?.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-1">
+              <div className="mt-1 flex flex-wrap gap-0.5">
                 {spot.badges.map((bid) => {
                   const badge = allBadges.find((b) => b.id === bid);
                   return badge ? (
-                    <span key={bid} className="rounded-full bg-jade-soft/90 px-2 py-0.5 text-[10px] font-semibold text-jade-deep">
+                    <span key={bid} className="rounded bg-jade-soft/90 px-1.5 py-px text-[9px] font-semibold text-jade-deep">
                       {badge.label}
                     </span>
                   ) : null;
@@ -123,22 +136,22 @@ function SpotCard({ spot, variant = "default", dayOptions, allBadges, onRemove }
 
   return (
     <article
-      className={`overflow-hidden rounded-2xl border bg-white shadow-[var(--shadow-soft)] ${
+      className={`overflow-hidden rounded-xl border bg-white shadow-sm ${
         spot.rating >= 5 ? "border-jade/30" : "border-jade/10"
       }`}
     >
       <div className="flex items-stretch">
-        <div className={`flex w-14 shrink-0 flex-col items-center justify-center border-r border-jade/10 ${meta.tone.split(" ")[0]}`}>
-          <span className="text-2xl" aria-hidden="true">
+        <div className={`flex w-11 shrink-0 flex-col items-center justify-center border-r border-jade/10 ${meta.tone.split(" ")[0]}`}>
+          <span className="text-lg" aria-hidden="true">
             {meta.icon}
           </span>
-          <span className="mt-0.5 text-[9px] font-bold">{meta.label}</span>
+          <span className="mt-0.5 text-[8px] font-bold">{meta.label}</span>
         </div>
-        <div className="min-w-0 flex-1 px-3 py-2.5">
-          <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1 px-2.5 py-1.5">
+          <div className="flex items-start justify-between gap-1">
             <div className="min-w-0">
-              <p className="truncate font-display text-sm font-bold text-ink">{spot.name}</p>
-              <p className="mt-0.5 text-[11px] text-ink-faint">
+              <p className="truncate text-[13px] font-bold text-ink">{spot.name}</p>
+              <p className="mt-0.5 text-[10px] text-ink-faint">
                 {spot.time && <span className="font-bold text-jade-deep">{spot.time} </span>}
                 {day ? day.short : "未標日"}
                 {spot.area ? ` · ${spot.area}` : ""}
@@ -153,19 +166,21 @@ function SpotCard({ spot, variant = "default", dayOptions, allBadges, onRemove }
             <button
               type="button"
               onClick={() => onRemove(spot.id)}
-              className="shrink-0 rounded p-1 text-ink-faint active:scale-90"
+              className="shrink-0 rounded p-0.5 text-ink-faint active:scale-90"
               aria-label="刪除"
             >
               ✕
             </button>
           </div>
-          {spot.note && <p className="mt-1.5 line-clamp-3 text-[12px] leading-relaxed text-ink-soft">{spot.note}</p>}
+          {spot.note && (
+            <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-ink-soft">{spot.note}</p>
+          )}
           {spot.badges?.length > 0 && (
-            <div className="mt-1.5 flex flex-wrap gap-1">
+            <div className="mt-1 flex flex-wrap gap-0.5">
               {spot.badges.map((bid) => {
                 const badge = allBadges.find((b) => b.id === bid);
                 return badge ? (
-                  <span key={bid} className="rounded-full bg-jade-soft/80 px-2 py-0.5 text-[10px] font-semibold text-jade-deep">
+                  <span key={bid} className="rounded bg-jade-soft/80 px-1.5 py-px text-[9px] font-semibold text-jade-deep">
                     {badge.label}
                   </span>
                 ) : null;
@@ -413,29 +428,25 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false }) {
   ];
 
   return (
-    <div className="space-y-3">
-      <div className="relative overflow-hidden rounded-3xl border border-jade/15 bg-gradient-to-br from-jade-soft/55 via-white to-sky-50/50 shadow-[var(--shadow-soft)]">
-        <span className="pointer-events-none absolute -right-6 -top-8 text-[7rem] opacity-[0.06]" aria-hidden="true">
-          🗺
-        </span>
-        <div className="relative px-4 pb-3.5 pt-4">
-          <div className="flex items-start justify-between gap-2">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-jade-deep/70">Travel Log</p>
-              <h2 className="font-display text-[1.35rem] font-bold leading-tight text-ink">旅程足跡</h2>
-              <p className="mt-1 text-[12px] leading-snug text-ink-soft">
-                {trip?.city || "今次旅行"} · 去過邊 · 做過咩
+    <div className="space-y-2">
+      <div className="relative overflow-hidden rounded-2xl border border-jade/15 bg-gradient-to-br from-jade-soft/55 via-white to-sky-50/50 shadow-sm">
+        <div className="relative px-3 pb-2.5 pt-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <h2 className="font-display text-base font-bold leading-tight text-ink">旅程足跡</h2>
+              <p className="truncate text-[10px] text-ink-soft">
+                {trip?.city || "今次旅行"} · {stats.total} 地點
                 {adapt ? " · 已優先室內" : ""}
               </p>
             </div>
-            <div className="flex shrink-0 gap-1.5">
+            <div className="flex shrink-0 gap-1">
               <button
                 type="button"
                 onClick={() => {
                   setLogOpen((v) => !v);
                   setFormOpen(false);
                 }}
-                className={`rounded-xl border px-2.5 py-2 text-[11px] font-bold shadow-sm transition active:scale-95 ${
+                className={`rounded-lg border px-2 py-1.5 text-[10px] font-bold transition active:scale-95 ${
                   logOpen ? "border-jade bg-jade-soft/80 text-jade-deep" : "border-jade/20 bg-white text-jade-deep"
                 }`}
               >
@@ -447,7 +458,7 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false }) {
                   setFormOpen((v) => !v);
                   setLogOpen(false);
                 }}
-                className={`rounded-xl px-3 py-2 text-[11px] font-bold shadow-sm transition active:scale-95 ${
+                className={`rounded-lg px-2.5 py-1.5 text-[10px] font-bold transition active:scale-95 ${
                   formOpen ? "bg-jade-deep text-white" : "bg-jade text-white"
                 }`}
               >
@@ -456,34 +467,17 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false }) {
             </div>
           </div>
 
-          <div className="mt-3.5 grid grid-cols-4 gap-2">
+          <div className="mt-2 grid grid-cols-4 gap-1">
             {heroStats.map((item) => (
               <div
                 key={item.label}
-                className="rounded-2xl border border-white/80 bg-white/85 px-2 py-2.5 text-center shadow-sm backdrop-blur-sm"
+                className="rounded-lg border border-white/80 bg-white/85 px-1 py-1.5 text-center"
               >
-                <p className="text-[9px] font-bold tracking-wide text-ink-faint">{item.label}</p>
-                <p className={`font-display text-xl font-bold tabular-nums leading-none ${item.tone}`}>{item.value}</p>
+                <p className="text-[8px] font-bold tracking-wide text-ink-faint">{item.label}</p>
+                <p className={`font-display text-base font-bold tabular-nums leading-none ${item.tone}`}>{item.value}</p>
               </div>
             ))}
           </div>
-
-          {stats.total > 0 && (
-            <div className="mt-3 flex gap-1.5 overflow-x-auto pb-0.5">
-              {PLACE_TYPES.filter((t) => stats.byType[t.id] > 0).map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setFilterType(t.id)}
-                  className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-bold transition active:scale-[0.98] ${
-                    filterType === t.id ? `${t.tone} ring-2 ring-jade/25` : `${t.tone} opacity-90 hover:opacity-100`
-                  }`}
-                >
-                  {t.icon} {t.label} {stats.byType[t.id]}
-                </button>
-              ))}
-            </div>
-          )}
         </div>
       </div>
 
@@ -725,25 +719,25 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false }) {
           ))}
         </div>
       ) : (
-        <div className="space-y-3.5">
+        <div className="space-y-2">
           {timelineGroups.map((group) => (
-            <section key={group.day.id} className="footprint-day-shell">
-              <div className="flex items-center gap-2.5 border-b border-jade/10 px-3.5 py-2.5">
-                <span className="flex h-8 min-w-8 items-center justify-center rounded-xl bg-gradient-to-br from-jade to-jade-deep px-2 text-[11px] font-bold text-white shadow-sm">
+            <section key={group.day.id} className="footprint-day-shell footprint-day-shell--compact">
+              <div className="flex items-center gap-2 border-b border-jade/10 px-2.5 py-1.5">
+                <span className="flex h-6 min-w-6 items-center justify-center rounded-lg bg-gradient-to-br from-jade to-jade-deep px-1.5 text-[10px] font-bold text-white">
                   {group.day.short}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[13px] font-bold text-ink">{group.day.label}</p>
-                  <p className="text-[10px] text-ink-faint">{group.spots.length} 個足跡</p>
+                  <p className="truncate text-[12px] font-bold text-ink">{group.day.label}</p>
                 </div>
+                <p className="shrink-0 text-[9px] font-bold text-ink-faint">{group.spots.length} 項</p>
               </div>
-              <div className="relative px-3 py-3 pl-5">
-                {group.spots.length > 1 && <span className="footprint-rail" aria-hidden="true" />}
-                <div className="space-y-3">
+              <div className="relative px-2 py-1.5 pl-3.5">
+                {group.spots.length > 1 && <span className="footprint-rail footprint-rail--compact" aria-hidden="true" />}
+                <div className="space-y-1">
                   {group.spots.map((spot) => (
-                    <div key={spot.id} className="relative flex gap-2.5">
-                      <span className="footprint-node" aria-hidden="true" />
-                      <div className="w-[3.1rem] shrink-0 pt-1">
+                    <div key={spot.id} className="relative flex gap-1.5">
+                      <span className="footprint-node footprint-node--compact" aria-hidden="true" />
+                      <div className="w-[2.6rem] shrink-0 pt-1">
                         <TimePill time={spot.time} />
                       </div>
                       <div className="min-w-0 flex-1">

@@ -7,7 +7,6 @@ import {
   isOsakaTrip,
   mergeOsakaDayFootprints,
   mergeOsakaDayItinerary,
-  osakaLogSeedKey,
 } from "./data/osakaTripLog";
 import TripSwitcher from "./components/TripSwitcher";
 import TripForm from "./components/TripForm";
