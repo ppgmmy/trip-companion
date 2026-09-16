@@ -104,16 +104,13 @@ function SpotCard({ spot, variant = "default", dayOptions, allBadges, onRemove }
               <button
                 type="button"
                 onClick={() => setNoteOpen((v) => !v)}
-                className="mt-1 w-full rounded-md bg-mist/60 px-1.5 py-1 text-left active:opacity-80"
+                className="mt-0.5 w-full rounded-md px-0 py-0.5 text-left active:opacity-80"
               >
-                <p
-                  className={`text-[11px] leading-snug text-ink-soft ${noteOpen ? "" : "line-clamp-1"}`}
-                >
-                  {spot.note}
-                </p>
-                <p className="mt-0.5 text-[9px] font-bold text-jade-deep">
-                  {noteOpen ? "收起詳情" : "詳情"}
-                </p>
+                {noteOpen ? (
+                  <p className="rounded-md bg-mist/70 px-1.5 py-1 text-[11px] leading-snug text-ink-soft">{spot.note}</p>
+                ) : (
+                  <p className="text-[9px] font-bold text-jade-deep">詳情 ›</p>
+                )}
               </button>
             )}
             {spot.badges?.length > 0 && (
