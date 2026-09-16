@@ -17,7 +17,8 @@ import DailyTodosPanel from "./DailyTodosPanel";
 import SharedTodoPanel from "./SharedTodoPanel";
 
 const PERSONAL_VIEWS = [
-  { id: "mine", label: "行程", hint: "個人行程／日程時間表" },
+  { id: "mine", label: "行程", hint: "月曆＋近 7 日日程" },
+  { id: "log", label: "Log", hint: "完整行程紀錄 · 可改可刪" },
   { id: "daily", label: "每日", hint: "每日習慣＋本月%" },
   { id: "shared", label: "To-Do", hint: "共用 To-Do List（C M S P）" },
 ];
@@ -513,7 +514,7 @@ function ItineraryLog({
         </div>
       }
     >
-      <div className="max-h-[22rem] divide-y divide-jade/10 overflow-y-auto">
+      <div className="max-h-[70dvh] divide-y divide-jade/10 overflow-y-auto">
         {groups.length === 0 ? (
           <p className="px-2.5 py-4 text-center text-[11px] text-ink-faint">
             {filter === "past" ? "未有以往行程紀錄" : filter === "upcoming" ? "未有將嚟行程" : "未有行程紀錄"}
@@ -722,7 +723,7 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
           kind: "event",
           filterKind: "event",
           showCompleted: Boolean(base.showCompleted),
-          section: ["mine", "daily", "shared"].includes(base.section) ? base.section : "mine",
+          section: ["mine", "log", "daily", "shared"].includes(base.section) ? base.section : "mine",
         };
       },
     },
@@ -790,7 +791,7 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
   }, [selectedDate, viewMonth, kind, filterKind, showCompleted, section, setPersonalUi]);
 
   useEffect(() => {
-    if (section === "mine") {
+    if (section === "mine" || section === "log") {
       setKind("event");
       setFilterKind("event");
       setEntryTime((t) => t || nextRoundedHour());
@@ -889,6 +890,7 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
     setKind("event");
     setTimeError(false);
     setAddFormOpen(true);
+    // 喺 Log 欄改就留喺 Log；喺行程欄改就留喺行程，避免跳嚟跳去
     window.setTimeout(() => {
       formRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
       titleRef.current?.focus({ preventScroll: true });
@@ -932,15 +934,149 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
 
   const activeView = PERSONAL_VIEWS.find((v) => v.id === section) || PERSONAL_VIEWS[0];
 
+  const sectionTitle =
+    section === "mine" ? "行程" : section === "log" ? "Log" : section === "shared" ? "To-Do" : section === "daily" ? "每日" : "個人";
+
+  function renderAddForm() {
+    if (!addFormOpen) {
+      return (
+        <button
+          type="button"
+          onClick={() => {
+            cancelEdit();
+            setAddFormOpen(true);
+          }}
+          className="h-9 w-full rounded-xl border border-dashed border-jade/25 bg-white text-[13px] font-bold text-jade-deep active:scale-[0.99]"
+        >
+          + 新增行程
+        </button>
+      );
+    }
+    return (
+      <SectionCard
+        title={editingId ? "編輯行程" : "新增行程"}
+        hint={editingId ? "改完撳儲存 · 以往日子都得" : "必填時間 · 可揀以往日子"}
+        action={
+          <button
+            type="button"
+            onClick={() => {
+              cancelEdit();
+              setAddFormOpen(false);
+            }}
+            className="rounded-md border border-jade/15 bg-white px-1.5 py-0.5 text-[9px] font-bold text-ink-soft"
+          >
+            收起
+          </button>
+        }
+      >
+        <form ref={formRef} onSubmit={addItem} className="space-y-1.5 p-2">
+          <input
+            ref={titleRef}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="幾時做咩？例如：食飯、開會…"
+            className="h-8 w-full rounded-lg border border-jade/15 bg-mist px-2.5 text-[13px] outline-none ring-jade focus:ring-2"
+          />
+
+          <div className="grid grid-cols-[1fr_auto] gap-1.5">
+            <div>
+              <div className="mb-1 flex gap-1">
+                {[
+                  { label: "今日", offset: 0 },
+                  { label: "明日", offset: 1 },
+                  { label: "後日", offset: 2 },
+                ].map(({ label, offset }) => {
+                  const dateId = shiftDateId(todayId, offset);
+                  const active = entryDate === dateId;
+                  return (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={() => {
+                        setEntryDate(dateId);
+                        setSelectedDate(dateId);
+                      }}
+                      className={`min-h-6 flex-1 rounded-md border text-[10px] font-bold active:scale-[0.98] ${
+                        active ? "border-jade bg-jade-soft/60 text-jade-deep" : "border-jade/15 bg-white text-ink-soft"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+              <input
+                type="date"
+                value={entryDate}
+                onChange={(e) => {
+                  setEntryDate(e.target.value);
+                  if (kind === "event") setSelectedDate(e.target.value);
+                }}
+                className="h-8 w-full rounded-lg border border-jade/15 bg-mist px-2 text-[11px] outline-none ring-jade focus:ring-2"
+              />
+            </div>
+            <div className="w-[6.5rem]">
+              <input
+                type="time"
+                value={entryTime}
+                onChange={(e) => {
+                  setEntryTime(e.target.value);
+                  setTimeError(false);
+                }}
+                required
+                className={`h-8 w-full rounded-lg border bg-mist px-1.5 text-[11px] outline-none ring-jade focus:ring-2 ${
+                  timeError ? "border-coral ring-coral" : "border-jade/15"
+                }`}
+              />
+              {timeError && <p className="mt-0.5 text-[9px] font-bold text-coral">要時間</p>}
+              <div className="mt-1 flex flex-wrap gap-0.5">
+                {TIME_PRESETS.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => {
+                      setEntryTime(t);
+                      setTimeError(false);
+                    }}
+                    className={`rounded border px-1 py-px text-[9px] font-bold active:scale-95 ${
+                      entryTime === t
+                        ? "border-jade bg-jade-soft/60 text-jade-deep"
+                        : "border-jade/15 bg-white text-ink-soft"
+                    }`}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-1.5">
+            {editingId && (
+              <button
+                type="button"
+                onClick={cancelEdit}
+                className="h-8 flex-1 rounded-lg border border-jade/15 bg-white text-[13px] font-bold text-ink-soft"
+              >
+                取消
+              </button>
+            )}
+            <button type="submit" className="h-8 flex-[2] rounded-lg bg-jade text-[13px] font-bold text-white">
+              {editingId ? "儲存修改" : "加入行程"}
+            </button>
+          </div>
+        </form>
+      </SectionCard>
+    );
+  }
+
   return (
     <div className="space-y-2">
       {toast && <UndoToast message={toast.message} onUndo={toast.undo ? undoRemove : null} />}
 
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
-          <h2 className="font-display text-base font-bold leading-tight text-ink">
-            {section === "mine" ? "行程" : section === "shared" ? "To-Do" : section === "daily" ? "每日" : "個人"}
-          </h2>
+          <h2 className="font-display text-base font-bold leading-tight text-ink">{sectionTitle}</h2>
           <p className="truncate text-[10px] text-ink-faint">{activeView.hint}</p>
         </div>
         {section === "mine" && (
@@ -954,13 +1090,13 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
         )}
       </div>
 
-      <div className="grid grid-cols-3 gap-1">
+      <div className="grid grid-cols-4 gap-1">
         {PERSONAL_VIEWS.map((v) => (
           <button
             key={v.id}
             type="button"
             onClick={() => setSection(v.id)}
-            className={`min-h-8 rounded-lg border px-1.5 text-[11px] font-bold transition active:scale-[0.98] ${
+            className={`min-h-8 rounded-lg border px-1 text-[11px] font-bold transition active:scale-[0.98] ${
               section === v.id ? "badge-active border-transparent" : "border-jade/15 bg-white text-ink-soft"
             }`}
           >
@@ -971,6 +1107,22 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
 
       {section === "daily" && <DailyTodosPanel />}
       {section === "shared" && <SharedTodoPanel />}
+
+      {section === "log" && (
+        <>
+          <ItineraryLog
+            items={items}
+            todayId={todayId}
+            filter={logFilter}
+            onFilterChange={setLogFilter}
+            onToggle={toggleItem}
+            onRemove={removeItem}
+            onPostpone={postponeItem}
+            onEdit={startEdit}
+          />
+          {renderAddForm()}
+        </>
+      )}
 
       {section === "mine" && (
         <>
@@ -1022,17 +1174,6 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
         </SectionCard>
       )}
 
-      <ItineraryLog
-        items={items}
-        todayId={todayId}
-        filter={logFilter}
-        onFilterChange={setLogFilter}
-        onToggle={toggleItem}
-        onRemove={removeItem}
-        onPostpone={postponeItem}
-        onEdit={startEdit}
-      />
-
       <SevenDayTimetable
           horizon={sevenDayHorizon}
           items={items}
@@ -1051,133 +1192,7 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
           todayId={todayId}
         />
 
-      {!addFormOpen ? (
-        <button
-          type="button"
-          onClick={() => {
-            cancelEdit();
-            setAddFormOpen(true);
-          }}
-          className="h-9 w-full rounded-xl border border-dashed border-jade/25 bg-white text-[13px] font-bold text-jade-deep active:scale-[0.99]"
-        >
-          + 新增行程
-        </button>
-      ) : (
-        <SectionCard
-          title={editingId ? "編輯行程" : "新增行程"}
-          hint={editingId ? "改完撳儲存 · 以往日子都得" : "必填時間 · 可揀以往日子"}
-          action={
-            <button
-              type="button"
-              onClick={() => {
-                cancelEdit();
-                setAddFormOpen(false);
-              }}
-              className="rounded-md border border-jade/15 bg-white px-1.5 py-0.5 text-[9px] font-bold text-ink-soft"
-            >
-              收起
-            </button>
-          }
-        >
-          <form ref={formRef} onSubmit={addItem} className="space-y-1.5 p-2">
-            <input
-              ref={titleRef}
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="幾時做咩？例如：食飯、開會…"
-              className="h-8 w-full rounded-lg border border-jade/15 bg-mist px-2.5 text-[13px] outline-none ring-jade focus:ring-2"
-            />
-
-            <div className="grid grid-cols-[1fr_auto] gap-1.5">
-              <div>
-                <div className="mb-1 flex gap-1">
-                  {[
-                    { label: "今日", offset: 0 },
-                    { label: "明日", offset: 1 },
-                    { label: "後日", offset: 2 },
-                  ].map(({ label, offset }) => {
-                    const dateId = shiftDateId(todayId, offset);
-                    const active = entryDate === dateId;
-                    return (
-                      <button
-                        key={label}
-                        type="button"
-                        onClick={() => {
-                          setEntryDate(dateId);
-                          setSelectedDate(dateId);
-                        }}
-                        className={`min-h-6 flex-1 rounded-md border text-[10px] font-bold active:scale-[0.98] ${
-                          active ? "border-jade bg-jade-soft/60 text-jade-deep" : "border-jade/15 bg-white text-ink-soft"
-                        }`}
-                      >
-                        {label}
-                      </button>
-                    );
-                  })}
-                </div>
-                <input
-                  type="date"
-                  value={entryDate}
-                  onChange={(e) => {
-                    setEntryDate(e.target.value);
-                    if (kind === "event") setSelectedDate(e.target.value);
-                  }}
-                  className="h-8 w-full rounded-lg border border-jade/15 bg-mist px-2 text-[11px] outline-none ring-jade focus:ring-2"
-                />
-              </div>
-              <div className="w-[6.5rem]">
-                <input
-                  type="time"
-                  value={entryTime}
-                  onChange={(e) => {
-                    setEntryTime(e.target.value);
-                    setTimeError(false);
-                  }}
-                  required
-                  className={`h-8 w-full rounded-lg border bg-mist px-1.5 text-[11px] outline-none ring-jade focus:ring-2 ${
-                    timeError ? "border-coral ring-coral" : "border-jade/15"
-                  }`}
-                />
-                {timeError && <p className="mt-0.5 text-[9px] font-bold text-coral">要時間</p>}
-                <div className="mt-1 flex flex-wrap gap-0.5">
-                  {TIME_PRESETS.map((t) => (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => {
-                        setEntryTime(t);
-                        setTimeError(false);
-                      }}
-                      className={`rounded border px-1 py-px text-[9px] font-bold active:scale-95 ${
-                        entryTime === t
-                          ? "border-jade bg-jade-soft/60 text-jade-deep"
-                          : "border-jade/15 bg-white text-ink-soft"
-                      }`}
-                    >
-                      {t}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex gap-1.5">
-              {editingId && (
-                <button
-                  type="button"
-                  onClick={cancelEdit}
-                  className="h-8 flex-1 rounded-lg border border-jade/15 bg-white text-[13px] font-bold text-ink-soft"
-                >
-                  取消
-                </button>
-              )}
-              <button type="submit" className="h-8 flex-[2] rounded-lg bg-jade text-[13px] font-bold text-white">
-                {editingId ? "儲存修改" : "加入行程"}
-              </button>
-            </div>
-          </form>
-        </SectionCard>
-      )}
+      {renderAddForm()}
         </>
       )}
     </div>
