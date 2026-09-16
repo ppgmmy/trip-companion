@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { REGISTRY_KEYS, tripKey, TRIP_SECTIONS } from "./storage";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 import { useExchangeRate } from "./hooks/useExchangeRate";
-import { uid, toDateId, normalizeExpensePayer, personalTodoStartDate } from "./data";
+import { uid, toDateId, normalizeExpensePayer, personalTodoStartDate, pickActiveTripByDate, tripCoversDate } from "./data";
 import TripSwitcher from "./components/TripSwitcher";
 import TripForm from "./components/TripForm";
 import BottomNav from "./components/BottomNav";
@@ -55,6 +55,9 @@ export default function App() {
   const [personalAddTick, setPersonalAddTick] = useState(0);
   const [expensePanelRequest, setExpensePanelRequest] = useState("ledger");
   const prevTripIdRef = useRef(null);
+  /** 用戶手動切旅程後，唔即刻被「今日範圍」自動覆蓋（重新整理／換日會再跟日期） */
+  const userPickedTripRef = useRef(false);
+  const todayId = toDateId(new Date());
 
   // 開機再寫一次上碟，確保 localStorage 同畫面一致
   useEffect(() => {
@@ -84,7 +87,23 @@ export default function App() {
     setActiveTab("tools");
   }
 
-  const activeTrip = useMemo(() => trips.find((t) => t.id === activeId) || trips[0] || null, [trips, activeId]);
+  // 今日落喺邊段旅程日期範圍，就自動揀嗰段（過咗嘅大阪唔再霸住）
+  useEffect(() => {
+    if (userPickedTripRef.current) return;
+    const preferred = pickActiveTripByDate(trips, todayId);
+    if (!preferred) return;
+    if (preferred.id !== activeId) setActiveId(preferred.id);
+  }, [trips, todayId, activeId, setActiveId]);
+
+  const activeTrip = useMemo(() => {
+    const byId = trips.find((t) => t.id === activeId) || null;
+    const preferred = pickActiveTripByDate(trips, todayId);
+    if (!userPickedTripRef.current && preferred) {
+      if (!byId || !tripCoversDate(byId, todayId)) return preferred;
+    }
+    if (byId) return byId;
+    return preferred || trips[0] || null;
+  }, [trips, activeId, todayId]);
   const tripId = activeTrip?.id;
 
   useEffect(() => {
@@ -129,7 +148,6 @@ export default function App() {
     }).length;
   }, [personal]);
 
-  const todayId = toDateId(new Date());
   const tripSpendSummary = useMemo(() => {
     if (!activeTrip?.budget) return null;
     const total = expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
@@ -139,7 +157,7 @@ export default function App() {
 
   const expenseNavBadge = useMemo(() => {
     if (!activeTrip) return 0;
-    const inTrip = todayId >= activeTrip.startDate && todayId <= activeTrip.endDate;
+    const inTrip = tripCoversDate(activeTrip, todayId);
     if (!inTrip) return 0;
     const todayCount = expenses.filter((e) => e.date === todayId).length;
     if (todayCount === 0) return -1;
@@ -196,6 +214,7 @@ export default function App() {
   }, [tripId, setExpenses]);
 
   function createTrip(trip) {
+    userPickedTripRef.current = true;
     setTrips((prev) => [...prev, trip]);
     setActiveId(trip.id);
   }
@@ -206,7 +225,10 @@ export default function App() {
 
   function deleteTrip(id) {
     setTrips((prev) => prev.filter((t) => t.id !== id));
-    if (activeId === id) setActiveId(null);
+    if (activeId === id) {
+      userPickedTripRef.current = false;
+      setActiveId(null);
+    }
     try {
       Object.keys(localStorage)
         .filter((k) => k.startsWith(`universal_trip_${id}_`))
@@ -215,6 +237,7 @@ export default function App() {
   }
 
   function switchTrip(id) {
+    userPickedTripRef.current = true;
     if (tripId && activeTab) {
       setTripTabs((prev) => ({ ...prev, [tripId]: activeTab }));
     }
