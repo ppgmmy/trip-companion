@@ -124,15 +124,9 @@ export default function App() {
     { migrate: (v) => v === true || v === "true" || v === 1 },
   );
 
-  // 大阪旅程：種入 8/30 真實出發日紀錄（行程＋足跡）；8/31–9/10 之後再補
+  // 大阪旅程：種入 8/30 真實出發日紀錄（行程＋足跡）；以 id 去重，可重跑
   useEffect(() => {
     if (!tripId || !activeTrip || !isOsakaTrip(activeTrip)) return;
-    try {
-      if (localStorage.getItem(osakaLogSeedKey(tripId)) === "1") return;
-      localStorage.setItem(osakaLogSeedKey(tripId), "1");
-    } catch {
-      return;
-    }
     setItinerary((prev) => {
       const { itinerary: next, changed } = mergeOsakaDayItinerary(prev);
       return changed ? next : prev;
