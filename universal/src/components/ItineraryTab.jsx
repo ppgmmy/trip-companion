@@ -34,11 +34,16 @@ export default function ItineraryTab({ trip, itinerary, setItinerary }) {
   const activeDayId = dayId && days.some((d) => d.id === dayId) ? dayId : days[0]?.id;
   const activeDay = days.find((d) => d.id === activeDayId) || days[0];
   const dayIndex = activeDay ? activeDay.index - 1 : 0;
+  const userItems = useMemo(
+    () => [...(itinerary?.[activeDayId] || [])].sort((a, b) => String(a.time || "").localeCompare(String(b.time || ""))),
+    [itinerary, activeDayId],
+  );
 
   const dayPlan = useMemo(
     () => (trip && activeDayId ? dayPlanForTrip(trip, activeDayId, dayIndex) : null),
     [trip, activeDayId, dayIndex],
   );
+  const hasSuggestion = Boolean(dayPlan?.slots?.length);
 
   const mapConfig = useMemo(
     () => mapConfigForTrip(trip, dayPlan?.zone),
