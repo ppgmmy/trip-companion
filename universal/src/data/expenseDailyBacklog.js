@@ -236,4 +236,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "將今日使費同過去 7 日（不含今日）日均對比，附迷你走勢，快速知今日係咪異常消費日。",
     pillar: "analysis",
   },
+  {
+    id: "remaining-budget-countdown",
+    title: "剩餘預算倒數",
+    description: "記帳頁顯示剩餘預算百分比、依而家節奏可撐幾日，同旅程剩餘日對比，出門消費前心里有數。",
+    pillar: "convenience",
+  },
 ];

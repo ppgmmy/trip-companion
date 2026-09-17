@@ -36,9 +36,10 @@
     "today-vs-median-day",
     "today-pace-projection",
     "today-biggest-entry",
-    "today-vs-seven-day-avg"
+    "today-vs-seven-day-avg",
+    "remaining-budget-countdown"
   ],
-  "updatedAt": "2026-09-16T02:15:00.000Z",
-  "lastFeatureId": "today-vs-seven-day-avg",
-  "lastTitle": "今日 vs 近 7 日平均"
+  "updatedAt": "2026-09-17T02:15:00.000Z",
+  "lastFeatureId": "remaining-budget-countdown",
+  "lastTitle": "剩餘預算倒數"
 }

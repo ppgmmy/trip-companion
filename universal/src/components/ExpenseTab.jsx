@@ -38,6 +38,7 @@ import {
   BudgetRunwayPanel,
   SpendingTimelineAlignPanel,
   TodayCategoryChips,
+  RemainingBudgetCountdownPanel,
 } from "./ExpenseDailyExtras";
 import PayerPaymentFields from "./PayerPaymentFields";
 import { useLocalStorage } from "../hooks/useLocalStorage";
@@ -735,6 +736,15 @@ export default function ExpenseTab({
               remainingDays={remainingDays}
               dailyAllowance={dailyAllowance}
               todayLeft={todayLeft}
+            />
+
+            <RemainingBudgetCountdownPanel
+              trip={trip}
+              budget={budget}
+              remaining={remaining}
+              remainingDays={remainingDays}
+              pace={pace}
+              totalSpent={totalSpent}
             />
 
             <LedgerDailyPulse
