@@ -96,6 +96,11 @@ export const OSAKA_DAY_ITINERARY = {
       time: "19:30",
       text: "南海難波商場 · 食蛋包飯",
     },
+    {
+      id: "osaka-0831-2030",
+      time: "20:30",
+      text: "難波渣滑板車返酒店 · 過程十分驚險",
+    },
   ],
 };
 
@@ -284,8 +289,19 @@ export const OSAKA_DAY_FOOTPRINTS = [
     type: "food",
     name: "南海難波商場 · 蛋包飯",
     area: "難波",
-    note: "最後去南海難波商場食蛋包飯，8/31 收工。",
+    note: "去南海難波商場食蛋包飯。",
     rating: 4,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0831-skate-home",
+    dayId: "2026-08-31",
+    time: "20:30",
+    type: "experience",
+    name: "難波渣滑板車返酒店",
+    area: "難波 → 堺筋本町",
+    note: "食完蛋包飯喺難波渣滑板車返去，過程十分驚險。",
+    rating: 5,
     badges: [],
   },
 ];

@@ -71,14 +71,15 @@ const OSAKA_CURATED = {
   },
   "2026-08-31": {
     title: "心齋橋慢活 → 難波",
-    vibe: "訓晏 · 樓下 Cafe · LUUP · 麥當勞 · 固力果 · 蛋包飯",
+    vibe: "訓晏 · Cafe · LUUP · 麥當勞 · 固力果 · 蛋包飯 · 驚險滑板返",
     zone: "shinsaibashi",
     slots: [
       slot("food", "14:00", "樓下 Cafe", "訓到好晏，兩點先落樓食", "堺筋本町", "cafes near Sakaisuji-Hommachi Osaka"),
       slot("spot", "14:45", "心齋橋＋LUUP", "踩單車／滑板落心齋橋行街", "心齋橋", "Shinsaibashi Osaka LUUP"),
       slot("food", "16:00", "麥當勞特飲", "薄荷朱古力飲品＋迷你熱香餅", "心齋橋", "McDonalds Shinsaibashi Osaka"),
       slot("spot", "18:30", "固力果招牌", "行到難波／道頓堀睇大 poster", "道頓堀", "Glico sign Dotonbori Osaka"),
-      slot("food", "19:30", "南海難波商場", "食蛋包飯收工", "難波", "Nankai Namba Station restaurants Osaka"),
+      slot("food", "19:30", "南海難波商場", "食蛋包飯", "難波", "Nankai Namba Station restaurants Osaka"),
+      slot("spot", "20:30", "滑板車返酒店", "難波渣滑板車返，過程十分驚險", "堺筋本町", "LUUP scooter Namba to Hommachi Osaka"),
     ],
   },
   "2026-09-01": {
