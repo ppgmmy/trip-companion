@@ -1718,6 +1718,132 @@ export function TodayBiggestEntryPanel({ trip, expenses }) {
   );
 }
 
+export function RemainingBudgetCountdownPanel({
+  trip,
+  budget = 0,
+  remaining = 0,
+  remainingDays = 1,
+  pace = 0,
+  totalSpent = 0,
+}) {
+  if (!isFeatureEnabled("remaining-budget-countdown") || budget <= 0) return null;
+
+  const remainingPct = Math.max(0, Math.min(100, (remaining / budget) * 100));
+  const usedPct = 100 - remainingPct;
+  const hasPace = pace > 0 && totalSpent > 0;
+  const runwayDays = hasPace && remaining > 0 ? remaining / pace : remaining > 0 ? remainingDays : 0;
+  const runwayRatio = remainingDays > 0 && runwayDays > 0 ? runwayDays / remainingDays : 0;
+  const segmentCount = Math.min(remainingDays, 14);
+  const filledSegments =
+    remaining <= 0 ? 0 : hasPace ? Math.min(segmentCount, Math.max(0, Math.ceil(runwayDays))) : segmentCount;
+
+  let tier;
+  if (remaining <= 0) {
+    tier = {
+      badge: "已超預算",
+      badgeClass: "bg-coral/15 text-coral",
+      barClass: "bg-gradient-to-r from-coral to-[#dc2626]",
+      insight: `已超 ${formatMoney(-remaining, trip.targetCurrency)} · 今日起要收油`,
+      insightClass: "text-coral",
+    };
+  } else if (!hasPace) {
+    tier = {
+      badge: "待記帳",
+      badgeClass: "bg-shell text-ink-soft",
+      barClass: "bg-gradient-to-r from-jade/60 to-jade",
+      insight: `仲有 ${formatMoney(remaining, trip.targetCurrency)} · 記幾筆後會估算可撐幾日`,
+      insightClass: "text-ink-soft",
+    };
+  } else if (runwayRatio < 0.65) {
+    tier = {
+      badge: "快用盡",
+      badgeClass: "bg-coral/15 text-coral",
+      barClass: "bg-gradient-to-r from-[#f97316] to-coral",
+      insight: `照而家節奏只夠 ${formatRunwayDays(runwayDays)} 日 · 旅程仲剩 ${remainingDays} 日`,
+      insightClass: "text-coral",
+    };
+  } else if (runwayRatio < 0.9) {
+    tier = {
+      badge: "偏緊",
+      badgeClass: "bg-[#fef3c7] text-[#b45309]",
+      barClass: "bg-gradient-to-r from-[#f59e0b] to-jade",
+      insight: `可撐約 ${formatRunwayDays(runwayDays)} 日 · 略少於剩 ${remainingDays} 日，留意節奏`,
+      insightClass: "text-[#b45309]",
+    };
+  } else if (runwayRatio >= 1.2) {
+    tier = {
+      badge: "充裕",
+      badgeClass: "bg-jade-soft text-jade-deep",
+      barClass: "bg-gradient-to-r from-[#34d399] to-jade",
+      insight: `可撐約 ${formatRunwayDays(runwayDays)} 日 · 比旅程剩餘日多，節奏健康`,
+      insightClass: "text-jade-deep",
+    };
+  } else {
+    tier = {
+      badge: "剛剛好",
+      badgeClass: "bg-jade-soft text-jade-deep",
+      barClass: "bg-gradient-to-r from-jade to-[#34d399]",
+      insight: `可撐約 ${formatRunwayDays(runwayDays)} 日 · 同剩 ${remainingDays} 日旅程大致吻合`,
+      insightClass: "text-jade",
+    };
+  }
+
+  return (
+    <div className="rounded-2xl border border-jade/12 bg-gradient-to-br from-white to-jade-soft/30 px-3 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">剩餘預算倒數</p>
+        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${tier.badgeClass}`}>{tier.badge}</span>
+      </div>
+      <div className="mt-2 flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[10px] font-semibold text-ink-faint">仲剩</p>
+          <p className={`font-display text-2xl font-black leading-none ${remaining <= 0 ? "text-coral" : "text-jade-deep"}`}>
+            {formatMoney(Math.max(0, remaining), trip.targetCurrency)}
+          </p>
+          <p className="mt-0.5 text-[10px] font-semibold text-ink-faint">佔總預算 {remainingPct.toFixed(0)}%</p>
+        </div>
+        <div className="shrink-0 text-right">
+          <p className="text-[10px] font-semibold text-ink-faint">依而家節奏</p>
+          <p className="font-display text-2xl font-black leading-none text-ink">
+            {remaining <= 0 ? "0" : !hasPace ? "—" : formatRunwayDays(runwayDays)}
+            <span className="ml-0.5 text-sm font-bold text-ink-faint">日</span>
+          </p>
+          <p className="mt-0.5 text-[10px] font-semibold text-ink-faint">旅程剩 {remainingDays} 日</p>
+        </div>
+      </div>
+      <div className="mt-2.5 h-2 overflow-hidden rounded-full bg-[#efe9e0]">
+        <div className={`h-full rounded-full transition-all duration-700 ${tier.barClass}`} style={{ width: `${remainingPct}%` }} />
+      </div>
+      {segmentCount > 0 && (
+        <div className="mt-2 flex items-center gap-0.5" aria-hidden="true">
+          {Array.from({ length: segmentCount }, (_, i) => {
+            const isFilled = i < filledSegments;
+            const isCritical = remaining <= 0 || (hasPace && runwayRatio < 0.65);
+            return (
+              <div
+                key={i}
+                className={`h-1.5 min-w-0 flex-1 rounded-full ${
+                  isFilled
+                    ? isCritical
+                      ? "bg-coral/75"
+                      : runwayRatio < 0.9
+                        ? "bg-[#f59e0b]/70"
+                        : "bg-jade/65"
+                    : "bg-[#efe9e0]"
+                }`}
+              />
+            );
+          })}
+        </div>
+      )}
+      <p className="mt-1 text-center text-[9px] font-semibold text-ink-faint">
+        每格 ≈ 1 日 · 已用 {usedPct.toFixed(0)}% 預算
+      </p>
+      <p className={`mt-1.5 text-center text-[11px] font-semibold ${tier.insightClass}`}>{tier.insight}</p>
+    </div>
+  );
+}
+
 export function TodayPaceProjectionPanel({ trip, expenses, budget }) {
   const todayId = toDateId(new Date());
 

@@ -271,6 +271,12 @@
       "title": "分類快速篩選",
       "description": "支出列表可按分類過濾，翻舊帳更快。",
       "cycle": true
+    },
+    {
+      "date": "2026-09-17",
+      "id": "remaining-budget-countdown",
+      "title": "剩餘預算倒數",
+      "description": "記帳頁顯示剩餘預算百分比、依而家節奏可撐幾日，同旅程剩餘日對比，出門消費前心里有數。"
     }
   ]
 }
