@@ -1,11 +1,16 @@
 /**
  * 大阪旅程真實日程紀錄（由用戶口述整理）。
- * 8/31–9/10 之後再補；而家先種 8/30 出發日。
+ * 已有 8/30、8/31；9/1–9/10 之後再補。
  */
 
-export const OSAKA_DAY_LOG_SEED_VERSION = "osaka-day-log-v1-2026-08-30";
-export const OSAKA_DEPARTURE_DAY_ID = "2026-08-30";
-export const OSAKA_DEPARTURE_DAY_LABEL = "8/30 出發日";
+export const OSAKA_DAY_LOG_SEED_VERSION = "osaka-day-log-v2-2026-08-31";
+/** 一鍵入口預設跳去最新補完嗰日 */
+export const OSAKA_FOCUS_DAY_ID = "2026-08-31";
+export const OSAKA_LOG_BANNER_LABEL = "8/30–8/31 旅程紀錄";
+/** @deprecated 用 OSAKA_FOCUS_DAY_ID */
+export const OSAKA_DEPARTURE_DAY_ID = OSAKA_FOCUS_DAY_ID;
+/** @deprecated 用 OSAKA_LOG_BANNER_LABEL */
+export const OSAKA_DEPARTURE_DAY_LABEL = OSAKA_LOG_BANNER_LABEL;
 
 export const OSAKA_DAY_ITINERARY = {
   "2026-08-30": [
@@ -58,6 +63,38 @@ export const OSAKA_DAY_ITINERARY = {
       id: "osaka-0830-1930",
       time: "19:30",
       text: "返酒店附近 Sukiya 食牛肉飯 · 收工一日",
+    },
+  ],
+  "2026-08-31": [
+    {
+      id: "osaka-0831-1200",
+      time: "12:00",
+      text: "訓到好晏 · 午前休息",
+    },
+    {
+      id: "osaka-0831-1400",
+      time: "14:00",
+      text: "落樓下 Cafe 食晏",
+    },
+    {
+      id: "osaka-0831-1445",
+      time: "14:45",
+      text: "踩單車／滑板落心齋橋行街",
+    },
+    {
+      id: "osaka-0831-1600",
+      time: "16:00",
+      text: "麥當勞 · 薄荷朱古力飲品＋迷你熱香餅",
+    },
+    {
+      id: "osaka-0831-1830",
+      time: "18:30",
+      text: "行到難波 · 睇固力果大 poster（道頓堀）",
+    },
+    {
+      id: "osaka-0831-1930",
+      time: "19:30",
+      text: "南海難波商場 · 食蛋包飯",
     },
   ],
 };
@@ -182,6 +219,72 @@ export const OSAKA_DAY_FOOTPRINTS = [
     name: "Sukiya 牛肉飯",
     area: "堺筋本町",
     note: "夜晚返酒店附近 Sukiya 食牛肉飯，一日收工。",
+    rating: 4,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0831-sleepin",
+    dayId: "2026-08-31",
+    time: "12:00",
+    type: "other",
+    name: "訓到好晏",
+    area: "堺筋本町酒店",
+    note: "8/31 訓到好晏，午前休息，晏晝先出動。",
+    rating: 0,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0831-cafe",
+    dayId: "2026-08-31",
+    time: "14:00",
+    type: "cafe",
+    name: "樓下 Cafe",
+    area: "堺筋本町",
+    note: "晏晝兩點落樓下咖啡館食。",
+    rating: 4,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0831-luup",
+    dayId: "2026-08-31",
+    time: "14:45",
+    type: "experience",
+    name: "踩單車／滑板 · 心齋橋",
+    area: "心齋橋",
+    note: "食完 Cafe 踩單車、踩滑板落心齋橋行街。",
+    rating: 5,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0831-mcd",
+    dayId: "2026-08-31",
+    time: "16:00",
+    type: "food",
+    name: "麥當勞 · 薄荷朱古力＋迷你熱香餅",
+    area: "心齋橋",
+    note: "行到去麥當勞，食薄荷朱古力飲品同迷你熱香餅。",
+    rating: 4,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0831-glico",
+    dayId: "2026-08-31",
+    time: "18:30",
+    type: "spot",
+    name: "固力果大 poster",
+    area: "道頓堀／難波",
+    note: "夜晚行到難波一帶，睇埋固力果大 poster（行到尾段先到）。",
+    rating: 5,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0831-omurice",
+    dayId: "2026-08-31",
+    time: "19:30",
+    type: "food",
+    name: "南海難波商場 · 蛋包飯",
+    area: "難波",
+    note: "最後去南海難波商場食蛋包飯，8/31 收工。",
     rating: 4,
     badges: [],
   },

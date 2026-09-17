@@ -8,8 +8,8 @@ import {
   isOsakaTrip,
   mergeOsakaDayFootprints,
   mergeOsakaDayItinerary,
-  OSAKA_DEPARTURE_DAY_ID,
-  OSAKA_DEPARTURE_DAY_LABEL,
+  OSAKA_FOCUS_DAY_ID,
+  OSAKA_LOG_BANNER_LABEL,
 } from "./data/osakaTripLog";
 import TripSwitcher from "./components/TripSwitcher";
 import TripForm from "./components/TripForm";
@@ -127,7 +127,7 @@ export default function App() {
     { migrate: (v) => v === true || v === "true" || v === 1 },
   );
 
-  // 所有大阪旅程都種入 8/30 紀錄（唔止而家 active 嗰個）
+  // 所有大阪旅程都種入真實日程紀錄（唔止而家 active 嗰個）
   useEffect(() => {
     if (!Array.isArray(trips) || trips.length === 0) return;
     trips.filter(isOsakaTrip).forEach((trip) => {
@@ -272,7 +272,7 @@ export default function App() {
     }
     setAppMode("travel");
     setActiveTab(target === "itinerary" ? "itinerary" : "spots");
-    setOsakaFocusDayId(OSAKA_DEPARTURE_DAY_ID);
+    setOsakaFocusDayId(OSAKA_FOCUS_DAY_ID);
   }
 
   return (
@@ -308,14 +308,14 @@ export default function App() {
             </span>
             <span className="min-w-0 flex-1">
               <span className="block text-[13px] font-extrabold text-amber-950">
-                大阪 {OSAKA_DEPARTURE_DAY_LABEL}完整紀錄
+                大阪 {OSAKA_LOG_BANNER_LABEL}
               </span>
               <span className="mt-0.5 block text-[11px] leading-snug text-amber-900/80">
-                NA52 → 機場 → 關西 → 酒店 1011 → 心齋橋／LUUP → Sukiya
+                最新 8/31：Cafe → 心齋橋／滑板 → 麥當勞 → 固力果 → 蛋包飯
                 {!isOsakaTrip(activeTrip) ? " · 撳呢度會切去大阪旅程" : ""}
               </span>
               <span className="mt-1 inline-flex rounded-lg bg-amber-900 px-2 py-1 text-[10px] font-bold text-amber-50">
-                一鍵打開足跡時間軸 →
+                一鍵打開 8/31 足跡 →
               </span>
             </span>
           </button>
