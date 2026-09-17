@@ -360,6 +360,25 @@ export function tripDays(trip) {
   return diff;
 }
 
+/** 今日（或指定日）落喺旅程 startDate–endDate 內嘅旅程；多個時揀 startDate 最新嗰個。 */
+export function pickActiveTripByDate(trips, dateId = toDateId(new Date())) {
+  if (!Array.isArray(trips) || trips.length === 0 || !dateId) return null;
+  const covering = trips.filter(
+    (t) => t?.startDate && t?.endDate && dateId >= t.startDate && dateId <= t.endDate,
+  );
+  if (covering.length === 0) return null;
+  covering.sort((a, b) => {
+    if (a.startDate === b.startDate) return 0;
+    return a.startDate < b.startDate ? 1 : -1;
+  });
+  return covering[0];
+}
+
+export function tripCoversDate(trip, dateId = toDateId(new Date())) {
+  if (!trip?.startDate || !trip?.endDate || !dateId) return false;
+  return dateId >= trip.startDate && dateId <= trip.endDate;
+}
+
 export function todayIndex(trip) {
   if (!trip) return 0;
   const start = new Date(trip.startDate);
