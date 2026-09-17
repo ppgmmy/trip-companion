@@ -19,7 +19,7 @@ const KIND_STYLE = {
 
 export { buildDays } from "./itineraryDays";
 
-export default function ItineraryTab({ trip, itinerary, setItinerary }) {
+export default function ItineraryTab({ trip, itinerary, setItinerary, focusDayId = null, onFocusDayConsumed }) {
   const mapRef = useRef(null);
   const todayId = toDateId(new Date());
   const [itineraryUi, setItineraryUi] = useLocalStorage(tripKey(trip.id, TRIP_SECTIONS.itineraryUi), { dayId: null }, {
@@ -65,6 +65,20 @@ export default function ItineraryTab({ trip, itinerary, setItinerary }) {
     const todayInTrip = days.find((d) => d.id === today);
     setDayId(todayInTrip?.id || days[0].id);
   }, [dayId, days]);
+
+  useEffect(() => {
+    if (!focusDayId) return;
+    if (!days.some((d) => d.id === focusDayId)) {
+      onFocusDayConsumed?.();
+      return;
+    }
+    setDayId(focusDayId);
+    const t = window.setTimeout(() => {
+      document.getElementById("itinerary-manual-log")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      onFocusDayConsumed?.();
+    }, 120);
+    return () => window.clearTimeout(t);
+  }, [focusDayId, days, onFocusDayConsumed]);
 
   function addItem(e) {
     e.preventDefault();
@@ -212,7 +226,7 @@ export default function ItineraryTab({ trip, itinerary, setItinerary }) {
         </section>
       )}
 
-      <section className="space-y-1.5">
+      <section id="itinerary-manual-log" className="space-y-1.5">
         <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">我的手動行程</p>
         <form onSubmit={addItem} className="flex gap-1.5 rounded-2xl bg-white/85 p-2 shadow-sm">
           <input

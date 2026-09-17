@@ -4,6 +4,8 @@
  */
 
 export const OSAKA_DAY_LOG_SEED_VERSION = "osaka-day-log-v1-2026-08-30";
+export const OSAKA_DEPARTURE_DAY_ID = "2026-08-30";
+export const OSAKA_DEPARTURE_DAY_LABEL = "8/30 出發日";
 
 export const OSAKA_DAY_ITINERARY = {
   "2026-08-30": [
@@ -189,6 +191,11 @@ export function isOsakaTrip(trip) {
   if (!trip) return false;
   const blob = `${trip.city || ""} ${trip.country || ""} ${trip.name || ""} ${trip.title || ""}`.toLowerCase();
   return blob.includes("大阪") || blob.includes("osaka") || blob.includes("堺筋") || blob.includes("本町");
+}
+
+export function findOsakaTrip(trips) {
+  if (!Array.isArray(trips)) return null;
+  return trips.find((trip) => isOsakaTrip(trip)) || null;
 }
 
 export function osakaLogSeedKey(tripId) {

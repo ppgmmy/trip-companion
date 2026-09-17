@@ -4,9 +4,12 @@ import { useLocalStorage } from "./hooks/useLocalStorage";
 import { useExchangeRate } from "./hooks/useExchangeRate";
 import { uid, toDateId, normalizeExpensePayer, personalTodoStartDate } from "./data";
 import {
+  findOsakaTrip,
   isOsakaTrip,
   mergeOsakaDayFootprints,
   mergeOsakaDayItinerary,
+  OSAKA_DEPARTURE_DAY_ID,
+  OSAKA_DEPARTURE_DAY_LABEL,
 } from "./data/osakaTripLog";
 import TripSwitcher from "./components/TripSwitcher";
 import TripForm from "./components/TripForm";
@@ -59,6 +62,7 @@ export default function App() {
   const [quickAdd, setQuickAdd] = useState(false);
   const [personalAddTick, setPersonalAddTick] = useState(0);
   const [expensePanelRequest, setExpensePanelRequest] = useState("ledger");
+  const [osakaFocusDayId, setOsakaFocusDayId] = useState(null);
   const prevTripIdRef = useRef(null);
 
   // 開機再寫一次上碟，確保 localStorage 同畫面一致
@@ -123,18 +127,28 @@ export default function App() {
     { migrate: (v) => v === true || v === "true" || v === 1 },
   );
 
-  // 大阪旅程：種入 8/30 真實出發日紀錄（行程＋足跡）；以 id 去重，可重跑
+  // 所有大阪旅程都種入 8/30 紀錄（唔止而家 active 嗰個）
   useEffect(() => {
-    if (!tripId || !activeTrip || !isOsakaTrip(activeTrip)) return;
-    setItinerary((prev) => {
-      const { itinerary: next, changed } = mergeOsakaDayItinerary(prev);
-      return changed ? next : prev;
+    if (!Array.isArray(trips) || trips.length === 0) return;
+    trips.filter(isOsakaTrip).forEach((trip) => {
+      try {
+        const itinKey = tripKey(trip.id, TRIP_SECTIONS.itinerary);
+        const spotsKey = tripKey(trip.id, TRIP_SECTIONS.spots);
+        const rawItin = JSON.parse(localStorage.getItem(itinKey) || "{}");
+        const rawSpots = JSON.parse(localStorage.getItem(spotsKey) || "[]");
+        const itin = mergeOsakaDayItinerary(rawItin && typeof rawItin === "object" ? rawItin : {});
+        const foot = mergeOsakaDayFootprints(Array.isArray(rawSpots) ? rawSpots : []);
+        if (itin.changed) localStorage.setItem(itinKey, JSON.stringify(itin.itinerary));
+        if (foot.changed) localStorage.setItem(spotsKey, JSON.stringify(foot.spots));
+        if (trip.id === tripId) {
+          if (itin.changed) setItinerary(itin.itinerary);
+          if (foot.changed) setSpots(foot.spots);
+        }
+      } catch {}
     });
-    setSpots((prev) => {
-      const { spots: next, changed } = mergeOsakaDayFootprints(prev);
-      return changed ? next : prev;
-    });
-  }, [tripId, activeTrip, setItinerary, setSpots]);
+  }, [trips, tripId, setItinerary, setSpots]);
+
+  const osakaTrip = useMemo(() => findOsakaTrip(trips), [trips]);
 
   const { status: fxStatus, refresh: refreshRate } = useExchangeRate(activeTrip, rateState, setRateState);
 
@@ -247,6 +261,20 @@ export default function App() {
     setExpensePanelRequest(panel);
   }
 
+  function openOsakaDepartureLog(target = "spots") {
+    const osaka = osakaTrip || (isOsakaTrip(activeTrip) ? activeTrip : null);
+    if (!osaka) return;
+    if (activeId !== osaka.id) {
+      if (tripId && activeTab) {
+        setTripTabs((prev) => ({ ...prev, [tripId]: activeTab }));
+      }
+      setActiveId(osaka.id);
+    }
+    setAppMode("travel");
+    setActiveTab(target === "itinerary" ? "itinerary" : "spots");
+    setOsakaFocusDayId(OSAKA_DEPARTURE_DAY_ID);
+  }
+
   return (
     <div id="tc-app" className="bg-travel min-h-dvh w-full overflow-x-hidden">
       <main className="safe-top mx-auto w-full max-w-lg box-border px-3 pb-32 sm:px-4">
@@ -268,6 +296,31 @@ export default function App() {
             <ModeRail mode={appMode} onModeChange={setAppMode} personalPending={personalPending} />
           </div>
         )}
+
+        {osakaTrip && (
+          <button
+            type="button"
+            onClick={() => openOsakaDepartureLog("spots")}
+            className="mb-2 flex w-full items-start gap-2 rounded-2xl border border-amber-300/50 bg-gradient-to-r from-amber-50 to-orange-50 px-3 py-2.5 text-left shadow-sm transition active:scale-[0.99]"
+          >
+            <span className="text-lg leading-none" aria-hidden="true">
+              📖
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[13px] font-extrabold text-amber-950">
+                大阪 {OSAKA_DEPARTURE_DAY_LABEL}完整紀錄
+              </span>
+              <span className="mt-0.5 block text-[11px] leading-snug text-amber-900/80">
+                NA52 → 機場 → 關西 → 酒店 1011 → 心齋橋／LUUP → Sukiya
+                {!isOsakaTrip(activeTrip) ? " · 撳呢度會切去大阪旅程" : ""}
+              </span>
+              <span className="mt-1 inline-flex rounded-lg bg-amber-900 px-2 py-1 text-[10px] font-bold text-amber-50">
+                一鍵打開足跡時間軸 →
+              </span>
+            </span>
+          </button>
+        )}
+
         {!activeTrip ? (
           <EmptyState onCreate={createTrip} />
         ) : (
@@ -288,11 +341,26 @@ export default function App() {
                       onOpenExpenses={() => openExpenses("overview")}
                     />
                     <DailyEvolution trip={activeTrip} onOpenTool={openTool} />
-                    <ItineraryTab trip={activeTrip} itinerary={itinerary} setItinerary={setItinerary} />
+                    <ItineraryTab
+                      trip={activeTrip}
+                      itinerary={itinerary}
+                      setItinerary={setItinerary}
+                      focusDayId={osakaFocusDayId}
+                      onFocusDayConsumed={() => setOsakaFocusDayId(null)}
+                    />
                   </>
                 )}
                 {activeTab === "checklist" && <ChecklistTab checked={checklist} setChecked={setChecklist} adapt={weatherAdapt} />}
-                {activeTab === "spots" && <SpotsTab trip={activeTrip} spots={spots} setSpots={setSpots} adapt={weatherAdapt} />}
+                {activeTab === "spots" && (
+                  <SpotsTab
+                    trip={activeTrip}
+                    spots={spots}
+                    setSpots={setSpots}
+                    adapt={weatherAdapt}
+                    focusDayId={osakaFocusDayId}
+                    onFocusDayConsumed={() => setOsakaFocusDayId(null)}
+                  />
+                )}
                 {activeTab === "expenses" && (
                   <ExpenseTab
                     trip={activeTrip}

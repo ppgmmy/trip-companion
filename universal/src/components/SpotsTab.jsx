@@ -228,7 +228,7 @@ function GalleryTile({ spot, dayOptions, onRemove }) {
   );
 }
 
-export default function SpotsTab({ trip, spots, setSpots, adapt = false }) {
+export default function SpotsTab({ trip, spots, setSpots, adapt = false, focusDayId = null, onFocusDayConsumed }) {
   const dayOptions = useMemo(() => buildTripDayOptions(trip), [trip]);
   const todayId = toDateId(new Date());
   const defaultDay =
@@ -245,6 +245,7 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false }) {
   const [dayId, setDayId] = useState(defaultDay);
   const [rating, setRating] = useState(4);
   const [selected, setSelected] = useState([]);
+  const [highlightDayId, setHighlightDayId] = useState(null);
   const [newBadge, setNewBadge] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [viewMode, setViewMode] = useState("timeline"); // timeline | gallery
@@ -264,6 +265,19 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false }) {
   useEffect(() => {
     if (!dayId && defaultDay) setDayId(defaultDay);
   }, [dayId, defaultDay]);
+
+  useEffect(() => {
+    if (!focusDayId) return;
+    setViewMode("timeline");
+    setFilterType("all");
+    setHighlightDayId(focusDayId);
+    const t = window.setTimeout(() => {
+      const el = document.getElementById(`footprint-day-${focusDayId}`);
+      el?.scrollIntoView({ behavior: "smooth", block: "start" });
+      onFocusDayConsumed?.();
+    }, 120);
+    return () => window.clearTimeout(t);
+  }, [focusDayId, onFocusDayConsumed]);
 
   const allBadges = [...DEFAULT_BADGES, ...customBadges.map((b) => ({ id: `custom-${b}`, label: b }))];
 
@@ -718,13 +732,22 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false }) {
       ) : (
         <div className="space-y-2">
           {timelineGroups.map((group) => (
-            <section key={group.day.id} className="footprint-day-shell footprint-day-shell--compact">
+            <section
+              key={group.day.id}
+              id={`footprint-day-${group.day.id}`}
+              className={`footprint-day-shell footprint-day-shell--compact ${
+                highlightDayId === group.day.id ? "ring-2 ring-amber-400/70" : ""
+              }`}
+            >
               <div className="flex items-center gap-2 border-b border-jade/10 px-2.5 py-1.5">
                 <span className="flex h-6 min-w-6 items-center justify-center rounded-lg bg-gradient-to-br from-jade to-jade-deep px-1.5 text-[10px] font-bold text-white">
                   {group.day.short}
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[12px] font-bold text-ink">{group.day.label}</p>
+                  {highlightDayId === group.day.id && (
+                    <p className="text-[9px] font-bold text-amber-800">← 出發日紀錄喺呢度</p>
+                  )}
                 </div>
                 <p className="shrink-0 text-[9px] font-bold text-ink-faint">{group.spots.length} 項</p>
               </div>
