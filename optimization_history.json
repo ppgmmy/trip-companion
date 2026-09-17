@@ -277,6 +277,13 @@
       "id": "remaining-budget-countdown",
       "title": "剩餘預算倒數",
       "description": "記帳頁顯示剩餘預算百分比、依而家節奏可撐幾日，同旅程剩餘日對比，出門消費前心里有數。"
+    },
+    {
+      "date": "2026-09-18",
+      "id": "week-over-week",
+      "title": "本週 vs 上週",
+      "description": "對比本週同上一週總支出，睇消費有冇升溫。",
+      "cycle": true
     }
   ]
 }
