@@ -39,6 +39,7 @@ import {
   SpendingTimelineAlignPanel,
   TodayCategoryChips,
   RemainingBudgetCountdownPanel,
+  TripHalfPaceComparePanel,
 } from "./ExpenseDailyExtras";
 import PayerPaymentFields from "./PayerPaymentFields";
 import { useLocalStorage } from "../hooks/useLocalStorage";
@@ -709,6 +710,9 @@ export default function ExpenseTab({
                 hint={peakWeek ? `${peakWeek.label} 使得最多（${formatHkd(peakWeek.value)}）。` : "有記帳之後會顯示每週同近 7 日走勢。"}
               />
               <SevenDayTrendPanel trip={trip} expenses={expenses} />
+              <div className="mt-4">
+                <TripHalfPaceComparePanel trip={trip} expenses={expenses} />
+              </div>
               <div className="mt-4">
                 <p className="expense-stat-label">旅程每週使費（港幣）</p>
                 <BarChart bars={weeklyTotals} formatLabel={(v) => `HK$${Math.round(v)}`} />

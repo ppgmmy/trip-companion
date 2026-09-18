@@ -37,9 +37,10 @@
     "today-pace-projection",
     "today-biggest-entry",
     "today-vs-seven-day-avg",
-    "remaining-budget-countdown"
+    "remaining-budget-countdown",
+    "trip-half-pace-compare"
   ],
-  "updatedAt": "2026-09-17T17:36:19.498Z",
-  "lastFeatureId": "week-over-week",
-  "lastTitle": "本週 vs 上週"
+  "updatedAt": "2026-09-18T02:30:00.000Z",
+  "lastFeatureId": "trip-half-pace-compare",
+  "lastTitle": "前半 vs 後半日均"
 }

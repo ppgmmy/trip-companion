@@ -242,4 +242,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "記帳頁顯示剩餘預算百分比、依而家節奏可撐幾日，同旅程剩餘日對比，出門消費前心里有數。",
     pillar: "convenience",
   },
+  {
+    id: "trip-half-pace-compare",
+    title: "前半 vs 後半日均",
+    description: "將已過旅程拆成前半同後半，對比兩段日均使費，及早發現越玩越豪定越玩越慳。",
+    pillar: "analysis",
+  },
 ];

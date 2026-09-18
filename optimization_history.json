@@ -284,6 +284,12 @@
       "title": "本週 vs 上週",
       "description": "對比本週同上一週總支出，睇消費有冇升溫。",
       "cycle": true
+    },
+    {
+      "date": "2026-09-18",
+      "id": "trip-half-pace-compare",
+      "title": "前半 vs 後半日均",
+      "description": "將已過旅程拆成前半同後半，對比兩段日均使費，及早發現越玩越豪定越玩越慳。"
     }
   ]
 }
