@@ -61,12 +61,160 @@ function Stars({ value }) {
   );
 }
 
-function TimePill({ time }) {
-  if (time) return <span className="footprint-time-pill footprint-time-pill--compact">{time}</span>;
-  return <span className="footprint-time-muted footprint-time-muted--compact">···</span>;
+function TimePill({ time, lavish = false }) {
+  if (time) {
+    return (
+      <span className={`footprint-time-pill ${lavish ? "footprint-time-pill--lavish" : "footprint-time-pill--compact"}`}>
+        {time}
+      </span>
+    );
+  }
+  return (
+    <span className={`footprint-time-muted ${lavish ? "footprint-time-muted--lavish" : "footprint-time-muted--compact"}`}>
+      ···
+    </span>
+  );
 }
 
-function SpotCard({ spot, variant = "default", dayOptions, allBadges, onRemove }) {
+function ConfirmDialog({ open, title, message, confirmLabel = "確定刪除", onConfirm, onCancel }) {
+  if (!open) return null;
+  return (
+    <div
+      className="fixed inset-0 z-[70] flex items-center justify-center bg-ink/50 p-5 backdrop-blur-md"
+      role="dialog"
+      aria-modal="true"
+      aria-label={title}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onCancel?.();
+      }}
+    >
+      <div className="footprint-confirm-card w-full max-w-sm overflow-hidden">
+        <div className="footprint-confirm-card__glow" aria-hidden="true" />
+        <div className="relative px-5 pb-4 pt-5">
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-coral">再確認一次</p>
+          <h3 className="mt-1.5 font-display text-lg font-bold leading-snug text-ink">{title}</h3>
+          <p className="mt-2 text-[13px] leading-relaxed text-ink-soft">{message}</p>
+          <div className="mt-5 flex gap-2">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="flex-1 rounded-2xl border border-jade/15 bg-white px-3 py-2.5 text-[13px] font-bold text-ink-soft transition active:scale-[0.98]"
+            >
+              取消
+            </button>
+            <button
+              type="button"
+              onClick={onConfirm}
+              className="flex-1 rounded-2xl bg-gradient-to-br from-coral to-[#e11d48] px-3 py-2.5 text-[13px] font-bold text-white shadow-[0_10px_24px_-12px_rgb(244_63_94_/_0.65)] transition active:scale-[0.98]"
+            >
+              {confirmLabel}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FootprintDaySheet({
+  day,
+  spots,
+  preview,
+  highlight = false,
+  allBadges,
+  dayOptions,
+  onClose,
+  onRequestRemoveSpot,
+  onRequestRemoveDay,
+}) {
+  const removableCount = spots.filter((s) => !isOsakaSeedFootprint(s)).length;
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center sm:p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label={day.label}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose?.();
+      }}
+    >
+      <div className="footprint-day-sheet absolute inset-0 bg-ink/45 backdrop-blur-[6px]" aria-hidden="true" onClick={onClose} />
+      <div className="footprint-day-sheet__panel relative z-[1] flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden sm:max-h-[88vh]">
+        <div className="footprint-day-sheet__hero shrink-0 px-4 pb-4 pt-3">
+          <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-white/35 sm:hidden" aria-hidden="true" />
+          <div className="flex items-start gap-3">
+            <span className="footprint-day-sheet__badge flex h-12 min-w-12 items-center justify-center rounded-2xl px-2 text-sm font-bold text-white">
+              {day.short}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/70">旅程足跡 · Day {day.index}</p>
+              <h3 className="mt-0.5 font-display text-[1.35rem] font-bold leading-tight text-white">{day.label}</h3>
+              <p className="mt-1 truncate text-[12px] text-white/80">
+                {preview.range ? `${preview.range} · ` : ""}
+                {spots.length} 個足跡
+                {highlight ? " · 入口指向呢日" : ""}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/15 text-white backdrop-blur transition hover:bg-white/25 active:scale-90"
+              aria-label="關閉"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+
+        <div className="relative min-h-0 flex-1 overflow-y-auto bg-gradient-to-b from-[#f7fffc] via-white to-[#eefaf7] px-3 py-3">
+          <div className="relative pl-2">
+            {spots.length > 1 && <span className="footprint-rail footprint-rail--sheet" aria-hidden="true" />}
+            <div className="space-y-2.5">
+              {spots.map((spot, index) => (
+                <div
+                  key={spot.id}
+                  className="footprint-day-sheet__row relative flex gap-2"
+                  style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
+                >
+                  <span className="footprint-node footprint-node--sheet" aria-hidden="true" />
+                  <div className="w-[3rem] shrink-0 pt-1.5">
+                    <TimePill time={spot.time} lavish />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <SpotCard
+                      spot={spot}
+                      variant="timeline"
+                      lavish
+                      dayOptions={dayOptions}
+                      allBadges={allBadges}
+                      onRemove={onRequestRemoveSpot}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="shrink-0 border-t border-jade/10 bg-white/95 px-4 py-3 backdrop-blur">
+          {removableCount > 0 ? (
+            <button
+              type="button"
+              onClick={() => onRequestRemoveDay?.(day, removableCount)}
+              className="w-full rounded-2xl border border-coral/25 bg-gradient-to-r from-rose-50 to-white px-3 py-2.5 text-[12px] font-bold text-coral transition active:scale-[0.99]"
+            >
+              刪除呢日 {removableCount} 項可編輯足跡…
+            </button>
+          ) : (
+            <p className="text-center text-[11px] font-semibold text-ink-faint">呢日係旅程紀錄 · 唯讀 · 要改透過口述更新</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SpotCard({ spot, variant = "default", dayOptions, allBadges, onRemove, lavish = false }) {
   const meta = placeTypeMeta(spot.type);
   const accent = meta.accent || "border-l-jade";
   const day = dayOptions.find((d) => d.id === spot.dayId);
@@ -75,16 +223,20 @@ function SpotCard({ spot, variant = "default", dayOptions, allBadges, onRemove }
   if (variant === "timeline") {
     return (
       <article
-        className={`overflow-hidden rounded-lg border border-jade/10 border-l-[3px] ${accent} bg-white/95`}
+        className={`overflow-hidden border border-l-[3px] ${accent} ${
+          lavish
+            ? "rounded-2xl border-jade/15 bg-white/95 shadow-[0_10px_28px_-18px_rgb(13_127_116_/_0.45)]"
+            : "rounded-lg border-jade/10 bg-white/95"
+        }`}
       >
-        <div className="flex items-start gap-1.5 px-2 py-1.5">
-          <span className="mt-0.5 text-sm leading-none" aria-hidden="true">
+        <div className={`flex items-start gap-1.5 ${lavish ? "px-3 py-2.5" : "px-2 py-1.5"}`}>
+          <span className={`mt-0.5 leading-none ${lavish ? "text-base" : "text-sm"}`} aria-hidden="true">
             {meta.icon}
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-start gap-1">
               <div className="min-w-0 flex-1">
-                <p className="text-[12px] font-bold leading-snug text-ink">{spot.name}</p>
+                <p className={`font-bold leading-snug text-ink ${lavish ? "text-[13px]" : "text-[12px]"}`}>{spot.name}</p>
                 <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[9px] font-semibold text-ink-faint">
                   <span className={`rounded px-1 py-px ${meta.tone}`}>{meta.label}</span>
                   {spot.area && <span>{spot.area}</span>}
@@ -95,16 +247,22 @@ function SpotCard({ spot, variant = "default", dayOptions, allBadges, onRemove }
               {!locked && (
                 <button
                   type="button"
-                  onClick={() => onRemove(spot.id)}
-                  className="shrink-0 rounded p-0.5 text-[10px] text-ink-faint opacity-50 transition hover:opacity-100 active:scale-90"
+                  onClick={() => onRemove(spot)}
+                  className="shrink-0 rounded-lg px-1.5 py-0.5 text-[10px] font-bold text-ink-faint opacity-60 transition hover:bg-rose-50 hover:text-coral hover:opacity-100 active:scale-90"
                   aria-label="刪除"
                 >
-                  ✕
+                  刪除
                 </button>
               )}
             </div>
             {spot.note && (
-              <p className="mt-1 rounded-md bg-mist/70 px-1.5 py-1 text-[11px] leading-snug text-ink-soft">{spot.note}</p>
+              <p
+                className={`mt-1.5 leading-snug text-ink-soft ${
+                  lavish ? "rounded-xl bg-gradient-to-br from-mist/90 to-jade-soft/40 px-2.5 py-2 text-[12px]" : "rounded-md bg-mist/70 px-1.5 py-1 text-[11px]"
+                }`}
+              >
+                {spot.note}
+              </p>
             )}
             {spot.badges?.length > 0 && (
               <div className="mt-1 flex flex-wrap gap-0.5">
@@ -157,11 +315,11 @@ function SpotCard({ spot, variant = "default", dayOptions, allBadges, onRemove }
             {!locked && (
               <button
                 type="button"
-                onClick={() => onRemove(spot.id)}
-                className="shrink-0 rounded p-0.5 text-ink-faint active:scale-90"
+                onClick={() => onRemove(spot)}
+                className="shrink-0 rounded p-0.5 text-[10px] font-bold text-ink-faint active:scale-90"
                 aria-label="刪除"
               >
-                ✕
+                刪除
               </button>
             )}
           </div>
@@ -205,11 +363,11 @@ function GalleryTile({ spot, dayOptions, onRemove }) {
           {!locked && (
             <button
               type="button"
-              onClick={() => onRemove(spot.id)}
-              className="rounded-lg bg-white/70 p-1 text-[10px] text-ink-faint backdrop-blur active:scale-90"
+              onClick={() => onRemove(spot)}
+              className="rounded-lg bg-white/70 px-1.5 py-1 text-[10px] font-bold text-ink-faint backdrop-blur active:scale-90"
               aria-label="刪除"
             >
-              ✕
+              刪除
             </button>
           )}
         </div>
@@ -247,6 +405,7 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false, focusDa
   const [selected, setSelected] = useState([]);
   const [highlightDayId, setHighlightDayId] = useState(null);
   const [expandedDayId, setExpandedDayId] = useState(null);
+  const [pendingDelete, setPendingDelete] = useState(null);
   const [newBadge, setNewBadge] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [viewMode, setViewMode] = useState("timeline"); // timeline | gallery
@@ -281,8 +440,12 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false, focusDa
     return () => window.clearTimeout(t);
   }, [focusDayId, onFocusDayConsumed]);
 
-  function toggleDayExpanded(id) {
-    setExpandedDayId((prev) => (prev === id ? null : id));
+  function openDaySheet(id) {
+    setExpandedDayId(id);
+  }
+
+  function closeDaySheet() {
+    setExpandedDayId(null);
   }
 
   function dayPreview(spotsList) {
@@ -291,6 +454,40 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false, focusDa
     const range = times.length ? `${times[0]}${times.length > 1 ? `–${times[times.length - 1]}` : ""}` : "";
     const preview = names.slice(0, 3).join(" · ") + (names.length > 3 ? "…" : "");
     return { range, preview };
+  }
+
+  function requestRemoveSpot(spot) {
+    if (!spot || isOsakaSeedFootprint(spot)) return;
+    setPendingDelete({
+      type: "spot",
+      id: spot.id,
+      title: `刪除「${spot.name || "呢項足跡"}」？`,
+      message: "刪除後無法還原。旅程口述紀錄唔受影響。",
+    });
+  }
+
+  function requestRemoveDay(day, count) {
+    if (!day || !count) return;
+    setPendingDelete({
+      type: "day",
+      dayId: day.id,
+      title: `刪除 ${day.short} 可編輯足跡？`,
+      message: `會刪除呢日 ${count} 項你自己加嘅足跡；旅程口述紀錄（唯讀）會保留。呢個動作無法還原。`,
+    });
+  }
+
+  function confirmPendingDelete() {
+    if (!pendingDelete) return;
+    if (pendingDelete.type === "spot") {
+      const id = pendingDelete.id;
+      setSpots((prev) => prev.filter((s) => s.id !== id || isOsakaSeedFootprint(s)));
+    } else if (pendingDelete.type === "day") {
+      const dayKey = pendingDelete.dayId;
+      setSpots((prev) =>
+        prev.filter((s) => s.dayId !== dayKey || isOsakaSeedFootprint(s)),
+      );
+    }
+    setPendingDelete(null);
   }
 
   const allBadges = [...DEFAULT_BADGES, ...customBadges.map((b) => ({ id: `custom-${b}`, label: b }))];
@@ -367,6 +564,11 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false, focusDa
     return ordered;
   }, [filtered, dayOptions]);
 
+  const expandedGroup = useMemo(
+    () => timelineGroups.find((g) => g.day.id === expandedDayId) || null,
+    [timelineGroups, expandedDayId],
+  );
+
   function toggleBadge(id) {
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }
@@ -441,8 +643,12 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false, focusDa
     setFormOpen(false);
   }
 
-  function removeSpot(id) {
-    setSpots((prev) => prev.filter((s) => s.id !== id || isOsakaSeedFootprint(s)));
+  function removeSpot(spotOrId) {
+    const spot =
+      typeof spotOrId === "object" && spotOrId
+        ? spotOrId
+        : normalized.find((s) => s.id === spotOrId);
+    requestRemoveSpot(spot);
   }
 
   const heroStats = [
@@ -752,65 +958,63 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false, focusDa
               <section
                 key={group.day.id}
                 id={`footprint-day-${group.day.id}`}
-                className={`footprint-day-shell footprint-day-shell--compact ${
+                className={`footprint-day-shell footprint-day-shell--compact transition ${
                   highlightDayId === group.day.id ? "ring-2 ring-amber-400/70" : ""
-                }`}
+                } ${open ? "border-jade/35 shadow-[var(--shadow-soft)]" : ""}`}
               >
                 <button
                   type="button"
-                  onClick={() => toggleDayExpanded(group.day.id)}
-                  className="flex w-full items-center gap-2 border-b border-jade/10 px-2.5 py-2 text-left active:bg-jade-soft/30"
+                  onClick={() => openDaySheet(group.day.id)}
+                  className="footprint-day-row flex w-full items-center gap-2.5 px-2.5 py-2.5 text-left"
                   aria-expanded={open}
                 >
-                  <span className="flex h-6 min-w-6 items-center justify-center rounded-lg bg-gradient-to-br from-jade to-jade-deep px-1.5 text-[10px] font-bold text-white">
+                  <span className="flex h-8 min-w-8 items-center justify-center rounded-xl bg-gradient-to-br from-jade via-[#14b8a6] to-jade-deep px-1.5 text-[11px] font-bold text-white shadow-[0_6px_14px_-8px_rgb(13_127_116_/_0.8)]">
                     {group.day.short}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[12px] font-bold text-ink">{group.day.label}</p>
-                    {!open && (
-                      <p className="mt-0.5 truncate text-[10px] leading-snug text-ink-faint">
-                        {preview.range ? `${preview.range} · ` : ""}
-                        {preview.preview || `${group.spots.length} 項足跡`}
-                      </p>
-                    )}
-                    {open && highlightDayId === group.day.id && (
-                      <p className="text-[9px] font-bold text-amber-800">← 旅程紀錄喺呢度</p>
+                    <p className="truncate text-[13px] font-bold text-ink">{group.day.label}</p>
+                    <p className="mt-0.5 truncate text-[10px] leading-snug text-ink-faint">
+                      {preview.range ? `${preview.range} · ` : ""}
+                      {preview.preview || `${group.spots.length} 項足跡`}
+                    </p>
+                    {highlightDayId === group.day.id && (
+                      <p className="mt-0.5 text-[9px] font-bold text-amber-800">入口指向呢日</p>
                     )}
                   </div>
-                  <span className="shrink-0 text-[9px] font-bold text-ink-faint">{group.spots.length} 項</span>
-                  <span className="shrink-0 text-[11px] font-bold text-jade-deep" aria-hidden="true">
-                    {open ? "▴" : "▾"}
+                  <span className="shrink-0 rounded-full bg-jade-soft/80 px-2 py-0.5 text-[9px] font-bold text-jade-deep">
+                    {group.spots.length}
+                  </span>
+                  <span className="shrink-0 text-[12px] font-bold text-jade-deep" aria-hidden="true">
+                    ›
                   </span>
                 </button>
-                {open && (
-                  <div className="relative px-2 py-1.5 pl-3.5">
-                    {group.spots.length > 1 && <span className="footprint-rail footprint-rail--compact" aria-hidden="true" />}
-                    <div className="space-y-1">
-                      {group.spots.map((spot) => (
-                        <div key={spot.id} className="relative flex gap-1.5">
-                          <span className="footprint-node footprint-node--compact" aria-hidden="true" />
-                          <div className="w-[2.6rem] shrink-0 pt-1">
-                            <TimePill time={spot.time} />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <SpotCard
-                              spot={spot}
-                              variant="timeline"
-                              dayOptions={dayOptions}
-                              allBadges={allBadges}
-                              onRemove={removeSpot}
-                            />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </section>
             );
           })}
         </div>
       )}
+
+      {expandedGroup && (
+        <FootprintDaySheet
+          day={expandedGroup.day}
+          spots={expandedGroup.spots}
+          preview={dayPreview(expandedGroup.spots)}
+          highlight={highlightDayId === expandedGroup.day.id}
+          allBadges={allBadges}
+          dayOptions={dayOptions}
+          onClose={closeDaySheet}
+          onRequestRemoveSpot={requestRemoveSpot}
+          onRequestRemoveDay={requestRemoveDay}
+        />
+      )}
+
+      <ConfirmDialog
+        open={Boolean(pendingDelete)}
+        title={pendingDelete?.title || "確定刪除？"}
+        message={pendingDelete?.message || ""}
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={confirmPendingDelete}
+      />
     </div>
   );
 }
