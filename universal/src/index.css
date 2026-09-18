@@ -441,6 +441,26 @@ body {
   box-shadow: 0 0 0 3px rgb(18 168 154 / 0.16);
 }
 
+.footprint-rail--inline {
+  left: calc(0.4375rem - 1px);
+  top: 0.85rem;
+  bottom: 0.4rem;
+  width: 2px;
+  background: linear-gradient(180deg, #12a89a 0%, rgb(18 168 154 / 0.2) 80%, transparent 100%);
+}
+
+.footprint-node--inline {
+  position: static;
+  left: auto;
+  top: auto;
+  z-index: 1;
+  display: block;
+  height: 0.55rem;
+  width: 0.55rem;
+  border-width: 2px;
+  box-shadow: 0 0 0 3px rgb(18 168 154 / 0.16);
+}
+
 .footprint-confirm-card {
   position: relative;
   border-radius: 1.5rem;

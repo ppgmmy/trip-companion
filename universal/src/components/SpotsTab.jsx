@@ -904,16 +904,18 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false, focusDa
                 </button>
                 {open && (
                   <div className="footprint-day-inline border-t border-jade/10 bg-gradient-to-b from-[#f7fffc] via-white to-[#eefaf7] px-2.5 pb-2.5 pt-2">
-                    <div className="relative pl-1.5">
-                      {group.spots.length > 1 && <span className="footprint-rail footprint-rail--sheet" aria-hidden="true" />}
+                    <div className="relative">
+                      {group.spots.length > 1 && <span className="footprint-rail footprint-rail--inline" aria-hidden="true" />}
                       <div className="space-y-2">
                         {group.spots.map((spot, index) => (
                           <div
                             key={spot.id}
-                            className="footprint-day-sheet__row relative flex gap-1.5"
+                            className="footprint-day-sheet__row relative flex gap-2"
                             style={{ animationDelay: `${Math.min(index, 8) * 35}ms` }}
                           >
-                            <span className="footprint-node footprint-node--sheet" aria-hidden="true" />
+                            <div className="relative z-[1] flex w-3.5 shrink-0 justify-center pt-[0.85rem]" aria-hidden="true">
+                              <span className="footprint-node footprint-node--inline" />
+                            </div>
                             <div className="w-[2.9rem] shrink-0 pt-1">
                               <TimePill time={spot.time} lavish />
                             </div>
