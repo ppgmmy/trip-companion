@@ -24,6 +24,7 @@ export const OSAKA_MAP = {
     { id: "umeda", label: "梅田", lat: 34.7024, lng: 135.4959, color: "#14b8a6" },
     { id: "tennoji", label: "天王寺", lat: 34.6462, lng: 135.5133, color: "#6366f1" },
     { id: "nakanoshima", label: "中之島", lat: 34.6924, lng: 135.501, color: "#84cc16" },
+    { id: "nara", label: "奈良", lat: 34.6851, lng: 135.8048, color: "#22c55e" },
   ],
 };
 
@@ -95,14 +96,17 @@ const OSAKA_CURATED = {
     ],
   },
   "2026-09-02": {
-    title: "梅田一日",
-    vibe: "御堂筋線北上",
-    zone: "umeda",
+    title: "近鐵奈良日",
+    vibe: "小雨睇鹿 · Daiso 襪 · 壽司肚痛謎 · Seattle Cafe · 毛巾",
+    zone: "nara",
     slots: [
-      slot("food", "10:30", "梅田 Depachika", "百貨地下美食街早餐", "梅田", "depachika Umeda Osaka"),
-      slot("spot", "13:30", "Grand Front Osaka", "最新商場同空中花園", "梅田", "Grand Front Osaka"),
-      slot("food", "17:00", "梅田食街", "阪急百貨或 Lucua 餐廳", "梅田", "restaurants Umeda Osaka"),
-      slot("spot", "19:30", "梅田空中庭園", "173 米展望台睇日落", "梅田", "Umeda Sky Building Osaka"),
+      slot("food", "09:30", "樓下珈琲館早餐", "九點半起身後落樓食", "堺筋本町", "珈琲館 Sakaisuji-Hommachi Osaka"),
+      slot("spot", "10:30", "日本橋 → 近鐵奈良", "轉近鐵出發", "日本橋", "Kintetsu Nara from Nipponbashi"),
+      slot("spot", "12:00", "小雨睇鹿", "奈良公園行陣", "奈良", "Nara Park deer"),
+      slot("spot", "13:00", "微型商店街 Daiso", "買咗幾對襪", "奈良", "Daiso Nara shopping street"),
+      slot("food", "14:30", "壽司店", "壽司超好味、烏冬都好；之後有人肚痛唔認", "奈良", "sushi udon Nara shopping street"),
+      slot("food", "16:30", "Seattle Best Cafe", "飲嘢唔錯", "奈良", "Seattle Best Coffee Nara"),
+      slot("spot", "17:30", "站前特色毛巾", "¥600 幾買咗一條", "奈良", "Nara souvenir towel station"),
     ],
   },
   "2026-09-03": {
@@ -474,6 +478,8 @@ const AREA_ZONE_HINTS = [
   ["中之島", "nakanoshima"],
   ["天保山", "tennoji"],
   ["環球", "hommachi"],
+  ["奈良", "nara"],
+  ["日本橋", "kuromon"],
   ["Phra Ram", "rama9"],
   ["Siam", "siam"],
   ["Chong Nonsi", "chong"],

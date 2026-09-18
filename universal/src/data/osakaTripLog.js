@@ -1,9 +1,9 @@
 /**
  * 大阪旅程真實日程紀錄（由用戶口述整理）。
- * 已有 8/30、8/31、9/1、9/9；其餘日子之後再補。
+ * 已有 8/30、8/31、9/1、9/2、9/9；其餘日子之後再補。
  */
 
-export const OSAKA_DAY_LOG_SEED_VERSION = "osaka-day-log-v4-2026-09-01";
+export const OSAKA_DAY_LOG_SEED_VERSION = "osaka-day-log-v5-2026-09-02";
 /** 一鍵入口預設跳去最新補完嗰日 */
 export const OSAKA_FOCUS_DAY_ID = "2026-09-09";
 export const OSAKA_LOG_BANNER_LABEL = "8/30–9/9 旅程紀錄";
@@ -132,6 +132,53 @@ export const OSAKA_DAY_ITINERARY = {
       id: "osaka-0901-1830",
       time: "18:30",
       text: "返酒店 · 望咗下樓下珈琲館 · 想買咖啡豆",
+    },
+  ],
+  "2026-09-02": [
+    {
+      id: "osaka-0902-0930",
+      time: "09:30",
+      text: "起身梳洗 · 落樓下珈琲館食早餐",
+    },
+    {
+      id: "osaka-0902-1030",
+      time: "10:30",
+      text: "搭去日本橋 → 轉近鐵去奈良",
+    },
+    {
+      id: "osaka-0902-1200",
+      time: "12:00",
+      text: "小雨 · 行陣睇鹿",
+    },
+    {
+      id: "osaka-0902-1300",
+      time: "13:00",
+      text: "奈良微型商店街 · Daiso 買咗幾對襪",
+    },
+    {
+      id: "osaka-0902-1430",
+      time: "14:30",
+      text: "附近壽司店 · 壽司超好味、烏冬都好食（之後有人肚痛唔認）",
+    },
+    {
+      id: "osaka-0902-1530",
+      time: "15:30",
+      text: "繼續行街 · 感覺比大阪簡樸、接近民生",
+    },
+    {
+      id: "osaka-0902-1630",
+      time: "16:30",
+      text: "Seattle Best Cafe · 飲嘢唔錯",
+    },
+    {
+      id: "osaka-0902-1730",
+      time: "17:30",
+      text: "返鐵路站 · 買奈良特色毛巾（¥600 幾）",
+    },
+    {
+      id: "osaka-0902-1930",
+      time: "19:30",
+      text: "約七點半到酒店附近 · 7-Eleven 買少少嘢返酒店",
     },
   ],
   "2026-09-09": [
@@ -442,6 +489,105 @@ export const OSAKA_DAY_FOOTPRINTS = [
     area: "堺筋本町",
     note: "夜晚返酒店望咗下樓下珈琲館，想買下佢啲咖啡豆。（店名就係「珈琲館」，唔係 cafe。）",
     rating: 4,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0902-breakfast",
+    dayId: "2026-09-02",
+    time: "09:30",
+    type: "cafe",
+    name: "樓下珈琲館早餐",
+    area: "堺筋本町",
+    note: "九點半起身梳洗，落樓下珈琲館食早餐。",
+    rating: 4,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0902-kintetsu",
+    dayId: "2026-09-02",
+    time: "10:30",
+    type: "move",
+    name: "日本橋 → 近鐵奈良",
+    area: "日本橋／奈良",
+    note: "先搭去日本橋，再轉近鐵去奈良。",
+    rating: 0,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0902-deer",
+    dayId: "2026-09-02",
+    time: "12:00",
+    type: "spot",
+    name: "小雨睇鹿",
+    area: "奈良公園",
+    note: "果日好似有點小雨，行咗陣去睇鹿。",
+    rating: 4,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0902-daiso",
+    dayId: "2026-09-02",
+    time: "13:00",
+    type: "shop",
+    name: "奈良微型商店街 · Daiso",
+    area: "奈良",
+    note: "落返去奈良微型商店街，有 Daiso；行咗陣買咗幾對襪。",
+    rating: 4,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0902-sushi",
+    dayId: "2026-09-02",
+    time: "14:30",
+    type: "food",
+    name: "奈良壽司店",
+    area: "奈良商店街附近",
+    note: "壽司超好味，烏冬都好好食；不過啲壽司食完會肚痛（有人唔認及扮嘢）。",
+    rating: 5,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0902-walk",
+    dayId: "2026-09-02",
+    time: "15:30",
+    type: "spot",
+    name: "奈良街景散步",
+    area: "奈良",
+    note: "繼續行；同大阪市感覺有啲唔同，比較簡樸、接近民生。",
+    rating: 5,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0902-seattle",
+    dayId: "2026-09-02",
+    time: "16:30",
+    type: "cafe",
+    name: "Seattle Best Cafe",
+    area: "奈良",
+    note: "去咗間 cafe 飲嘢，叫 Seattle Best Cafe，間嘢都唔錯。",
+    rating: 4,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0902-towel",
+    dayId: "2026-09-02",
+    time: "17:30",
+    type: "shop",
+    name: "奈良特色毛巾",
+    area: "奈良鐵路站",
+    note: "返鐵路站買咗一條有奈良特色嘅毛巾，¥600 幾。",
+    rating: 4,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0902-seven",
+    dayId: "2026-09-02",
+    time: "19:30",
+    type: "shop",
+    name: "酒店附近 7-Eleven",
+    area: "堺筋本町",
+    note: "約七點半到酒店附近，7 仔買少少嘢，之後返酒店。",
+    rating: 0,
     badges: [],
   },
   {

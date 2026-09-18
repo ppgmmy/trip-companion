@@ -311,7 +311,7 @@ export default function App() {
                 大阪 {OSAKA_LOG_BANNER_LABEL}
               </span>
               <span className="mt-0.5 block text-[11px] leading-snug text-amber-900/80">
-                最新 9/9：天王寺 → 3COINS → Bic → NAMCO → 靚橋 → 買耳機（另已補 9/1）
+                最新 9/9：天王寺商場日（另已補 9/1 心齋橋、9/2 奈良）
                 {!isOsakaTrip(activeTrip) ? " · 撳呢度會切去大阪旅程" : ""}
               </span>
               <span className="mt-1 inline-flex rounded-lg bg-amber-900 px-2 py-1 text-[10px] font-bold text-amber-50">
