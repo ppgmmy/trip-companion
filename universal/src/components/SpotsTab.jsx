@@ -116,104 +116,6 @@ function ConfirmDialog({ open, title, message, confirmLabel = "確定刪除", on
   );
 }
 
-function FootprintDaySheet({
-  day,
-  spots,
-  preview,
-  highlight = false,
-  allBadges,
-  dayOptions,
-  onClose,
-  onRequestRemoveSpot,
-  onRequestRemoveDay,
-}) {
-  const removableCount = spots.filter((s) => !isOsakaSeedFootprint(s)).length;
-  return (
-    <div
-      className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center sm:p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-label={day.label}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose?.();
-      }}
-    >
-      <div className="footprint-day-sheet absolute inset-0 bg-ink/45 backdrop-blur-[6px]" aria-hidden="true" onClick={onClose} />
-      <div className="footprint-day-sheet__panel relative z-[1] flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden sm:max-h-[88vh]">
-        <div className="footprint-day-sheet__hero shrink-0 px-4 pb-4 pt-3">
-          <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-white/35 sm:hidden" aria-hidden="true" />
-          <div className="flex items-start gap-3">
-            <span className="footprint-day-sheet__badge flex h-12 min-w-12 items-center justify-center rounded-2xl px-2 text-sm font-bold text-white">
-              {day.short}
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/70">旅程足跡 · Day {day.index}</p>
-              <h3 className="mt-0.5 font-display text-[1.35rem] font-bold leading-tight text-white">{day.label}</h3>
-              <p className="mt-1 truncate text-[12px] text-white/80">
-                {preview.range ? `${preview.range} · ` : ""}
-                {spots.length} 個足跡
-                {highlight ? " · 入口指向呢日" : ""}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/15 text-white backdrop-blur transition hover:bg-white/25 active:scale-90"
-              aria-label="關閉"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-
-        <div className="relative min-h-0 flex-1 overflow-y-auto bg-gradient-to-b from-[#f7fffc] via-white to-[#eefaf7] px-3 py-3">
-          <div className="relative pl-2">
-            {spots.length > 1 && <span className="footprint-rail footprint-rail--sheet" aria-hidden="true" />}
-            <div className="space-y-2.5">
-              {spots.map((spot, index) => (
-                <div
-                  key={spot.id}
-                  className="footprint-day-sheet__row relative flex gap-2"
-                  style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
-                >
-                  <span className="footprint-node footprint-node--sheet" aria-hidden="true" />
-                  <div className="w-[3rem] shrink-0 pt-1.5">
-                    <TimePill time={spot.time} lavish />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <SpotCard
-                      spot={spot}
-                      variant="timeline"
-                      lavish
-                      dayOptions={dayOptions}
-                      allBadges={allBadges}
-                      onRemove={onRequestRemoveSpot}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="shrink-0 border-t border-jade/10 bg-white/95 px-4 py-3 backdrop-blur">
-          {removableCount > 0 ? (
-            <button
-              type="button"
-              onClick={() => onRequestRemoveDay?.(day, removableCount)}
-              className="w-full rounded-2xl border border-coral/25 bg-gradient-to-r from-rose-50 to-white px-3 py-2.5 text-[12px] font-bold text-coral transition active:scale-[0.99]"
-            >
-              刪除呢日 {removableCount} 項可編輯足跡…
-            </button>
-          ) : (
-            <p className="text-center text-[11px] font-semibold text-ink-faint">呢日係旅程紀錄 · 唯讀 · 要改透過口述更新</p>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function SpotCard({ spot, variant = "default", dayOptions, allBadges, onRemove, lavish = false }) {
   const meta = placeTypeMeta(spot.type);
   const accent = meta.accent || "border-l-jade";
@@ -440,12 +342,8 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false, focusDa
     return () => window.clearTimeout(t);
   }, [focusDayId, onFocusDayConsumed]);
 
-  function openDaySheet(id) {
-    setExpandedDayId(id);
-  }
-
-  function closeDaySheet() {
-    setExpandedDayId(null);
+  function toggleDayExpanded(id) {
+    setExpandedDayId((prev) => (prev === id ? null : id));
   }
 
   function dayPreview(spotsList) {
@@ -563,11 +461,6 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false, focusDa
     }
     return ordered;
   }, [filtered, dayOptions]);
-
-  const expandedGroup = useMemo(
-    () => timelineGroups.find((g) => g.day.id === expandedDayId) || null,
-    [timelineGroups, expandedDayId],
-  );
 
   function toggleBadge(id) {
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -954,17 +847,18 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false, focusDa
           {timelineGroups.map((group) => {
             const open = expandedDayId === group.day.id;
             const preview = dayPreview(group.spots);
+            const removableCount = group.spots.filter((s) => !isOsakaSeedFootprint(s)).length;
             return (
               <section
                 key={group.day.id}
                 id={`footprint-day-${group.day.id}`}
                 className={`footprint-day-shell footprint-day-shell--compact transition ${
                   highlightDayId === group.day.id ? "ring-2 ring-amber-400/70" : ""
-                } ${open ? "border-jade/35 shadow-[var(--shadow-soft)]" : ""}`}
+                } ${open ? "footprint-day-shell--open border-jade/35 shadow-[var(--shadow-soft)]" : ""}`}
               >
                 <button
                   type="button"
-                  onClick={() => openDaySheet(group.day.id)}
+                  onClick={() => toggleDayExpanded(group.day.id)}
                   className="footprint-day-row flex w-full items-center gap-2.5 px-2.5 py-2.5 text-left"
                   aria-expanded={open}
                 >
@@ -973,11 +867,13 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false, focusDa
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[13px] font-bold text-ink">{group.day.label}</p>
-                    <p className="mt-0.5 truncate text-[10px] leading-snug text-ink-faint">
-                      {preview.range ? `${preview.range} · ` : ""}
-                      {preview.preview || `${group.spots.length} 項足跡`}
-                    </p>
-                    {highlightDayId === group.day.id && (
+                    {!open && (
+                      <p className="mt-0.5 truncate text-[10px] leading-snug text-ink-faint">
+                        {preview.range ? `${preview.range} · ` : ""}
+                        {preview.preview || `${group.spots.length} 項足跡`}
+                      </p>
+                    )}
+                    {open && highlightDayId === group.day.id && (
                       <p className="mt-0.5 text-[9px] font-bold text-amber-800">入口指向呢日</p>
                     )}
                   </div>
@@ -985,27 +881,59 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false, focusDa
                     {group.spots.length}
                   </span>
                   <span className="shrink-0 text-[12px] font-bold text-jade-deep" aria-hidden="true">
-                    ›
+                    {open ? "▴" : "▾"}
                   </span>
                 </button>
+                {open && (
+                  <div className="footprint-day-inline border-t border-jade/10 bg-gradient-to-b from-[#f7fffc] via-white to-[#eefaf7] px-2.5 pb-2.5 pt-2">
+                    <div className="relative pl-1.5">
+                      {group.spots.length > 1 && <span className="footprint-rail footprint-rail--sheet" aria-hidden="true" />}
+                      <div className="space-y-2">
+                        {group.spots.map((spot, index) => (
+                          <div
+                            key={spot.id}
+                            className="footprint-day-sheet__row relative flex gap-1.5"
+                            style={{ animationDelay: `${Math.min(index, 8) * 35}ms` }}
+                          >
+                            <span className="footprint-node footprint-node--sheet" aria-hidden="true" />
+                            <div className="w-[2.9rem] shrink-0 pt-1">
+                              <TimePill time={spot.time} lavish />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <SpotCard
+                                spot={spot}
+                                variant="timeline"
+                                lavish
+                                dayOptions={dayOptions}
+                                allBadges={allBadges}
+                                onRemove={requestRemoveSpot}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="mt-2.5">
+                      {removableCount > 0 ? (
+                        <button
+                          type="button"
+                          onClick={() => requestRemoveDay(group.day, removableCount)}
+                          className="w-full rounded-xl border border-coral/25 bg-gradient-to-r from-rose-50 to-white px-3 py-2 text-[11px] font-bold text-coral transition active:scale-[0.99]"
+                        >
+                          刪除呢日 {removableCount} 項可編輯足跡…
+                        </button>
+                      ) : (
+                        <p className="px-1 text-center text-[10px] font-semibold text-ink-faint">
+                          旅程紀錄 · 唯讀 · 要改透過口述更新
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
               </section>
             );
           })}
         </div>
-      )}
-
-      {expandedGroup && (
-        <FootprintDaySheet
-          day={expandedGroup.day}
-          spots={expandedGroup.spots}
-          preview={dayPreview(expandedGroup.spots)}
-          highlight={highlightDayId === expandedGroup.day.id}
-          allBadges={allBadges}
-          dayOptions={dayOptions}
-          onClose={closeDaySheet}
-          onRequestRemoveSpot={requestRemoveSpot}
-          onRequestRemoveDay={requestRemoveDay}
-        />
       )}
 
       <ConfirmDialog
