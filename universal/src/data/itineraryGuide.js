@@ -71,10 +71,10 @@ const OSAKA_CURATED = {
   },
   "2026-08-31": {
     title: "心齋橋慢活 → 難波",
-    vibe: "訓晏 · Cafe · LUUP · 麥當勞 · 固力果 · 蛋包飯 · 驚險滑板返",
+    vibe: "訓晏 · 珈琲館 · LUUP · 麥當勞 · 固力果 · 蛋包飯 · 驚險滑板返",
     zone: "shinsaibashi",
     slots: [
-      slot("food", "14:00", "樓下 Cafe", "訓到好晏，兩點先落樓食", "堺筋本町", "cafes near Sakaisuji-Hommachi Osaka"),
+      slot("food", "14:00", "樓下珈琲館", "訓到好晏，兩點先落樓食", "堺筋本町", "珈琲館 Sakaisuji-Hommachi Osaka"),
       slot("spot", "14:45", "心齋橋＋LUUP", "踩單車／滑板落心齋橋行街", "心齋橋", "Shinsaibashi Osaka LUUP"),
       slot("food", "16:00", "麥當勞特飲", "薄荷朱古力飲品＋迷你熱香餅", "心齋橋", "McDonalds Shinsaibashi Osaka"),
       slot("spot", "18:30", "固力果招牌", "行到難波／道頓堀睇大 poster", "道頓堀", "Glico sign Dotonbori Osaka"),
@@ -83,14 +83,15 @@ const OSAKA_CURATED = {
     ],
   },
   "2026-09-01": {
-    title: "大阪城",
-    vibe: "從本町搭地鐵北上",
-    zone: "castle",
+    title: "心齋橋商店街日",
+    vibe: "PARCO／大丸牛扒 · 星乃 · 雜貨鋪 · 珈琲館咖啡豆",
+    zone: "shinsaibashi",
     slots: [
-      slot("food", "10:30", "堺筋本町早餐", "出發前喺基地附近食", "堺筋本町", "breakfast near Sakaisuji-Hommachi Osaka"),
-      slot("spot", "13:30", "大阪城天守閣", "地標城堡同公園散步", "大阪城", "Osaka Castle Osaka"),
-      slot("food", "17:00", "大阪城公園周邊", "公園附近食午餐或下午茶", "大阪城", "restaurants near Osaka Castle"),
-      slot("spot", "19:30", "天滿宮／天神橋筋", "商店街傍晚行", "天神橋", "Tenjinbashi-suji Shopping Street Osaka"),
+      slot("spot", "11:00", "心齋橋 · PARCO／大丸", "商店街行街", "心齋橋", "PARCO Daimaru Shinsaibashi Osaka"),
+      slot("food", "12:30", "上樓牛扒", "約港紙 $130／位，中低價高質幾抵", "心齋橋", "steak restaurant Shinsaibashi PARCO Osaka"),
+      slot("food", "14:00", "星乃咖啡", "soufflé 難食，咖啡好飲", "心齋橋", "Hoshino Coffee Shinsaibashi Osaka"),
+      slot("spot", "15:30", "幾層雜貨鋪", "下層文具，上面包裝袋／招紙", "心齋橋", "zakka stationery packaging Shinsaibashi Osaka"),
+      slot("food", "18:30", "樓下珈琲館", "返酒店望咗下，想買咖啡豆", "堺筋本町", "珈琲館 Sakaisuji-Hommachi Osaka"),
     ],
   },
   "2026-09-02": {

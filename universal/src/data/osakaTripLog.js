@@ -1,9 +1,9 @@
 /**
  * 大阪旅程真實日程紀錄（由用戶口述整理）。
- * 已有 8/30、8/31、9/9；其餘日子之後再補。
+ * 已有 8/30、8/31、9/1、9/9；其餘日子之後再補。
  */
 
-export const OSAKA_DAY_LOG_SEED_VERSION = "osaka-day-log-v3-2026-09-09";
+export const OSAKA_DAY_LOG_SEED_VERSION = "osaka-day-log-v4-2026-09-01";
 /** 一鍵入口預設跳去最新補完嗰日 */
 export const OSAKA_FOCUS_DAY_ID = "2026-09-09";
 export const OSAKA_LOG_BANNER_LABEL = "8/30–9/9 旅程紀錄";
@@ -74,7 +74,7 @@ export const OSAKA_DAY_ITINERARY = {
     {
       id: "osaka-0831-1400",
       time: "14:00",
-      text: "落樓下 Cafe 食晏",
+      text: "落樓下珈琲館食晏",
     },
     {
       id: "osaka-0831-1445",
@@ -100,6 +100,38 @@ export const OSAKA_DAY_ITINERARY = {
       id: "osaka-0831-2030",
       time: "20:30",
       text: "難波渣滑板車返酒店 · 過程十分驚險",
+    },
+  ],
+  "2026-09-01": [
+    {
+      id: "osaka-0901-1000",
+      time: "10:00",
+      text: "訓到大約十點 · 午前先出動",
+    },
+    {
+      id: "osaka-0901-1100",
+      time: "11:00",
+      text: "心齋橋商店街 · PARCO 同大丸",
+    },
+    {
+      id: "osaka-0901-1230",
+      time: "12:30",
+      text: "上樓食牛扒 · 約港紙 $130／位 · 中低價食到高質 · 幾抵",
+    },
+    {
+      id: "osaka-0901-1400",
+      time: "14:00",
+      text: "星乃咖啡 · soufflé 難食 · 咖啡好飲",
+    },
+    {
+      id: "osaka-0901-1530",
+      time: "15:30",
+      text: "幾層雜貨鋪 · 下層文具 · 上面包裝袋／招紙",
+    },
+    {
+      id: "osaka-0901-1830",
+      time: "18:30",
+      text: "返酒店 · 望咗下樓下珈琲館 · 想買咖啡豆",
     },
   ],
   "2026-09-09": [
@@ -285,9 +317,9 @@ export const OSAKA_DAY_FOOTPRINTS = [
     dayId: "2026-08-31",
     time: "14:00",
     type: "cafe",
-    name: "樓下 Cafe",
+    name: "樓下珈琲館",
     area: "堺筋本町",
-    note: "晏晝兩點落樓下咖啡館食。",
+    note: "晏晝兩點落樓下珈琲館食。",
     rating: 4,
     badges: [],
   },
@@ -298,7 +330,7 @@ export const OSAKA_DAY_FOOTPRINTS = [
     type: "experience",
     name: "踩單車／滑板 · 心齋橋",
     area: "心齋橋",
-    note: "食完 Cafe 踩單車、踩滑板落心齋橋行街。",
+    note: "食完珈琲館踩單車、踩滑板落心齋橋行街。",
     rating: 5,
     badges: [],
   },
@@ -344,6 +376,72 @@ export const OSAKA_DAY_FOOTPRINTS = [
     area: "難波 → 堺筋本町",
     note: "食完蛋包飯喺難波渣滑板車返去，過程十分驚險。",
     rating: 5,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0901-sleepin",
+    dayId: "2026-09-01",
+    time: "10:00",
+    type: "other",
+    name: "訓到大約十點",
+    area: "堺筋本町酒店",
+    note: "9/1 訓到大約十點，之後先出門。",
+    rating: 0,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0901-shinsaibashi",
+    dayId: "2026-09-01",
+    time: "11:00",
+    type: "shop",
+    name: "心齋橋商店街 · PARCO／大丸",
+    area: "心齋橋",
+    note: "去心齋橋商店街，逛 PARCO 同大丸。",
+    rating: 4,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0901-steak",
+    dayId: "2026-09-01",
+    time: "12:30",
+    type: "food",
+    name: "上樓食牛扒",
+    area: "心齋橋／PARCO・大丸",
+    note: "香港中低價錢但食到高質牛扒，幾抵；每位約港紙 $130。",
+    rating: 5,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0901-hoshino",
+    dayId: "2026-09-01",
+    time: "14:00",
+    type: "cafe",
+    name: "星乃咖啡 · soufflé／咖啡",
+    area: "心齋橋商店街",
+    note: "出返心齋橋商店街去星乃咖啡：soufflé 難食，咖啡好飲。",
+    rating: 3,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0901-zakka",
+    dayId: "2026-09-01",
+    time: "15:30",
+    type: "shop",
+    name: "幾層雜貨鋪",
+    area: "心齋橋商店街",
+    note: "行埋商店街有間幾層雜貨鋪：下層文具，上面幾層賣產品包裝袋、招紙等。",
+    rating: 4,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0901-kohikan",
+    dayId: "2026-09-01",
+    time: "18:30",
+    type: "cafe",
+    name: "酒店樓下珈琲館",
+    area: "堺筋本町",
+    note: "夜晚返酒店望咗下樓下珈琲館，想買下佢啲咖啡豆。（店名就係「珈琲館」，唔係 cafe。）",
+    rating: 4,
     badges: [],
   },
   {
@@ -451,18 +549,25 @@ export function osakaLogSeedKey(tripId) {
   return `universal_trip_${tripId}_${OSAKA_DAY_LOG_SEED_VERSION}`;
 }
 
-/** 合併一日行程：以 seed id 去重；唔抹走用戶其他手動項 */
+/** 合併一日行程：以 seed id 去重／覆寫 seed 欄位；唔抹走用戶其他手動項 */
 export function mergeOsakaDayItinerary(existingItinerary = {}) {
   const next = { ...(existingItinerary && typeof existingItinerary === "object" ? existingItinerary : {}) };
   let changed = false;
   Object.entries(OSAKA_DAY_ITINERARY).forEach(([dateId, items]) => {
     const current = Array.isArray(next[dateId]) ? [...next[dateId]] : [];
-    const ids = new Set(current.map((item) => item.id));
+    const byId = new Map(current.map((item) => [item.id, item]));
     items.forEach((item) => {
-      if (ids.has(item.id)) return;
-      current.push({ ...item });
-      ids.add(item.id);
-      changed = true;
+      const prev = byId.get(item.id);
+      if (!prev) {
+        current.push({ ...item });
+        byId.set(item.id, item);
+        changed = true;
+        return;
+      }
+      if (prev.time !== item.time || prev.text !== item.text) {
+        Object.assign(prev, { time: item.time, text: item.text });
+        changed = true;
+      }
     });
     current.sort((a, b) => String(a.time || "").localeCompare(String(b.time || "")));
     next[dateId] = current;
@@ -470,20 +575,47 @@ export function mergeOsakaDayItinerary(existingItinerary = {}) {
   return { itinerary: next, changed };
 }
 
-/** 合併足跡：以 seed id 去重，可安全重跑 */
+/** 合併足跡：以 seed id 去重／覆寫 seed 欄位，可安全重跑 */
 export function mergeOsakaDayFootprints(existingSpots = []) {
   const list = Array.isArray(existingSpots) ? [...existingSpots] : [];
-  const ids = new Set(list.map((s) => s.id));
+  const indexById = new Map(list.map((s, i) => [s.id, i]));
   let changed = false;
   const base = Date.now();
   OSAKA_DAY_FOOTPRINTS.forEach((spot, index) => {
-    if (ids.has(spot.id)) return;
-    list.push({
-      ...spot,
-      createdAt: base + index,
-    });
-    ids.add(spot.id);
-    changed = true;
+    const at = indexById.get(spot.id);
+    if (at == null) {
+      list.push({
+        ...spot,
+        createdAt: base + index,
+      });
+      indexById.set(spot.id, list.length - 1);
+      changed = true;
+      return;
+    }
+    const prev = list[at];
+    const next = {
+      ...prev,
+      dayId: spot.dayId,
+      time: spot.time,
+      type: spot.type,
+      name: spot.name,
+      area: spot.area,
+      note: spot.note,
+      rating: spot.rating,
+      badges: Array.isArray(spot.badges) ? [...spot.badges] : [],
+    };
+    if (
+      prev.dayId !== next.dayId ||
+      prev.time !== next.time ||
+      prev.type !== next.type ||
+      prev.name !== next.name ||
+      prev.area !== next.area ||
+      prev.note !== next.note ||
+      prev.rating !== next.rating
+    ) {
+      list[at] = next;
+      changed = true;
+    }
   });
   return { spots: list, changed };
 }
