@@ -334,13 +334,31 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false, focusDa
     setFilterType("all");
     setHighlightDayId(focusDayId);
     setExpandedDayId(focusDayId);
-    const t = window.setTimeout(() => {
-      const el = document.getElementById(`footprint-day-${focusDayId}`);
-      el?.scrollIntoView({ behavior: "smooth", block: "start" });
-      onFocusDayConsumed?.();
-    }, 120);
+    const t = window.setTimeout(() => onFocusDayConsumed?.(), 120);
     return () => window.clearTimeout(t);
   }, [focusDayId, onFocusDayConsumed]);
+
+  // 展開某日時：將嗰日標題捲到畫面頂，再由上睇落日程（避免仲留喺上一日底部）
+  useEffect(() => {
+    if (!expandedDayId) return;
+    let timeoutId = 0;
+    let raf2 = 0;
+    const raf1 = window.requestAnimationFrame(() => {
+      raf2 = window.requestAnimationFrame(() => {
+        timeoutId = window.setTimeout(() => {
+          document.getElementById(`footprint-day-${expandedDayId}`)?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }, 40);
+      });
+    });
+    return () => {
+      window.cancelAnimationFrame(raf1);
+      window.cancelAnimationFrame(raf2);
+      window.clearTimeout(timeoutId);
+    };
+  }, [expandedDayId]);
 
   function toggleDayExpanded(id) {
     setExpandedDayId((prev) => (prev === id ? null : id));

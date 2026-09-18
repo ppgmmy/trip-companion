@@ -308,6 +308,7 @@ body {
   border: 1px solid rgb(18 168 154 / 0.12);
   background: linear-gradient(165deg, rgb(255 255 255 / 0.97) 0%, rgb(236 253 245 / 0.5) 100%);
   box-shadow: var(--shadow-soft);
+  scroll-margin-top: 0.75rem;
 }
 
 .footprint-day-shell--compact {
