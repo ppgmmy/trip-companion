@@ -695,6 +695,13 @@ export function osakaLogSeedKey(tripId) {
   return `universal_trip_${tripId}_${OSAKA_DAY_LOG_SEED_VERSION}`;
 }
 
+/** 旅程口述 seed 足跡：唯讀，要改透過更新 seed */
+export function isOsakaSeedFootprint(spot) {
+  if (!spot) return false;
+  if (spot.readonly === true || spot.locked === true) return true;
+  return typeof spot.id === "string" && spot.id.startsWith("osaka-fp-");
+}
+
 /** 合併一日行程：以 seed id 去重／覆寫 seed 欄位；唔抹走用戶其他手動項 */
 export function mergeOsakaDayItinerary(existingItinerary = {}) {
   const next = { ...(existingItinerary && typeof existingItinerary === "object" ? existingItinerary : {}) };
@@ -732,6 +739,7 @@ export function mergeOsakaDayFootprints(existingSpots = []) {
     if (at == null) {
       list.push({
         ...spot,
+        readonly: true,
         createdAt: base + index,
       });
       indexById.set(spot.id, list.length - 1);
@@ -749,6 +757,7 @@ export function mergeOsakaDayFootprints(existingSpots = []) {
       note: spot.note,
       rating: spot.rating,
       badges: Array.isArray(spot.badges) ? [...spot.badges] : [],
+      readonly: true,
     };
     if (
       prev.dayId !== next.dayId ||
@@ -757,7 +766,8 @@ export function mergeOsakaDayFootprints(existingSpots = []) {
       prev.name !== next.name ||
       prev.area !== next.area ||
       prev.note !== next.note ||
-      prev.rating !== next.rating
+      prev.rating !== next.rating ||
+      prev.readonly !== true
     ) {
       list[at] = next;
       changed = true;

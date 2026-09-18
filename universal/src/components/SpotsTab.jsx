@@ -13,6 +13,7 @@ import {
 } from "../data";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { tripKey } from "../storage";
+import { isOsakaSeedFootprint } from "../data/osakaTripLog";
 
 function buildTripDayOptions(trip) {
   if (!trip?.startDate) return [];
@@ -69,6 +70,7 @@ function SpotCard({ spot, variant = "default", dayOptions, allBadges, onRemove }
   const meta = placeTypeMeta(spot.type);
   const accent = meta.accent || "border-l-jade";
   const day = dayOptions.find((d) => d.id === spot.dayId);
+  const locked = isOsakaSeedFootprint(spot);
 
   if (variant === "timeline") {
     return (
@@ -87,16 +89,19 @@ function SpotCard({ spot, variant = "default", dayOptions, allBadges, onRemove }
                   <span className={`rounded px-1 py-px ${meta.tone}`}>{meta.label}</span>
                   {spot.area && <span>{spot.area}</span>}
                   <Stars value={spot.rating} />
+                  {locked && <span className="rounded bg-mist px-1 py-px text-ink-faint">紀錄</span>}
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => onRemove(spot.id)}
-                className="shrink-0 rounded p-0.5 text-[10px] text-ink-faint opacity-50 transition hover:opacity-100 active:scale-90"
-                aria-label="刪除"
-              >
-                ✕
-              </button>
+              {!locked && (
+                <button
+                  type="button"
+                  onClick={() => onRemove(spot.id)}
+                  className="shrink-0 rounded p-0.5 text-[10px] text-ink-faint opacity-50 transition hover:opacity-100 active:scale-90"
+                  aria-label="刪除"
+                >
+                  ✕
+                </button>
+              )}
             </div>
             {spot.note && (
               <p className="mt-1 rounded-md bg-mist/70 px-1.5 py-1 text-[11px] leading-snug text-ink-soft">{spot.note}</p>
@@ -146,16 +151,19 @@ function SpotCard({ spot, variant = "default", dayOptions, allBadges, onRemove }
                     <Stars value={spot.rating} />
                   </>
                 )}
+                {locked && " · 紀錄"}
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => onRemove(spot.id)}
-              className="shrink-0 rounded p-0.5 text-ink-faint active:scale-90"
-              aria-label="刪除"
-            >
-              ✕
-            </button>
+            {!locked && (
+              <button
+                type="button"
+                onClick={() => onRemove(spot.id)}
+                className="shrink-0 rounded p-0.5 text-ink-faint active:scale-90"
+                aria-label="刪除"
+              >
+                ✕
+              </button>
+            )}
           </div>
           {spot.note && (
             <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-ink-soft">{spot.note}</p>
@@ -181,6 +189,7 @@ function SpotCard({ spot, variant = "default", dayOptions, allBadges, onRemove }
 function GalleryTile({ spot, dayOptions, onRemove }) {
   const meta = placeTypeMeta(spot.type);
   const day = dayOptions.find((d) => d.id === spot.dayId);
+  const locked = isOsakaSeedFootprint(spot);
   return (
     <article
       className={`relative flex min-h-[8.5rem] flex-col justify-between overflow-hidden rounded-3xl border p-3.5 shadow-[var(--shadow-soft)] ${meta.tone}`}
@@ -193,14 +202,16 @@ function GalleryTile({ spot, dayOptions, onRemove }) {
           <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/60 bg-white/70 text-xl shadow-sm">
             {meta.icon}
           </span>
-          <button
-            type="button"
-            onClick={() => onRemove(spot.id)}
-            className="rounded-lg bg-white/70 p-1 text-[10px] text-ink-faint backdrop-blur active:scale-90"
-            aria-label="刪除"
-          >
-            ✕
-          </button>
+          {!locked && (
+            <button
+              type="button"
+              onClick={() => onRemove(spot.id)}
+              className="rounded-lg bg-white/70 p-1 text-[10px] text-ink-faint backdrop-blur active:scale-90"
+              aria-label="刪除"
+            >
+              ✕
+            </button>
+          )}
         </div>
         <p className="relative mt-2 line-clamp-2 font-display text-[14px] font-bold leading-snug text-ink">{spot.name}</p>
       </div>
@@ -209,6 +220,7 @@ function GalleryTile({ spot, dayOptions, onRemove }) {
           {spot.time && `${spot.time} · `}
           {day?.short || "—"}
           {spot.area ? ` · ${spot.area}` : ""}
+          {locked ? " · 紀錄" : ""}
         </p>
         {spot.note && <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-ink-soft">{spot.note}</p>}
       </div>
@@ -430,7 +442,7 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false, focusDa
   }
 
   function removeSpot(id) {
-    setSpots((prev) => prev.filter((s) => s.id !== id));
+    setSpots((prev) => prev.filter((s) => s.id !== id || isOsakaSeedFootprint(s)));
   }
 
   const heroStats = [
