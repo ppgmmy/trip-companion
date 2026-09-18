@@ -479,7 +479,6 @@ const AREA_ZONE_HINTS = [
   ["天保山", "tennoji"],
   ["環球", "hommachi"],
   ["奈良", "nara"],
-  ["日本橋", "kuromon"],
   ["Phra Ram", "rama9"],
   ["Siam", "siam"],
   ["Chong Nonsi", "chong"],
