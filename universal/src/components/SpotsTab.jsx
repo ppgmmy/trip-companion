@@ -69,10 +69,8 @@ function SpotCard({ spot, variant = "default", dayOptions, allBadges, onRemove }
   const meta = placeTypeMeta(spot.type);
   const accent = meta.accent || "border-l-jade";
   const day = dayOptions.find((d) => d.id === spot.dayId);
-  const [noteOpen, setNoteOpen] = useState(false);
 
   if (variant === "timeline") {
-    const hasNote = Boolean(spot.note);
     return (
       <article
         className={`overflow-hidden rounded-lg border border-jade/10 border-l-[3px] ${accent} bg-white/95`}
@@ -100,18 +98,8 @@ function SpotCard({ spot, variant = "default", dayOptions, allBadges, onRemove }
                 ✕
               </button>
             </div>
-            {hasNote && (
-              <button
-                type="button"
-                onClick={() => setNoteOpen((v) => !v)}
-                className="mt-0.5 w-full rounded-md px-0 py-0.5 text-left active:opacity-80"
-              >
-                {noteOpen ? (
-                  <p className="rounded-md bg-mist/70 px-1.5 py-1 text-[11px] leading-snug text-ink-soft">{spot.note}</p>
-                ) : (
-                  <p className="text-[9px] font-bold text-jade-deep">詳情 ›</p>
-                )}
-              </button>
+            {spot.note && (
+              <p className="mt-1 rounded-md bg-mist/70 px-1.5 py-1 text-[11px] leading-snug text-ink-soft">{spot.note}</p>
             )}
             {spot.badges?.length > 0 && (
               <div className="mt-1 flex flex-wrap gap-0.5">
@@ -246,6 +234,7 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false, focusDa
   const [rating, setRating] = useState(4);
   const [selected, setSelected] = useState([]);
   const [highlightDayId, setHighlightDayId] = useState(null);
+  const [expandedDayId, setExpandedDayId] = useState(null);
   const [newBadge, setNewBadge] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [viewMode, setViewMode] = useState("timeline"); // timeline | gallery
@@ -271,6 +260,7 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false, focusDa
     setViewMode("timeline");
     setFilterType("all");
     setHighlightDayId(focusDayId);
+    setExpandedDayId(focusDayId);
     const t = window.setTimeout(() => {
       const el = document.getElementById(`footprint-day-${focusDayId}`);
       el?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -278,6 +268,18 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false, focusDa
     }, 120);
     return () => window.clearTimeout(t);
   }, [focusDayId, onFocusDayConsumed]);
+
+  function toggleDayExpanded(id) {
+    setExpandedDayId((prev) => (prev === id ? null : id));
+  }
+
+  function dayPreview(spotsList) {
+    const names = spotsList.map((s) => s.name).filter(Boolean);
+    const times = spotsList.map((s) => s.time).filter(Boolean);
+    const range = times.length ? `${times[0]}${times.length > 1 ? `–${times[times.length - 1]}` : ""}` : "";
+    const preview = names.slice(0, 3).join(" · ") + (names.length > 3 ? "…" : "");
+    return { range, preview };
+  }
 
   const allBadges = [...DEFAULT_BADGES, ...customBadges.map((b) => ({ id: `custom-${b}`, label: b }))];
 
@@ -731,50 +733,70 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false, focusDa
         </div>
       ) : (
         <div className="space-y-2">
-          {timelineGroups.map((group) => (
-            <section
-              key={group.day.id}
-              id={`footprint-day-${group.day.id}`}
-              className={`footprint-day-shell footprint-day-shell--compact ${
-                highlightDayId === group.day.id ? "ring-2 ring-amber-400/70" : ""
-              }`}
-            >
-              <div className="flex items-center gap-2 border-b border-jade/10 px-2.5 py-1.5">
-                <span className="flex h-6 min-w-6 items-center justify-center rounded-lg bg-gradient-to-br from-jade to-jade-deep px-1.5 text-[10px] font-bold text-white">
-                  {group.day.short}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[12px] font-bold text-ink">{group.day.label}</p>
-                  {highlightDayId === group.day.id && (
-                    <p className="text-[9px] font-bold text-amber-800">← 出發日紀錄喺呢度</p>
-                  )}
-                </div>
-                <p className="shrink-0 text-[9px] font-bold text-ink-faint">{group.spots.length} 項</p>
-              </div>
-              <div className="relative px-2 py-1.5 pl-3.5">
-                {group.spots.length > 1 && <span className="footprint-rail footprint-rail--compact" aria-hidden="true" />}
-                <div className="space-y-1">
-                  {group.spots.map((spot) => (
-                    <div key={spot.id} className="relative flex gap-1.5">
-                      <span className="footprint-node footprint-node--compact" aria-hidden="true" />
-                      <div className="w-[2.6rem] shrink-0 pt-1">
-                        <TimePill time={spot.time} />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <SpotCard
-                          spot={spot}
-                          variant="timeline"
-                          dayOptions={dayOptions}
-                          allBadges={allBadges}
-                          onRemove={removeSpot}
-                        />
-                      </div>
+          {timelineGroups.map((group) => {
+            const open = expandedDayId === group.day.id;
+            const preview = dayPreview(group.spots);
+            return (
+              <section
+                key={group.day.id}
+                id={`footprint-day-${group.day.id}`}
+                className={`footprint-day-shell footprint-day-shell--compact ${
+                  highlightDayId === group.day.id ? "ring-2 ring-amber-400/70" : ""
+                }`}
+              >
+                <button
+                  type="button"
+                  onClick={() => toggleDayExpanded(group.day.id)}
+                  className="flex w-full items-center gap-2 border-b border-jade/10 px-2.5 py-2 text-left active:bg-jade-soft/30"
+                  aria-expanded={open}
+                >
+                  <span className="flex h-6 min-w-6 items-center justify-center rounded-lg bg-gradient-to-br from-jade to-jade-deep px-1.5 text-[10px] font-bold text-white">
+                    {group.day.short}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[12px] font-bold text-ink">{group.day.label}</p>
+                    {!open && (
+                      <p className="mt-0.5 truncate text-[10px] leading-snug text-ink-faint">
+                        {preview.range ? `${preview.range} · ` : ""}
+                        {preview.preview || `${group.spots.length} 項足跡`}
+                      </p>
+                    )}
+                    {open && highlightDayId === group.day.id && (
+                      <p className="text-[9px] font-bold text-amber-800">← 旅程紀錄喺呢度</p>
+                    )}
+                  </div>
+                  <span className="shrink-0 text-[9px] font-bold text-ink-faint">{group.spots.length} 項</span>
+                  <span className="shrink-0 text-[11px] font-bold text-jade-deep" aria-hidden="true">
+                    {open ? "▴" : "▾"}
+                  </span>
+                </button>
+                {open && (
+                  <div className="relative px-2 py-1.5 pl-3.5">
+                    {group.spots.length > 1 && <span className="footprint-rail footprint-rail--compact" aria-hidden="true" />}
+                    <div className="space-y-1">
+                      {group.spots.map((spot) => (
+                        <div key={spot.id} className="relative flex gap-1.5">
+                          <span className="footprint-node footprint-node--compact" aria-hidden="true" />
+                          <div className="w-[2.6rem] shrink-0 pt-1">
+                            <TimePill time={spot.time} />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <SpotCard
+                              spot={spot}
+                              variant="timeline"
+                              dayOptions={dayOptions}
+                              allBadges={allBadges}
+                              onRemove={removeSpot}
+                            />
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </div>
-            </section>
-          ))}
+                  </div>
+                )}
+              </section>
+            );
+          })}
         </div>
       )}
     </div>
