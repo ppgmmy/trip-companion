@@ -1,12 +1,12 @@
 /**
  * 大阪旅程真實日程紀錄（由用戶口述整理）。
- * 已有 8/30、8/31；9/1–9/10 之後再補。
+ * 已有 8/30、8/31、9/9；其餘日子之後再補。
  */
 
-export const OSAKA_DAY_LOG_SEED_VERSION = "osaka-day-log-v2-2026-08-31";
+export const OSAKA_DAY_LOG_SEED_VERSION = "osaka-day-log-v3-2026-09-09";
 /** 一鍵入口預設跳去最新補完嗰日 */
-export const OSAKA_FOCUS_DAY_ID = "2026-08-31";
-export const OSAKA_LOG_BANNER_LABEL = "8/30–8/31 旅程紀錄";
+export const OSAKA_FOCUS_DAY_ID = "2026-09-09";
+export const OSAKA_LOG_BANNER_LABEL = "8/30–9/9 旅程紀錄";
 /** @deprecated 用 OSAKA_FOCUS_DAY_ID */
 export const OSAKA_DEPARTURE_DAY_ID = OSAKA_FOCUS_DAY_ID;
 /** @deprecated 用 OSAKA_LOG_BANNER_LABEL */
@@ -100,6 +100,48 @@ export const OSAKA_DAY_ITINERARY = {
       id: "osaka-0831-2030",
       time: "20:30",
       text: "難波渣滑板車返酒店 · 過程十分驚險",
+    },
+  ],
+  "2026-09-09": [
+    {
+      id: "osaka-0909-1000",
+      time: "10:00",
+      text: "訓到大約十點 · 午前先出動",
+    },
+    {
+      id: "osaka-0909-1100",
+      time: "11:00",
+      text: "去天王寺站 → 行去動物園前站商場一帶",
+    },
+    {
+      id: "osaka-0909-1200",
+      time: "12:00",
+      text: "3COINS PLUS 睇生活用品 · 耳機 ¥2000（約港紙 $100）先睇唔買",
+    },
+    {
+      id: "osaka-0909-1300",
+      time: "13:00",
+      text: "Bic Camera · 睇 Google Pixel 10a 系列電話最後無買 · 睇到手信可以俾朋友",
+    },
+    {
+      id: "osaka-0909-1500",
+      time: "15:00",
+      text: "另一間商場 NAMCO · 打太鼓同夾公仔",
+    },
+    {
+      id: "osaka-0909-1630",
+      time: "16:30",
+      text: "連接商場之間嘅橋 · 景色好靚",
+    },
+    {
+      id: "osaka-0909-1730",
+      time: "17:30",
+      text: "返 3COINS PLUS 買咗耳機 · 真係好抵",
+    },
+    {
+      id: "osaka-0909-1830",
+      time: "18:30",
+      text: "搭火車返酒店",
     },
   ],
 };
@@ -302,6 +344,94 @@ export const OSAKA_DAY_FOOTPRINTS = [
     area: "難波 → 堺筋本町",
     note: "食完蛋包飯喺難波渣滑板車返去，過程十分驚險。",
     rating: 5,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0909-sleepin",
+    dayId: "2026-09-09",
+    time: "10:00",
+    type: "other",
+    name: "訓到大約十點",
+    area: "堺筋本町酒店",
+    note: "9/9 訓到大約十點，之後先出門。",
+    rating: 0,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0909-tennoji",
+    dayId: "2026-09-09",
+    time: "11:00",
+    type: "move",
+    name: "天王寺站 → 動物園前站",
+    area: "天王寺／動物園前",
+    note: "去天王寺站，再行去動物園前站一帶；嗰邊都係商場。",
+    rating: 4,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0909-3coins-look",
+    dayId: "2026-09-09",
+    time: "12:00",
+    type: "shop",
+    name: "3COINS PLUS · 先睇耳機",
+    area: "動物園前",
+    note: "睇生活用品，見到耳機幾抵：¥2000（約港紙 $100）。果陣無買，走咗。",
+    rating: 4,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0909-bic",
+    dayId: "2026-09-09",
+    time: "13:00",
+    type: "shop",
+    name: "Bic Camera · Pixel 10a／手信",
+    area: "天王寺／動物園前",
+    note: "睇 Google Pixel 10a 系列電話，最後無買；反而睇到手信可以買返去俾朋友食。",
+    rating: 4,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0909-namco",
+    dayId: "2026-09-09",
+    time: "15:00",
+    type: "experience",
+    name: "NAMCO · 太鼓＋夾公仔",
+    area: "天王寺商場",
+    note: "去另一間商場 NAMCO，打太鼓同夾公仔。",
+    rating: 5,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0909-bridge",
+    dayId: "2026-09-09",
+    time: "16:30",
+    type: "spot",
+    name: "商場之間連接橋",
+    area: "天王寺",
+    note: "去到連接唔同商場之間嘅橋，覺得嗰到景色好靚。",
+    rating: 5,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0909-3coins-buy",
+    dayId: "2026-09-09",
+    time: "17:30",
+    type: "shop",
+    name: "返 3COINS PLUS 買耳機",
+    area: "動物園前",
+    note: "最後先返去 3COINS PLUS 買咗個耳機，真係好抵。",
+    rating: 5,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0909-train-home",
+    dayId: "2026-09-09",
+    time: "18:30",
+    type: "move",
+    name: "搭火車返酒店",
+    area: "天王寺 → 堺筋本町",
+    note: "買完耳機先搭火車返酒店。",
+    rating: 0,
     badges: [],
   },
 ];

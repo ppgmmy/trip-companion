@@ -171,14 +171,16 @@ const OSAKA_CURATED = {
     ],
   },
   "2026-09-09": {
-    title: "環球影城",
-    vibe: "USJ 全日",
-    zone: "hommachi",
+    title: "天王寺／動物園前商場日",
+    vibe: "訓到十點 · 3COINS · Bic · NAMCO · 靚橋 · 耳機成交",
+    zone: "tennoji",
     slots: [
-      slot("food", "10:30", "USJ 園內早餐", "入園後園內食", "環球影城", "Universal Studios Japan Osaka"),
-      slot("spot", "13:30", "任天堂世界等園區", "預留 Express 或早入園", "環球影城", "Super Nintendo World USJ"),
-      slot("food", "17:00", "USJ 園內晚餐", "園內餐廳", "環球影城", "restaurants Universal Studios Japan"),
-      slot("spot", "19:30", "夜間遊行／燈光", "睇完先返堺筋本町", "環球影城", "Universal Citywalk Osaka"),
+      slot("spot", "11:00", "天王寺 → 動物園前", "行去動物園前站商場一帶", "天王寺", "Tennoji Station Osaka Dobutsuen-mae"),
+      slot("spot", "12:00", "3COINS PLUS 先睇", "耳機 ¥2000 好抵，果陣未買", "動物園前", "3COINS PLUS Dobutsuen-mae Osaka"),
+      slot("spot", "13:00", "Bic Camera", "睇 Pixel 10a 無買；睇到手信俾朋友", "天王寺", "Bic Camera Tennoji Osaka"),
+      slot("spot", "15:00", "NAMCO 太鼓＋夾公仔", "另一間商場打機玩", "天王寺", "NAMCO Tennoji Osaka"),
+      slot("spot", "16:30", "商場連接橋", "連接唔同商場，景色好靚", "天王寺", "Abeno Tennoji pedestrian bridge Osaka"),
+      slot("spot", "17:30", "返 3COINS 買耳機", "最後買咗，真係好抵", "動物園前", "3COINS PLUS Dobutsuen-mae Osaka"),
     ],
   },
   "2026-09-10": {
