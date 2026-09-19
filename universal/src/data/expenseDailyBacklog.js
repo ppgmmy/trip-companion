@@ -248,4 +248,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "將已過旅程拆成前半同後半，對比兩段日均使費，及早發現越玩越豪定越玩越慳。",
     pillar: "analysis",
   },
+  {
+    id: "logging-gap-hint",
+    title: "漏記帳日提示",
+    description: "列出旅程已過但未記帳嘅日子，一撳即揀日期補記，唔使漏計開支。",
+    pillar: "convenience",
+  },
 ];

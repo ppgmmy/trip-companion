@@ -153,6 +153,23 @@ function dailySpendTotalsInTrip(expenses, trip) {
   return Object.values(byDate);
 }
 
+/** 旅程由開始至今日（或結束日）嘅已過日期，含首尾 */
+function elapsedTripDateIds(trip) {
+  const start = trip.startDate;
+  if (!start) return [];
+  const todayId = toDateId(new Date());
+  const tripEnd = trip.endDate || todayId;
+  const cap = todayId < tripEnd ? todayId : tripEnd;
+  if (cap < start) return [];
+  const ids = [];
+  let cursor = start;
+  while (cursor <= cap) {
+    ids.push(cursor);
+    cursor = shiftDateId(cursor, 1);
+  }
+  return ids;
+}
+
 function tripDayNumber(tripStartDate, dateId) {
   const start = new Date(`${tripStartDate}T12:00:00`).getTime();
   const target = new Date(`${dateId}T12:00:00`).getTime();
@@ -922,6 +939,91 @@ export function TripHalfPaceComparePanel({ trip, expenses }) {
       )}
 
       <p className={`mt-3 text-center text-xs font-semibold ${insightClass}`}>{insight}</p>
+    </div>
+  );
+}
+
+export function LoggingGapHintPanel({ trip, expenses, onPickDate }) {
+  const todayId = toDateId(new Date());
+
+  const gapStats = useMemo(() => {
+    const elapsed = elapsedTripDateIds(trip);
+    if (elapsed.length === 0) return null;
+    const logged = new Set(expenses.map((e) => e.date).filter(Boolean));
+    const gaps = elapsed.filter((dateId) => !logged.has(dateId));
+    return {
+      elapsedCount: elapsed.length,
+      gaps,
+      loggedDays: elapsed.length - gaps.length,
+    };
+  }, [trip, expenses]);
+
+  if (!isFeatureEnabled("logging-gap-hint")) return null;
+  if (!gapStats || gapStats.gaps.length === 0) return null;
+
+  const { gaps, elapsedCount, loggedDays } = gapStats;
+  const recentGaps = [...gaps].slice(-8).reverse();
+  const coveragePct = Math.round((loggedDays / elapsedCount) * 100);
+
+  let statusLabel = `${gaps.length} 日未記`;
+  let statusClass = "bg-[#fef3c7] text-[#b45309]";
+  let insight = "撳日期補記，總帳先準";
+  let insightClass = "text-[#b45309]";
+
+  if (gaps.length === 1) {
+    statusLabel = "1 日漏記";
+    insight =
+      gaps[0] === todayId
+        ? "今日仲未記帳，記一筆就完整"
+        : `漏咗 ${formatShortDate(gaps[0])}（週${weekdayLabel(gaps[0])}），撳一下補記`;
+  } else if (coveragePct >= 80) {
+    statusClass = "bg-jade-soft text-jade-deep";
+    insightClass = "text-jade";
+    insight = `已記 ${loggedDays}/${elapsedCount} 日 · 補返剩低 ${gaps.length} 日就齊`;
+  } else if (gaps.length >= 3) {
+    insight = `旅程已過 ${elapsedCount} 日，${gaps.length} 日零記帳 · 逐日補返唔使估`;
+  }
+
+  return (
+    <div className="rounded-3xl bg-white/85 p-4 shadow-[var(--shadow-soft)]">
+      <div className="mb-3 flex items-start justify-between gap-2">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-ink-faint">漏記帳日提示</p>
+          <p className="mt-1 text-[11px] text-ink-faint">
+            已過 {elapsedCount} 日 · 記帳覆蓋 {coveragePct}%
+          </p>
+        </div>
+        <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${statusClass}`}>{statusLabel}</span>
+      </div>
+
+      <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5">
+        {recentGaps.map((dateId) => {
+          const isToday = dateId === todayId;
+          return (
+            <button
+              key={dateId}
+              type="button"
+              onClick={() => onPickDate?.(dateId)}
+              className={`shrink-0 rounded-xl border px-3 py-2 text-left transition active:scale-[0.97] ${
+                isToday
+                  ? "border-jade/30 bg-jade-soft/80 text-jade-deep"
+                  : "border-[#fcd34d]/60 bg-[#fffbeb] text-[#92400e]"
+              }`}
+            >
+              <p className="text-[10px] font-semibold text-ink-faint">{isToday ? "今日" : `週${weekdayLabel(dateId)}`}</p>
+              <p className="font-display text-sm font-bold">{formatShortDate(dateId)}</p>
+            </button>
+          );
+        })}
+      </div>
+
+      {gaps.length > recentGaps.length && (
+        <p className="mt-2 text-center text-[10px] font-semibold text-ink-faint">
+          顯示最近 {recentGaps.length} 日 · 共 {gaps.length} 日未記
+        </p>
+      )}
+
+      <p className={`mt-2 text-center text-xs font-semibold ${insightClass}`}>{insight}</p>
     </div>
   );
 }

@@ -38,9 +38,10 @@
     "today-biggest-entry",
     "today-vs-seven-day-avg",
     "remaining-budget-countdown",
-    "trip-half-pace-compare"
+    "trip-half-pace-compare",
+    "logging-gap-hint"
   ],
-  "updatedAt": "2026-09-18T17:03:35.059Z",
-  "lastFeatureId": "quick-amount-chips",
-  "lastTitle": "快速金額按鈕"
+  "updatedAt": "2026-09-19T02:18:13.996Z",
+  "lastFeatureId": "logging-gap-hint",
+  "lastTitle": "漏記帳日提示"
 }

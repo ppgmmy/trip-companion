@@ -40,6 +40,7 @@ import {
   TodayCategoryChips,
   RemainingBudgetCountdownPanel,
   TripHalfPaceComparePanel,
+  LoggingGapHintPanel,
 } from "./ExpenseDailyExtras";
 import PayerPaymentFields from "./PayerPaymentFields";
 import { useLocalStorage } from "../hooks/useLocalStorage";
@@ -447,6 +448,15 @@ export default function ExpenseTab({
     setPanel("ledger");
   }
 
+  function pickGapDate(dateId) {
+    if (!dateId) return;
+    setEditingId(null);
+    setEntryDate(dateId);
+    window.requestAnimationFrame(() => amountRef.current?.focus({ preventScroll: true }));
+    const [, m, d] = dateId.split("-");
+    showToast(`已選 ${Number(m)}/${Number(d)}，補記開支`);
+  }
+
   const statusLabel = {
     idle: "同步中…",
     loading: "更新中…",
@@ -758,6 +768,8 @@ export default function ExpenseTab({
             />
 
             <SevenDayLoggingDots expenses={expenses} />
+
+            <LoggingGapHintPanel trip={trip} expenses={expenses} onPickDate={pickGapDate} />
 
             <TodayEntryPacePanel trip={trip} expenses={expenses} />
 
