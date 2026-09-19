@@ -110,14 +110,15 @@ const OSAKA_CURATED = {
     ],
   },
   "2026-09-03": {
-    title: "新世界",
-    vibe: "通天閣＋串炸",
-    zone: "tennoji",
+    title: "本町補給日",
+    vibe: "頂七家失手 · Daiso／Seria · monaka · 天丼蕎麥收尾",
+    zone: "hommachi",
     slots: [
-      slot("food", "10:30", "本町 Cafe", "上午輕鬆出發", "堺筋本町", "cafes Sakaisuji-Hommachi Osaka"),
-      slot("spot", "13:30", "通天閣＋新世界", "昭和復古街區打卡", "新世界", "Tsutenkaku Osaka"),
-      slot("food", "17:00", "新世界串炸", "炸物放題或名店", "新世界", "kushikatsu Shinsekai Osaka"),
-      slot("spot", "19:30", "天王寺／阿倍野", "傍晚行 Q's Mall 或公園", "天王寺", "Tennoji Osaka"),
+      slot("food", "13:00", "頂七家多次拉麵", "再俾機會但冇珍惜", "堺筋本町", "頂七家 多次拉麵 堺筋本町"),
+      slot("spot", "14:30", "Semba Center Daiso", "買好多生活用品", "船場", "Semba Center Daiso Osaka"),
+      slot("spot", "15:30", "Seria 掛衫橫桿", "酒店另一邊買橫桿", "堺筋本町", "Seria near Sakaisuji-Hommachi Osaka"),
+      slot("food", "16:30", "monaka 雪糕＋咖啡", "酒店樓下附近", "堺筋本町", "monaka ice cream coffee Hommachi Osaka"),
+      slot("food", "19:30", "天丼蕎麥", "好好味", "堺筋本町", "tendon soba Sakaisuji-Hommachi Osaka"),
     ],
   },
   "2026-09-04": {

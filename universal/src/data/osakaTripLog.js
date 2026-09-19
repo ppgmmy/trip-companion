@@ -1,9 +1,9 @@
 /**
  * 大阪旅程真實日程紀錄（由用戶口述整理）。
- * 已有 8/30、8/31、9/1、9/2、9/9；其餘日子之後再補。
+ * 已有 8/30、8/31、9/1、9/2、9/3、9/9；其餘日子之後再補。
  */
 
-export const OSAKA_DAY_LOG_SEED_VERSION = "osaka-day-log-v5-2026-09-02";
+export const OSAKA_DAY_LOG_SEED_VERSION = "osaka-day-log-v6-2026-09-03";
 /** 一鍵入口預設跳去最新補完嗰日 */
 export const OSAKA_FOCUS_DAY_ID = "2026-09-09";
 export const OSAKA_LOG_BANNER_LABEL = "8/30–9/9 旅程紀錄";
@@ -179,6 +179,48 @@ export const OSAKA_DAY_ITINERARY = {
       id: "osaka-0902-1930",
       time: "19:30",
       text: "約七點半到酒店附近 · 7-Eleven 買少少嘢返酒店",
+    },
+  ],
+  "2026-09-03": [
+    {
+      id: "osaka-0903-1200",
+      time: "12:00",
+      text: "訓到好晏先起身 · 前一日奈良好累",
+    },
+    {
+      id: "osaka-0903-1300",
+      time: "13:00",
+      text: "酒店附近頂七家 · 多次拉麵 · 再俾機會但冇珍惜",
+    },
+    {
+      id: "osaka-0903-1430",
+      time: "14:30",
+      text: "Semba Center 入面 Daiso · 買好多生活用品",
+    },
+    {
+      id: "osaka-0903-1530",
+      time: "15:30",
+      text: "酒店另一邊 Seria · 買掛衫用橫桿",
+    },
+    {
+      id: "osaka-0903-1630",
+      time: "16:30",
+      text: "酒店樓下附近 · monaka 雪糕＋咖啡",
+    },
+    {
+      id: "osaka-0903-1730",
+      time: "17:30",
+      text: "返酒店休息",
+    },
+    {
+      id: "osaka-0903-1930",
+      time: "19:30",
+      text: "落去食蕎麥麵 · 天丼蕎麥好好味",
+    },
+    {
+      id: "osaka-0903-2100",
+      time: "21:00",
+      text: "酒店附近 7-Eleven 買少少嘢返酒店",
     },
   ],
   "2026-09-09": [
@@ -587,6 +629,94 @@ export const OSAKA_DAY_FOOTPRINTS = [
     name: "酒店附近 7-Eleven",
     area: "堺筋本町",
     note: "約七點半到酒店附近，7 仔買少少嘢，之後返酒店。",
+    rating: 0,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0903-sleepin",
+    dayId: "2026-09-03",
+    time: "12:00",
+    type: "other",
+    name: "訓到好晏 · 十二點先起",
+    area: "堺筋本町酒店",
+    note: "前一日去完奈良好累，訓到好晏，十二點先起身。",
+    rating: 0,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0903-chou7",
+    dayId: "2026-09-03",
+    time: "13:00",
+    type: "food",
+    name: "頂七家 · 多次拉麵",
+    area: "堺筋本町",
+    note: "酒店附近頂七家食多次拉麵；話畀次機會佢，但係冇珍惜到嗰次機會。",
+    rating: 2,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0903-daiso",
+    dayId: "2026-09-03",
+    time: "14:30",
+    type: "shop",
+    name: "Semba Center · Daiso",
+    area: "船場／堺筋本町",
+    note: "食完頂七家行返去，入 Semba Center 入面 Daiso，買咗好多生活用品。",
+    rating: 4,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0903-seria",
+    dayId: "2026-09-03",
+    time: "15:30",
+    type: "shop",
+    name: "Seria · 掛衫橫桿",
+    area: "酒店另一邊",
+    note: "酒店另外一邊嘅 Seria，買咗啲掛衫用嘅橫桿。",
+    rating: 4,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0903-monaka",
+    dayId: "2026-09-03",
+    time: "16:30",
+    type: "cafe",
+    name: "monaka 雪糕＋咖啡",
+    area: "酒店樓下附近",
+    note: "返去接近酒店樓下，食 monaka 雪糕同埋飲咖啡。",
+    rating: 4,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0903-hotel",
+    dayId: "2026-09-03",
+    time: "17:30",
+    type: "other",
+    name: "返酒店休息",
+    area: "堺筋本町酒店",
+    note: "食完 monaka 返咗酒店休息一陣。",
+    rating: 0,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0903-soba",
+    dayId: "2026-09-03",
+    time: "19:30",
+    type: "food",
+    name: "天丼蕎麥",
+    area: "堺筋本町附近",
+    note: "夜晚落去食蕎麥麵，天丼蕎麥好好味。",
+    rating: 5,
+    badges: [],
+  },
+  {
+    id: "osaka-fp-0903-seven",
+    dayId: "2026-09-03",
+    time: "21:00",
+    type: "shop",
+    name: "酒店附近 7-Eleven",
+    area: "堺筋本町",
+    note: "酒店附近 7 仔買少少嘢就返去。",
     rating: 0,
     badges: [],
   },
