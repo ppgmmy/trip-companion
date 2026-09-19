@@ -20,6 +20,12 @@
     },
     {
       "date": "1970-01-01",
+      "id": "logging-gap-hint",
+      "title": "漏記帳日提示",
+      "description": "列出旅程已過但未記帳嘅日子，一撳即揀日期補記，唔使漏計開支。"
+    },
+    {
+      "date": "1970-01-01",
       "id": "remaining-days-chip",
       "title": "剩餘日數徽章",
       "description": "標題旁顯示旅程剩餘日數，強化時間感。"
@@ -299,11 +305,11 @@
       "cycle": true
     },
     {
-      "date": "1970-01-01",
-      "id": "logging-gap-hint",
-      "title": "漏記帳日提示",
-      "description": "列出旅程已過但未記帳嘅日子，一撳即揀日期補記，唔使漏計開支。",
-      "backfill": true
+      "date": "2026-09-20",
+      "id": "expense-search",
+      "title": "備註搜尋",
+      "description": "用關鍵字搜尋備註，即刻搵到特定消費。",
+      "cycle": true
     }
   ]
 }
