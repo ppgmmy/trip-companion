@@ -111,6 +111,11 @@ function weekdayLabel(dateId) {
   return ["日", "一", "二", "三", "四", "五", "六"][wd];
 }
 
+function isWeekendDateId(dateId) {
+  const wd = new Date(`${dateId}T12:00:00`).getDay();
+  return wd === 0 || wd === 6;
+}
+
 function median(values) {
   if (!values.length) return 0;
   const sorted = [...values].sort((a, b) => a - b);
@@ -936,6 +941,148 @@ export function TripHalfPaceComparePanel({ trip, expenses }) {
         </div>
       ) : (
         <p className="py-2 text-center text-sm text-ink-faint">兩段都未有記帳，記幾筆就會顯示對比</p>
+      )}
+
+      <p className={`mt-3 text-center text-xs font-semibold ${insightClass}`}>{insight}</p>
+    </div>
+  );
+}
+
+export function WeekendWeekdayComparePanel({ trip, expenses }) {
+  const stats = useMemo(() => {
+    const elapsed = elapsedTripDateIds(trip);
+    if (elapsed.length < 2) return null;
+
+    const weekendDates = elapsed.filter((d) => isWeekendDateId(d));
+    const weekdayDates = elapsed.filter((d) => !isWeekendDateId(d));
+    if (weekendDates.length === 0 || weekdayDates.length === 0) return null;
+
+    const weekendSet = new Set(weekendDates);
+    const weekdaySet = new Set(weekdayDates);
+    const weekendSum = sumExpensesOnDates(expenses, weekendSet);
+    const weekdaySum = sumExpensesOnDates(expenses, weekdaySet);
+    const weekendAvg = weekendSum / weekendDates.length;
+    const weekdayAvg = weekdaySum / weekdayDates.length;
+    const delta = weekendAvg - weekdayAvg;
+    const ratio = weekdayAvg > 0 ? weekendAvg / weekdayAvg : weekendAvg > 0 ? 2 : 1;
+    const pctChange =
+      weekdayAvg > 0 ? Math.round(((weekendAvg - weekdayAvg) / weekdayAvg) * 100) : weekendAvg > 0 ? 100 : 0;
+
+    return {
+      weekendDates,
+      weekdayDates,
+      weekendAvg,
+      weekdayAvg,
+      weekendSum,
+      weekdaySum,
+      delta,
+      ratio,
+      pctChange,
+      hasData: weekendSum > 0 || weekdaySum > 0,
+    };
+  }, [trip, expenses]);
+
+  if (!isFeatureEnabled("weekend-weekday-compare")) return null;
+  if (!stats) return null;
+
+  const {
+    weekendDates,
+    weekdayDates,
+    weekendAvg,
+    weekdayAvg,
+    delta,
+    ratio,
+    pctChange,
+    hasData,
+  } = stats;
+
+  const maxBar = Math.max(weekendAvg, weekdayAvg, 1);
+  const weekendBar = Math.max(8, Math.round((weekendAvg / maxBar) * 100));
+  const weekdayBar = Math.max(8, Math.round((weekdayAvg / maxBar) * 100));
+
+  let statusLabel = "節奏接近";
+  let statusClass = "bg-jade-soft text-jade-deep";
+  let insight = "週末同平日日均差唔多，消費節奏平穩";
+  let insightClass = "text-ink-faint";
+
+  if (hasData) {
+    if (ratio > 1.25) {
+      statusLabel = "週末較豪";
+      statusClass = "bg-coral/15 text-coral";
+      insight = `週末日均多 ${formatMoney(delta, trip.targetCurrency)}${pctChange !== 0 ? `（+${pctChange}%）` : ""} · 市集／活動日預留多啲`;
+      insightClass = "text-coral";
+    } else if (ratio > 1.08) {
+      statusLabel = "週末略高";
+      statusClass = "bg-[#fef3c7] text-[#b45309]";
+      insight = `週末日均略高 ${formatMoney(delta, trip.targetCurrency)}，出街前心里有數`;
+      insightClass = "text-[#b45309]";
+    } else if (ratio < 0.85) {
+      statusLabel = "平日較高";
+      statusClass = "bg-jade-soft text-jade-deep";
+      insight = `平日日均高過週末 ${formatMoney(-delta, trip.targetCurrency)} · 可能交通／購物集中喺平日`;
+      insightClass = "text-jade";
+    }
+  }
+
+  return (
+    <div className="rounded-3xl bg-white/85 p-4 shadow-[var(--shadow-soft)]">
+      <div className="mb-3 flex items-start justify-between gap-2">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-ink-faint">週末 vs 平日日均</p>
+          <p className="mt-1 text-[11px] text-ink-faint">
+            已過 {weekendDates.length + weekdayDates.length} 日 · 六日＋日 vs 一至五
+          </p>
+        </div>
+        {hasData && (
+          <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${statusClass}`}>
+            {statusLabel}
+            {weekdayAvg > 0 ? ` · ${Math.round(ratio * 100)}%` : ""}
+          </span>
+        )}
+      </div>
+
+      {hasData ? (
+        <div className="space-y-3">
+          <div>
+            <div className="mb-1 flex items-baseline justify-between gap-2">
+              <p className="text-[11px] font-semibold text-ink-soft">
+                平日（{weekdayDates.length} 日 · 一至五）
+              </p>
+              <p className="font-display text-sm font-bold text-ink-faint">{formatMoney(weekdayAvg, trip.targetCurrency)}</p>
+            </div>
+            <div className="h-3 overflow-hidden rounded-full bg-[#efe9e0]">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-jade to-[#34d399] transition-all duration-700"
+                style={{ width: `${weekdayBar}%` }}
+              />
+            </div>
+          </div>
+
+          <div>
+            <div className="mb-1 flex items-baseline justify-between gap-2">
+              <p className="text-[11px] font-semibold text-ink-soft">
+                週末（{weekendDates.length} 日 · 六日＋日）
+              </p>
+              <p
+                className={`font-display text-sm font-bold ${ratio > 1.08 ? "text-coral" : ratio < 0.85 ? "text-jade" : "text-ink"}`}
+              >
+                {formatMoney(weekendAvg, trip.targetCurrency)}
+              </p>
+            </div>
+            <div className="h-3 overflow-hidden rounded-full bg-[#efe9e0]">
+              <div
+                className={`h-full rounded-full transition-all duration-700 ${
+                  ratio > 1.08
+                    ? "bg-gradient-to-r from-[#f59e0b] to-coral"
+                    : "bg-gradient-to-r from-[#60a5fa] to-[#6366f1]"
+                }`}
+                style={{ width: `${weekendBar}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      ) : (
+        <p className="py-2 text-center text-sm text-ink-faint">週末同平日都未有記帳，記幾筆就會顯示對比</p>
       )}
 
       <p className={`mt-3 text-center text-xs font-semibold ${insightClass}`}>{insight}</p>
@@ -2452,6 +2599,8 @@ export function ExpenseInsightCards({ trip, expenses, days, totalSpent, budget, 
       <Recent3DayPacePanel trip={trip} expenses={expenses} elapsedDays={elapsedDays} />
 
       <TripHalfPaceComparePanel trip={trip} expenses={expenses} />
+
+      <WeekendWeekdayComparePanel trip={trip} expenses={expenses} />
 
       <UnderBudgetStreakPanel trip={trip} expenses={expenses} budget={budget} />
 

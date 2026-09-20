@@ -254,4 +254,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "列出旅程已過但未記帳嘅日子，一撳即揀日期補記，唔使漏計開支。",
     pillar: "convenience",
   },
+  {
+    id: "weekend-weekday-compare",
+    title: "週末 vs 平日日均",
+    description: "對比週末同平日每日平均使費，搵到市集、活動日同返工日嘅消費節奏差異。",
+    pillar: "analysis",
+  },
 ];

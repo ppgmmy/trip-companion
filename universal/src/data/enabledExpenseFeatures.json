@@ -39,9 +39,10 @@
     "today-vs-seven-day-avg",
     "remaining-budget-countdown",
     "trip-half-pace-compare",
-    "logging-gap-hint"
+    "logging-gap-hint",
+    "weekend-weekday-compare"
   ],
-  "updatedAt": "2026-09-19T16:25:19.762Z",
-  "lastFeatureId": "expense-search",
-  "lastTitle": "備註搜尋"
+  "updatedAt": "2026-09-20T02:10:00.000Z",
+  "lastFeatureId": "weekend-weekday-compare",
+  "lastTitle": "週末 vs 平日日均"
 }

@@ -41,6 +41,7 @@ import {
   RemainingBudgetCountdownPanel,
   TripHalfPaceComparePanel,
   LoggingGapHintPanel,
+  WeekendWeekdayComparePanel,
 } from "./ExpenseDailyExtras";
 import PayerPaymentFields from "./PayerPaymentFields";
 import { useLocalStorage } from "../hooks/useLocalStorage";
@@ -724,6 +725,9 @@ export default function ExpenseTab({
                 <TripHalfPaceComparePanel trip={trip} expenses={expenses} />
               </div>
               <div className="mt-4">
+                <WeekendWeekdayComparePanel trip={trip} expenses={expenses} />
+              </div>
+              <div className="mt-4">
                 <p className="expense-stat-label">旅程每週使費（港幣）</p>
                 <BarChart bars={weeklyTotals} formatLabel={(v) => `HK$${Math.round(v)}`} />
               </div>
@@ -776,6 +780,8 @@ export default function ExpenseTab({
             <TodayVsMedianDayPanel trip={trip} expenses={expenses} />
 
             <TodayVsSevenDayAvgPanel trip={trip} expenses={expenses} />
+
+            <WeekendWeekdayComparePanel trip={trip} expenses={expenses} />
 
             <TodayPaceProjectionPanel trip={trip} expenses={expenses} budget={budget} />
 
