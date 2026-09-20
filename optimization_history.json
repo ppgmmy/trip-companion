@@ -309,6 +309,13 @@
       "id": "weekend-weekday-compare",
       "title": "週末 vs 平日日均",
       "description": "對比週末同平日每日平均使費，搵到市集、活動日同返工日嘅消費節奏差異。"
+    },
+    {
+      "date": "2026-09-21",
+      "id": "expense-search",
+      "title": "備註搜尋",
+      "description": "用關鍵字搜尋備註，即刻搵到特定消費。",
+      "cycle": true
     }
   ]
 }
