@@ -40,9 +40,10 @@
     "remaining-budget-countdown",
     "trip-half-pace-compare",
     "logging-gap-hint",
-    "weekend-weekday-compare"
+    "weekend-weekday-compare",
+    "today-payment-chips"
   ],
-  "updatedAt": "2026-09-20T16:46:24.605Z",
-  "lastFeatureId": "expense-search",
-  "lastTitle": "備註搜尋"
+  "updatedAt": "2026-09-21T02:15:00.000Z",
+  "lastFeatureId": "today-payment-chips",
+  "lastTitle": "今日付款方式快篩"
 }

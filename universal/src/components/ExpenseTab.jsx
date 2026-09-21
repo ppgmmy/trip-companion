@@ -38,6 +38,7 @@ import {
   BudgetRunwayPanel,
   SpendingTimelineAlignPanel,
   TodayCategoryChips,
+  TodayPaymentChips,
   RemainingBudgetCountdownPanel,
   TripHalfPaceComparePanel,
   LoggingGapHintPanel,
@@ -792,6 +793,13 @@ export default function ExpenseTab({
               expenses={expenses}
               filterCategory={filterCategory}
               setFilterCategory={setFilterCategory}
+            />
+
+            <TodayPaymentChips
+              trip={trip}
+              expenses={expenses}
+              filterPaymentMethod={filterPaymentMethod}
+              setFilterPaymentMethod={setFilterPaymentMethod}
             />
 
             <PayerSpendStats trip={trip} payerTotals={payerTotals} onJumpToPayer={jumpToLedgerPayer} />

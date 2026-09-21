@@ -260,4 +260,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "對比週末同平日每日平均使費，搵到市集、活動日同返工日嘅消費節奏差異。",
     pillar: "analysis",
   },
+  {
+    id: "today-payment-chips",
+    title: "今日付款方式快篩",
+    description: "記帳頁顯示今日現金／信用卡使費晶片，一撳即篩選該付款方式，對帳同補記更快。",
+    pillar: "convenience",
+  },
 ];
