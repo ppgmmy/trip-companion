@@ -315,6 +315,13 @@
       "id": "today-payment-chips",
       "title": "今日付款方式快篩",
       "description": "記帳頁顯示今日現金／信用卡使費晶片，一撳即篩選該付款方式，對帳同補記更快。"
+    },
+    {
+      "date": "2026-09-22",
+      "id": "expense-search",
+      "title": "備註搜尋",
+      "description": "用關鍵字搜尋備註，即刻搵到特定消費。",
+      "cycle": true
     }
   ]
 }
