@@ -322,6 +322,12 @@
       "title": "備註搜尋",
       "description": "用關鍵字搜尋備註，即刻搵到特定消費。",
       "cycle": true
+    },
+    {
+      "date": "2026-09-22",
+      "id": "today-category-shift",
+      "title": "今日分類變化",
+      "description": "對比今日同昨日各分類使費，標出升溫或收油最大嘅類別，唔使逐類心算。"
     }
   ]
 }

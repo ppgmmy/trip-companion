@@ -41,9 +41,10 @@
     "trip-half-pace-compare",
     "logging-gap-hint",
     "weekend-weekday-compare",
-    "today-payment-chips"
+    "today-payment-chips",
+    "today-category-shift"
   ],
-  "updatedAt": "2026-09-21T16:24:55.995Z",
-  "lastFeatureId": "expense-search",
-  "lastTitle": "備註搜尋"
+  "updatedAt": "2026-09-22T02:30:00.000Z",
+  "lastFeatureId": "today-category-shift",
+  "lastTitle": "今日分類變化"
 }

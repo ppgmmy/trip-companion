@@ -39,6 +39,7 @@ import {
   SpendingTimelineAlignPanel,
   TodayCategoryChips,
   TodayPaymentChips,
+  TodayCategoryShiftPanel,
   RemainingBudgetCountdownPanel,
   TripHalfPaceComparePanel,
   LoggingGapHintPanel,
@@ -771,6 +772,8 @@ export default function ExpenseTab({
               expenses={expenses}
               dailyAllowance={budget > 0 ? dailyAllowance : null}
             />
+
+            <TodayCategoryShiftPanel trip={trip} expenses={expenses} />
 
             <SevenDayLoggingDots expenses={expenses} />
 

@@ -2430,6 +2430,111 @@ const PAYMENT_CHIP_META = {
   card: { emoji: "💳", accent: "text-[#4338ca]", dot: "#6366f1" },
 };
 
+export function TodayCategoryShiftPanel({ trip, expenses }) {
+  const todayId = toDateId(new Date());
+  const yesterdayId = shiftDateId(todayId, -1);
+
+  const rows = useMemo(() => {
+    const todayMap = {};
+    const yesterdayMap = {};
+    expenses.forEach((e) => {
+      const amt = Number(e.amount) || 0;
+      if (e.date === todayId) todayMap[e.categoryId] = (todayMap[e.categoryId] || 0) + amt;
+      if (e.date === yesterdayId) yesterdayMap[e.categoryId] = (yesterdayMap[e.categoryId] || 0) + amt;
+    });
+    const ids = new Set([...Object.keys(todayMap), ...Object.keys(yesterdayMap)]);
+    return [...ids]
+      .map((id) => {
+        const meta = EXPENSE_CATEGORIES.find((c) => c.id === id);
+        const today = todayMap[id] || 0;
+        const yesterday = yesterdayMap[id] || 0;
+        return {
+          id,
+          label: meta?.label || id,
+          color: meta?.color || "#64748b",
+          today,
+          yesterday,
+          delta: today - yesterday,
+        };
+      })
+      .filter((r) => r.today > 0 || r.yesterday > 0)
+      .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
+      .slice(0, 5);
+  }, [expenses, todayId, yesterdayId]);
+
+  if (!isFeatureEnabled("today-category-shift") || !rows.length) return null;
+
+  const hasYesterday = rows.some((r) => r.yesterday > 0);
+  const maxBar = Math.max(...rows.flatMap((r) => [r.today, r.yesterday]), 1);
+
+  return (
+    <div className="rounded-2xl bg-white/90 p-3 shadow-[var(--shadow-soft)]">
+      <div className="mb-2 flex items-baseline justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">今日分類變化 · vs 昨日</p>
+        {!hasYesterday && (
+          <span className="text-[10px] font-semibold text-ink-faint">昨日未記帳，顯示今日分類</span>
+        )}
+      </div>
+      <ul className="space-y-2.5">
+        {rows.map((r) => {
+          const todayW = Math.max(4, Math.round((r.today / maxBar) * 100));
+          const yesterdayW = Math.max(4, Math.round((r.yesterday / maxBar) * 100));
+          let deltaLabel = "—";
+          let deltaClass = "text-ink-faint";
+          if (r.delta > 0) {
+            deltaLabel = `+${formatMoney(r.delta, trip.targetCurrency)}`;
+            deltaClass = "text-coral";
+          } else if (r.delta < 0) {
+            deltaLabel = formatMoney(r.delta, trip.targetCurrency);
+            deltaClass = "text-jade";
+          } else if (r.today > 0 && r.yesterday > 0) {
+            deltaLabel = "持平";
+          }
+          return (
+            <li key={r.id}>
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex min-w-0 items-center gap-1.5 text-xs font-bold text-ink">
+                  <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: r.color }} aria-hidden="true" />
+                  <span className="truncate">{r.label}</span>
+                </span>
+                <span className={`shrink-0 text-[11px] font-bold ${deltaClass}`}>{deltaLabel}</span>
+              </div>
+              <div className="mt-1 space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="w-7 shrink-0 text-[9px] font-semibold text-jade-deep">今日</span>
+                  <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-[#efe9e0]">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-jade to-[#34d399] transition-all duration-500"
+                      style={{ width: `${todayW}%` }}
+                    />
+                  </div>
+                  <span className="w-14 shrink-0 text-right text-[10px] font-semibold text-ink-soft">
+                    {r.today > 0 ? formatMoney(r.today, trip.targetCurrency) : "—"}
+                  </span>
+                </div>
+                {hasYesterday && (
+                  <div className="flex items-center gap-2">
+                    <span className="w-7 shrink-0 text-[9px] font-semibold text-ink-faint">昨日</span>
+                    <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-[#efe9e0]">
+                      <div
+                        className="h-full rounded-full bg-[#cbd5e1] transition-all duration-500"
+                        style={{ width: `${yesterdayW}%` }}
+                      />
+                    </div>
+                    <span className="w-14 shrink-0 text-right text-[10px] font-semibold text-ink-faint">
+                      {r.yesterday > 0 ? formatMoney(r.yesterday, trip.targetCurrency) : "—"}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
 export function TodayPaymentChips({ trip, expenses, filterPaymentMethod, setFilterPaymentMethod }) {
   const todayId = toDateId(new Date());
 

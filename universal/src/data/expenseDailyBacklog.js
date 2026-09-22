@@ -266,4 +266,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "記帳頁顯示今日現金／信用卡使費晶片，一撳即篩選該付款方式，對帳同補記更快。",
     pillar: "convenience",
   },
+  {
+    id: "today-category-shift",
+    title: "今日分類變化",
+    description: "對比今日同昨日各分類使費，標出升溫或收油最大嘅類別，唔使逐類心算。",
+    pillar: "analysis",
+  },
 ];
