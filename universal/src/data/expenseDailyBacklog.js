@@ -272,4 +272,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "對比今日同昨日各分類使費，標出升溫或收油最大嘅類別，唔使逐類心算。",
     pillar: "analysis",
   },
+  {
+    id: "evening-logging-nudge",
+    title: "傍晚記帳提醒",
+    description: "旅程中傍晚若今日仲未記帳，溫馨提示補記一筆，一撳即跳去記帳欄，減少漏記。",
+    pillar: "stickiness",
+  },
 ];

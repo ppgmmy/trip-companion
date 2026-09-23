@@ -2430,6 +2430,88 @@ const PAYMENT_CHIP_META = {
   card: { emoji: "💳", accent: "text-[#4338ca]", dot: "#6366f1" },
 };
 
+const EVENING_NUDGE_HOUR = 17;
+
+export function EveningLoggingNudgePanel({ trip, expenses, onFocusQuickAdd }) {
+  const todayId = toDateId(new Date());
+  const yesterdayId = shiftDateId(todayId, -1);
+  const [dismissed, setDismissed] = useState(false);
+
+  useEffect(() => {
+    const key = `expense-evening-nudge:${todayId}`;
+    setDismissed(localStorage.getItem(key) === "1");
+  }, [todayId]);
+
+  const inTrip = useMemo(() => {
+    const start = trip.startDate;
+    const end = trip.endDate || todayId;
+    return todayId >= start && todayId <= end;
+  }, [trip.startDate, trip.endDate, todayId]);
+
+  const todayCount = useMemo(
+    () => expenses.filter((e) => e.date === todayId).length,
+    [expenses, todayId],
+  );
+
+  const shouldShow = useMemo(() => {
+    if (!isFeatureEnabled("evening-logging-nudge") || dismissed || !inTrip) return false;
+    if (todayCount > 0) return false;
+    if (new Date().getHours() < EVENING_NUDGE_HOUR) return false;
+    const streak = loggingStreak(expenses);
+    const hadYesterday = expenses.some((e) => e.date === yesterdayId);
+    return streak > 0 || hadYesterday;
+  }, [dismissed, expenses, inTrip, todayCount, yesterdayId]);
+
+  if (!shouldShow) return null;
+
+  const streak = loggingStreak(expenses);
+
+  function dismiss() {
+    localStorage.setItem(`expense-evening-nudge:${todayId}`, "1");
+    setDismissed(true);
+  }
+
+  function handleLogNow() {
+    onFocusQuickAdd?.();
+    dismiss();
+  }
+
+  return (
+    <div className="rounded-2xl border border-amber-200/80 bg-gradient-to-br from-[#fffbeb] to-[#fef9c3] p-3.5 shadow-[var(--shadow-soft)]">
+      <div className="flex items-start gap-2">
+        <span className="text-xl" aria-hidden="true">
+          🌙
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-amber-800/90">傍晚記帳提醒</p>
+          <p className="mt-1 text-sm font-bold text-ink">今日仲未記帳</p>
+          <p className="mt-1 text-xs leading-relaxed text-ink-soft">
+            {streak > 0
+              ? `你已連續 ${streak} 日有記帳，補一筆就可以保持節奏。`
+              : "出街消費後順手記低，明早對帳唔使估。"}
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={handleLogNow}
+              className="rounded-xl bg-jade px-3 py-2 text-xs font-bold text-white shadow-sm transition active:scale-95"
+            >
+              而家記一筆
+            </button>
+            <button
+              type="button"
+              onClick={dismiss}
+              className="rounded-xl border border-amber-300/60 bg-white/70 px-3 py-2 text-xs font-bold text-ink-soft transition active:scale-95"
+            >
+              今日唔再提示
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function TodayCategoryShiftPanel({ trip, expenses }) {
   const todayId = toDateId(new Date());
   const yesterdayId = shiftDateId(todayId, -1);

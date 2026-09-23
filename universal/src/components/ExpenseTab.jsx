@@ -40,6 +40,7 @@ import {
   TodayCategoryChips,
   TodayPaymentChips,
   TodayCategoryShiftPanel,
+  EveningLoggingNudgePanel,
   RemainingBudgetCountdownPanel,
   TripHalfPaceComparePanel,
   LoggingGapHintPanel,
@@ -460,6 +461,14 @@ export default function ExpenseTab({
     showToast(`已選 ${Number(m)}/${Number(d)}，補記開支`);
   }
 
+  function focusQuickAdd() {
+    setPanel("ledger");
+    window.requestAnimationFrame(() => {
+      formRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      amountRef.current?.focus({ preventScroll: true });
+    });
+  }
+
   const statusLabel = {
     idle: "同步中…",
     loading: "更新中…",
@@ -774,6 +783,8 @@ export default function ExpenseTab({
             />
 
             <TodayCategoryShiftPanel trip={trip} expenses={expenses} />
+
+            <EveningLoggingNudgePanel trip={trip} expenses={expenses} onFocusQuickAdd={focusQuickAdd} />
 
             <SevenDayLoggingDots expenses={expenses} />
 
