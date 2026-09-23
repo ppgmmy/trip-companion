@@ -331,16 +331,23 @@
     },
     {
       "date": "2026-09-23",
+      "id": "evening-logging-nudge",
+      "title": "傍晚記帳提醒",
+      "description": "旅程中傍晚若今日仲未記帳，溫馨提示補記一筆，一撳即跳去記帳欄，減少漏記。"
+    },
+    {
+      "date": "2026-09-23",
       "id": "pace-vs-ideal",
       "title": "理想日均對比",
       "description": "實際日均 vs 預算理想日均，清楚知超前定落後。",
       "cycle": true
     },
     {
-      "date": "2026-09-23",
-      "id": "evening-logging-nudge",
-      "title": "傍晚記帳提醒",
-      "description": "旅程中傍晚若今日仲未記帳，溫馨提示補記一筆，一撳即跳去記帳欄，減少漏記。"
+      "date": "2026-09-24",
+      "id": "top-spender-day",
+      "title": "爆煲日提示",
+      "description": "標出使費最高嘅日子，避免重蹈覆轍。",
+      "cycle": true
     }
   ]
 }
