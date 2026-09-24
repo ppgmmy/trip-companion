@@ -278,4 +278,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "旅程中傍晚若今日仲未記帳，溫馨提示補記一筆，一撳即跳去記帳欄，減少漏記。",
     pillar: "stickiness",
   },
+  {
+    id: "yesterday-quick-add",
+    title: "昨日快記",
+    description: "記帳欄上一鍵切換昨日日期並聚焦金額，晨間或漏記時補記昨天消費更快。",
+    pillar: "convenience",
+  },
 ];

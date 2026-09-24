@@ -2617,6 +2617,87 @@ export function TodayCategoryShiftPanel({ trip, expenses }) {
   );
 }
 
+export function YesterdayQuickAddBar({ trip, expenses, entryDate, onSetEntryDate }) {
+  const todayId = toDateId(new Date());
+  const yesterdayId = shiftDateId(todayId, -1);
+  const tripEnd = trip.endDate || todayId;
+
+  const yesterdayInTrip = yesterdayId >= trip.startDate && yesterdayId <= tripEnd;
+
+  const yesterdayStats = useMemo(() => {
+    const items = expenses.filter((e) => e.date === yesterdayId);
+    const sum = items.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+    return { count: items.length, sum };
+  }, [expenses, yesterdayId]);
+
+  if (!isFeatureEnabled("yesterday-quick-add") || !yesterdayInTrip || !onSetEntryDate) return null;
+
+  const isYesterday = entryDate === yesterdayId;
+  const isToday = entryDate === todayId;
+
+  function pickYesterday() {
+    onSetEntryDate(yesterdayId);
+  }
+
+  function pickToday() {
+    onSetEntryDate(todayId);
+  }
+
+  if (isYesterday) {
+    return (
+      <div className="flex items-center justify-between gap-2 rounded-2xl border border-jade/25 bg-jade-soft/50 px-3 py-2.5 shadow-[var(--shadow-soft)]">
+        <div className="min-w-0">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-jade-deep">昨日快記</p>
+          <p className="mt-0.5 truncate text-xs font-bold text-ink">
+            正在記 {formatShortDate(yesterdayId)}
+            {yesterdayStats.count > 0 && (
+              <span className="font-semibold text-ink-soft">
+                {" "}
+                · 已有 {yesterdayStats.count} 筆（{formatMoney(yesterdayStats.sum, trip.targetCurrency)}）
+              </span>
+            )}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={pickToday}
+          className="shrink-0 rounded-xl border border-jade/20 bg-white px-3 py-2 text-xs font-bold text-ink-soft transition active:scale-95"
+        >
+          改回今日
+        </button>
+      </div>
+    );
+  }
+
+  if (!isToday) return null;
+
+  const { count, sum } = yesterdayStats;
+  let hint = "一鍵揀昨日日期，專心入金額";
+  if (count === 0) {
+    hint = "昨日仲未記帳 · 撳一下補記";
+  } else if (count === 1) {
+    hint = `昨日 1 筆 ${formatMoney(sum, trip.targetCurrency)} · 可再加`;
+  } else {
+    hint = `昨日 ${count} 筆共 ${formatMoney(sum, trip.targetCurrency)} · 可再加`;
+  }
+
+  return (
+    <div className="flex items-center justify-between gap-2 rounded-2xl bg-white/90 px-3 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="min-w-0">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">昨日快記 · {formatShortDate(yesterdayId)}</p>
+        <p className="mt-0.5 text-xs font-semibold text-ink-soft">{hint}</p>
+      </div>
+      <button
+        type="button"
+        onClick={pickYesterday}
+        className="shrink-0 rounded-xl bg-jade px-3 py-2 text-xs font-bold text-white shadow-sm transition active:scale-95"
+      >
+        記昨日
+      </button>
+    </div>
+  );
+}
+
 export function TodayPaymentChips({ trip, expenses, filterPaymentMethod, setFilterPaymentMethod }) {
   const todayId = toDateId(new Date());
 

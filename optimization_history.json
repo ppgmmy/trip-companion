@@ -344,10 +344,9 @@
     },
     {
       "date": "2026-09-24",
-      "id": "top-spender-day",
-      "title": "爆煲日提示",
-      "description": "標出使費最高嘅日子，避免重蹈覆轍。",
-      "cycle": true
+      "id": "yesterday-quick-add",
+      "title": "昨日快記",
+      "description": "記帳欄上一鍵切換昨日日期並聚焦金額，晨間或漏記時補記昨天消費更快。"
     }
   ]
 }

@@ -43,9 +43,10 @@
     "weekend-weekday-compare",
     "today-payment-chips",
     "today-category-shift",
-    "evening-logging-nudge"
+    "evening-logging-nudge",
+    "yesterday-quick-add"
   ],
-  "updatedAt": "2026-09-23T17:50:14.252Z",
-  "lastFeatureId": "top-spender-day",
-  "lastTitle": "爆煲日提示"
+  "updatedAt": "2026-09-24T02:15:00.000Z",
+  "lastFeatureId": "yesterday-quick-add",
+  "lastTitle": "昨日快記"
 }

@@ -45,6 +45,7 @@ import {
   TripHalfPaceComparePanel,
   LoggingGapHintPanel,
   WeekendWeekdayComparePanel,
+  YesterdayQuickAddBar,
 } from "./ExpenseDailyExtras";
 import PayerPaymentFields from "./PayerPaymentFields";
 import { useLocalStorage } from "../hooks/useLocalStorage";
@@ -817,6 +818,17 @@ export default function ExpenseTab({
             />
 
             <PayerSpendStats trip={trip} payerTotals={payerTotals} onJumpToPayer={jumpToLedgerPayer} />
+
+            <YesterdayQuickAddBar
+              trip={trip}
+              expenses={expenses}
+              entryDate={entryDate}
+              onSetEntryDate={(dateId) => {
+                setEditingId(null);
+                setEntryDate(dateId);
+                window.requestAnimationFrame(() => amountRef.current?.focus({ preventScroll: true }));
+              }}
+            />
 
             <form ref={formRef} onSubmit={submitExpense} className="expense-section-card-compact space-y-1.5">
               {editingId && (
