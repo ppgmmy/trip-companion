@@ -350,16 +350,23 @@
     },
     {
       "date": "2026-09-25",
+      "id": "today-payer-chips",
+      "title": "今日付款人快篩",
+      "description": "記帳頁顯示今日各付款人使費晶片，一撳即篩選該人支出，同行分帳對數更快。"
+    },
+    {
+      "date": "2026-09-25",
       "id": "top-spender-day",
       "title": "爆煲日提示",
       "description": "標出使費最高嘅日子，避免重蹈覆轍。",
       "cycle": true
     },
     {
-      "date": "2026-09-25",
-      "id": "today-payer-chips",
-      "title": "今日付款人快篩",
-      "description": "記帳頁顯示今日各付款人使費晶片，一撳即篩選該人支出，同行分帳對數更快。"
+      "date": "2026-09-26",
+      "id": "export-csv",
+      "title": "匯出 CSV",
+      "description": "一鍵匯出本旅程開支清單，方便試算表分析。",
+      "cycle": true
     }
   ]
 }
