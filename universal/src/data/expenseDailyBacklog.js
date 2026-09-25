@@ -284,4 +284,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "記帳欄上一鍵切換昨日日期並聚焦金額，晨間或漏記時補記昨天消費更快。",
     pillar: "convenience",
   },
+  {
+    id: "today-payer-chips",
+    title: "今日付款人快篩",
+    description: "記帳頁顯示今日各付款人使費晶片，一撳即篩選該人支出，同行分帳對數更快。",
+    pillar: "convenience",
+  },
 ];

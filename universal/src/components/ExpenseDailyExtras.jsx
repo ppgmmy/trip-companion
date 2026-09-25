@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  DEFAULT_PAYER_ID,
   EXPENSE_CATEGORIES,
   expenseMetaLine,
   formatHkd,
   formatMoney,
+  normalizeExpensePayer,
   normalizePaymentMethod,
   payerLabel,
   paymentMethodLabel,
@@ -2430,6 +2432,15 @@ const PAYMENT_CHIP_META = {
   card: { emoji: "💳", accent: "text-[#4338ca]", dot: "#6366f1" },
 };
 
+const PAYER_CHIP_META = {
+  ppg: { dot: "#0d9488" },
+  mo: { dot: "#6366f1" },
+  shared: { dot: "#f59e0b" },
+  "cash-pool": { dot: "#64748b" },
+};
+
+const DEFAULT_PAYER_DOT = "#94a3b8";
+
 const EVENING_NUDGE_HOUR = 17;
 
 export function EveningLoggingNudgePanel({ trip, expenses, onFocusQuickAdd }) {
@@ -2779,6 +2790,96 @@ export function TodayPaymentChips({ trip, expenses, filterPaymentMethod, setFilt
       {filterPaymentMethod !== "all" && activeIsToday && (
         <p className="mt-2 text-center text-[10px] font-semibold text-jade-deep">
           已篩選「{paymentMethodLabel(filterPaymentMethod)}」· 再撳一次取消
+        </p>
+      )}
+    </div>
+  );
+}
+
+export function TodayPayerChips({ trip, expenses, filterPayer, setFilterPayer }) {
+  const todayId = toDateId(new Date());
+
+  const chips = useMemo(() => {
+    const map = {};
+    expenses
+      .filter((e) => e.date === todayId)
+      .forEach((e) => {
+        const normalized = normalizeExpensePayer(e);
+        const key = normalized.payer || DEFAULT_PAYER_ID;
+        map[key] = (map[key] || 0) + (Number(e.amount) || 0);
+      });
+    return Object.entries(map)
+      .map(([id, value]) => ({
+        id,
+        label: payerLabel(id),
+        value,
+        dot: PAYER_CHIP_META[id]?.dot ?? DEFAULT_PAYER_DOT,
+      }))
+      .sort((a, b) => b.value - a.value);
+  }, [expenses, todayId]);
+
+  const todayTotal = useMemo(
+    () => expenses.filter((e) => e.date === todayId).reduce((s, e) => s + (Number(e.amount) || 0), 0),
+    [expenses, todayId],
+  );
+
+  if (!isFeatureEnabled("today-payer-chips") || chips.length < 2) return null;
+
+  const activeIsToday = filterPayer === "all" || chips.some((c) => c.id === filterPayer);
+
+  function handleChipClick(payerKey) {
+    if (!setFilterPayer) return;
+    if (payerKey === "all") {
+      setFilterPayer("all");
+      return;
+    }
+    setFilterPayer((prev) => (prev === payerKey ? "all" : payerKey));
+  }
+
+  return (
+    <div className="rounded-2xl bg-white/90 p-3 shadow-[var(--shadow-soft)]">
+      <div className="mb-2 flex items-baseline justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">今日付款人 · 撳一下篩選</p>
+        <p className="text-[11px] font-bold text-jade-deep">{formatMoney(todayTotal, trip.targetCurrency)}</p>
+      </div>
+      <div className="expense-chip-row">
+        <button
+          type="button"
+          onClick={() => handleChipClick("all")}
+          className={`shrink-0 rounded-xl border px-2.5 py-1.5 text-xs font-bold transition active:scale-95 ${
+            filterPayer === "all" || !activeIsToday
+              ? "badge-active border-transparent"
+              : "border-jade/15 bg-mist text-ink-soft"
+          }`}
+        >
+          全部
+        </button>
+        {chips.map((c) => {
+          const share = todayTotal > 0 ? Math.round((c.value / todayTotal) * 100) : 0;
+          const isActive = filterPayer === c.id;
+          return (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => handleChipClick(c.id)}
+              className={`shrink-0 rounded-xl border px-2.5 py-1.5 text-xs font-bold transition active:scale-95 ${
+                isActive ? "badge-active border-transparent" : "border-jade/15 bg-mist text-ink-soft"
+              }`}
+              aria-pressed={isActive}
+            >
+              <span className="inline-flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full" style={{ background: c.dot }} aria-hidden="true" />
+                <span>{c.label}</span>
+                <span className={isActive ? "opacity-90" : "text-jade-deep"}>{formatMoney(c.value, trip.targetCurrency)}</span>
+                <span className={`text-[10px] ${isActive ? "opacity-75" : "text-ink-faint"}`}>{share}%</span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      {filterPayer !== "all" && activeIsToday && (
+        <p className="mt-2 text-center text-[10px] font-semibold text-jade-deep">
+          已篩選「{payerLabel(filterPayer)}」· 再撳一次取消
         </p>
       )}
     </div>

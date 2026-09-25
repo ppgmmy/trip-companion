@@ -354,6 +354,12 @@
       "title": "爆煲日提示",
       "description": "標出使費最高嘅日子，避免重蹈覆轍。",
       "cycle": true
+    },
+    {
+      "date": "2026-09-25",
+      "id": "today-payer-chips",
+      "title": "今日付款人快篩",
+      "description": "記帳頁顯示今日各付款人使費晶片，一撳即篩選該人支出，同行分帳對數更快。"
     }
   ]
 }

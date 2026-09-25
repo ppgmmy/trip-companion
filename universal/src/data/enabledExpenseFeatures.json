@@ -44,9 +44,10 @@
     "today-payment-chips",
     "today-category-shift",
     "evening-logging-nudge",
-    "yesterday-quick-add"
+    "yesterday-quick-add",
+    "today-payer-chips"
   ],
-  "updatedAt": "2026-09-24T17:50:34.470Z",
-  "lastFeatureId": "top-spender-day",
-  "lastTitle": "爆煲日提示"
+  "updatedAt": "2026-09-25T02:30:00.000Z",
+  "lastFeatureId": "today-payer-chips",
+  "lastTitle": "今日付款人快篩"
 }
