@@ -373,6 +373,13 @@
       "id": "payer-split-balance",
       "title": "分帳平衡度",
       "description": "對比各付款人實際使費與平均應付比例，一眼睇邊個多付、邊個欠數，同行分帳更清晰。"
+    },
+    {
+      "date": "2026-09-27",
+      "id": "note-templates",
+      "title": "備註快捷模板",
+      "description": "午餐／交通／咖啡等常見備註一撳填入。",
+      "cycle": true
     }
   ]
 }
