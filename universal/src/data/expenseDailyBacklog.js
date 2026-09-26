@@ -290,4 +290,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "記帳頁顯示今日各付款人使費晶片，一撳即篩選該人支出，同行分帳對數更快。",
     pillar: "convenience",
   },
+  {
+    id: "payer-split-balance",
+    title: "分帳平衡度",
+    description: "對比各付款人實際使費與平均應付比例，一眼睇邊個多付、邊個欠數，同行分帳更清晰。",
+    pillar: "analysis",
+  },
 ];

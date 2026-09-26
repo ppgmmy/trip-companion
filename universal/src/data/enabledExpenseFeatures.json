@@ -45,9 +45,10 @@
     "today-category-shift",
     "evening-logging-nudge",
     "yesterday-quick-add",
-    "today-payer-chips"
+    "today-payer-chips",
+    "payer-split-balance"
   ],
-  "updatedAt": "2026-09-25T17:56:02.891Z",
-  "lastFeatureId": "export-csv",
-  "lastTitle": "匯出 CSV"
+  "updatedAt": "2026-09-26T02:15:00.000Z",
+  "lastFeatureId": "payer-split-balance",
+  "lastTitle": "分帳平衡度"
 }

@@ -47,6 +47,7 @@ import {
   LoggingGapHintPanel,
   WeekendWeekdayComparePanel,
   YesterdayQuickAddBar,
+  PayerSplitBalancePanel,
 } from "./ExpenseDailyExtras";
 import PayerPaymentFields from "./PayerPaymentFields";
 import { useLocalStorage } from "../hooks/useLocalStorage";
@@ -824,6 +825,8 @@ export default function ExpenseTab({
               filterPayer={filterPayer}
               setFilterPayer={setFilterPayer}
             />
+
+            <PayerSplitBalancePanel trip={trip} expenses={expenses} onJumpToPayer={jumpToLedgerPayer} />
 
             <PayerSpendStats trip={trip} payerTotals={payerTotals} onJumpToPayer={jumpToLedgerPayer} />
 

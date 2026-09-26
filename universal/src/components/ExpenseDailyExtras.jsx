@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   DEFAULT_PAYER_ID,
   EXPENSE_CATEGORIES,
+  aggregateByPayer,
   expenseMetaLine,
   formatHkd,
   formatMoney,
@@ -2882,6 +2883,128 @@ export function TodayPayerChips({ trip, expenses, filterPayer, setFilterPayer })
           已篩選「{payerLabel(filterPayer)}」· 再撳一次取消
         </p>
       )}
+    </div>
+  );
+}
+
+export function PayerSplitBalancePanel({ trip, expenses, onJumpToPayer }) {
+  const rows = useMemo(() => {
+    const payers = aggregateByPayer(expenses).filter((row) => row.amount > 0);
+    if (payers.length < 2) return null;
+    const total = payers.reduce((s, row) => s + row.amount, 0);
+    const fairShare = total / payers.length;
+    const maxAmount = Math.max(...payers.map((row) => row.amount), fairShare, 1);
+    return payers.map((row) => {
+      const delta = row.amount - fairShare;
+      const sharePct = total > 0 ? Math.round((row.amount / total) * 100) : 0;
+      const barPct = Math.max(6, Math.round((row.amount / maxAmount) * 100));
+      const fairBarPct = Math.max(4, Math.round((fairShare / maxAmount) * 100));
+      return {
+        ...row,
+        delta,
+        sharePct,
+        barPct,
+        fairBarPct,
+        dot: PAYER_CHIP_META[row.key]?.dot ?? DEFAULT_PAYER_DOT,
+      };
+    });
+  }, [expenses]);
+
+  if (!isFeatureEnabled("payer-split-balance") || !rows) return null;
+
+  const total = rows.reduce((s, row) => s + row.amount, 0);
+  const fairShare = total / rows.length;
+  const sortedByDelta = [...rows].sort((a, b) => b.delta - a.delta);
+  const ahead = sortedByDelta.find((row) => row.delta > fairShare * 0.05);
+  const behind = [...sortedByDelta].reverse().find((row) => row.delta < -fairShare * 0.05);
+
+  let insight = "各付款人接近平均應付，分帳大致平衡";
+  let insightClass = "text-jade-deep";
+  if (ahead && behind) {
+    insight = `${ahead.label} 多付 ${formatMoney(ahead.delta, trip.targetCurrency)} · ${behind.label} 欠 ${formatMoney(-behind.delta, trip.targetCurrency)}`;
+    insightClass = "text-[#b45309]";
+  } else if (ahead) {
+    insight = `${ahead.label} 暫時多付 ${formatMoney(ahead.delta, trip.targetCurrency)}`;
+    insightClass = "text-ink-soft";
+  } else if (behind) {
+    insight = `${behind.label} 暫時少付 ${formatMoney(-behind.delta, trip.targetCurrency)}`;
+    insightClass = "text-ink-soft";
+  }
+
+  const maxImbalance = Math.max(...rows.map((row) => Math.abs(row.delta)), 0);
+  let balanceLabel = "平衡";
+  let balanceClass = "bg-jade-soft text-jade-deep";
+  if (fairShare > 0 && maxImbalance / fairShare > 0.35) {
+    balanceLabel = "明顯傾斜";
+    balanceClass = "bg-coral/15 text-coral";
+  } else if (fairShare > 0 && maxImbalance / fairShare > 0.15) {
+    balanceLabel = "略為不均";
+    balanceClass = "bg-[#fef3c7] text-[#b45309]";
+  }
+
+  return (
+    <div className="rounded-2xl border border-jade/10 bg-gradient-to-br from-white to-mist/80 px-3 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">分帳平衡度 · 平均應付</p>
+        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${balanceClass}`}>{balanceLabel}</span>
+      </div>
+      <p className="mt-1 text-[11px] font-semibold text-ink-soft">
+        每人應約 {formatMoney(fairShare, trip.targetCurrency)}（共 {rows.length} 人 · {formatMoney(total, trip.targetCurrency)}）
+      </p>
+      <ul className="mt-2.5 space-y-2">
+        {rows.map((row) => {
+          const deltaTone =
+            row.delta > fairShare * 0.05 ? "text-coral" : row.delta < -fairShare * 0.05 ? "text-jade-deep" : "text-ink-faint";
+          const deltaPrefix = row.delta > 0 ? "+" : row.delta < 0 ? "−" : "";
+          const inner = (
+            <>
+              <div className="flex items-center justify-between gap-2 text-[11px]">
+                <span className="inline-flex min-w-0 items-center gap-1.5 font-bold text-ink">
+                  <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: row.dot }} aria-hidden="true" />
+                  <span className="truncate">{row.label}</span>
+                </span>
+                <span className="shrink-0 font-display font-black text-jade-deep">
+                  {formatMoney(row.amount, trip.targetCurrency)}
+                  <span className="ml-1 text-[10px] font-semibold text-ink-faint">({row.sharePct}%)</span>
+                </span>
+              </div>
+              <div className="relative mt-1 h-2 overflow-hidden rounded-full bg-jade/10">
+                <div
+                  className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-jade to-jade-deep transition-all"
+                  style={{ width: `${row.barPct}%` }}
+                />
+                <div
+                  className="absolute inset-y-0 w-0.5 bg-ink/25"
+                  style={{ left: `${row.fairBarPct}%` }}
+                  title="平均應付"
+                  aria-hidden="true"
+                />
+              </div>
+              <p className={`text-[10px] font-semibold ${deltaTone}`}>
+                {row.delta === 0
+                  ? "剛好係平均"
+                  : `${deltaPrefix}${formatMoney(Math.abs(row.delta), trip.targetCurrency)} vs 平均`}
+              </p>
+            </>
+          );
+          return (
+            <li key={row.key}>
+              {onJumpToPayer ? (
+                <button
+                  type="button"
+                  onClick={() => onJumpToPayer(row.key)}
+                  className="w-full rounded-xl px-1 py-0.5 text-left transition active:bg-jade-soft/40"
+                >
+                  {inner}
+                </button>
+              ) : (
+                <div>{inner}</div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+      <p className={`mt-2 text-center text-[11px] font-semibold ${insightClass}`}>{insight}</p>
     </div>
   );
 }

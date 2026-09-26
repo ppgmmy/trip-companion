@@ -367,6 +367,12 @@
       "title": "匯出 CSV",
       "description": "一鍵匯出本旅程開支清單，方便試算表分析。",
       "cycle": true
+    },
+    {
+      "date": "2026-09-26",
+      "id": "payer-split-balance",
+      "title": "分帳平衡度",
+      "description": "對比各付款人實際使費與平均應付比例，一眼睇邊個多付、邊個欠數，同行分帳更清晰。"
     }
   ]
 }
