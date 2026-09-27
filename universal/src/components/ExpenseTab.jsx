@@ -48,6 +48,7 @@ import {
   WeekendWeekdayComparePanel,
   YesterdayQuickAddBar,
   PayerSplitBalancePanel,
+  TodayTripBudgetSharePanel,
 } from "./ExpenseDailyExtras";
 import PayerPaymentFields from "./PayerPaymentFields";
 import { useLocalStorage } from "../hooks/useLocalStorage";
@@ -777,6 +778,13 @@ export default function ExpenseTab({
               remainingDays={remainingDays}
               pace={pace}
               totalSpent={totalSpent}
+            />
+
+            <TodayTripBudgetSharePanel
+              trip={trip}
+              budget={budget}
+              todaySpent={todaySpent}
+              tripDaysCount={days}
             />
 
             <LedgerDailyPulse

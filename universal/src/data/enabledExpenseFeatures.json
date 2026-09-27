@@ -46,9 +46,10 @@
     "evening-logging-nudge",
     "yesterday-quick-add",
     "today-payer-chips",
-    "payer-split-balance"
+    "payer-split-balance",
+    "today-trip-budget-share"
   ],
-  "updatedAt": "2026-09-26T17:06:43.795Z",
-  "lastFeatureId": "note-templates",
-  "lastTitle": "備註快捷模板"
+  "updatedAt": "2026-09-27T02:10:00.000Z",
+  "lastFeatureId": "today-trip-budget-share",
+  "lastTitle": "今日佔旅程預算"
 }

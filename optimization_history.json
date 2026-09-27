@@ -376,10 +376,9 @@
     },
     {
       "date": "2026-09-27",
-      "id": "note-templates",
-      "title": "備註快捷模板",
-      "description": "午餐／交通／咖啡等常見備註一撳填入。",
-      "cycle": true
+      "id": "today-trip-budget-share",
+      "title": "今日佔旅程預算",
+      "description": "顯示今日使費佔全程預算百分比，對照平均一日應佔比例，大額消費前知會唔會一次食咗太多總預算。"
     }
   ]
 }

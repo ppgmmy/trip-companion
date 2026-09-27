@@ -296,4 +296,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "對比各付款人實際使費與平均應付比例，一眼睇邊個多付、邊個欠數，同行分帳更清晰。",
     pillar: "analysis",
   },
+  {
+    id: "today-trip-budget-share",
+    title: "今日佔旅程預算",
+    description: "顯示今日使費佔全程預算百分比，對照平均一日應佔比例，大額消費前知會唔會一次食咗太多總預算。",
+    pillar: "convenience",
+  },
 ];
