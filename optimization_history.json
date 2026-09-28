@@ -392,6 +392,13 @@
       "id": "tomorrow-daily-cap",
       "title": "聽日建議上限",
       "description": "依剩餘預算同旅程剩日計出聽日每 day 建議使費；今日若超支會自動收緊聽日上限，方便計劃翌日行程。"
+    },
+    {
+      "date": "2026-09-29",
+      "id": "duplicate-last",
+      "title": "複製上一筆",
+      "description": "重複消費一撳複製上一筆再微調，極速記帳。",
+      "cycle": true
     }
   ]
 }
