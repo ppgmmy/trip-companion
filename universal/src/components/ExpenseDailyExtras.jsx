@@ -3092,6 +3092,112 @@ export function TodayTripBudgetSharePanel({ trip, budget = 0, todaySpent = 0, tr
   );
 }
 
+export function TomorrowDailyCapPanel({
+  trip,
+  budget = 0,
+  remaining = 0,
+  remainingDays = 1,
+  todaySpent = 0,
+  dailyAllowance = 0,
+}) {
+  if (!isFeatureEnabled("tomorrow-daily-cap") || budget <= 0) return null;
+
+  const todayId = toDateId(new Date());
+  const endDate = trip.endDate || todayId;
+  if (!trip.startDate || todayId < trip.startDate || todayId > endDate) return null;
+
+  const daysAfterToday = Math.max(0, remainingDays - 1);
+
+  if (daysAfterToday === 0) {
+    const todayLeft = dailyAllowance > 0 ? dailyAllowance - todaySpent : remaining;
+    return (
+      <div className="rounded-2xl border border-jade/10 bg-gradient-to-br from-white to-mist/80 px-3 py-2.5 shadow-[var(--shadow-soft)]">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">聽日建議上限</p>
+        <p className="mt-1 font-display text-lg font-black text-jade-deep">旅程最後一日</p>
+        <p className="mt-1.5 text-center text-[11px] font-semibold text-ink-soft">
+          {remaining > 0
+            ? `專注今日 · 仲可用 ${formatMoney(Math.max(0, todayLeft), trip.targetCurrency)}`
+            : `已超預算 ${formatMoney(-remaining, trip.targetCurrency)} · 今日要收油`}
+        </p>
+      </div>
+    );
+  }
+
+  const tomorrowCap = Math.max(0, remaining / daysAfterToday);
+  const capVsAllowance = dailyAllowance > 0 ? tomorrowCap / dailyAllowance : 1;
+  const todayOver = dailyAllowance > 0 && todaySpent > dailyAllowance ? todaySpent - dailyAllowance : 0;
+  const barPct = dailyAllowance > 0 ? Math.min(100, Math.max(tomorrowCap > 0 ? 6 : 0, (tomorrowCap / dailyAllowance) * 100)) : 50;
+
+  let badge = "正常";
+  let badgeClass = "bg-jade-soft text-jade-deep";
+  let barClass = "bg-gradient-to-r from-jade to-jade-deep";
+  let insight = `餘下 ${daysAfterToday} 日 · 聽日同平均剩餘日預算接近`;
+  let insightClass = "text-jade";
+
+  if (remaining <= 0) {
+    badge = "已超支";
+    badgeClass = "bg-coral/15 text-coral";
+    barClass = "bg-gradient-to-r from-coral to-[#dc2626]";
+    insight = `總預算已超 ${formatMoney(-remaining, trip.targetCurrency)} · 聽日起要大幅收油`;
+    insightClass = "text-coral";
+  } else if (capVsAllowance < 0.75 && todayOver > 0) {
+    badge = "收緊";
+    badgeClass = "bg-coral/15 text-coral";
+    barClass = "bg-gradient-to-r from-[#f97316] to-coral";
+    insight = `今日超支 ${formatMoney(todayOver, trip.targetCurrency)} · 聽日建議低過平均 ${formatMoney(dailyAllowance - tomorrowCap, trip.targetCurrency)}`;
+    insightClass = "text-coral";
+  } else if (capVsAllowance < 0.9) {
+    badge = "略緊";
+    badgeClass = "bg-[#fef3c7] text-[#b45309]";
+    barClass = "bg-gradient-to-r from-[#f59e0b] to-jade";
+    insight = `聽日上限略低於平均剩餘日 ${formatMoney(dailyAllowance, trip.targetCurrency)} · 預留緩衝`;
+    insightClass = "text-[#b45309]";
+  } else if (capVsAllowance > 1.15) {
+    badge = "有餘力";
+    badgeClass = "bg-jade-soft text-jade-deep";
+    barClass = "bg-gradient-to-r from-[#34d399] to-jade";
+    insight = `比平均剩餘日多 ${formatMoney(tomorrowCap - dailyAllowance, trip.targetCurrency)} · 聽日可以稍為鬆動`;
+    insightClass = "text-jade-deep";
+  }
+
+  return (
+    <div className="rounded-2xl border border-jade/10 bg-gradient-to-br from-white to-mist/80 px-3 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">聽日建議上限</p>
+        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${badgeClass}`}>{badge}</span>
+      </div>
+      <div className="mt-2 flex items-end justify-between gap-3">
+        <div>
+          <p className="font-display text-3xl font-black leading-none text-jade-deep">
+            {formatMoney(tomorrowCap, trip.targetCurrency)}
+          </p>
+          <p className="mt-0.5 text-[10px] font-semibold text-ink-faint">
+            仲剩 {formatMoney(Math.max(0, remaining), trip.targetCurrency)} · 分 {daysAfterToday} 日
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-[10px] font-semibold text-ink-faint">平均剩餘日</p>
+          <p className="font-display text-lg font-bold text-ink-soft">
+            {dailyAllowance > 0 ? formatMoney(dailyAllowance, trip.targetCurrency) : "—"}
+          </p>
+        </div>
+      </div>
+      {dailyAllowance > 0 && (
+        <div className="relative mt-2.5 h-2.5 overflow-hidden rounded-full bg-jade/10">
+          <div className={`absolute inset-y-0 left-0 rounded-full transition-all ${barClass}`} style={{ width: `${barPct}%` }} />
+          <div
+            className="absolute inset-y-0 w-0.5 bg-ink/25"
+            style={{ left: "100%", transform: "translateX(-100%)" }}
+            title={`平均剩餘日 ${formatMoney(dailyAllowance, trip.targetCurrency)}`}
+            aria-hidden="true"
+          />
+        </div>
+      )}
+      <p className={`mt-2 text-center text-[11px] font-semibold ${insightClass}`}>{insight}</p>
+    </div>
+  );
+}
+
 export function LedgerSummaryBar({
   trip,
   expenses,

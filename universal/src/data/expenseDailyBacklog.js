@@ -302,4 +302,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "顯示今日使費佔全程預算百分比，對照平均一日應佔比例，大額消費前知會唔會一次食咗太多總預算。",
     pillar: "convenience",
   },
+  {
+    id: "tomorrow-daily-cap",
+    title: "聽日建議上限",
+    description: "依剩餘預算同旅程剩日計出聽日每 day 建議使費；今日若超支會自動收緊聽日上限，方便計劃翌日行程。",
+    pillar: "analysis",
+  },
 ];

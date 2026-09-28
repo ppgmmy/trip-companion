@@ -47,9 +47,10 @@
     "yesterday-quick-add",
     "today-payer-chips",
     "payer-split-balance",
-    "today-trip-budget-share"
+    "today-trip-budget-share",
+    "tomorrow-daily-cap"
   ],
-  "updatedAt": "2026-09-27T17:42:31.834Z",
-  "lastFeatureId": "note-templates",
-  "lastTitle": "備註快捷模板"
+  "updatedAt": "2026-09-28T02:12:52.760Z",
+  "lastFeatureId": "tomorrow-daily-cap",
+  "lastTitle": "聽日建議上限"
 }
