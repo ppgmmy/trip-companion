@@ -48,9 +48,10 @@
     "today-payer-chips",
     "payer-split-balance",
     "today-trip-budget-share",
-    "tomorrow-daily-cap"
+    "tomorrow-daily-cap",
+    "morning-logging-brief"
   ],
-  "updatedAt": "2026-09-28T18:05:56.915Z",
-  "lastFeatureId": "duplicate-last",
-  "lastTitle": "複製上一筆"
+  "updatedAt": "2026-09-29T02:10:00.000Z",
+  "lastFeatureId": "morning-logging-brief",
+  "lastTitle": "晨間記帳小卡"
 }

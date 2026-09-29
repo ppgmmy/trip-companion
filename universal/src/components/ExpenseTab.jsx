@@ -42,6 +42,7 @@ import {
   TodayPayerChips,
   TodayCategoryShiftPanel,
   EveningLoggingNudgePanel,
+  MorningLoggingBriefPanel,
   RemainingBudgetCountdownPanel,
   TripHalfPaceComparePanel,
   LoggingGapHintPanel,
@@ -804,6 +805,15 @@ export default function ExpenseTab({
             />
 
             <TodayCategoryShiftPanel trip={trip} expenses={expenses} />
+
+            <MorningLoggingBriefPanel
+              trip={trip}
+              expenses={expenses}
+              budget={budget}
+              dailyAllowance={dailyAllowance}
+              elapsedDays={elapsedDays}
+              onFocusQuickAdd={focusQuickAdd}
+            />
 
             <EveningLoggingNudgePanel trip={trip} expenses={expenses} onFocusQuickAdd={focusQuickAdd} />
 

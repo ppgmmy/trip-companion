@@ -308,4 +308,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "依剩餘預算同旅程剩日計出聽日每 day 建議使費；今日若超支會自動收緊聽日上限，方便計劃翌日行程。",
     pillar: "analysis",
   },
+  {
+    id: "morning-logging-brief",
+    title: "晨間記帳小卡",
+    description: "旅程中上午若今日尚未記帳，顯示昨日使費同今日建議上限，一撳開始記第一筆，養成出門前對帳習慣。",
+    pillar: "stickiness",
+  },
 ];

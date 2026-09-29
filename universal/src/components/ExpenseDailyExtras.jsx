@@ -2443,6 +2443,8 @@ const PAYER_CHIP_META = {
 const DEFAULT_PAYER_DOT = "#94a3b8";
 
 const EVENING_NUDGE_HOUR = 17;
+const MORNING_BRIEF_START_HOUR = 5;
+const MORNING_BRIEF_END_HOUR = 12;
 
 export function EveningLoggingNudgePanel({ trip, expenses, onFocusQuickAdd }) {
   const todayId = toDateId(new Date());
@@ -2514,6 +2516,117 @@ export function EveningLoggingNudgePanel({ trip, expenses, onFocusQuickAdd }) {
               type="button"
               onClick={dismiss}
               className="rounded-xl border border-amber-300/60 bg-white/70 px-3 py-2 text-xs font-bold text-ink-soft transition active:scale-95"
+            >
+              今日唔再提示
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function MorningLoggingBriefPanel({
+  trip,
+  expenses,
+  budget = 0,
+  dailyAllowance = 0,
+  elapsedDays = 1,
+  onFocusQuickAdd,
+}) {
+  const todayId = toDateId(new Date());
+  const yesterdayId = shiftDateId(todayId, -1);
+  const [dismissed, setDismissed] = useState(false);
+
+  useEffect(() => {
+    const key = `expense-morning-brief:${todayId}`;
+    setDismissed(localStorage.getItem(key) === "1");
+  }, [todayId]);
+
+  const inTrip = useMemo(() => {
+    const start = trip.startDate;
+    const end = trip.endDate || todayId;
+    return todayId >= start && todayId <= end;
+  }, [trip.startDate, trip.endDate, todayId]);
+
+  const todayCount = useMemo(
+    () => expenses.filter((e) => e.date === todayId).length,
+    [expenses, todayId],
+  );
+
+  const yesterdaySum = useMemo(() => sumByDate(expenses, yesterdayId), [expenses, yesterdayId]);
+  const streak = useMemo(() => loggingStreak(expenses), [expenses]);
+
+  const shouldShow = useMemo(() => {
+    if (!isFeatureEnabled("morning-logging-brief") || dismissed || !inTrip) return false;
+    if (todayCount > 0) return false;
+    const hour = new Date().getHours();
+    if (hour < MORNING_BRIEF_START_HOUR || hour >= MORNING_BRIEF_END_HOUR) return false;
+    return yesterdaySum > 0 || streak > 0 || budget > 0;
+  }, [budget, dismissed, inTrip, streak, todayCount, yesterdaySum]);
+
+  if (!shouldShow) return null;
+
+  const showBudget = budget > 0 && dailyAllowance > 0;
+  const yesterdayInTrip = yesterdayId >= trip.startDate && yesterdayId <= (trip.endDate || todayId);
+
+  function dismiss() {
+    localStorage.setItem(`expense-morning-brief:${todayId}`, "1");
+    setDismissed(true);
+  }
+
+  function handleLogNow() {
+    onFocusQuickAdd?.();
+    dismiss();
+  }
+
+  let insight = "出門前記低第一筆，今日預算節奏更清晰";
+  if (streak > 0) {
+    insight = `連續 ${streak} 日有記帳 · 記今日第一筆就可以保持節奏`;
+  } else if (yesterdayInTrip && yesterdaySum > 0) {
+    insight = `昨日使咗 ${formatMoney(yesterdaySum, trip.targetCurrency)} · 對照今日上限再出發`;
+  }
+
+  return (
+    <div className="rounded-2xl border border-sky-200/80 bg-gradient-to-br from-[#f0f9ff] to-[#e0f2fe] p-3.5 shadow-[var(--shadow-soft)]">
+      <div className="flex items-start gap-2">
+        <span className="text-xl" aria-hidden="true">
+          ☀️
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-sky-900/80">晨間記帳小卡</p>
+          <p className="mt-1 text-sm font-bold text-ink">
+            旅程第 {elapsedDays} 日 · 今日仲未記帳
+          </p>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <div className="rounded-xl bg-white/80 px-2.5 py-2">
+              <p className="text-[9px] font-bold uppercase tracking-wide text-ink-faint">昨日</p>
+              <p className="font-display text-base font-black text-ink">
+                {yesterdayInTrip && yesterdaySum > 0
+                  ? formatMoney(yesterdaySum, trip.targetCurrency)
+                  : "—"}
+              </p>
+            </div>
+            <div className="rounded-xl bg-white/80 px-2.5 py-2">
+              <p className="text-[9px] font-bold uppercase tracking-wide text-jade-deep">今日建議上限</p>
+              <p className="font-display text-base font-black text-jade-deep">
+                {showBudget ? formatMoney(dailyAllowance, trip.targetCurrency) : "—"}
+              </p>
+            </div>
+          </div>
+          <p className="mt-2 text-xs leading-relaxed text-ink-soft">{insight}</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={handleLogNow}
+              className="rounded-xl bg-jade px-3 py-2 text-xs font-bold text-white shadow-sm transition active:scale-95"
+            >
+              記今日第一筆
+            </button>
+            <button
+              type="button"
+              onClick={dismiss}
+              className="rounded-xl border border-sky-300/60 bg-white/70 px-3 py-2 text-xs font-bold text-ink-soft transition active:scale-95"
             >
               今日唔再提示
             </button>
