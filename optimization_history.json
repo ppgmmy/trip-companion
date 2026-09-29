@@ -405,6 +405,13 @@
       "id": "morning-logging-brief",
       "title": "晨間記帳小卡",
       "description": "旅程中上午若今日尚未記帳，顯示昨日使費同今日建議上限，一撳開始記第一筆，養成出門前對帳習慣。"
+    },
+    {
+      "date": "2026-09-30",
+      "id": "pinned-budget-alert",
+      "title": "預算警戒條",
+      "description": "用咗超過 80% 預算時顯示醒目提示。",
+      "cycle": true
     }
   ]
 }
