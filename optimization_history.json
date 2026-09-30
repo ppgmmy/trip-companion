@@ -412,6 +412,12 @@
       "title": "預算警戒條",
       "description": "用咗超過 80% 預算時顯示醒目提示。",
       "cycle": true
+    },
+    {
+      "date": "2026-09-30",
+      "id": "ledger-jump-today",
+      "title": "跳至今日記錄",
+      "description": "睇全旅程支出清單時一鍵捲至今日分組，長清單對帳唔使逐日向下搵。"
     }
   ]
 }

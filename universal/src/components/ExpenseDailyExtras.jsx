@@ -3311,6 +3311,70 @@ export function TomorrowDailyCapPanel({
   );
 }
 
+export function LedgerJumpTodayBar({
+  trip,
+  listTodayOnly,
+  todayId,
+  todaySpent = 0,
+  todayEntryCount = 0,
+  showWhenExpanded = false,
+}) {
+  const [todayVisible, setTodayVisible] = useState(true);
+  const [flash, setFlash] = useState(false);
+
+  useEffect(() => {
+    if (!isFeatureEnabled("ledger-jump-today") || listTodayOnly || !showWhenExpanded) {
+      setTodayVisible(true);
+      return undefined;
+    }
+    const el = document.getElementById(`expense-day-${todayId}`);
+    if (!el || typeof IntersectionObserver === "undefined") {
+      setTodayVisible(false);
+      return undefined;
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setTodayVisible(Boolean(entry?.isIntersecting));
+      },
+      { root: null, rootMargin: "-12% 0px -55% 0px", threshold: 0.05 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [listTodayOnly, showWhenExpanded, todayId]);
+
+  if (!isFeatureEnabled("ledger-jump-today") || listTodayOnly || !showWhenExpanded) return null;
+  if (todayVisible) return null;
+
+  function jumpToToday() {
+    const el = document.getElementById(`expense-day-${todayId}`);
+    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setFlash(true);
+    window.setTimeout(() => setFlash(false), 1200);
+  }
+
+  const summary =
+    todayEntryCount > 0
+      ? `今日 ${todayEntryCount} 筆 · ${formatMoney(todaySpent, trip.targetCurrency)}`
+      : "今日尚未記帳 · 跳去記一筆";
+
+  return (
+    <div className="sticky bottom-2 z-20 px-0.5">
+      <button
+        type="button"
+        onClick={jumpToToday}
+        className={`flex w-full items-center justify-between gap-2 rounded-2xl border border-jade/25 bg-gradient-to-r from-white to-jade-soft/80 px-3 py-2.5 text-left shadow-[var(--shadow-soft)] transition active:scale-[0.99] ${flash ? "ring-2 ring-jade/50" : ""}`}
+        aria-label="跳至今日支出記錄"
+      >
+        <span className="min-w-0">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-jade-deep">📍 跳至今日</p>
+          <p className="mt-0.5 truncate text-xs font-semibold text-ink-soft">{summary}</p>
+        </span>
+        <span className="shrink-0 rounded-xl bg-jade px-2.5 py-1.5 text-[11px] font-extrabold text-white">捲動</span>
+      </button>
+    </div>
+  );
+}
+
 export function LedgerSummaryBar({
   trip,
   expenses,

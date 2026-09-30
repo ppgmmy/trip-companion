@@ -51,6 +51,7 @@ import {
   PayerSplitBalancePanel,
   TodayTripBudgetSharePanel,
   TomorrowDailyCapPanel,
+  LedgerJumpTodayBar,
 } from "./ExpenseDailyExtras";
 import PayerPaymentFields from "./PayerPaymentFields";
 import { useLocalStorage } from "../hooks/useLocalStorage";
@@ -1013,6 +1014,15 @@ export default function ExpenseTab({
               </button>
             )}
 
+            <LedgerJumpTodayBar
+              trip={trip}
+              listTodayOnly={listTodayOnly || hasActiveListFilter}
+              todayId={todayId}
+              todaySpent={todaySpent}
+              todayEntryCount={expenses.filter((e) => e.date === todayId).length}
+              showWhenExpanded={!listTodayOnly && !hasActiveListFilter && expenses.length > 0}
+            />
+
               {expenses.length === 0 ? (
                 isFeatureEnabled("empty-state-tips") ? (
                   <ul><EmptyStateTip hasExpenses={false} /></ul>
@@ -1024,8 +1034,21 @@ export default function ExpenseTab({
               ) : displayGroups.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-jade/20 bg-white/50 px-4 py-8 text-center text-sm text-ink-faint">今日尚未記帳</div>
               ) : (
-                displayGroups.map((group) => (
-                  <section key={group.date} className="space-y-2.5">
+                <>
+                {!listTodayOnly && !hasActiveListFilter && !displayGroups.some((g) => g.date === todayId) && (
+                  <div
+                    id={`expense-day-${todayId}`}
+                    className="scroll-mt-3 rounded-2xl border border-dashed border-jade/20 bg-white/50 px-4 py-6 text-center text-sm text-ink-faint"
+                  >
+                    今日尚未記帳 · 喺上面記第一筆
+                  </div>
+                )}
+                {displayGroups.map((group) => (
+                  <section
+                    key={group.date}
+                    id={group.date === todayId ? `expense-day-${todayId}` : undefined}
+                    className="space-y-2.5"
+                  >
                     <div className="expense-day-header py-1.5">
                       <h3 className="text-xs font-bold text-ink">{formatDayHeading(group.date, listSort)}</h3>
                       <div className="text-right">
@@ -1108,7 +1131,8 @@ export default function ExpenseTab({
                       })}
                     </ul>
                   </section>
-                ))
+                ))}
+                </>
               )}
 
             <ExportCsvPanel trip={trip} expenses={expenses} filterCategory={filterCategory} />

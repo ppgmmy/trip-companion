@@ -49,9 +49,10 @@
     "payer-split-balance",
     "today-trip-budget-share",
     "tomorrow-daily-cap",
-    "morning-logging-brief"
+    "morning-logging-brief",
+    "ledger-jump-today"
   ],
-  "updatedAt": "2026-09-29T16:28:03.826Z",
-  "lastFeatureId": "pinned-budget-alert",
-  "lastTitle": "預算警戒條"
+  "updatedAt": "2026-09-30T02:15:00.000Z",
+  "lastFeatureId": "ledger-jump-today",
+  "lastTitle": "跳至今日記錄"
 }

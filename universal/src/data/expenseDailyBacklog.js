@@ -314,4 +314,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "旅程中上午若今日尚未記帳，顯示昨日使費同今日建議上限，一撳開始記第一筆，養成出門前對帳習慣。",
     pillar: "stickiness",
   },
+  {
+    id: "ledger-jump-today",
+    title: "跳至今日記錄",
+    description: "睇全旅程支出清單時一鍵捲至今日分組，長清單對帳唔使逐日向下搵。",
+    pillar: "convenience",
+  },
 ];
