@@ -53,7 +53,7 @@
     "ledger-jump-today",
     "expense-time-of-day"
   ],
-  "updatedAt": "2026-10-01T02:15:00.000Z",
-  "lastFeatureId": "expense-time-of-day",
-  "lastTitle": "消費時段分布"
+  "updatedAt": "2026-10-01T16:59:56.223Z",
+  "lastFeatureId": "category-pct-labels",
+  "lastTitle": "分類百分比標籤"
 }
