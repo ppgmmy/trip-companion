@@ -320,4 +320,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "睇全旅程支出清單時一鍵捲至今日分組，長清單對帳唔使逐日向下搵。",
     pillar: "convenience",
   },
+  {
+    id: "expense-time-of-day",
+    title: "消費時段分布",
+    description: "依記帳時間統計清晨至深夜各時段支出佔比，了解邊個時段最易使費。",
+    pillar: "analysis",
+  },
 ];

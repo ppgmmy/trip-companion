@@ -52,6 +52,7 @@ import {
   TodayTripBudgetSharePanel,
   TomorrowDailyCapPanel,
   LedgerJumpTodayBar,
+  ExpenseTimeOfDayPanel,
 } from "./ExpenseDailyExtras";
 import PayerPaymentFields from "./PayerPaymentFields";
 import { useLocalStorage } from "../hooks/useLocalStorage";
@@ -739,6 +740,9 @@ export default function ExpenseTab({
                 hint={peakWeek ? `${peakWeek.label} 使得最多（${formatHkd(peakWeek.value)}）。` : "有記帳之後會顯示每週同近 7 日走勢。"}
               />
               <SevenDayTrendPanel trip={trip} expenses={expenses} />
+              <div className="mt-4">
+                <ExpenseTimeOfDayPanel trip={trip} expenses={expenses} />
+              </div>
               <div className="mt-4">
                 <TripHalfPaceComparePanel trip={trip} expenses={expenses} />
               </div>

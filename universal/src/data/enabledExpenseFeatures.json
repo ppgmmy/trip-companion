@@ -50,9 +50,10 @@
     "today-trip-budget-share",
     "tomorrow-daily-cap",
     "morning-logging-brief",
-    "ledger-jump-today"
+    "ledger-jump-today",
+    "expense-time-of-day"
   ],
-  "updatedAt": "2026-09-30T16:22:28.519Z",
-  "lastFeatureId": "hkd-list-toggle",
-  "lastTitle": "列表幣種切換"
+  "updatedAt": "2026-10-01T02:15:00.000Z",
+  "lastFeatureId": "expense-time-of-day",
+  "lastTitle": "消費時段分布"
 }

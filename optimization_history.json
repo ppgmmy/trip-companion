@@ -425,6 +425,12 @@
       "title": "列表幣種切換",
       "description": "支出列表可切換顯示當地幣或港幣。",
       "cycle": true
+    },
+    {
+      "date": "2026-10-01",
+      "id": "expense-time-of-day",
+      "title": "消費時段分布",
+      "description": "依記帳時間統計清晨至深夜各時段支出佔比，了解邊個時段最易使費。"
     }
   ]
 }

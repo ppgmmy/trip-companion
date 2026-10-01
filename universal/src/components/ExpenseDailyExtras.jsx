@@ -3311,6 +3311,99 @@ export function TomorrowDailyCapPanel({
   );
 }
 
+const EXPENSE_TIME_BUCKETS = [
+  { id: "dawn", label: "清晨", emoji: "🌙", start: 0, end: 6 },
+  { id: "morning", label: "上午", emoji: "☀️", start: 6, end: 11 },
+  { id: "afternoon", label: "午後", emoji: "🌤", start: 11, end: 17 },
+  { id: "evening", label: "晚上", emoji: "🌆", start: 17, end: 22 },
+  { id: "late", label: "深夜", emoji: "🌃", start: 22, end: 24 },
+];
+
+function expenseLogHour(entry) {
+  if (entry?.createdAt) return new Date(entry.createdAt).getHours();
+  return 12;
+}
+
+function bucketForHour(hour) {
+  return EXPENSE_TIME_BUCKETS.find((b) => hour >= b.start && hour < b.end) ?? EXPENSE_TIME_BUCKETS[2];
+}
+
+export function ExpenseTimeOfDayPanel({ trip, expenses }) {
+  const stats = useMemo(() => {
+    const totals = EXPENSE_TIME_BUCKETS.map((b) => ({ ...b, amount: 0, count: 0 }));
+    let grand = 0;
+    for (const e of expenses) {
+      const amt = Number(e.amount) || 0;
+      if (amt <= 0) continue;
+      const bucket = bucketForHour(expenseLogHour(e));
+      const row = totals.find((t) => t.id === bucket.id);
+      if (row) {
+        row.amount += amt;
+        row.count += 1;
+      }
+      grand += amt;
+    }
+    const ranked = [...totals].sort((a, b) => b.amount - a.amount);
+    const top = ranked[0]?.amount > 0 ? ranked[0] : null;
+    return { totals, grand, top };
+  }, [expenses]);
+
+  if (!isFeatureEnabled("expense-time-of-day")) return null;
+  if (!expenses.length || stats.grand <= 0) return null;
+
+  const { totals, grand, top } = stats;
+  const maxAmt = Math.max(...totals.map((t) => t.amount), 1);
+
+  let insight = "各時段支出較平均";
+  let insightClass = "text-ink-soft";
+  if (top && top.amount / grand >= 0.45) {
+    insight = `${top.emoji} ${top.label}佔 ${Math.round((top.amount / grand) * 100)}%，係主要使費時段`;
+    insightClass = "text-[#b45309]";
+  } else if (top && top.amount / grand >= 0.32) {
+    insight = `${top.emoji} ${top.label}使費最多，約 ${Math.round((top.amount / grand) * 100)}%`;
+    insightClass = "text-jade-deep";
+  }
+
+  return (
+    <div className="rounded-2xl border border-jade/10 bg-gradient-to-br from-white to-[#faf5ff]/50 px-3 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">消費時段分布</p>
+        <span className="text-[10px] font-semibold text-ink-faint">依記帳時間</span>
+      </div>
+      <ul className="mt-2.5 space-y-2">
+        {totals.map((row) => {
+          const pct = grand > 0 ? (row.amount / grand) * 100 : 0;
+          const barW = Math.max(row.amount > 0 ? 6 : 0, Math.round((row.amount / maxAmt) * 100));
+          const isTop = top?.id === row.id && row.amount > 0;
+          return (
+            <li key={row.id}>
+              <div className="flex items-center justify-between gap-2 text-[11px]">
+                <span className={`font-bold ${isTop ? "text-jade-deep" : "text-ink-soft"}`}>
+                  {row.emoji} {row.label}
+                  {row.count > 0 && <span className="ml-1 font-semibold text-ink-faint">({row.count})</span>}
+                </span>
+                <span className="shrink-0 font-display font-black text-ink">
+                  {row.amount > 0 ? formatMoney(row.amount, trip.targetCurrency) : "—"}
+                  {pct >= 1 && (
+                    <span className="ml-1 text-[10px] font-bold text-ink-faint">{Math.round(pct)}%</span>
+                  )}
+                </span>
+              </div>
+              <div className="mt-1 h-2 overflow-hidden rounded-full bg-[#efe9e0]">
+                <div
+                  className={`h-full rounded-full transition-all ${isTop ? "bg-coral/85" : "bg-jade/55"}`}
+                  style={{ width: `${barW}%` }}
+                />
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+      <p className={`mt-2.5 text-center text-[11px] font-semibold ${insightClass}`}>{insight}</p>
+    </div>
+  );
+}
+
 export function LedgerJumpTodayBar({
   trip,
   listTodayOnly,
