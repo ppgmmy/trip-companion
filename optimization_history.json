@@ -444,6 +444,13 @@
       "id": "trip-log-coverage",
       "title": "旅程記帳覆蓋率",
       "description": "圓環顯示已過旅程日子嘅記帳覆蓋百分比，同累計筆數成就，鼓勵補齊漏記、養成完整帳目。"
+    },
+    {
+      "date": "2026-10-03",
+      "id": "empty-state-tips",
+      "title": "空狀態引導",
+      "description": "未記帳時顯示實用提示，降低第一筆門檻。",
+      "cycle": true
     }
   ]
 }
