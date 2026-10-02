@@ -326,4 +326,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "依記帳時間統計清晨至深夜各時段支出佔比，了解邊個時段最易使費。",
     pillar: "analysis",
   },
+  {
+    id: "trip-log-coverage",
+    title: "旅程記帳覆蓋率",
+    description: "圓環顯示已過旅程日子嘅記帳覆蓋百分比，同累計筆數成就，鼓勵補齊漏記、養成完整帳目。",
+    pillar: "stickiness",
+  },
 ];

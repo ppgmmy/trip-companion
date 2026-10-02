@@ -53,6 +53,7 @@ import {
   TomorrowDailyCapPanel,
   LedgerJumpTodayBar,
   ExpenseTimeOfDayPanel,
+  TripLogCoveragePanel,
 } from "./ExpenseDailyExtras";
 import PayerPaymentFields from "./PayerPaymentFields";
 import { useLocalStorage } from "../hooks/useLocalStorage";
@@ -823,6 +824,8 @@ export default function ExpenseTab({
             <EveningLoggingNudgePanel trip={trip} expenses={expenses} onFocusQuickAdd={focusQuickAdd} />
 
             <SevenDayLoggingDots expenses={expenses} />
+
+            <TripLogCoveragePanel trip={trip} expenses={expenses} onPickGapDate={pickGapDate} />
 
             <LoggingGapHintPanel trip={trip} expenses={expenses} onPickDate={pickGapDate} />
 

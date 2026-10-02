@@ -3328,6 +3328,114 @@ function bucketForHour(hour) {
   return EXPENSE_TIME_BUCKETS.find((b) => hour >= b.start && hour < b.end) ?? EXPENSE_TIME_BUCKETS[2];
 }
 
+export function TripLogCoveragePanel({ trip, expenses, onPickGapDate }) {
+  const todayId = toDateId(new Date());
+
+  const stats = useMemo(() => {
+    const elapsed = elapsedTripDateIds(trip);
+    if (elapsed.length === 0) return null;
+    const loggedDates = new Set(expenses.map((e) => e.date).filter(Boolean));
+    const loggedDays = elapsed.filter((d) => loggedDates.has(d)).length;
+    const gaps = elapsed.filter((d) => !loggedDates.has(d));
+    const coveragePct = Math.round((loggedDays / elapsed.length) * 100);
+    const entryCount = expenses.length;
+    const nextGap = gaps.find((d) => d !== todayId) ?? gaps[0] ?? null;
+    return {
+      elapsedCount: elapsed.length,
+      loggedDays,
+      gaps,
+      coveragePct,
+      entryCount,
+      nextGap,
+    };
+  }, [trip, expenses]);
+
+  if (!isFeatureEnabled("trip-log-coverage")) return null;
+  if (!stats || stats.elapsedCount < 1) return null;
+
+  const { elapsedCount, loggedDays, gaps, coveragePct, entryCount, nextGap } = stats;
+  const ringPct = Math.min(100, coveragePct);
+  const r = 26;
+  const c = 2 * Math.PI * r;
+  const dash = (ringPct / 100) * c;
+
+  let statusLabel = "進行中";
+  let statusClass = "bg-jade-soft text-jade-deep";
+  let insight = `已記 ${loggedDays}/${elapsedCount} 日 · 補齊漏記，回程對帳更輕鬆`;
+  let insightClass = "text-ink-soft";
+
+  if (coveragePct >= 100) {
+    statusLabel = "全覆蓋";
+    statusClass = "bg-jade/15 text-jade-deep";
+    insight = `🎉 已過日子全部有記帳 · 共 ${entryCount} 筆，帳目完整`;
+    insightClass = "text-jade";
+  } else if (coveragePct >= 85) {
+    statusLabel = "幾乎齊";
+    insight = `差 ${gaps.length} 日就 100% · 撳下方可補最近漏記`;
+    insightClass = "text-jade-deep";
+  } else if (gaps.length === 1 && gaps[0] === todayId) {
+    statusLabel = "差今日";
+    statusClass = "bg-[#fef3c7] text-[#b45309]";
+    insight = "今日仲未記帳，記一筆就維持覆蓋率";
+    insightClass = "text-[#b45309]";
+  } else if (coveragePct < 50) {
+    statusLabel = "待補記";
+    statusClass = "bg-[#fef3c7] text-[#b45309]";
+    insight = `${gaps.length} 日零記帳 · 逐日補返，總帳先唔會估`;
+    insightClass = "text-[#b45309]";
+  }
+
+  return (
+    <div className="rounded-2xl border border-jade/10 bg-gradient-to-br from-white to-jade-soft/30 px-3 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="flex items-center gap-3">
+        <div className="relative shrink-0">
+          <svg width="64" height="64" viewBox="0 0 64 64" className="-rotate-90" aria-hidden="true">
+            <circle cx="32" cy="32" r={r} fill="none" stroke="#efe9e0" strokeWidth="6" />
+            <circle
+              cx="32"
+              cy="32"
+              r={r}
+              fill="none"
+              className={coveragePct >= 100 ? "stroke-jade" : coveragePct >= 70 ? "stroke-jade/80" : "stroke-[#f59e0b]/75"}
+              strokeWidth="6"
+              strokeLinecap="round"
+              strokeDasharray={`${dash} ${c}`}
+            />
+          </svg>
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+            <span className="font-display text-lg font-black leading-none text-jade-deep">{coveragePct}%</span>
+            <span className="text-[8px] font-bold uppercase tracking-wide text-ink-faint">覆蓋</span>
+          </div>
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">旅程記帳覆蓋率</p>
+            <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${statusClass}`}>{statusLabel}</span>
+          </div>
+          <p className="mt-1 font-display text-xl font-black text-ink">
+            {loggedDays}
+            <span className="text-sm font-bold text-ink-faint"> / {elapsedCount} 日</span>
+          </p>
+          <p className="mt-0.5 text-[11px] font-semibold text-ink-soft">累計 {entryCount} 筆記帳</p>
+        </div>
+      </div>
+      {nextGap && onPickGapDate && coveragePct < 100 && (
+        <button
+          type="button"
+          onClick={() => onPickGapDate(nextGap)}
+          className="mt-2.5 w-full rounded-xl border border-jade/20 bg-white/80 py-2 text-center text-[11px] font-bold text-jade-deep transition active:scale-[0.98]"
+        >
+          補記 {nextGap === todayId ? "今日" : formatShortDate(nextGap)}
+          {nextGap !== todayId && (
+            <span className="ml-1 font-semibold text-ink-faint">（週{weekdayLabel(nextGap)}）</span>
+          )}
+        </button>
+      )}
+      <p className={`mt-2 text-center text-[11px] font-semibold ${insightClass}`}>{insight}</p>
+    </div>
+  );
+}
+
 export function ExpenseTimeOfDayPanel({ trip, expenses }) {
   const stats = useMemo(() => {
     const totals = EXPENSE_TIME_BUCKETS.map((b) => ({ ...b, amount: 0, count: 0 }));
