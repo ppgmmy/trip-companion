@@ -3436,6 +3436,138 @@ export function TripLogCoveragePanel({ trip, expenses, onPickGapDate }) {
   );
 }
 
+export function TripDayQuickFilterPanel({ trip, expenses, filterDate, setFilterDate, onPickEntryDate }) {
+  const todayId = toDateId(new Date());
+
+  const days = useMemo(() => {
+    const ids = elapsedTripDateIds(trip);
+    if (ids.length === 0) return [];
+    const counts = {};
+    expenses.forEach((e) => {
+      if (!e.date) return;
+      counts[e.date] = (counts[e.date] || 0) + 1;
+    });
+    const rows = ids.map((dateId) => ({
+      dateId,
+      spent: sumByDate(expenses, dateId),
+      count: counts[dateId] || 0,
+      dayNum: tripDayNumber(trip.startDate, dateId),
+    }));
+    const maxSpent = Math.max(...rows.map((r) => r.spent), 1);
+    return rows.map((r) => ({ ...r, maxSpent }));
+  }, [trip, expenses]);
+
+  if (!isFeatureEnabled("ledger-day-quick-filter")) return null;
+  if (days.length < 2) return null;
+
+  const activeDate = filterDate !== "all" ? filterDate : null;
+  const activeRow = activeDate ? days.find((d) => d.dateId === activeDate) : null;
+
+  function handleDayClick(dateId) {
+    if (!setFilterDate) return;
+    setFilterDate((prev) => (prev === dateId ? "all" : dateId));
+  }
+
+  function labelForDay(dateId) {
+    if (dateId === todayId) return "今日";
+    const y = shiftDateId(todayId, -1);
+    if (dateId === y) return "昨日";
+    const [, m, d] = dateId.split("-");
+    return `${Number(m)}/${Number(d)}`;
+  }
+
+  return (
+    <div className="rounded-2xl border border-jade/10 bg-gradient-to-br from-white to-mist/80 px-3 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="mb-2 flex items-baseline justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">日子快篩 · 撳一下篩選</p>
+        {activeRow ? (
+          <p className="text-[11px] font-bold text-jade-deep">
+            {labelForDay(activeRow.dateId)} · {formatMoney(activeRow.spent, trip.targetCurrency)}
+          </p>
+        ) : (
+          <p className="text-[10px] font-semibold text-ink-faint">共 {days.length} 日</p>
+        )}
+      </div>
+      <div className="flex gap-1 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <button
+          type="button"
+          onClick={() => setFilterDate?.("all")}
+          className={`flex shrink-0 flex-col items-center justify-end rounded-xl border px-2 py-1.5 transition active:scale-95 ${
+            filterDate === "all" ? "badge-active border-transparent" : "border-jade/15 bg-white/90"
+          }`}
+          aria-pressed={filterDate === "all"}
+        >
+          <span className="text-[10px] font-bold">全部</span>
+          <span className="mt-1 h-6 w-7" aria-hidden="true" />
+        </button>
+        {days.map((row) => {
+          const barH = row.spent > 0 ? Math.max(8, Math.round((row.spent / row.maxSpent) * 28)) : 3;
+          const isActive = filterDate === row.dateId;
+          const isToday = row.dateId === todayId;
+          const hasLog = row.count > 0;
+          return (
+            <button
+              key={row.dateId}
+              type="button"
+              onClick={() => handleDayClick(row.dateId)}
+              className={`flex shrink-0 flex-col items-center justify-end rounded-xl border px-1.5 py-1.5 transition active:scale-95 ${
+                isActive ? "badge-active border-transparent" : "border-jade/15 bg-white/90"
+              }`}
+              aria-pressed={isActive}
+              title={
+                hasLog
+                  ? `${row.dateId} · ${formatMoney(row.spent, trip.targetCurrency)} · ${row.count} 筆`
+                  : `${row.dateId} · 未記帳`
+              }
+            >
+              <span className={`text-[9px] font-bold leading-none ${isToday && !isActive ? "text-jade-deep" : ""}`}>
+                {labelForDay(row.dateId)}
+              </span>
+              <div className="mt-1 flex h-7 w-7 items-end justify-center" aria-hidden="true">
+                <div
+                  className={`w-2.5 rounded-t-sm transition-all ${
+                    row.spent <= 0
+                      ? "bg-jade/15"
+                      : isActive
+                        ? "bg-white/90"
+                        : isToday
+                          ? "bg-jade"
+                          : "bg-jade/55"
+                  }`}
+                  style={{ height: `${barH}px` }}
+                />
+              </div>
+              {hasLog && (
+                <span className={`mt-0.5 text-[8px] font-bold ${isActive ? "opacity-90" : "text-ink-faint"}`}>
+                  {row.count}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+      {activeRow && (
+        <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+          <p className="text-center text-[10px] font-semibold text-jade-deep">
+            已篩選 {labelForDay(activeRow.dateId)}
+            {activeRow.count > 0 ? ` · ${activeRow.count} 筆` : " · 零記帳"}
+            · 再撳一次取消
+          </p>
+          {onPickEntryDate && (
+            <button
+              type="button"
+              onClick={() => onPickEntryDate(activeRow.dateId)}
+              className="rounded-lg border border-jade/25 bg-white/90 px-2 py-0.5 text-[10px] font-bold text-jade-deep"
+            >
+              以呢日記帳
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function ExpenseTimeOfDayPanel({ trip, expenses }) {
   const stats = useMemo(() => {
     const totals = EXPENSE_TIME_BUCKETS.map((b) => ({ ...b, amount: 0, count: 0 }));

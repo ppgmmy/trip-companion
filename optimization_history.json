@@ -451,6 +451,12 @@
       "title": "空狀態引導",
       "description": "未記帳時顯示實用提示，降低第一筆門檻。",
       "cycle": true
+    },
+    {
+      "date": "2026-10-03",
+      "id": "ledger-day-quick-filter",
+      "title": "日子快篩",
+      "description": "橫向迷你柱狀圖顯示已過每日使費，一撳即篩選該日支出，長清單對帳更快。"
     }
   ]
 }

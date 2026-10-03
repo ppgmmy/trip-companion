@@ -52,9 +52,10 @@
     "morning-logging-brief",
     "ledger-jump-today",
     "expense-time-of-day",
-    "trip-log-coverage"
+    "trip-log-coverage",
+    "ledger-day-quick-filter"
   ],
-  "updatedAt": "2026-10-02T16:13:38.864Z",
-  "lastFeatureId": "empty-state-tips",
-  "lastTitle": "空狀態引導"
+  "updatedAt": "2026-10-03T02:00:24.000Z",
+  "lastFeatureId": "ledger-day-quick-filter",
+  "lastTitle": "日子快篩"
 }

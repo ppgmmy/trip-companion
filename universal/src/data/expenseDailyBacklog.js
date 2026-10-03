@@ -332,4 +332,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "圓環顯示已過旅程日子嘅記帳覆蓋百分比，同累計筆數成就，鼓勵補齊漏記、養成完整帳目。",
     pillar: "stickiness",
   },
+  {
+    id: "ledger-day-quick-filter",
+    title: "日子快篩",
+    description: "橫向迷你柱狀圖顯示已過每日使費，一撳即篩選該日支出，長清單對帳更快。",
+    pillar: "convenience",
+  },
 ];

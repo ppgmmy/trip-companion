@@ -54,6 +54,7 @@ import {
   LedgerJumpTodayBar,
   ExpenseTimeOfDayPanel,
   TripLogCoveragePanel,
+  TripDayQuickFilterPanel,
 } from "./ExpenseDailyExtras";
 import PayerPaymentFields from "./PayerPaymentFields";
 import { useLocalStorage } from "../hooks/useLocalStorage";
@@ -99,6 +100,7 @@ function migrateExpenseUi(v) {
     listSort: ["date-desc", "date-asc", "amount-desc", "amount-asc"].includes(base.listSort)
       ? base.listSort
       : "date-desc",
+    filterDate: typeof base.filterDate === "string" ? base.filterDate : "all",
   };
 }
 
@@ -132,6 +134,7 @@ export default function ExpenseTab({
   const [paymentMethod, setPaymentMethod] = useState(() => lastPaymentDefaults(expenses).paymentMethod);
   const [toast, setToast] = useState(null);
   const [listTodayOnly, setListTodayOnly] = useState(expenseUi.listTodayOnly !== false);
+  const [filterDate, setFilterDate] = useState(expenseUi.filterDate || "all");
   const undoRef = useRef(null);
   const tabRefs = useRef({});
   const tabRailRef = useRef(null);
@@ -149,8 +152,9 @@ export default function ExpenseTab({
       filterPaymentMethod,
       search,
       listSort,
+      filterDate,
     }));
-  }, [panel, listTodayOnly, showHkd, filterCategory, filterPayer, filterPaymentMethod, search, listSort, setExpenseUi]);
+  }, [panel, listTodayOnly, showHkd, filterCategory, filterPayer, filterPaymentMethod, search, listSort, filterDate, setExpenseUi]);
 
   useEffect(() => {
     if (!initialPanel || !PANELS.some((p) => p.id === initialPanel)) return;
@@ -166,7 +170,12 @@ export default function ExpenseTab({
   }, [panel]);
 
   const suggestedAmounts = useMemo(() => frequentAmounts(expenses), [expenses]);
-  const hasActiveListFilter = filterCategory !== "all" || filterPayer !== "all" || filterPaymentMethod !== "all" || Boolean(search.trim());
+  const hasActiveListFilter =
+    filterCategory !== "all"
+    || filterPayer !== "all"
+    || filterPaymentMethod !== "all"
+    || Boolean(search.trim())
+    || (isFeatureEnabled("ledger-day-quick-filter") && filterDate !== "all");
 
   const days = tripDays(trip);
   const rate = rateState?.rate || 0;
@@ -246,8 +255,11 @@ export default function ExpenseTab({
     if (filterPaymentMethod !== "all") {
       list = list.filter((e) => normalizePaymentMethod(e.paymentMethod) === filterPaymentMethod);
     }
+    if (isFeatureEnabled("ledger-day-quick-filter") && filterDate !== "all") {
+      list = list.filter((e) => e.date === filterDate);
+    }
     return list;
-  }, [expenses, filterCategory, filterPayer, filterPaymentMethod]);
+  }, [expenses, filterCategory, filterPayer, filterPaymentMethod, filterDate]);
 
   const visibleExpenses = useMemo(() => {
     if (!isFeatureEnabled("expense-search") || !search.trim()) return categoryFilteredExpenses;
@@ -982,6 +994,18 @@ export default function ExpenseTab({
                 </button>
               </div>
             </form>
+
+            <TripDayQuickFilterPanel
+              trip={trip}
+              expenses={expenses}
+              filterDate={filterDate}
+              setFilterDate={setFilterDate}
+              onPickEntryDate={(dateId) => {
+                setEditingId(null);
+                setEntryDate(dateId);
+                window.requestAnimationFrame(() => amountRef.current?.focus({ preventScroll: true }));
+              }}
+            />
 
             <ExpenseListExtras
               trip={trip}
