@@ -457,6 +457,13 @@
       "id": "ledger-day-quick-filter",
       "title": "日子快篩",
       "description": "橫向迷你柱狀圖顯示已過每日使費，一撳即篩選該日支出，長清單對帳更快。"
+    },
+    {
+      "date": "2026-10-04",
+      "id": "remaining-days-chip",
+      "title": "剩餘日數徽章",
+      "description": "標題旁顯示旅程剩餘日數，強化時間感。",
+      "cycle": true
     }
   ]
 }
