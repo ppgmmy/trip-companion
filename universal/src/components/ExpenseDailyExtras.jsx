@@ -3568,6 +3568,139 @@ export function TripDayQuickFilterPanel({ trip, expenses, filterDate, setFilterD
   );
 }
 
+export function FilteredDayBenchmarkPanel({ trip, expenses, filterDate, budget = 0 }) {
+  const todayId = toDateId(new Date());
+
+  const stats = useMemo(() => {
+    if (filterDate === "all" || !filterDate) return null;
+    const daySpent = sumByDate(expenses, filterDate);
+    const dailyTotals = dailySpendTotalsInTrip(expenses, trip);
+    const loggedDayCount = dailyTotals.length;
+    const totalSpent = expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+    const tripAvgLogged = loggedDayCount > 0 ? totalSpent / loggedDayCount : 0;
+    const medianDay = median(dailyTotals);
+    const allowance =
+      budget > 0 ? dailyAllowanceForDate(expenses, trip, budget, filterDate) : null;
+    const count = expenses.filter((e) => e.date === filterDate).length;
+    return {
+      dateId: filterDate,
+      daySpent,
+      tripAvgLogged,
+      medianDay,
+      allowance,
+      loggedDayCount,
+      count,
+      vsAvg: daySpent - tripAvgLogged,
+      vsMedian: daySpent - medianDay,
+      vsAllowance: allowance != null ? daySpent - allowance : null,
+    };
+  }, [budget, expenses, filterDate, trip]);
+
+  if (!isFeatureEnabled("filtered-day-benchmark")) return null;
+  if (!stats || stats.loggedDayCount < 2) return null;
+
+  const { dateId, daySpent, tripAvgLogged, medianDay, allowance, count, vsAvg, vsMedian, vsAllowance } =
+    stats;
+
+  function dayLabel(dateId) {
+    if (dateId === todayId) return "今日";
+    const y = shiftDateId(todayId, -1);
+    if (dateId === y) return "昨日";
+    return `${formatShortDate(dateId)}（週${weekdayLabel(dateId)}）`;
+  }
+
+  const maxBar = Math.max(daySpent, tripAvgLogged, medianDay, allowance ?? 0, 1);
+  const barPct = (v) => Math.max(6, Math.round((v / maxBar) * 100));
+
+  let insight = `${dayLabel(dateId)}使費接近旅程典型節奏`;
+  let insightClass = "text-ink-soft";
+  if (daySpent === 0 && count === 0) {
+    insight = `${dayLabel(dateId)}未有記帳，對照基於其他有記帳日`;
+    insightClass = "text-ink-faint";
+  } else if (medianDay > 0 && daySpent >= medianDay * 1.45) {
+    insight = `比中位日多 ${formatMoney(vsMedian, trip.targetCurrency)}，屬偏高消費日`;
+    insightClass = "text-coral";
+  } else if (tripAvgLogged > 0 && daySpent >= tripAvgLogged * 1.35) {
+    insight = `高過有記帳日平均 ${formatMoney(vsAvg, trip.targetCurrency)}`;
+    insightClass = "text-[#b45309]";
+  } else if (allowance != null && vsAllowance > 0) {
+    insight = `超過當日建議上限 ${formatMoney(vsAllowance, trip.targetCurrency)}`;
+    insightClass = "text-coral";
+  } else if (medianDay > 0 && daySpent <= medianDay * 0.7 && daySpent > 0) {
+    insight = `慳咗 ${formatMoney(-vsMedian, trip.targetCurrency)}，低過典型一日`;
+    insightClass = "text-jade-deep";
+  } else if (allowance != null && daySpent > 0 && vsAllowance <= 0) {
+    insight = `喺當日建議上限內，仲剩 ${formatMoney(-vsAllowance, trip.targetCurrency)}`;
+    insightClass = "text-jade";
+  }
+
+  return (
+    <div className="rounded-2xl border border-jade/15 bg-gradient-to-br from-white to-[#f1f5f4]/90 px-3 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="mb-2 flex items-baseline justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">篩選日 vs 基準</p>
+        <p className="text-[11px] font-bold text-jade-deep">
+          {dayLabel(dateId)}
+          {count > 0 ? ` · ${count} 筆` : ""}
+        </p>
+      </div>
+      <p className="font-display text-xl font-black text-ink">{formatMoney(daySpent, trip.targetCurrency)}</p>
+      <div className="mt-2.5 space-y-2">
+        <div>
+          <div className="flex items-center justify-between text-[10px] font-semibold text-ink-faint">
+            <span>有記帳日平均（{stats.loggedDayCount} 日）</span>
+            <span>{formatMoney(tripAvgLogged, trip.targetCurrency)}</span>
+          </div>
+          <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-[#efe9e0]">
+            <div className="h-full rounded-full bg-ink-faint/35" style={{ width: `${barPct(tripAvgLogged)}%` }} />
+          </div>
+        </div>
+        <div>
+          <div className="flex items-center justify-between text-[10px] font-semibold text-ink-faint">
+            <span>旅程中位日</span>
+            <span>{formatMoney(medianDay, trip.targetCurrency)}</span>
+          </div>
+          <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-[#efe9e0]">
+            <div className="h-full rounded-full bg-jade/40" style={{ width: `${barPct(medianDay)}%` }} />
+          </div>
+        </div>
+        {allowance != null && (
+          <div>
+            <div className="flex items-center justify-between text-[10px] font-semibold text-ink-faint">
+              <span>當日建議上限</span>
+              <span>{formatMoney(allowance, trip.targetCurrency)}</span>
+            </div>
+            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-[#efe9e0]">
+              <div
+                className="h-full rounded-full border border-dashed border-jade/50 bg-jade/15"
+                style={{ width: `${barPct(allowance)}%` }}
+              />
+            </div>
+          </div>
+        )}
+        <div>
+          <div className="flex items-center justify-between text-[10px] font-semibold text-jade-deep">
+            <span>{dayLabel(dateId)}實際</span>
+            <span>{formatMoney(daySpent, trip.targetCurrency)}</span>
+          </div>
+          <div className="mt-1 h-2 overflow-hidden rounded-full bg-[#efe9e0]">
+            <div
+              className={`h-full rounded-full ${
+                vsMedian > 0 && daySpent > medianDay * 1.15
+                  ? "bg-coral"
+                  : daySpent > 0 && vsMedian < 0
+                    ? "bg-jade"
+                    : "bg-jade/75"
+              }`}
+              style={{ width: `${barPct(daySpent)}%` }}
+            />
+          </div>
+        </div>
+      </div>
+      <p className={`mt-2 text-center text-[11px] font-semibold leading-snug ${insightClass}`}>{insight}</p>
+    </div>
+  );
+}
+
 export function ExpenseTimeOfDayPanel({ trip, expenses }) {
   const stats = useMemo(() => {
     const totals = EXPENSE_TIME_BUCKETS.map((b) => ({ ...b, amount: 0, count: 0 }));

@@ -55,6 +55,7 @@ import {
   ExpenseTimeOfDayPanel,
   TripLogCoveragePanel,
   TripDayQuickFilterPanel,
+  FilteredDayBenchmarkPanel,
 } from "./ExpenseDailyExtras";
 import PayerPaymentFields from "./PayerPaymentFields";
 import { useLocalStorage } from "../hooks/useLocalStorage";
@@ -1005,6 +1006,13 @@ export default function ExpenseTab({
                 setEntryDate(dateId);
                 window.requestAnimationFrame(() => amountRef.current?.focus({ preventScroll: true }));
               }}
+            />
+
+            <FilteredDayBenchmarkPanel
+              trip={trip}
+              expenses={expenses}
+              filterDate={filterDate}
+              budget={budget}
             />
 
             <ExpenseListExtras

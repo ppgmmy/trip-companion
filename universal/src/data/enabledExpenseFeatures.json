@@ -53,9 +53,10 @@
     "ledger-jump-today",
     "expense-time-of-day",
     "trip-log-coverage",
-    "ledger-day-quick-filter"
+    "ledger-day-quick-filter",
+    "filtered-day-benchmark"
   ],
-  "updatedAt": "2026-10-03T17:13:15.864Z",
-  "lastFeatureId": "remaining-days-chip",
-  "lastTitle": "剩餘日數徽章"
+  "updatedAt": "2026-10-04T02:15:00.000Z",
+  "lastFeatureId": "filtered-day-benchmark",
+  "lastTitle": "篩選日 vs 日均"
 }

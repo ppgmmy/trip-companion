@@ -338,4 +338,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "橫向迷你柱狀圖顯示已過每日使費，一撳即篩選該日支出，長清單對帳更快。",
     pillar: "convenience",
   },
+  {
+    id: "filtered-day-benchmark",
+    title: "篩選日 vs 日均",
+    description: "日子快篩選中某一日時，對比該日使費同旅程日均、中位日同當日預算建議，秒懂偏高定偏低。",
+    pillar: "analysis",
+  },
 ];
