@@ -56,7 +56,7 @@
     "ledger-day-quick-filter",
     "filtered-day-benchmark"
   ],
-  "updatedAt": "2026-10-04T02:15:00.000Z",
-  "lastFeatureId": "filtered-day-benchmark",
-  "lastTitle": "篩選日 vs 日均"
+  "updatedAt": "2026-10-04T17:32:50.146Z",
+  "lastFeatureId": "avg-per-category",
+  "lastTitle": "分類日均"
 }
