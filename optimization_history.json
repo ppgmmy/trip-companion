@@ -483,6 +483,13 @@
       "id": "filtered-day-category-chips",
       "title": "篩選日分類快篩",
       "description": "日子快篩選中舊日時，顯示該日各分類使費晶片，一撳即篩選該類支出，翻舊帳對帳更快。"
+    },
+    {
+      "date": "2026-10-06",
+      "id": "fx-rate-impact",
+      "title": "匯率影響說明",
+      "description": "對比記帳鎖定港幣同而家匯率重算嘅差額，了解匯率波動點影響總使費。",
+      "cycle": true
     }
   ]
 }
