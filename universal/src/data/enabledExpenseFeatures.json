@@ -54,9 +54,10 @@
     "expense-time-of-day",
     "trip-log-coverage",
     "ledger-day-quick-filter",
-    "filtered-day-benchmark"
+    "filtered-day-benchmark",
+    "filtered-day-category-chips"
   ],
-  "updatedAt": "2026-10-04T17:32:50.146Z",
-  "lastFeatureId": "avg-per-category",
-  "lastTitle": "分類日均"
+  "updatedAt": "2026-10-05T02:15:00.000Z",
+  "lastFeatureId": "filtered-day-category-chips",
+  "lastTitle": "篩選日分類快篩"
 }

@@ -344,4 +344,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "日子快篩選中某一日時，對比該日使費同旅程日均、中位日同當日預算建議，秒懂偏高定偏低。",
     pillar: "analysis",
   },
+  {
+    id: "filtered-day-category-chips",
+    title: "篩選日分類快篩",
+    description: "日子快篩選中舊日時，顯示該日各分類使費晶片，一撳即篩選該類支出，翻舊帳對帳更快。",
+    pillar: "convenience",
+  },
 ];
