@@ -3793,6 +3793,155 @@ export function FilteredDayCategoryChips({ trip, expenses, filterDate, filterCat
   );
 }
 
+export function FilteredDayPrevComparePanel({ trip, expenses, filterDate }) {
+  const todayId = toDateId(new Date());
+  const dayId = filterDate !== "all" && filterDate ? filterDate : null;
+  const tripStart = trip.startDate;
+  const tripEnd = trip.endDate || todayId;
+
+  const stats = useMemo(() => {
+    if (!dayId || dayId === todayId) return null;
+    if (dayId < tripStart || dayId > tripEnd) return null;
+    const prevId = shiftDateId(dayId, -1);
+    if (prevId < tripStart) return null;
+
+    const daySpent = sumByDate(expenses, dayId);
+    const prevSpent = sumByDate(expenses, prevId);
+    const delta = daySpent - prevSpent;
+    const prevCount = expenses.filter((e) => e.date === prevId).length;
+    const dayCount = expenses.filter((e) => e.date === dayId).length;
+
+    let pctChange = null;
+    if (prevSpent > 0) {
+      pctChange = Math.round((delta / prevSpent) * 100);
+    } else if (daySpent > 0) {
+      pctChange = null;
+    }
+
+    const topShift = (() => {
+      const mapDay = {};
+      const mapPrev = {};
+      expenses
+        .filter((e) => e.date === dayId)
+        .forEach((e) => {
+          mapDay[e.categoryId] = (mapDay[e.categoryId] || 0) + (Number(e.amount) || 0);
+        });
+      expenses
+        .filter((e) => e.date === prevId)
+        .forEach((e) => {
+          mapPrev[e.categoryId] = (mapPrev[e.categoryId] || 0) + (Number(e.amount) || 0);
+        });
+      let best = null;
+      for (const cat of EXPENSE_CATEGORIES) {
+        const d = (mapDay[cat.id] || 0) - (mapPrev[cat.id] || 0);
+        if (!best || Math.abs(d) > Math.abs(best.delta)) {
+          best = { cat, delta: d, dayVal: mapDay[cat.id] || 0, prevVal: mapPrev[cat.id] || 0 };
+        }
+      }
+      return best && best.delta !== 0 ? best : null;
+    })();
+
+    return { dayId, prevId, daySpent, prevSpent, delta, pctChange, prevCount, dayCount, topShift };
+  }, [dayId, todayId, tripStart, tripEnd, expenses]);
+
+  if (!isFeatureEnabled("filtered-day-prev-compare")) return null;
+  if (!stats) return null;
+
+  const { dayId: dId, prevId, daySpent, prevSpent, delta, pctChange, prevCount, dayCount, topShift } = stats;
+
+  function dayLabel(dateId) {
+    const y = shiftDateId(todayId, -1);
+    if (dateId === y) return "昨日";
+    return `${formatShortDate(dateId)}（週${weekdayLabel(dateId)}）`;
+  }
+
+  const maxBar = Math.max(daySpent, prevSpent, 1);
+  const barPct = (v) => Math.max(6, Math.round((v / maxBar) * 100));
+
+  let insight = "兩日使費相近";
+  let insightClass = "text-ink-soft";
+  if (prevSpent === 0 && daySpent === 0) {
+    insight = "兩日都未有記帳";
+    insightClass = "text-ink-faint";
+  } else if (prevSpent === 0 && daySpent > 0) {
+    insight = `${dayLabel(dId)}先開始有支出，前一日無記帳`;
+    insightClass = "text-ink-soft";
+  } else if (delta > 0 && pctChange != null && pctChange >= 35) {
+    insight = `比前一日多 ${formatMoney(delta, trip.targetCurrency)}（+${pctChange}%），消費升溫`;
+    insightClass = "text-coral";
+  } else if (delta > 0) {
+    insight = `比前一日多 ${formatMoney(delta, trip.targetCurrency)}`;
+    insightClass = "text-[#b45309]";
+  } else if (delta < 0 && pctChange != null && pctChange <= -25) {
+    insight = `慳咗 ${formatMoney(-delta, trip.targetCurrency)}（${pctChange}%），收油成功`;
+    insightClass = "text-jade-deep";
+  } else if (delta < 0) {
+    insight = `比前一日少 ${formatMoney(-delta, trip.targetCurrency)}`;
+    insightClass = "text-jade";
+  }
+
+  return (
+    <div className="rounded-2xl border border-jade/15 bg-gradient-to-br from-white to-[#f0f9ff]/80 px-3 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="mb-2 flex items-baseline justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">篩選日 vs 前一日</p>
+        <p className="text-[11px] font-bold text-jade-deep">
+          {dayLabel(dId)}
+          {dayCount > 0 ? ` · ${dayCount} 筆` : ""}
+        </p>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <p className="text-[10px] font-semibold text-ink-faint">{dayLabel(prevId)}</p>
+          <p className="font-display text-lg font-black text-ink">{formatMoney(prevSpent, trip.targetCurrency)}</p>
+          {prevCount > 0 && <p className="text-[10px] text-ink-faint">{prevCount} 筆</p>}
+        </div>
+        <div className="text-right">
+          <p className="text-[10px] font-semibold text-jade-deep">{dayLabel(dId)}</p>
+          <p className="font-display text-lg font-black text-ink">{formatMoney(daySpent, trip.targetCurrency)}</p>
+          <p
+            className={`text-[11px] font-bold ${
+              delta > 0 ? "text-coral" : delta < 0 ? "text-jade" : "text-ink-faint"
+            }`}
+          >
+            {delta === 0
+              ? "持平"
+              : delta > 0
+                ? `↑ ${formatMoney(delta, trip.targetCurrency)}`
+                : `↓ ${formatMoney(-delta, trip.targetCurrency)}`}
+            {pctChange != null && delta !== 0 ? ` · ${pctChange > 0 ? "+" : ""}${pctChange}%` : ""}
+          </p>
+        </div>
+      </div>
+      <div className="mt-2.5 space-y-1.5">
+        <div className="flex items-center gap-2">
+          <span className="w-14 shrink-0 truncate text-[9px] font-semibold text-ink-faint">{formatShortDate(prevId)}</span>
+          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#efe9e0]">
+            <div className="h-full rounded-full bg-ink-faint/35" style={{ width: `${barPct(prevSpent)}%` }} />
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="w-14 shrink-0 truncate text-[9px] font-semibold text-jade-deep">{formatShortDate(dId)}</span>
+          <div className="h-2 flex-1 overflow-hidden rounded-full bg-[#efe9e0]">
+            <div
+              className={`h-full rounded-full ${delta > 0 ? "bg-coral/85" : delta < 0 ? "bg-jade" : "bg-jade/75"}`}
+              style={{ width: `${barPct(daySpent)}%` }}
+            />
+          </div>
+        </div>
+      </div>
+      {topShift && (
+        <p className="mt-2 text-center text-[10px] font-semibold text-ink-soft">
+          最大變化：
+          <span className="text-ink">{topShift.cat.label}</span>
+          {topShift.delta > 0 ? " +" : " "}
+          {formatMoney(topShift.delta, trip.targetCurrency)}
+        </p>
+      )}
+      <p className={`mt-1.5 text-center text-[11px] font-semibold leading-snug ${insightClass}`}>{insight}</p>
+    </div>
+  );
+}
+
 export function ExpenseTimeOfDayPanel({ trip, expenses }) {
   const stats = useMemo(() => {
     const totals = EXPENSE_TIME_BUCKETS.map((b) => ({ ...b, amount: 0, count: 0 }));

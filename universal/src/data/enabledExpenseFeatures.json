@@ -55,9 +55,10 @@
     "trip-log-coverage",
     "ledger-day-quick-filter",
     "filtered-day-benchmark",
-    "filtered-day-category-chips"
+    "filtered-day-category-chips",
+    "filtered-day-prev-compare"
   ],
-  "updatedAt": "2026-10-05T19:13:40.400Z",
-  "lastFeatureId": "fx-rate-impact",
-  "lastTitle": "匯率影響說明"
+  "updatedAt": "2026-10-06T02:20:00.000Z",
+  "lastFeatureId": "filtered-day-prev-compare",
+  "lastTitle": "篩選日 vs 前一日"
 }

@@ -350,4 +350,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "日子快篩選中舊日時，顯示該日各分類使費晶片，一撳即篩選該類支出，翻舊帳對帳更快。",
     pillar: "convenience",
   },
+  {
+    id: "filtered-day-prev-compare",
+    title: "篩選日 vs 前一日",
+    description: "日子快篩選中舊日時，對比該日與前一日使費，秒懂消費升溫定收油，翻舊帳更有上下文。",
+    pillar: "analysis",
+  },
 ];
