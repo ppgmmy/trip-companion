@@ -486,16 +486,23 @@
     },
     {
       "date": "2026-10-06",
+      "id": "filtered-day-prev-compare",
+      "title": "篩選日 vs 前一日",
+      "description": "日子快篩選中舊日時，對比該日與前一日使費，秒懂消費升溫定收油，翻舊帳更有上下文。"
+    },
+    {
+      "date": "2026-10-06",
       "id": "fx-rate-impact",
       "title": "匯率影響說明",
       "description": "對比記帳鎖定港幣同而家匯率重算嘅差額，了解匯率波動點影響總使費。",
       "cycle": true
     },
     {
-      "date": "2026-10-06",
-      "id": "filtered-day-prev-compare",
-      "title": "篩選日 vs 前一日",
-      "description": "日子快篩選中舊日時，對比該日與前一日使費，秒懂消費升溫定收油，翻舊帳更有上下文。"
+      "date": "2026-10-07",
+      "id": "today-budget-gauge",
+      "title": "今日預算儀表",
+      "description": "概覽頁一眼睇今日已使同每日可用額，色階提示仲剩幾多，出門前心里有數。",
+      "cycle": true
     }
   ]
 }
