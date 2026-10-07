@@ -499,16 +499,23 @@
     },
     {
       "date": "2026-10-07",
+      "id": "filtered-day-trip-budget-share",
+      "title": "篩選日佔旅程預算",
+      "description": "日子快篩選中舊日時，顯示該日使費佔全程預算百分比，對照平均一日應佔，回顧邊日一次食咗太多總預算。"
+    },
+    {
+      "date": "2026-10-07",
       "id": "today-budget-gauge",
       "title": "今日預算儀表",
       "description": "概覽頁一眼睇今日已使同每日可用額，色階提示仲剩幾多，出門前心里有數。",
       "cycle": true
     },
     {
-      "date": "2026-10-07",
-      "id": "filtered-day-trip-budget-share",
-      "title": "篩選日佔旅程預算",
-      "description": "日子快篩選中舊日時，顯示該日使費佔全程預算百分比，對照平均一日應佔，回顧邊日一次食咗太多總預算。"
+      "date": "2026-10-08",
+      "id": "budget-runway-days",
+      "title": "預算可用天數",
+      "description": "照而家使費速度，預算仲夠用幾多日；同旅程剩餘日數對比，一眼知要唔要收油。",
+      "cycle": true
     }
   ]
 }
