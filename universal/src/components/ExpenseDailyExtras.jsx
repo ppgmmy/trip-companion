@@ -3942,6 +3942,112 @@ export function FilteredDayPrevComparePanel({ trip, expenses, filterDate }) {
   );
 }
 
+export function FilteredDayTripBudgetSharePanel({
+  trip,
+  expenses,
+  budget = 0,
+  filterDate,
+  tripDaysCount = 1,
+}) {
+  const todayId = toDateId(new Date());
+  const dayId = filterDate !== "all" && filterDate ? filterDate : null;
+
+  const daySpent = useMemo(() => {
+    if (!dayId) return 0;
+    return sumByDate(expenses, dayId);
+  }, [dayId, expenses]);
+
+  if (!isFeatureEnabled("filtered-day-trip-budget-share") || budget <= 0) return null;
+  if (!dayId || dayId === todayId) return null;
+
+  const days = Math.max(1, tripDaysCount);
+  const sharePct = daySpent > 0 ? (daySpent / budget) * 100 : 0;
+  const fairDailyPct = 100 / days;
+  const ratio = fairDailyPct > 0 && daySpent > 0 ? sharePct / fairDailyPct : 0;
+  const barPct = Math.min(100, Math.max(daySpent > 0 ? 4 : 0, sharePct));
+  const fairMarkerPct = Math.min(98, Math.max(2, fairDailyPct));
+
+  function dayHeading(dateId) {
+    const y = shiftDateId(todayId, -1);
+    if (dateId === y) return "昨日";
+    return `${formatShortDate(dateId)}（週${weekdayLabel(dateId)}）`;
+  }
+
+  let badge = "未有記帳";
+  let badgeClass = "bg-shell text-ink-soft";
+  let barClass = "bg-gradient-to-r from-jade/40 to-jade/60";
+  let insight = `平均一日約佔 ${fairDailyPct.toFixed(1)}% 總預算 · 補記後就睇到該日比重`;
+  let insightClass = "text-ink-soft";
+
+  if (daySpent > 0) {
+    if (ratio >= 2) {
+      badge = "偏高";
+      badgeClass = "bg-coral/15 text-coral";
+      barClass = "bg-gradient-to-r from-[#f97316] to-coral";
+      insight = `${dayHeading(dayId)}已用 ${sharePct.toFixed(1)}% 總預算，約係平均一日嘅 ${ratio.toFixed(1)} 倍 · 回顧大額消費`;
+      insightClass = "text-coral";
+    } else if (ratio >= 1.25) {
+      badge = "略高";
+      badgeClass = "bg-[#fef3c7] text-[#b45309]";
+      barClass = "bg-gradient-to-r from-[#f59e0b] to-jade";
+      insight = `高過平均一日應佔（${fairDailyPct.toFixed(1)}%）· 呢日使費較集中`;
+      insightClass = "text-[#b45309]";
+    } else if (ratio <= 0.5) {
+      badge = "慳住使";
+      badgeClass = "bg-jade-soft text-jade-deep";
+      barClass = "bg-gradient-to-r from-[#34d399] to-jade";
+      insight = `只佔 ${sharePct.toFixed(1)}% 總預算 · 低於典型一日`;
+      insightClass = "text-jade-deep";
+    } else {
+      badge = "正常";
+      badgeClass = "bg-jade-soft text-jade-deep";
+      barClass = "bg-gradient-to-r from-jade to-jade-deep";
+      insight = `接近平均一日應佔 ${fairDailyPct.toFixed(1)}% · 節奏健康`;
+      insightClass = "text-jade";
+    }
+  }
+
+  return (
+    <div className="rounded-2xl border border-jade/10 bg-gradient-to-br from-white to-mist/80 px-3 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">
+          {dayHeading(dayId)}佔旅程預算
+        </p>
+        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${badgeClass}`}>{badge}</span>
+      </div>
+      <div className="mt-2 flex items-end justify-between gap-3">
+        <div>
+          <p className="font-display text-3xl font-black leading-none text-jade-deep">
+            {daySpent > 0 ? `${sharePct.toFixed(1)}%` : "—"}
+          </p>
+          <p className="mt-0.5 text-[10px] font-semibold text-ink-faint">
+            {daySpent > 0
+              ? `${formatMoney(daySpent, trip.targetCurrency)} · 總預算 ${formatMoney(budget, trip.targetCurrency)}`
+              : `總預算 ${formatMoney(budget, trip.targetCurrency)} · ${days} 日行程`}
+          </p>
+        </div>
+        {daySpent > 0 && (
+          <p className="text-right text-[11px] font-bold text-ink-soft">
+            平均一日
+            <br />
+            <span className="font-display text-lg text-jade-deep">{fairDailyPct.toFixed(1)}%</span>
+          </p>
+        )}
+      </div>
+      <div className="relative mt-2.5 h-2.5 overflow-hidden rounded-full bg-jade/10">
+        <div className={`absolute inset-y-0 left-0 rounded-full transition-all ${barClass}`} style={{ width: `${barPct}%` }} />
+        <div
+          className="absolute inset-y-0 w-0.5 bg-ink/20"
+          style={{ left: `${fairMarkerPct}%` }}
+          title={`平均一日應佔約 ${fairDailyPct.toFixed(1)}%`}
+          aria-hidden="true"
+        />
+      </div>
+      <p className={`mt-2 text-center text-[11px] font-semibold ${insightClass}`}>{insight}</p>
+    </div>
+  );
+}
+
 export function ExpenseTimeOfDayPanel({ trip, expenses }) {
   const stats = useMemo(() => {
     const totals = EXPENSE_TIME_BUCKETS.map((b) => ({ ...b, amount: 0, count: 0 }));

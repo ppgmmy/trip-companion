@@ -356,4 +356,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "日子快篩選中舊日時，對比該日與前一日使費，秒懂消費升溫定收油，翻舊帳更有上下文。",
     pillar: "analysis",
   },
+  {
+    id: "filtered-day-trip-budget-share",
+    title: "篩選日佔旅程預算",
+    description: "日子快篩選中舊日時，顯示該日使費佔全程預算百分比，對照平均一日應佔，回顧邊日一次食咗太多總預算。",
+    pillar: "stickiness",
+  },
 ];

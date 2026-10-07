@@ -58,6 +58,7 @@ import {
   FilteredDayBenchmarkPanel,
   FilteredDayCategoryChips,
   FilteredDayPrevComparePanel,
+  FilteredDayTripBudgetSharePanel,
 } from "./ExpenseDailyExtras";
 import PayerPaymentFields from "./PayerPaymentFields";
 import { useLocalStorage } from "../hooks/useLocalStorage";
@@ -1029,6 +1030,14 @@ export default function ExpenseTab({
               trip={trip}
               expenses={expenses}
               filterDate={filterDate}
+            />
+
+            <FilteredDayTripBudgetSharePanel
+              trip={trip}
+              expenses={expenses}
+              budget={budget}
+              filterDate={filterDate}
+              tripDaysCount={days}
             />
 
             <ExpenseListExtras
