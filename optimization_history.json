@@ -522,6 +522,13 @@
       "id": "filtered-day-biggest-entry",
       "title": "篩選日最大單筆",
       "description": "日子快篩選中舊日時，突出該日最高一筆消費同佔當日比例，翻舊帳秒搵大額支出。"
+    },
+    {
+      "date": "2026-10-09",
+      "id": "spending-vs-timeline",
+      "title": "行程進度對齊",
+      "description": "對比「旅程已過幾多%」同「預算已用幾多%」，一眼知使費超前定落後行程。",
+      "cycle": true
     }
   ]
 }
