@@ -362,4 +362,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "日子快篩選中舊日時，顯示該日使費佔全程預算百分比，對照平均一日應佔，回顧邊日一次食咗太多總預算。",
     pillar: "stickiness",
   },
+  {
+    id: "filtered-day-biggest-entry",
+    title: "篩選日最大單筆",
+    description: "日子快篩選中舊日時，突出該日最高一筆消費同佔當日比例，翻舊帳秒搵大額支出。",
+    pillar: "convenience",
+  },
 ];

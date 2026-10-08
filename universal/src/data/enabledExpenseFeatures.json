@@ -57,9 +57,10 @@
     "filtered-day-benchmark",
     "filtered-day-category-chips",
     "filtered-day-prev-compare",
-    "filtered-day-trip-budget-share"
+    "filtered-day-trip-budget-share",
+    "filtered-day-biggest-entry"
   ],
-  "updatedAt": "2026-10-07T17:23:22.973Z",
-  "lastFeatureId": "budget-runway-days",
-  "lastTitle": "預算可用天數"
+  "updatedAt": "2026-10-08T02:15:00.000Z",
+  "lastFeatureId": "filtered-day-biggest-entry",
+  "lastTitle": "篩選日最大單筆"
 }
