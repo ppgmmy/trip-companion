@@ -4143,6 +4143,129 @@ export function FilteredDayBiggestEntryPanel({ trip, expenses, filterDate }) {
   );
 }
 
+export function FilteredDayAvgPerEntryPanel({ trip, expenses, filterDate }) {
+  const todayId = toDateId(new Date());
+  const dayId = filterDate !== "all" && filterDate ? filterDate : null;
+
+  const stats = useMemo(() => {
+    if (!dayId) return null;
+    const dayEntries = expenses.filter((e) => e.date === dayId);
+    const dayCount = dayEntries.length;
+    const daySpent = dayEntries.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+    const dayAvgPerEntry = dayCount > 0 ? daySpent / dayCount : 0;
+
+    const allWithAmount = expenses.filter((e) => (Number(e.amount) || 0) > 0);
+    const totalCount = allWithAmount.length;
+    const totalSpent = allWithAmount.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+    const tripAvgPerEntry = totalCount > 0 ? totalSpent / totalCount : 0;
+
+    const loggedDates = new Set(expenses.map((e) => e.date).filter(Boolean));
+    const avgEntriesOnLoggedDays =
+      loggedDates.size > 0
+        ? expenses.filter((e) => loggedDates.has(e.date)).length / loggedDates.size
+        : 0;
+
+    return {
+      dayCount,
+      daySpent,
+      dayAvgPerEntry,
+      tripAvgPerEntry,
+      totalCount,
+      avgEntriesOnLoggedDays,
+    };
+  }, [dayId, expenses]);
+
+  if (!isFeatureEnabled("filtered-day-avg-per-entry")) return null;
+  if (!stats || !dayId || dayId === todayId || stats.dayCount === 0) return null;
+  if (stats.totalCount < 2) return null;
+
+  const { dayCount, daySpent, dayAvgPerEntry, tripAvgPerEntry, avgEntriesOnLoggedDays } = stats;
+  const entryDelta = dayCount - avgEntriesOnLoggedDays;
+  const avgDelta = dayAvgPerEntry - tripAvgPerEntry;
+  const avgRatio = tripAvgPerEntry > 0 ? dayAvgPerEntry / tripAvgPerEntry : 0;
+
+  function dayHeading(dateId) {
+    const y = shiftDateId(todayId, -1);
+    if (dateId === y) return "昨日";
+    return `${formatShortDate(dateId)}（週${weekdayLabel(dateId)}）`;
+  }
+
+  let insight = `${dayHeading(dayId)}每筆使費接近旅程平均`;
+  let insightClass = "text-ink-soft";
+  if (entryDelta >= 2 && avgRatio <= 1.15) {
+    insight = `筆數多過典型 ${Math.round(entryDelta)} 筆，偏向細碎消費日`;
+    insightClass = "text-[#b45309]";
+  } else if (dayCount <= 2 && daySpent > 0 && avgRatio >= 1.4) {
+    insight = `少筆但每筆大，平均每筆高 ${formatMoney(avgDelta, trip.targetCurrency)}`;
+    insightClass = "text-coral";
+  } else if (avgRatio >= 1.35 && tripAvgPerEntry > 0) {
+    insight = `每筆比旅程平均大 ${Math.round((avgRatio - 1) * 100)}%，留意大額`;
+    insightClass = "text-[#b45309]";
+  } else if (avgRatio <= 0.75 && dayCount >= 3) {
+    insight = "多筆細項為主，平均每筆低過旅程慣常";
+    insightClass = "text-jade-deep";
+  } else if (entryDelta <= -1.5 && dayCount > 0) {
+    insight = "筆數少於有記帳日平均，可能係大單集中日";
+    insightClass = "text-jade-deep";
+  }
+
+  const maxBar = Math.max(dayAvgPerEntry, tripAvgPerEntry, 1);
+  const barPct = (v) => Math.max(8, Math.round((v / maxBar) * 100));
+
+  return (
+    <div className="rounded-2xl border border-jade/10 bg-gradient-to-br from-white to-[#eef6f4]/90 px-3 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">篩選日每筆平均</p>
+        <span className="rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-bold text-jade-deep">
+          {dayHeading(dayId)} · {dayCount} 筆
+        </span>
+      </div>
+      <div className="mt-2 grid grid-cols-2 gap-2">
+        <div className="rounded-xl bg-white/90 px-2.5 py-2">
+          <p className="text-[10px] font-semibold text-ink-faint">該日平均每筆</p>
+          <p className="font-display text-2xl font-black text-ink">{formatMoney(dayAvgPerEntry, trip.targetCurrency)}</p>
+          <p className="mt-0.5 text-[10px] font-semibold text-ink-soft">
+            當日共 {formatMoney(daySpent, trip.targetCurrency)}
+          </p>
+        </div>
+        <div className="rounded-xl bg-white/90 px-2.5 py-2">
+          <p className="text-[10px] font-semibold text-ink-faint">旅程平均每筆</p>
+          <p className="font-display text-2xl font-black text-jade-deep">{formatMoney(tripAvgPerEntry, trip.targetCurrency)}</p>
+          <p className="mt-0.5 text-[10px] font-semibold text-ink-soft">
+            有記帳日約 {avgEntriesOnLoggedDays.toFixed(1)} 筆／日
+          </p>
+        </div>
+      </div>
+      <div className="mt-2.5 space-y-1.5">
+        <div>
+          <div className="flex items-center justify-between text-[10px] font-semibold text-ink-faint">
+            <span>旅程平均</span>
+            <span>{formatMoney(tripAvgPerEntry, trip.targetCurrency)}</span>
+          </div>
+          <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-[#efe9e0]">
+            <div className="h-full rounded-full bg-ink-faint/35" style={{ width: `${barPct(tripAvgPerEntry)}%` }} />
+          </div>
+        </div>
+        <div>
+          <div className="flex items-center justify-between text-[10px] font-semibold text-jade-deep">
+            <span>{dayHeading(dayId)}</span>
+            <span>{formatMoney(dayAvgPerEntry, trip.targetCurrency)}</span>
+          </div>
+          <div className="mt-1 h-2 overflow-hidden rounded-full bg-[#efe9e0]">
+            <div
+              className={`h-full rounded-full ${
+                avgRatio >= 1.35 ? "bg-coral" : avgRatio <= 0.8 ? "bg-jade" : "bg-jade/75"
+              }`}
+              style={{ width: `${barPct(dayAvgPerEntry)}%` }}
+            />
+          </div>
+        </div>
+      </div>
+      <p className={`mt-2 text-center text-[11px] font-semibold leading-snug ${insightClass}`}>{insight}</p>
+    </div>
+  );
+}
+
 export function ExpenseTimeOfDayPanel({ trip, expenses }) {
   const stats = useMemo(() => {
     const totals = EXPENSE_TIME_BUCKETS.map((b) => ({ ...b, amount: 0, count: 0 }));

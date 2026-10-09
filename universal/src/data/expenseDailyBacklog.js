@@ -368,4 +368,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "日子快篩選中舊日時，突出該日最高一筆消費同佔當日比例，翻舊帳秒搵大額支出。",
     pillar: "convenience",
   },
+  {
+    id: "filtered-day-avg-per-entry",
+    title: "篩選日每筆平均",
+    description: "日子快篩選中舊日時，對比該日平均每筆使費同全旅程每筆平均，秒懂係細碎消費定少筆大額。",
+    pillar: "analysis",
+  },
 ];
