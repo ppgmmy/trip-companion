@@ -62,7 +62,7 @@
     "filtered-day-avg-per-entry",
     "filtered-day-category-leader"
   ],
-  "updatedAt": "2026-10-10T02:15:00.000Z",
-  "lastFeatureId": "filtered-day-category-leader",
-  "lastTitle": "篩選日主導分類"
+  "updatedAt": "2026-10-10T17:48:34.977Z",
+  "lastFeatureId": "expense-list-sort",
+  "lastTitle": "列表排序切換"
 }

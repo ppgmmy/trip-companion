@@ -548,6 +548,13 @@
       "id": "filtered-day-category-leader",
       "title": "篩選日主導分類",
       "description": "日子快篩選中舊日時，突出當日使費最大分類同佔比，並對照全程該類佔比，回顧「食飲日／購物日」更有記憶點。"
+    },
+    {
+      "date": "2026-10-11",
+      "id": "expense-list-sort",
+      "title": "列表排序切換",
+      "description": "支出清單可按最新、最舊或金額高低排序，長清單搵大額消費更快。",
+      "cycle": true
     }
   ]
 }
