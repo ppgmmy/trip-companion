@@ -374,4 +374,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "日子快篩選中舊日時，對比該日平均每筆使費同全旅程每筆平均，秒懂係細碎消費定少筆大額。",
     pillar: "analysis",
   },
+  {
+    id: "filtered-day-category-leader",
+    title: "篩選日主導分類",
+    description: "日子快篩選中舊日時，突出當日使費最大分類同佔比，並對照全程該類佔比，回顧「食飲日／購物日」更有記憶點。",
+    pillar: "stickiness",
+  },
 ];

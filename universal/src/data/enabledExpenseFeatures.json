@@ -59,9 +59,10 @@
     "filtered-day-prev-compare",
     "filtered-day-trip-budget-share",
     "filtered-day-biggest-entry",
-    "filtered-day-avg-per-entry"
+    "filtered-day-avg-per-entry",
+    "filtered-day-category-leader"
   ],
-  "updatedAt": "2026-10-09T16:57:08.216Z",
-  "lastFeatureId": "budget-health-badge",
-  "lastTitle": "預算健康徽章"
+  "updatedAt": "2026-10-10T02:15:00.000Z",
+  "lastFeatureId": "filtered-day-category-leader",
+  "lastTitle": "篩選日主導分類"
 }

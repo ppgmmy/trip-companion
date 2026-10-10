@@ -4266,6 +4266,132 @@ export function FilteredDayAvgPerEntryPanel({ trip, expenses, filterDate }) {
   );
 }
 
+export function FilteredDayCategoryLeaderPanel({ trip, expenses, filterDate }) {
+  const todayId = toDateId(new Date());
+  const dayId = filterDate !== "all" && filterDate ? filterDate : null;
+
+  const stats = useMemo(() => {
+    if (!dayId) return null;
+    const dayEntries = expenses.filter((e) => e.date === dayId);
+    const dayTotal = dayEntries.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+    if (dayTotal <= 0) return null;
+
+    const dayMap = {};
+    dayEntries.forEach((e) => {
+      dayMap[e.categoryId] = (dayMap[e.categoryId] || 0) + (Number(e.amount) || 0);
+    });
+    const ranked = EXPENSE_CATEGORIES.filter((c) => (dayMap[c.id] || 0) > 0)
+      .map((c) => ({ ...c, value: dayMap[c.id] }))
+      .sort((a, b) => b.value - a.value);
+    if (!ranked.length) return null;
+
+    const leader = ranked[0];
+    const runnerUp = ranked[1] ?? null;
+    const tripTotal = expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+    const tripCatTotal = expenses
+      .filter((e) => e.categoryId === leader.id)
+      .reduce((s, e) => s + (Number(e.amount) || 0), 0);
+    const dayShare = dayTotal > 0 ? leader.value / dayTotal : 0;
+    const tripShare = tripTotal > 0 ? tripCatTotal / tripTotal : 0;
+    const entryCount = dayEntries.length;
+
+    return {
+      leader,
+      runnerUp,
+      dayTotal,
+      dayShare,
+      tripShare,
+      tripCatTotal,
+      entryCount,
+      categoryCount: ranked.length,
+    };
+  }, [dayId, expenses]);
+
+  if (!isFeatureEnabled("filtered-day-category-leader")) return null;
+  if (!stats || !dayId || dayId === todayId) return null;
+
+  const { leader, runnerUp, dayTotal, dayShare, tripShare, entryCount, categoryCount } = stats;
+  const dayPct = Math.round(dayShare * 100);
+  const tripPct = Math.round(tripShare * 100);
+  const isThemeDay = dayPct >= 50 && dayShare >= tripShare * 1.35;
+  const runnerPct =
+    runnerUp && dayTotal > 0 ? Math.round((runnerUp.value / dayTotal) * 100) : 0;
+
+  function dayHeading(dateId) {
+    const y = shiftDateId(todayId, -1);
+    if (dateId === y) return "昨日";
+    return `${formatShortDate(dateId)}（週${weekdayLabel(dateId)}）`;
+  }
+
+  let insight = `${dayHeading(dayId)}以「${leader.label}」為主（${dayPct}%）`;
+  let insightClass = "text-ink-soft";
+  if (isThemeDay && tripPct > 0) {
+    const lift = Math.round(((dayShare - tripShare) / tripShare) * 100);
+    insight = `典型「${leader.label}日」· 佔比高過全程 ${lift > 0 ? lift : 0}%`;
+    insightClass = "text-[#b45309]";
+  } else if (categoryCount >= 3 && dayPct <= 45) {
+    insight = `分類較分散 · 次位「${runnerUp?.label}」${runnerPct}%`;
+    insightClass = "text-jade-deep";
+  } else if (tripPct > 0 && dayShare < tripShare * 0.75) {
+    insight = `當日「${leader.label}」低過旅程慣常佔比，其他類別較活躍`;
+    insightClass = "text-jade";
+  } else if (runnerUp && dayPct - runnerPct <= 12) {
+    insight = `「${leader.label}」同「${runnerUp.label}」接近，混合消費日`;
+    insightClass = "text-ink-soft";
+  }
+
+  const barPct = Math.max(8, Math.min(100, dayPct));
+
+  return (
+    <div
+      className={`rounded-2xl border px-3 py-2.5 shadow-[var(--shadow-soft)] ${
+        isThemeDay
+          ? "border-amber-300/40 bg-gradient-to-br from-[#fffbeb]/95 to-white"
+          : "border-jade/15 bg-gradient-to-br from-white to-[#f0f7f5]/90"
+      }`}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">篩選日主導分類</p>
+        <span className="rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-bold text-jade-deep">
+          {dayHeading(dayId)} · {entryCount} 筆
+        </span>
+      </div>
+      <div className="mt-2 flex items-start gap-3">
+        <div
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-lg font-black text-white shadow-sm"
+          style={{ backgroundColor: leader.color }}
+          aria-hidden
+        >
+          {leader.label.slice(0, 1)}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="font-display text-xl font-black text-ink">{leader.label}</p>
+          <p className="mt-0.5 text-sm font-semibold text-ink-soft">
+            {formatMoney(leader.value, trip.targetCurrency)}
+            <span className="text-ink-faint"> · 佔當日 {dayPct}%</span>
+          </p>
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#efe9e0]">
+            <div
+              className="h-full rounded-full transition-all"
+              style={{ width: `${barPct}%`, backgroundColor: leader.color }}
+            />
+          </div>
+        </div>
+        <div className="shrink-0 text-right">
+          <p className="text-[10px] font-semibold text-ink-faint">全程佔比</p>
+          <p className="font-display text-lg font-black text-jade-deep">{tripPct}%</p>
+        </div>
+      </div>
+      {runnerUp && (
+        <p className="mt-2 text-[10px] font-semibold text-ink-faint">
+          次位 {runnerUp.label} · {formatMoney(runnerUp.value, trip.targetCurrency)}（{runnerPct}%）
+        </p>
+      )}
+      <p className={`mt-2 text-center text-[11px] font-semibold leading-snug ${insightClass}`}>{insight}</p>
+    </div>
+  );
+}
+
 export function ExpenseTimeOfDayPanel({ trip, expenses }) {
   const stats = useMemo(() => {
     const totals = EXPENSE_TIME_BUCKETS.map((b) => ({ ...b, amount: 0, count: 0 }));
