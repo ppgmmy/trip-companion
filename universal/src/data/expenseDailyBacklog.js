@@ -380,4 +380,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "日子快篩選中舊日時，突出當日使費最大分類同佔比，並對照全程該類佔比，回顧「食飲日／購物日」更有記憶點。",
     pillar: "stickiness",
   },
+  {
+    id: "filtered-day-payment-chips",
+    title: "篩選日付款快篩",
+    description: "日子快篩選中舊日時，顯示該日現金／信用卡使費晶片，一撳即篩選該付款方式，翻舊帳對帳更快。",
+    pillar: "convenience",
+  },
 ];

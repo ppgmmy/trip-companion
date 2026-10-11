@@ -60,9 +60,10 @@
     "filtered-day-trip-budget-share",
     "filtered-day-biggest-entry",
     "filtered-day-avg-per-entry",
-    "filtered-day-category-leader"
+    "filtered-day-category-leader",
+    "filtered-day-payment-chips"
   ],
-  "updatedAt": "2026-10-10T17:48:34.977Z",
-  "lastFeatureId": "expense-list-sort",
-  "lastTitle": "列表排序切換"
+  "updatedAt": "2026-10-11T02:10:00.000Z",
+  "lastFeatureId": "filtered-day-payment-chips",
+  "lastTitle": "篩選日付款快篩"
 }

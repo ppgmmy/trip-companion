@@ -4392,6 +4392,110 @@ export function FilteredDayCategoryLeaderPanel({ trip, expenses, filterDate }) {
   );
 }
 
+export function FilteredDayPaymentChips({
+  trip,
+  expenses,
+  filterDate,
+  filterPaymentMethod,
+  setFilterPaymentMethod,
+}) {
+  const todayId = toDateId(new Date());
+  const dayId = filterDate !== "all" && filterDate ? filterDate : null;
+
+  const chips = useMemo(() => {
+    if (!dayId) return [];
+    const map = {};
+    expenses
+      .filter((e) => e.date === dayId)
+      .forEach((e) => {
+        const key = normalizePaymentMethod(e.paymentMethod);
+        map[key] = (map[key] || 0) + (Number(e.amount) || 0);
+      });
+    return ["cash", "card"]
+      .filter((id) => map[id] > 0)
+      .map((id) => ({
+        id,
+        label: paymentMethodLabel(id),
+        value: map[id],
+        ...PAYMENT_CHIP_META[id],
+      }))
+      .sort((a, b) => b.value - a.value);
+  }, [dayId, expenses]);
+
+  const dayTotal = useMemo(() => {
+    if (!dayId) return 0;
+    return expenses.filter((e) => e.date === dayId).reduce((s, e) => s + (Number(e.amount) || 0), 0);
+  }, [dayId, expenses]);
+
+  if (!isFeatureEnabled("filtered-day-payment-chips")) return null;
+  if (!dayId || dayId === todayId || !chips.length) return null;
+
+  const activeOnDay =
+    filterPaymentMethod === "all" || chips.some((c) => c.id === filterPaymentMethod);
+
+  function dayHeading(dateId) {
+    const y = shiftDateId(todayId, -1);
+    if (dateId === y) return "昨日";
+    return `${formatShortDate(dateId)}（週${weekdayLabel(dateId)}）`;
+  }
+
+  function handleChipClick(methodId) {
+    if (!setFilterPaymentMethod) return;
+    setFilterPaymentMethod((prev) => (prev === methodId ? "all" : methodId));
+  }
+
+  return (
+    <div className="rounded-2xl border border-jade/10 bg-white/90 p-3 shadow-[var(--shadow-soft)]">
+      <div className="mb-2 flex items-baseline justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">
+          {dayHeading(dayId)}付款 · 撳一下篩選
+        </p>
+        <p className="text-[11px] font-bold text-jade-deep">{formatMoney(dayTotal, trip.targetCurrency)}</p>
+      </div>
+      <div className="expense-chip-row">
+        <button
+          type="button"
+          onClick={() => handleChipClick("all")}
+          className={`shrink-0 rounded-xl border px-2.5 py-1.5 text-xs font-bold transition active:scale-95 ${
+            filterPaymentMethod === "all" || !activeOnDay
+              ? "badge-active border-transparent"
+              : "border-jade/15 bg-mist text-ink-soft"
+          }`}
+        >
+          全部
+        </button>
+        {chips.map((c) => {
+          const share = dayTotal > 0 ? Math.round((c.value / dayTotal) * 100) : 0;
+          const isActive = filterPaymentMethod === c.id;
+          return (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => handleChipClick(c.id)}
+              className={`shrink-0 rounded-xl border px-2.5 py-1.5 text-xs font-bold transition active:scale-95 ${
+                isActive ? "badge-active border-transparent" : "border-jade/15 bg-mist text-ink-soft"
+              }`}
+              aria-pressed={isActive}
+            >
+              <span className="inline-flex items-center gap-1.5">
+                <span aria-hidden="true">{c.emoji}</span>
+                <span>{c.label}</span>
+                <span className={isActive ? "opacity-90" : c.accent}>{formatMoney(c.value, trip.targetCurrency)}</span>
+                <span className={`text-[10px] ${isActive ? "opacity-75" : "text-ink-faint"}`}>{share}%</span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      {filterPaymentMethod !== "all" && activeOnDay && (
+        <p className="mt-2 text-center text-[10px] font-semibold text-jade-deep">
+          已篩選「{paymentMethodLabel(filterPaymentMethod)}」· 再撳一次取消
+        </p>
+      )}
+    </div>
+  );
+}
+
 export function ExpenseTimeOfDayPanel({ trip, expenses }) {
   const stats = useMemo(() => {
     const totals = EXPENSE_TIME_BUCKETS.map((b) => ({ ...b, amount: 0, count: 0 }));
