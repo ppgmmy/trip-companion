@@ -561,6 +561,13 @@
       "id": "filtered-day-payment-chips",
       "title": "篩選日付款快篩",
       "description": "日子快篩選中舊日時，顯示該日現金／信用卡使費晶片，一撳即篩選該付款方式，翻舊帳對帳更快。"
+    },
+    {
+      "date": "2026-10-12",
+      "id": "recent-3day-pace",
+      "title": "近 3 日使費節奏",
+      "description": "對比近 3 日日均同全程日均，及早察覺消費升溫或收油。",
+      "cycle": true
     }
   ]
 }
