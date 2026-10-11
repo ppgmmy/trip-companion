@@ -17,9 +17,9 @@ import DailyTodosPanel from "./DailyTodosPanel";
 import SharedTodoPanel from "./SharedTodoPanel";
 
 const PERSONAL_VIEWS = [
+  { id: "shared", label: "To-Do", hint: "待辦清單第一版（C M S P）" },
   { id: "mine", label: "行程", hint: "個人行程／日程時間表" },
   { id: "daily", label: "每日", hint: "每日習慣＋本月%" },
-  { id: "shared", label: "To-Do", hint: "共用 To-Do List（C M S P）" },
 ];
 
 const KINDS = [
@@ -591,7 +591,7 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
   const [timeError, setTimeError] = useState(false);
   const [personalUi, setPersonalUi] = useLocalStorage(
     REGISTRY_KEYS.personalUi,
-    { selectedDate: todayId, viewMonth: null, kind: "event", filterKind: "event", showCompleted: false, section: "mine" },
+    { selectedDate: todayId, viewMonth: null, kind: "event", filterKind: "event", showCompleted: false, section: "shared" },
     {
       migrate: (v) => {
         const base = v && typeof v === "object" ? v : {};
@@ -601,12 +601,13 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
           kind: "event",
           filterKind: "event",
           showCompleted: Boolean(base.showCompleted),
-          section: ["mine", "daily", "shared"].includes(base.section) ? base.section : "mine",
+          // 第一版：個人模式預設 To-Do
+          section: ["mine", "daily", "shared"].includes(base.section) ? base.section : "shared",
         };
       },
     },
   );
-  const [section, setSection] = useState(personalUi.section || "mine");
+  const [section, setSection] = useState("shared");
   const [kind, setKind] = useState("event");
   const [filterKind, setFilterKind] = useState("event");
   const [showCompleted, setShowCompleted] = useState(Boolean(personalUi.showCompleted));
@@ -614,6 +615,12 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
   const [entryDate, setEntryDate] = useState(todayId);
   const [entryTime, setEntryTime] = useState("");
   const [selectedDate, setSelectedDate] = useState(personalUi.selectedDate || todayId);
+
+  // 第一版：開個人模式一律落到 To-Do
+  useEffect(() => {
+    setSection("shared");
+    setPersonalUi((prev) => ({ ...prev, section: "shared" }));
+  }, [setPersonalUi]);
   const [viewMonth, setViewMonth] = useState(() => {
     if (personalUi.viewMonth?.year != null && personalUi.viewMonth?.month != null) {
       return personalUi.viewMonth;
@@ -770,23 +777,25 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
     <div className="space-y-2">
       {toast && <UndoToast message={toast.message} onUndo={toast.undo ? undoRemove : null} />}
 
-      <div className="flex items-center justify-between gap-2">
-        <div className="min-w-0">
-          <h2 className="font-display text-base font-bold leading-tight text-ink">
-            {section === "mine" ? "行程" : section === "shared" ? "To-Do" : section === "daily" ? "每日" : "個人"}
-          </h2>
-          <p className="truncate text-[10px] text-ink-faint">{activeView.hint}</p>
+      {section !== "shared" && (
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <h2 className="font-display text-base font-bold leading-tight text-ink">
+              {section === "mine" ? "行程" : section === "daily" ? "每日" : "個人"}
+            </h2>
+            <p className="truncate text-[10px] text-ink-faint">{activeView.hint}</p>
+          </div>
+          {section === "mine" && (
+            <button
+              type="button"
+              onClick={() => setCalendarOpen((v) => !v)}
+              className="shrink-0 rounded-lg border border-jade/15 bg-white px-2 py-1 text-[10px] font-bold text-jade-deep"
+            >
+              {calendarOpen ? "收起月曆" : "月曆"}
+            </button>
+          )}
         </div>
-        {section === "mine" && (
-          <button
-            type="button"
-            onClick={() => setCalendarOpen((v) => !v)}
-            className="shrink-0 rounded-lg border border-jade/15 bg-white px-2 py-1 text-[10px] font-bold text-jade-deep"
-          >
-            {calendarOpen ? "收起月曆" : "月曆"}
-          </button>
-        )}
-      </div>
+      )}
 
       <div className="grid grid-cols-3 gap-1">
         {PERSONAL_VIEWS.map((v) => (
