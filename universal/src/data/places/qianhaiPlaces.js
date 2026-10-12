@@ -15,7 +15,7 @@ export const SHENZHEN_BBOX = {
   maxLng: 114.65,
 };
 
-export const QIANHAI_PLACE_SEED_VERSION = "qianhai-places-v3-2026-10-13";
+export const QIANHAI_PLACE_SEED_VERSION = "qianhai-places-v4-2026-10-12-seaworld-eats";
 
 /** @typedef {{ id: string, name: string, officialName: string, address: string, lat: number, lng: number, mapsQuery: string, zone: string, source: string, note?: string }} VerifiedPlace */
 
@@ -179,6 +179,55 @@ export const QIANHAI_PLACES = {
     mapsQuery: "桂湾站 深圳地铁5号线",
     zone: "guiwan",
     source: "OSM node/6836123689; Wikipedia 22.531861,113.898083",
+  },
+
+  fanlou: {
+    id: "fanlou",
+    name: "蘩樓（蛇口大廈店）",
+    officialName: "蘩楼(蛇口大厦店)",
+    address: "广东省深圳市南山区蛇口新街152号（石云路与蛇口新街交汇处，蛇口大厦对面）",
+    lat: 22.488808,
+    lng: 113.926824,
+    mapsQuery: "蘩楼 蛇口新街152号 石云路",
+    zone: "dongjiaotou",
+    source: "Amap B0FFKDAS4X 22.488808,113.926824; Dianping shop/129227324",
+    note: "RANY 石雲路口步行可到。粵菜／點心，適合入住後就近食。",
+  },
+  liXiaotaiBbq: {
+    id: "liXiaotaiBbq",
+    name: "李小太燒烤（海上世界）",
+    officialName: "李小太·烧烤(海上世界店)",
+    address: "广东省深圳市南山区望海路1128号海上世界C区L1层102号铺（船后广场）",
+    lat: 22.483591,
+    lng: 113.917775,
+    mapsQuery: "李小太烧烤 海上世界C区 船后广场102",
+    zone: "seaworld",
+    source: "OpenRice r8524797 船后广场102; Amap B0FFFEAE6Z 海上世界C区停车场 22.483591,113.917775（同 C 区船后广场地块）",
+    note: "串燒／生蠔／砂鍋粥；開到凌晨左右。地圖針係 C 區船後廣場地塊，入舖再認 102。",
+  },
+  nanhaiXiaochu: {
+    id: "nanhaiXiaochu",
+    name: "南海小廚（海上世界）",
+    officialName: "南海小厨(海上世界)",
+    address: "广东省深圳市南山区望海路1128号海上世界5栋101号铺",
+    lat: 22.483471,
+    lng: 113.916898,
+    mapsQuery: "南海小厨 望海路1128号 海上世界5栋101",
+    zone: "seaworld",
+    source: "OpenRice r6121438 5栋101; Amap B02F38M9ME 明华轮 22.483471,113.916898（船尾／廣場舖面一帶）",
+    note: "較正式粵菜，近明華輪船尾／噴泉。午市晚市時段。",
+  },
+  terraceThai: {
+    id: "terraceThai",
+    name: "Terrace 露台泰菜",
+    officialName: "Terrace露台泰国美食·现场音乐",
+    address: "广东省深圳市南山区望海路1128号海上世界街区广场L2层",
+    lat: 22.486343,
+    lng: 113.91193,
+    mapsQuery: "Terrace 露台泰国美食 望海路1128号 海上世界L2",
+    zone: "seaworld",
+    source: "OpenRice r5967034 L2层; plaza pin = OSM 明华轮/广场 way/105683429（同廣場，L2 再認星巴克樓上）",
+    note: "露台泰菜；入夜偏酒吧／駐唱。地圖針用廣場，上 L2 搵舖。",
   },
   shenzhenBayPort: {
     id: "shenzhenBayPort",
