@@ -15,7 +15,7 @@ export const SHENZHEN_BBOX = {
   maxLng: 114.65,
 };
 
-export const QIANHAI_PLACE_SEED_VERSION = "qianhai-places-v14-2026-10-12-russian-plaza-street";
+export const QIANHAI_PLACE_SEED_VERSION = "qianhai-places-v15-2026-10-12-jiahua-shiyun";
 
 /** @typedef {{ id: string, name: string, officialName: string, address: string, lat: number, lng: number, mapsQuery: string, zone: string, source: string, note?: string }} VerifiedPlace */
 
@@ -219,6 +219,18 @@ export const QIANHAI_PLACES = {
     zone: "dongjiaotou",
     source: "Amap B0FFKDAS4X 22.488808,113.926824; Dianping shop/129227324",
     note: "RANY 石雲路口步行可到。粵菜／點心，適合入住後就近食。",
+  },
+  jiahuaSnackShiyun: {
+    id: "jiahuaSnackShiyun",
+    name: "嘉華小吃（石雲路店）",
+    officialName: "嘉华小吃(石云路店)",
+    address: "广东省深圳市南山区蛇口街道海滨社区石云路10号（RANY芮汐酒店石云路25号楼下／附近）",
+    lat: 22.49043,
+    lng: 113.92248,
+    mapsQuery: "嘉华小吃 石云路店 石云路10号 蛇口",
+    zone: "dongjiaotou",
+    source: "旅客確認 2026-10-12 酒店樓下／石雲路店晚餐；工商註冊「嘉华潮乡里餐饮店」石云路10号（海滨社区）；針貼 RANY 石雲路25號一帶（hotel 同座標，樓下）。唔好用漁村路「嘉华小吃(蛇口市场店)」Amap B02F38JDXH 22.485825,113.927975——嗰間偏東，係同品牌唔同舖。",
+    note: "酒店樓下／石雲路本地小吃。同漁村路市場店可能係同品牌唔同舖；導航認石雲路／RANY 樓下，唔好去漁村路。今晚約 20:00 可去（唔鎖鐘點）。",
   },
   liXiaotaiBbq: {
     id: "liXiaotaiBbq",
