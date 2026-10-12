@@ -15,7 +15,7 @@ export const SHENZHEN_BBOX = {
   maxLng: 114.65,
 };
 
-export const QIANHAI_PLACE_SEED_VERSION = "qianhai-places-v9-2026-10-12-chaoxiangli-visit";
+export const QIANHAI_PLACE_SEED_VERSION = "qianhai-places-v10-2026-10-12-chaoxiangli-1400";
 
 /** @typedef {{ id: string, name: string, officialName: string, address: string, lat: number, lng: number, mapsQuery: string, zone: string, source: string, note?: string }} VerifiedPlace */
 
@@ -267,7 +267,7 @@ export const QIANHAI_PLACES = {
     mapsQuery: "潮巷里 海上世界B区 B106 船尾广场 望海路1128",
     zone: "seaworld",
     source: "OpenRice r6209337 潮巷·潮州粿条 海上世界 B区L1 B106 船尾广场1栋; iecity 潮巷里·老潮汕美食集市 船尾广场一栋106; OSM way/543176178 船尾广场 alt_name=海上世界B区 22.4853271,113.9110046",
-    note: "潮汕粿条／牛肉專門。船尾廣場 B區 L1 B106；地鐵海上世界站 A 口步行約 310m。2026-10-12 約 14:10 今日已食／到訪（實際紀錄）。附近食玩、唔鎖鐘點。",
+    note: "潮汕粿条／牛肉專門。船尾廣場 B區 L1 B106；地鐵海上世界站 A 口步行約 310m。2026-10-12 約下午2點（14:00）今日已食／到訪（實際紀錄）。附近食玩、唔鎖鐘點。",
   },
   shenzhenBayPort: {
     id: "shenzhenBayPort",
