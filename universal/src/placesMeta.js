@@ -39,7 +39,7 @@ const CITY_GUIDES = [
       qianhaiPlace("liXiaotaiBbq", "美食", "廣場 C 區船後 102。串燒生蠔砂鍋粥，宵夜都得。"),
       qianhaiPlace("nanhaiXiaochu", "美食", "廣場船尾 5 棟 101。正式啲粵菜／海景位。"),
       qianhaiPlace("chaoXiangLi", "美食", "船尾廣場 B區 B106。潮汕粿条／牛肉；2026-10-12 約下午2點今日已食（實際紀錄）。"),
-      qianhaiPlace("russianPavilion", "購物", "位置已遷／而家喺大街（明華輪廣場一帶），唔使跟舊負一樓。俄貨舖；同閱德点心／潮玩电玩城一帶。"),
+      qianhaiPlace("russianPavilion", "購物", "已由海上世界廣場遷去東角頭大街（近地鐵東角頭站／蛇口新街）；RANY 步行可到。俄貨舖，唔係餐廳。"),
 
       qianhaiPlace("daydreamMall", "購物", "現場名白日夢／Daydream。地圖標環船廣場／C區（望海路1128），同明華輪廣場一體；旁邊匯港。"),
       qianhaiPlace("gatewayMall", "購物", "廣場旁邊匯港（工業三路1號）。地鐵 B／D 口；補日用品同冷氣休息。唔係華強北茂業。"),
