@@ -153,13 +153,21 @@ export const QIANHAI_NEARBY_SPOTS = [
     badges: ["again", "value"],
     note: "船尾廣場 B區 L1 B106。潮汕粿条／牛肉。今日已食／到訪（實際紀錄，約下午2點）。附近食玩、唔鎖鐘點——之後想再去都得。",
   }),
+  footprintFromPlace("russianPavilion", {
+    id: "qh-fp-russian",
+    dayId: "2026-10-12",
+    time: "15:30",
+    type: "shop",
+    badges: ["again"],
+    note: "海上世界廣場 A區負一層。俄貨／特產舖（唔係餐廳）。潮巷里食完行過嚟；同閱德点心／潮玩电玩城同一帶走廊，望明華輪。唔鎖鐘點。",
+  }),
 footprintFromPlace("seaWorldPlaza", {
     id: "qh-fp-plaza",
     dayId: "2026-10-12",
     time: "15:00",
     type: "spot",
     badges: ["view", "again"],
-    note: "今日主線：望海路1128 海上世界廣場。裏面有明華輪、環船／船頭／船後廣場、餐飲酒吧街；食可揀 潮巷里（B區B106）、Terrace（L2）、李小太（C區102）、南海小廚（5棟101）。裏面有白日夢商場 Daydream（環船廣場／C區）；旁邊匯港商場、女媧像／文化藝術中心。由 RANY 步行約15分鐘，或東角頭→海上世界站 A 口。",
+    note: "今日主線：望海路1128 海上世界廣場。裏面有明華輪、環船／船頭／船後廣場、餐飲酒吧街；食可揀 潮巷里（B區B106）、Terrace（L2）、李小太（C區102）、南海小廚（5棟101）；A區負一層有俄羅斯國家館（俄貨舖，隨行可入）。裏面有白日夢商場 Daydream（環船廣場／C區）；旁邊匯港商場、女媧像／文化藝術中心。由 RANY 步行約15分鐘，或東角頭→海上世界站 A 口。",
   }),
   footprintFromPlace("nvwa", {
     id: "qh-fp-ocean",
