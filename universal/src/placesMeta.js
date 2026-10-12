@@ -32,6 +32,12 @@ const CITY_GUIDES = [
     label: "前海／海上世界精選",
     places: [
       qianhaiPlace("hotel", "室內", "兩日一夜過夜基地。石雲路25號，最早 10/12 08:00 可入住，10/13 退房。最近地鐵東角頭。"),
+
+      qianhaiPlace("fanlou", "美食", "RANY 石雲路口對面一帶。粵菜／點心，入住後就近。"),
+      qianhaiPlace("liXiaotaiBbq", "美食", "海上世界船後廣場 C 區 102。串燒生蠔砂鍋粥，宵夜都得。"),
+      qianhaiPlace("nanhaiXiaochu", "美食", "海上世界 5 棟 101。正式啲粵菜，近明華輪船尾。"),
+      qianhaiPlace("terraceThai", "美食", "廣場 L2 露台泰菜；氣氛輕鬆，入夜可有駐唱。"),
+
       qianhaiPlace("seaWorldPlaza", "景點", "望海路1128號明華輪／廣場。Day 1 放行李後行一圈。"),
       qianhaiPlace("nvwa", "景點", "女媧補天像。唔好同鹽田小梅沙海洋世界撈亂。"),
       qianhaiPlace("gatewayMall", "購物", "工業三路1號匯港。唔係華強北茂業天地。"),
