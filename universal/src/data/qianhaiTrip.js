@@ -72,6 +72,7 @@ export const QIANHAI_DAY_ITINERARY = {
     { id: "qh-1012-1500", time: "15:00", text: "📍 去海上世界廣場：明華輪＋環船廣場＋食玩（行約15分鐘或地鐵一站）", placeId: "seaWorldPlaza" },
     { id: "qh-1012-1630", time: "16:30", text: "🎨 可選：女媧像／文化藝術中心（望海路1187，廣場旁邊）", placeId: "seaWorldArtCenter" },
     { id: "qh-1012-1830", time: "18:30", text: "🍜 廣場晚餐：李小太／Terrace／南海小廚 → 返石雲路 RANY（潮巷里唔鎖晚餐鐘點）", placeId: "foodStreet" },
+    { id: "qh-1012-2000", time: "20:00", text: "🍜 可選：嘉華小吃（石雲路店）· 酒店樓下（唔鎖鐘點）", placeId: "jiahuaSnackShiyun" },
   ],
   "2026-10-13": [
     { id: "qh-1013-0900", time: "09:00", text: "🏨 RANY 退房 · 兩日一夜，行李一齊帶走或先寄一陣", placeId: "hotel" },
@@ -122,6 +123,14 @@ export const QIANHAI_NEARBY_SPOTS = [
     type: "food",
     badges: ["again", "value"],
     note: "石雲路／蛇口新街152號，RANY 對面一帶。粵菜點心，入住後就近醫肚。",
+  }),
+  footprintFromPlace("jiahuaSnackShiyun", {
+    id: "qh-fp-jiahua-shiyun",
+    dayId: "2026-10-12",
+    time: "20:00",
+    type: "food",
+    badges: ["again", "value"],
+    note: "酒店樓下／石雲路店（註冊石云路10號一帶）。本地小吃；今晚約 20:00 可去，唔鎖鐘點。唔好導航去漁村路市場店。",
   }),
   footprintFromPlace("liXiaotaiBbq", {
     id: "qh-fp-lixiaotai",
