@@ -17,9 +17,9 @@ import DailyTodosPanel from "./DailyTodosPanel";
 import SharedTodoPanel from "./SharedTodoPanel";
 
 const PERSONAL_VIEWS = [
-  { id: "shared", label: "To-Do", hint: "待辦清單第一版（C M S P）" },
-  { id: "mine", label: "行程", hint: "個人行程／日程時間表" },
-  { id: "daily", label: "每日", hint: "每日習慣＋本月%" },
+  { id: "shared", label: "待辦", hint: "共用待辦清單 · 分派人同到期日" },
+  { id: "mine", label: "行程", hint: "個人約會／日程時間表" },
+  { id: "daily", label: "每日", hint: "每日習慣打卡同本月進度" },
 ];
 
 const KINDS = [
@@ -797,14 +797,14 @@ export default function PersonalTab({ personal, setPersonal, focusAddTick = 0, t
         </div>
       )}
 
-      <div className="grid grid-cols-3 gap-1">
+      <div className="grid grid-cols-3 gap-1.5 rounded-2xl border border-jade/10 bg-white/80 p-1 shadow-sm">
         {PERSONAL_VIEWS.map((v) => (
           <button
             key={v.id}
             type="button"
             onClick={() => setSection(v.id)}
-            className={`min-h-8 rounded-lg border px-1.5 text-[11px] font-bold transition active:scale-[0.98] ${
-              section === v.id ? "badge-active border-transparent" : "border-jade/15 bg-white text-ink-soft"
+            className={`min-h-10 rounded-xl px-1.5 text-[13px] font-bold transition active:scale-[0.98] ${
+              section === v.id ? "bg-jade text-white shadow-sm" : "text-ink-soft"
             }`}
           >
             {v.label}
