@@ -15,7 +15,7 @@ export const SHENZHEN_BBOX = {
   maxLng: 114.65,
 };
 
-export const QIANHAI_PLACE_SEED_VERSION = "qianhai-places-v11-2026-10-12-russian-pavilion";
+export const QIANHAI_PLACE_SEED_VERSION = "qianhai-places-v12-2026-10-12-russian-street";
 
 /** @typedef {{ id: string, name: string, officialName: string, address: string, lat: number, lng: number, mapsQuery: string, zone: string, source: string, note?: string }} VerifiedPlace */
 
@@ -55,7 +55,7 @@ export const QIANHAI_PLACES = {
     mapsQuery: "深圳海上世界 明华轮 望海路1128号",
     zone: "seaworld",
     source: "OSM way/105683429 明华轮 22.48639,113.91197; Wikipedia Minghua; 本地宝／Amap 望海路1128号; Amap B02F302560 商场 22.482264,113.917846（商業廣場針）",
-    note: "望海路1128。核心係明華輪＋環船／船頭／船後廣場＋餐飲酒吧街。廣場入面：Terrace L2 露台泰菜、李小太 C區船後102、南海小廚 5棟101、潮巷里 B區船尾B106；A區負一層有俄羅斯國家館（俄貨舖）。旁邊行：白日夢商場 Daydream（環船廣場／C區，現場名）、匯港購物中心（地鐵 D／B 口）、女媧像／文化藝術中心（望海路1187）。由 RANY 石雲路步行約 1–1.2km（約 15 分鐘）向西／西南；或東角頭站坐 2 號綫一站到海上世界站 A 口再行入廣場。",
+    note: "望海路1128。核心係明華輪＋環船／船頭／船後廣場＋餐飲酒吧街。廣場入面：Terrace L2 露台泰菜、李小太 C區船後102、南海小廚 5棟101、潮巷里 B區船尾B106；明華輪廣場大街有俄羅斯國家館（俄貨舖，位置已遷唔使落負一樓）。旁邊行：白日夢商場 Daydream（環船廣場／C區，現場名）、匯港購物中心（地鐵 D／B 口）、女媧像／文化藝術中心（望海路1187）。由 RANY 石雲路步行約 1–1.2km（約 15 分鐘）向西／西南；或東角頭站坐 2 號綫一站到海上世界站 A 口再行入廣場。",
   },
   nvwa: {
     id: "nvwa",
@@ -274,13 +274,13 @@ export const QIANHAI_PLACES = {
     id: "russianPavilion",
     name: "俄羅斯國家館（海上世界旗艦店）",
     officialName: "俄罗斯国家馆(海上世界旗舰店)",
-    address: "广东省深圳市南山区招商街道太子路海上世界广场A区负一层",
-    lat: 22.48465,
-    lng: 113.914492,
-    mapsQuery: "俄罗斯国家馆 海上世界广场A区负一层 太子路",
+    address: "广东省深圳市南山区望海路1128号海上世界广场大街／环船广场一带（明华轮旁）",
+    lat: 22.4859071,
+    lng: 113.9129673,
+    mapsQuery: "俄罗斯国家馆 海上世界 明华轮 望海路1128 环船广场",
     zone: "seaworld",
-    source: "Amap B0LU7ZYY39 22.484650,113.914492 招商街道太子路海上世界广场A区负一层; 旅客現場 2026-10-12 ~15:46 UTC+8 影到舖面招牌（同閱德点心／潮玩电玩城同一帶走廊，望明華輪／望海路1128）",
-    note: "俄貨／特產舖（唔係餐廳）。海上世界廣場 A區負一層；由潮巷里（船尾 B區）行過去落 B1／A區就到。現場同閱德点心、潮玩电玩城同一帶走廊。唔好同已吊銷嘅「三套车」餐廳撈亂。",
+    source: "旅客現場 2026-10-12 ~15:46 UTC+8 影到舖面招牌喺明華輪廣場大街／有蓋走廊（同閱德点心／潮玩电玩城／幻樂園一帶，望明華輪）；座標用 OSM way/543176168 环船广场 22.4859071,113.9129673（街面）。Amap B0LU7ZYY39 仍標 A区负一层 22.484650,113.914492 — 舊負一樓 listing，以現場大街為準。",
+    note: "俄貨／特產舖（唔係餐廳）。位置已遷／而家喺大街（明華輪廣場一帶舖面），唔使跟舊負一樓／A區 B1 指引。由潮巷里行過去明華輪有蓋走廊／大街就到。唔好同已吊銷嘅「三套车」餐廳撈亂。",
   },
   shenzhenBayPort: {
     id: "shenzhenBayPort",
