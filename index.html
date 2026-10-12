@@ -33,6 +33,7 @@
               jade: { DEFAULT: "#0F766E", soft: "#CFF0EA", deep: "#084843" },
               rose: { DEFAULT: "#E11D48", soft: "#FFE4E6", deep: "#9F1239" },
               sand: { DEFAULT: "#D97706", soft: "#FEF3C7", deep: "#B45309" },
+              bay: { DEFAULT: "#0369A1", soft: "#E0F2FE", deep: "#0C4A6E" },
             },
           },
         },
@@ -55,6 +56,7 @@
     <div class="relative min-h-[100dvh] overflow-hidden">
       <div class="pointer-events-none absolute inset-0 -z-10 hub-bg"></div>
       <div class="pointer-events-none absolute -top-28 -right-16 h-72 w-72 rounded-full bg-jade-soft/70 blur-3xl"></div>
+      <div class="pointer-events-none absolute top-40 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full bg-bay-soft/80 blur-3xl"></div>
       <div class="pointer-events-none absolute bottom-10 -left-20 h-64 w-64 rounded-full bg-rose-soft/60 blur-3xl"></div>
 
       <main class="mx-auto flex min-h-[100dvh] max-w-lg flex-col px-5 pb-10 pt-[max(1.5rem,env(safe-area-inset-top))]">
@@ -74,6 +76,19 @@
         </header>
 
         <nav class="mt-8 flex flex-1 flex-col gap-3" aria-label="選擇行程">
+          <a
+            href="./qianhai/"
+            class="trip-link group relative overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-bay-deep via-bay to-[#38BDF8] p-5 text-white shadow-lg shadow-bay/30 ring-2 ring-white/40 active:scale-[0.99]"
+          >
+            <div class="flex items-center justify-between gap-3">
+              <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/70">Qianhai · 進行中</p>
+              <span class="rounded-full bg-white/20 px-2.5 py-0.5 text-[10px] font-bold tracking-wide">10/12 – 10/14</span>
+            </div>
+            <h2 class="mt-1 font-display text-2xl font-bold">前海行程 Companion</h2>
+            <p class="mt-1 text-sm text-white/85">海底世界 Rany Hotel · 蛇口海上世界</p>
+            <span class="mt-4 inline-flex text-sm font-bold text-white/95">進入 →</span>
+          </a>
+
           <a
             href="./universal/"
             class="trip-link group relative overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-[#0d9488] via-jade to-[#2dd4bf] p-5 text-white shadow-lg shadow-jade/25 ring-1 ring-white/20 active:scale-[0.99]"
@@ -127,7 +142,7 @@
               <li>用 <strong>Safari</strong>（iPhone）或 <strong>Chrome</strong>（Android）開呢個網址：<br />
                 <a class="font-bold text-jade-deep underline" href="https://trip-companion-pied.vercel.app/">trip-companion-pied.vercel.app</a>
               </li>
-              <li>撳上面你想用嗰個行程（台北／東京／泰國／萬能版）</li>
+              <li>撳上面你想用嗰個行程（前海／台北／東京／泰國／萬能版）</li>
               <li>確認入到 App、見到正常畫面</li>
               <li>
                 <strong>iPhone：</strong>分享 <span aria-hidden="true">⬆️</span> →「加入主畫面」<br />
@@ -135,9 +150,10 @@
               </li>
             </ol>
             <p class="rounded-xl bg-amber-50 px-3 py-2 text-[12px] text-amber-900">
-              ⚠️ 若你之前用「清除所有網站資料」，本機記帳／行程可能已刪除（台北／東京／泰國資料只存喺你部手機）。萬能版如有 Google 登入同步，登入後有機會從雲端載返。
+              ⚠️ 若你之前用「清除所有網站資料」，本機記帳／行程可能已刪除（前海／台北／東京／泰國資料只存喺你部手機）。萬能版如有 Google 登入同步，登入後有機會從雲端載返。
             </p>
             <div class="grid grid-cols-2 gap-2 pt-1">
+              <a href="./qianhai/" class="rounded-xl border border-bay/25 bg-bay-soft/70 px-3 py-2 text-center text-xs font-bold text-bay-deep">＋ 前海 App</a>
               <a href="./taipei/" class="rounded-xl border border-jade/15 bg-jade-soft/40 px-3 py-2 text-center text-xs font-bold text-jade-deep">＋ 台北 App</a>
               <a href="./tokyo/" class="rounded-xl border border-rose/20 bg-rose-soft/50 px-3 py-2 text-center text-xs font-bold text-rose-deep">＋ 東京 App</a>
               <a href="./thailand/" class="rounded-xl border border-sand/25 bg-sand-soft/60 px-3 py-2 text-center text-xs font-bold text-sand-deep">＋ 泰國 App</a>
@@ -147,7 +163,7 @@
         </details>
 
         <p class="mt-6 text-center text-xs text-ink-faint">
-          全球萬能版 + 台北 · 東京 · 泰國各自使用獨立 localStorage
+          前海 · 全球萬能版 + 台北 · 東京 · 泰國各自使用獨立 localStorage
         </p>
       </main>
     </div>
