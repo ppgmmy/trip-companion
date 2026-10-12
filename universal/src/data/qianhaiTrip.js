@@ -151,7 +151,7 @@ footprintFromPlace("seaWorldPlaza", {
     time: "15:00",
     type: "spot",
     badges: ["view", "again"],
-    note: "今日主線：望海路1128 海上世界廣場。裏面有明華輪、環船／船頭／船後廣場、餐飲酒吧街；食可揀 Terrace（L2）、李小太（C區102）、南海小廚（5棟101）。旁邊匯港商場、女媧像／文化藝術中心。由 RANY 步行約15分鐘，或東角頭→海上世界站 A 口。",
+    note: "今日主線：望海路1128 海上世界廣場。裏面有明華輪、環船／船頭／船後廣場、餐飲酒吧街；食可揀 Terrace（L2）、李小太（C區102）、南海小廚（5棟101）。裏面有白日夢商場 Daydream（環船廣場／C區）；旁邊匯港商場、女媧像／文化藝術中心。由 RANY 步行約15分鐘，或東角頭→海上世界站 A 口。",
   }),
   footprintFromPlace("nvwa", {
     id: "qh-fp-ocean",
@@ -179,6 +179,14 @@ footprintFromPlace("seaWorldPlaza", {
     type: "spot",
     badges: ["view"],
     note: "前海大道與金岸中街。由東角頭出發要地鐵或的士。Day 2 散步為主。",
+  }),
+  footprintFromPlace("daydreamMall", {
+    id: "qh-fp-daydream",
+    dayId: "2026-10-12",
+    time: "15:40",
+    type: "shop",
+    badges: ["again"],
+    note: "現場名白日夢商場 Daydream。地圖標環船廣場／海上世界C區（望海路1128），同明華輪廣場一體；旁邊匯港。",
   }),
   footprintFromPlace("gatewayMall", {
     id: "qh-fp-maoye",
