@@ -15,7 +15,7 @@ export const SHENZHEN_BBOX = {
   maxLng: 114.65,
 };
 
-export const QIANHAI_PLACE_SEED_VERSION = "qianhai-places-v4-2026-10-12-seaworld-eats";
+export const QIANHAI_PLACE_SEED_VERSION = "qianhai-places-v5-2026-10-12-plaza-guide";
 
 /** @typedef {{ id: string, name: string, officialName: string, address: string, lat: number, lng: number, mapsQuery: string, zone: string, source: string, note?: string }} VerifiedPlace */
 
@@ -31,7 +31,7 @@ export const QIANHAI_PLACES = {
     mapsQuery: "深圳蛇口海上世界RANY芮汐酒店 石云路25号",
     zone: "dongjiaotou",
     source: "official hotel site shekouseaworld.rany.hotelsofshenzhen.com; OSM way/393904158 石云路 + 东角头站",
-    note: "最近地鐵係東角頭（約 400–500m），唔係海上世界站。正式名唔係「海底世界」。",
+    note: "最近地鐵係東角頭（約 400–500m），唔係海上世界站。正式名唔係「海底世界」。去海上世界廣場步行約 1–1.2km／15 分鐘，或地鐵一站。",
   },
   dongjiaotouStation: {
     id: "dongjiaotouStation",
@@ -54,7 +54,8 @@ export const QIANHAI_PLACES = {
     lng: 113.91193,
     mapsQuery: "深圳海上世界 明华轮 望海路1128号",
     zone: "seaworld",
-    source: "OSM way/105683429 明华轮; 本地宝 望海路1128号",
+    source: "OSM way/105683429 明华轮 22.48639,113.91197; Wikipedia Minghua; 本地宝／Amap 望海路1128号; Amap B02F302560 商场 22.482264,113.917846（商業廣場針）",
+    note: "望海路1128。核心係明華輪＋環船／船頭／船後廣場＋餐飲酒吧街。廣場入面：Terrace L2 露台泰菜、李小太 C區船後102、南海小廚 5棟101。旁邊行：匯港購物中心（地鐵 D／B 口）、女媧像／文化藝術中心（望海路1187）。由 RANY 石雲路步行約 1–1.2km（約 15 分鐘）向西／西南；或東角頭站坐 2 號綫一站到海上世界站 A 口再行入廣場。",
   },
   nvwa: {
     id: "nvwa",
@@ -66,6 +67,19 @@ export const QIANHAI_PLACES = {
     mapsQuery: "女娲补天像 海上世界 深圳",
     zone: "seaworld",
     source: "OSM node/5250978477 女娲补天像; 深圳本地宝 望海路1187号",
+    note: "廣場南邊海邊打卡位；同文化藝術中心一齊行。",
+  },
+  seaWorldArtCenter: {
+    id: "seaWorldArtCenter",
+    name: "海上世界文化藝術中心",
+    officialName: "海上世界文化艺术中心",
+    address: "广东省深圳市南山区蛇口望海路1187号",
+    lat: 22.483164,
+    lng: 113.912027,
+    mapsQuery: "海上世界文化艺术中心 望海路1187号",
+    zone: "seaworld",
+    source: "OSM way/740022007 22.483164,113.912027; 深圳政府在线 望海路1187号；场馆约 10:00–22:00",
+    note: "廣場旁邊展館／文創零售。展期同開放時間以當日為準；由明華輪一帶步行幾分鐘。",
   },
   gatewayMall: {
     id: "gatewayMall",
@@ -77,7 +91,7 @@ export const QIANHAI_PLACES = {
     mapsQuery: "海上世界汇港购物中心 工业三路1号",
     zone: "seaworld",
     source: "OSM way/620827387; Amap B0FFI99Y4E 22.485644,113.916014（一期入口）",
-    note: "蛇口海上世界商場。深圳「茂業天地」喺華強北，唔喺海上世界。",
+    note: "蛇口海上世界商場（工業三路1號）。地鐵海上世界站 B／D 口直達；補日用品同冷氣休息。唔係華強北茂業天地。",
   },
   foodStreet: {
     id: "foodStreet",
@@ -88,7 +102,8 @@ export const QIANHAI_PLACES = {
     lng: 113.91193,
     mapsQuery: "海上世界广场 酒吧街 望海路1128号 深圳",
     zone: "seaworld",
-    source: "same plaza as 明华轮 / OSM way/105683429",
+    source: "same plaza as 明华轮 / OSM way/105683429; 读特／海上世界商圈报道：多国餐饮环船广场",
+    note: "圍繞明華輪嘅餐飲酒吧帶（中高低消費都有）。已核實舖：Terrace（L2）、李小太（C區船後）、南海小廚（5棟船尾）。夜晚可睇噴泉／夜景；付款優先微信／支付寶。",
   },
   seaWorldStation: {
     id: "seaWorldStation",
