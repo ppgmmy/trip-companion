@@ -378,7 +378,7 @@ export default function App() {
               {QIANHAI_HOTEL.name} · {QIANHAI_HOTEL.area}
             </p>
             <p className="mt-0.5 text-[11px] leading-snug text-sky-900/80">
-              最早入住 {QIANHAI_HOTEL.checkInDate.slice(5).replace("-", "/")} {QIANHAI_HOTEL.earliestCheckIn} · 兩日一夜（1 晚）· 10/13 退房
+              最早入住 {QIANHAI_HOTEL.checkInDate.slice(5).replace("-", "/")} {QIANHAI_HOTEL.earliestCheckIn} · 兩日一夜（{QIANHAI_HOTEL.nights} 晚）· {QIANHAI_HOTEL.checkOutDate.slice(5).replace("-", "/")} 退房
             </p>
           </div>
         )}
