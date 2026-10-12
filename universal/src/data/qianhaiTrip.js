@@ -68,10 +68,10 @@ export const QIANHAI_DAY_ITINERARY = {
     { id: "qh-1012-0830", time: "08:30", text: "香港出發往深圳灣口岸（專線巴士）", placeId: "shenzhenBayPort" },
     { id: "qh-1012-0930", time: "09:30", text: "過關：深圳灣口岸 → 的士／網約去石雲路", placeId: "shenzhenBayPort" },
     { id: "qh-1012-1030", time: "10:30", text: "到東角頭，辦理入住 RANY芮汐酒店", placeId: "hotel" },
-    { id: "qh-1012-1230", time: "12:30", text: "🍜 午餐可揀：潮巷里（B區B106）／Terrace／南海小廚，或返石雲路蘩樓", placeId: "chaoXiangLi" },
+    { id: "qh-1012-1230", time: "12:30", text: "🍜 午餐可揀：Terrace／南海小廚／蘩樓；潮巷里（B106）隨時可去、唔鎖鐘點", placeId: "seaWorldPlaza" },
     { id: "qh-1012-1500", time: "15:00", text: "📍 去海上世界廣場：明華輪＋環船廣場＋食玩（行約15分鐘或地鐵一站）", placeId: "seaWorldPlaza" },
     { id: "qh-1012-1630", time: "16:30", text: "🎨 可選：女媧像／文化藝術中心（望海路1187，廣場旁邊）", placeId: "seaWorldArtCenter" },
-    { id: "qh-1012-1830", time: "18:30", text: "🍜 廣場晚餐：潮巷里（B106）／李小太／Terrace／南海小廚 → 返石雲路 RANY", placeId: "chaoXiangLi" },
+    { id: "qh-1012-1830", time: "18:30", text: "🍜 廣場晚餐：李小太／Terrace／南海小廚 → 返石雲路 RANY（潮巷里唔鎖晚餐鐘點）", placeId: "foodStreet" },
   ],
   "2026-10-13": [
     { id: "qh-1013-0900", time: "09:00", text: "🏨 RANY 退房 · 兩日一夜，行李一齊帶走或先寄一陣", placeId: "hotel" },
@@ -148,10 +148,9 @@ export const QIANHAI_NEARBY_SPOTS = [
   footprintFromPlace("chaoXiangLi", {
     id: "qh-fp-chaoxiangli",
     dayId: "2026-10-12",
-    time: "17:00",
     type: "food",
     badges: ["again", "value"],
-    note: "船尾廣場 B區 L1 B106。潮汕粿条／牛肉；旅客 2026-10-12 到店。",
+    note: "船尾廣場 B區 L1 B106。潮汕粿条／牛肉。食無定時——想食就去，唔鎖午餐／晚餐鐘點。旅客 2026-10-12 到店。",
   }),
 footprintFromPlace("seaWorldPlaza", {
     id: "qh-fp-plaza",
@@ -227,7 +226,7 @@ footprintFromPlace("seaWorldPlaza", {
     time: "18:30",
     type: "food",
     badges: ["value"],
-    note: "廣場餐飲酒吧街（環明華輪）。已核實：潮巷里 B106、Terrace L2、李小太 C區、南海小廚 5棟。食完可睇夜景／噴泉；先確認微信／支付寶。",
+    note: "廣場餐飲酒吧街（環明華輪）。已核實：Terrace L2、李小太 C區、南海小廚 5棟；潮巷里 B106 隨時可去（唔鎖鐘點）。食完可睇夜景／噴泉；先確認微信／支付寶。",
   }),
   footprintFromPlace("uniwalkHui", {
     id: "qh-fp-uniwalk-food",
