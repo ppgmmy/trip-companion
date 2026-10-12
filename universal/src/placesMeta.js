@@ -5,8 +5,25 @@
  * tag "室內" marks rainy-day friendly spots.
  */
 
-function p(name, area, tag, detail) {
-  return { name, area, tag, detail, maps: `${name} ${area}` };
+import { QIANHAI_PLACES } from "./data/places/qianhaiPlaces.js";
+
+function p(name, area, tag, detail, maps) {
+  return { name, area, tag, detail, maps: maps || `${name} ${area}` };
+}
+
+function qianhaiPlace(id, tag, detail) {
+  const place = QIANHAI_PLACES[id];
+  return {
+    name: place.name,
+    area: place.officialName,
+    tag,
+    detail: detail || place.note || place.address,
+    maps: place.mapsQuery,
+    address: place.address,
+    lat: place.lat,
+    lng: place.lng,
+    placeId: place.id,
+  };
 }
 
 const CITY_GUIDES = [
@@ -14,21 +31,19 @@ const CITY_GUIDES = [
     keys: ["前海", "qianhai", "深圳", "shenzhen", "海上世界", "蛇口"],
     label: "前海／海上世界精選",
     places: [
-      p("海底世界 Rany Hotel", "海上世界", "室內", "過夜基地。最早 10/12 08:00 可入住；唔係桂灣酒店"),
-      p("海上世界廣場／女媧像", "海上世界", "景點", "酒店出街即到，Day 1 放行李後行一圈"),
-      p("深圳海洋世界", "海上世界", "玩樂", "同酒店同一個圈，入園先查門票同關門時間"),
-      p("海上世界茂業天地", "海上世界", "購物", "酒店旁邊商場，補日用品同冷氣休息"),
-      p("海上世界食街／酒吧街", "海上世界", "美食", "Day 1、Day 3 晚餐最省來回，先問電子支付"),
-      p("前海石公園", "前海桂灣", "戶外", "Day 2 散步為主，由海上世界要地鐵或的士"),
-      p("前海壹方城 Uniwalk", "前海桂灣", "室內", "前海主力商場同食樓，唔好當步行"),
-      p("前海嘉里中心", "前海桂灣", "購物", "壹方城附近備選，同一日唔使兩個商場都行完"),
-      p("壹方城食樓", "前海桂灣", "美食", "Day 2 午餐穩定選擇"),
-      p("蛇口老街", "蛇口", "景點", "短程的士或步行，舊街小店"),
-      p("花園城中心", "蛇口", "購物", "蛇口另一個商場，唔想去前海購物先嚟呢度"),
-      p("地鐵海上世界站（2 號綫）", "海上世界", "室內", "酒店最近地鐵，行李多優先的士去前海"),
-      p("便利店 7-Eleven／羅森／美宜佳", "海上世界", "購物", "過夜水同早餐可以喺呢度補"),
-      p("連鎖藥房 海王星辰／大參林", "海上世界", "室內", "商場層常見，常備藥先睇包裝"),
-      p("深圳灣口岸的士／網約", "口岸", "景點", "來回酒店同口岸都坐車，報海上世界 Rany Hotel"),
+      qianhaiPlace("hotel", "室內", "過夜基地。石雲路25號，最早 10/12 08:00 可入住。最近地鐵東角頭。"),
+      qianhaiPlace("seaWorldPlaza", "景點", "望海路1128號明華輪／廣場。Day 1 放行李後行一圈。"),
+      qianhaiPlace("nvwa", "景點", "女媧補天像。唔好同鹽田小梅沙海洋世界撈亂。"),
+      qianhaiPlace("gatewayMall", "購物", "工業三路1號匯港。唔係華強北茂業天地。"),
+      qianhaiPlace("foodStreet", "美食", "廣場餐飲酒吧街。Day 1、Day 3 晚餐最省來回。"),
+      qianhaiPlace("stonePark", "戶外", "前海大道與金岸中街。Day 2 散步為主。"),
+      qianhaiPlace("uniwalkHui", "室內", "聽海大道5059號桂灣商場。唔好去寶安中心壹方城。"),
+      qianhaiPlace("kerry", "購物", "桂灣四路99號，同石公園一街之隔。"),
+      qianhaiPlace("shekouOldStreet", "景點", "海昌街舊街。短程的士或步行。"),
+      qianhaiPlace("gardenCity", "購物", "太子灣郵輪大道。唔想去前海購物先嚟呢度。"),
+      qianhaiPlace("dongjiaotouStation", "室內", "酒店最近地鐵。行李多優先的士去桂灣。"),
+      qianhaiPlace("seaWorldStation", "室內", "去廣場／匯港用呢站。"),
+      qianhaiPlace("shenzhenBayPort", "景點", "東濱路1號。來回酒店都坐車，報石雲路25號。"),
     ],
   },
   {

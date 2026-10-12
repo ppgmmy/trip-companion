@@ -47,9 +47,10 @@ const TripMap = forwardRef(function TripMap(
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
-    const lat = config.lat ?? 34.6819;
-    const lng = config.lng ?? 135.5068;
+    const lat = config.lat;
+    const lng = config.lng;
     const zoom = config.zoom ?? 13;
+    if (lat == null || lng == null) return;
 
     const map = L.map(containerRef.current, {
       zoomControl: true,
@@ -143,6 +144,16 @@ const TripMap = forwardRef(function TripMap(
             </p>
             <p className="text-sm font-bold text-ink">{selected.title}</p>
             {selected.area && <p className="text-[11px] text-ink-soft">{selected.area}</p>}
+            {selected.mapsQuery && (
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${selected.lat},${selected.lng}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-1 inline-flex text-[11px] font-bold text-jade-deep"
+              >
+                開啟地圖
+              </a>
+            )}
           </div>
         )}
       </div>

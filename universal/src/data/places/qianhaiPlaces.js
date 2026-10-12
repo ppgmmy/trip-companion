@@ -1,0 +1,264 @@
+/**
+ * Verified Qianhai / Shekou POIs.
+ *
+ * Rules:
+ * - Every mapped place must have officialName + address + lat/lng + mapsQuery.
+ * - lat/lng come from OSM / Wikipedia / Amap / official listings — never invented offsets.
+ * - mapsQuery is the disambiguated navigation string (official name + street).
+ * - Shenzhen bbox is asserted at load time so Osaka fallbacks cannot sneak in.
+ */
+
+export const SHENZHEN_BBOX = {
+  minLat: 22.4,
+  maxLat: 22.85,
+  minLng: 113.75,
+  maxLng: 114.65,
+};
+
+export const QIANHAI_PLACE_SEED_VERSION = "qianhai-places-v2-2026-10-12";
+
+/** @typedef {{ id: string, name: string, officialName: string, address: string, lat: number, lng: number, mapsQuery: string, zone: string, source: string, note?: string }} VerifiedPlace */
+
+/** @type {Record<string, VerifiedPlace>} */
+export const QIANHAI_PLACES = {
+  hotel: {
+    id: "hotel",
+    name: "RANY芮汐酒店",
+    officialName: "深圳蛇口海上世界RANY芮汐酒店",
+    address: "广东省深圳市南山区蛇口新街石云路25号",
+    lat: 22.49043,
+    lng: 113.92248,
+    mapsQuery: "深圳蛇口海上世界RANY芮汐酒店 石云路25号",
+    zone: "dongjiaotou",
+    source: "official hotel site shekouseaworld.rany.hotelsofshenzhen.com; OSM way/393904158 石云路 + 东角头站",
+    note: "最近地鐵係東角頭（約 400–500m），唔係海上世界站。正式名唔係「海底世界」。",
+  },
+  dongjiaotouStation: {
+    id: "dongjiaotouStation",
+    name: "地鐵東角頭站（2 號綫）",
+    officialName: "深圳地铁2号线东角头站",
+    address: "广东省深圳市南山区蛇口新街与湾厦路交界",
+    lat: 22.489158,
+    lng: 113.926412,
+    mapsQuery: "东角头站 深圳地铁2号线",
+    zone: "dongjiaotou",
+    source: "OSM node/6715085272; Wikipedia 东角头站",
+    note: "酒店最近地鐵。Ctrip／永安：RANY 距東角頭步行約 7 分鐘。",
+  },
+  seaWorldPlaza: {
+    id: "seaWorldPlaza",
+    name: "海上世界廣場／明華輪",
+    officialName: "深圳海上世界（明华轮）",
+    address: "广东省深圳市南山区招商街道望海路1128号",
+    lat: 22.486343,
+    lng: 113.91193,
+    mapsQuery: "深圳海上世界 明华轮 望海路1128号",
+    zone: "seaworld",
+    source: "OSM way/105683429 明华轮; 本地宝 望海路1128号",
+  },
+  nvwa: {
+    id: "nvwa",
+    name: "女媧補天像",
+    officialName: "女娲补天像",
+    address: "广东省深圳市南山区望海路1187号海上世界文化艺术中心旁",
+    lat: 22.484044,
+    lng: 113.912622,
+    mapsQuery: "女娲补天像 海上世界 深圳",
+    zone: "seaworld",
+    source: "OSM node/5250978477 女娲补天像; 深圳本地宝 望海路1187号",
+  },
+  gatewayMall: {
+    id: "gatewayMall",
+    name: "海上世界·匯港購物中心",
+    officialName: "海上世界·汇港购物中心",
+    address: "广东省深圳市南山区工业三路1号（海上世界地铁站D口）",
+    lat: 22.488658,
+    lng: 113.911126,
+    mapsQuery: "海上世界汇港购物中心 工业三路1号",
+    zone: "seaworld",
+    source: "OSM way/620827387; Amap B0FFI99Y4E 22.485644,113.916014（一期入口）",
+    note: "蛇口海上世界商場。深圳「茂業天地」喺華強北，唔喺海上世界。",
+  },
+  foodStreet: {
+    id: "foodStreet",
+    name: "海上世界食街／酒吧街",
+    officialName: "海上世界广场餐饮酒吧街区",
+    address: "广东省深圳市南山区望海路1128号海上世界广场一带",
+    lat: 22.486343,
+    lng: 113.91193,
+    mapsQuery: "海上世界广场 酒吧街 望海路1128号 深圳",
+    zone: "seaworld",
+    source: "same plaza as 明华轮 / OSM way/105683429",
+  },
+  seaWorldStation: {
+    id: "seaWorldStation",
+    name: "地鐵海上世界站（2／12 號綫）",
+    officialName: "深圳地铁海上世界站",
+    address: "广东省深圳市南山区太子路与工业三路交叉路口以南",
+    lat: 22.488129,
+    lng: 113.910159,
+    mapsQuery: "海上世界站 深圳地铁",
+    zone: "seaworld",
+    source: "OSM node/6715085274; Wikipedia 22.4881111,113.9102694",
+    note: "去廣場／匯港用呢站。酒店最近係東角頭。",
+  },
+  shekouPortStation: {
+    id: "shekouPortStation",
+    name: "地鐵蛇口港站（2 號綫）",
+    officialName: "深圳地铁蛇口港站",
+    address: "广东省深圳市南山区蛇口客运码头北侧",
+    lat: 22.479714,
+    lng: 113.907387,
+    mapsQuery: "蛇口港站 深圳地铁2号线",
+    zone: "shekou",
+    source: "OSM node/6715085276; Wikipedia 22.47722,113.91167",
+  },
+  shekouOldStreet: {
+    id: "shekouOldStreet",
+    name: "蛇口老街",
+    officialName: "蛇口老街",
+    address: "广东省深圳市南山区蛇口街道海昌社区／海滨社区",
+    lat: 22.488845,
+    lng: 113.922432,
+    mapsQuery: "蛇口老街 海昌街 深圳南山",
+    zone: "shekou",
+    source: "OSM way/101317208 蛇口老街",
+  },
+  gardenCity: {
+    id: "gardenCity",
+    name: "太子灣花園城中心",
+    officialName: "太子湾花园城",
+    address: "广东省深圳市南山区蛇口邮轮大道1号",
+    lat: 22.478768,
+    lng: 113.908125,
+    mapsQuery: "太子湾花园城 邮轮大道 蛇口",
+    zone: "shekou",
+    source: "OSM node 太子湾花园城招呼站; 深圳貓 邮轮大道1号",
+  },
+  stonePark: {
+    id: "stonePark",
+    name: "前海石公園",
+    officialName: "前海石公园",
+    address: "广东省深圳市南山区前海大道与金岸中街交汇处（前湾二路）",
+    lat: 22.526982,
+    lng: 113.890178,
+    mapsQuery: "前海石公园 前海大道 南山",
+    zone: "guiwan",
+    source: "Amap B0FFG9KGTS 22.526982,113.890178; OSM way/542328084 park centroid 22.52906,113.88443",
+  },
+  kerry: {
+    id: "kerry",
+    name: "前海嘉里中心",
+    officialName: "前海嘉里中心",
+    address: "广东省深圳市南山区桂湾四路99号（临海大道与前海大道交汇处西侧）",
+    lat: 22.528488,
+    lng: 113.886644,
+    mapsQuery: "前海嘉里中心 桂湾四路99号",
+    zone: "guiwan",
+    source: "OSM way/1015410204; official 桂湾四路99号; Amap T1 22.525832,113.892281",
+  },
+  uniwalkHui: {
+    id: "uniwalkHui",
+    name: "前海壹方匯 Uniwalk",
+    officialName: "前海壹方汇",
+    address: "广东省深圳市南山区听海大道5059号",
+    lat: 22.532102,
+    lng: 113.891836,
+    mapsQuery: "前海壹方汇 听海大道5059号 桂湾",
+    zone: "guiwan",
+    source: "OSM relation/19117508 前海壹方汇 Uniway; 本地宝 听海大道5059号 桂湾站A2",
+    note: "桂灣商場。唔好同寶安中心「前海壹方城」（新湖路99號）撈亂。",
+  },
+  guiwanStation: {
+    id: "guiwanStation",
+    name: "地鐵桂灣站（5 號綫）",
+    officialName: "深圳地铁5号线桂湾站",
+    address: "广东省深圳市南山区听海大道与桂湾四路交叉口",
+    lat: 22.534431,
+    lng: 113.892867,
+    mapsQuery: "桂湾站 深圳地铁5号线",
+    zone: "guiwan",
+    source: "OSM node/6836123689; Wikipedia 22.531861,113.898083",
+  },
+  shenzhenBayPort: {
+    id: "shenzhenBayPort",
+    name: "深圳灣口岸",
+    officialName: "深圳湾口岸",
+    address: "广东省深圳市南山区蛇口街道东滨路1号",
+    lat: 22.506033,
+    lng: 113.945354,
+    mapsQuery: "深圳湾口岸 东滨路1号",
+    zone: "border",
+    source: "OSM node/12456006180; Wikipedia 深圳湾口岸站 22.50618,113.94463; 灰机wiki 东滨路1号",
+  },
+};
+
+export const QIANHAI_ZONE_CENTERS = {
+  seaworld: { id: "seaworld", label: "海上世界", lat: 22.486343, lng: 113.91193, color: "#0369a1" },
+  dongjiaotou: { id: "dongjiaotou", label: "東角頭／酒店", lat: 22.49043, lng: 113.92248, color: "#0284c7" },
+  shekou: { id: "shekou", label: "蛇口", lat: 22.488845, lng: 113.922432, color: "#0ea5e9" },
+  guiwan: { id: "guiwan", label: "前海桂灣", lat: 22.532102, lng: 113.891836, color: "#f59e0b" },
+  border: { id: "border", label: "深圳灣口岸", lat: 22.506033, lng: 113.945354, color: "#14b8a6" },
+};
+
+export function isFiniteCoord(value) {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+export function inShenzhenBbox(lat, lng) {
+  return (
+    isFiniteCoord(lat) &&
+    isFiniteCoord(lng) &&
+    lat >= SHENZHEN_BBOX.minLat &&
+    lat <= SHENZHEN_BBOX.maxLat &&
+    lng >= SHENZHEN_BBOX.minLng &&
+    lng <= SHENZHEN_BBOX.maxLng
+  );
+}
+
+export function getQianhaiPlace(id) {
+  return QIANHAI_PLACES[id] || null;
+}
+
+export function qianhaiPlaceByName(name) {
+  if (!name) return null;
+  const blob = String(name).toLowerCase();
+  return (
+    Object.values(QIANHAI_PLACES).find((place) => {
+      const hay = `${place.id} ${place.name} ${place.officialName} ${place.mapsQuery}`.toLowerCase();
+      return hay.includes(blob) || blob.includes(place.name.toLowerCase()) || blob.includes(place.officialName.toLowerCase());
+    }) || null
+  );
+}
+
+export function googleMapsSearchUrl(place) {
+  if (place?.lat != null && place?.lng != null) {
+    return `https://www.google.com/maps/search/?api=1&query=${place.lat},${place.lng}`;
+  }
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place?.mapsQuery || place?.name || "")}`;
+}
+
+export function appleMapsUrl(place) {
+  if (place?.lat != null && place?.lng != null) {
+    return `https://maps.apple.com/?ll=${place.lat},${place.lng}&q=${encodeURIComponent(place.officialName || place.name)}`;
+  }
+  return `https://maps.apple.com/?q=${encodeURIComponent(place?.mapsQuery || place?.name || "")}`;
+}
+
+export function assertQianhaiPlaces() {
+  const errors = [];
+  Object.values(QIANHAI_PLACES).forEach((place) => {
+    if (!place.officialName || !place.address || !place.mapsQuery) {
+      errors.push(`${place.id}: missing officialName/address/mapsQuery`);
+    }
+    if (!inShenzhenBbox(place.lat, place.lng)) {
+      errors.push(`${place.id}: coords outside Shenzhen bbox (${place.lat}, ${place.lng})`);
+    }
+  });
+  return errors;
+}
+
+const loadErrors = assertQianhaiPlaces();
+if (loadErrors.length) {
+  throw new Error(`Qianhai place catalog invalid:\n${loadErrors.join("\n")}`);
+}
