@@ -12,6 +12,7 @@ import {
   OSAKA_LOG_BANNER_LABEL,
 } from "./data/osakaTripLog";
 import {
+  alignQianhaiTrip,
   findQianhaiTrip,
   isQianhaiTrip,
   mergeQianhaiDayItinerary,
@@ -165,11 +166,17 @@ export default function App() {
       return;
     }
 
-    if (existing && !seededBefore) {
-      setActiveId(existing.id);
-      try {
-        localStorage.setItem(QIANHAI_SEED_FLAG, "1");
-      } catch {}
+    if (existing) {
+      const aligned = alignQianhaiTrip(existing);
+      if (aligned !== existing) {
+        setTrips((prev) => prev.map((t) => (t.id === existing.id ? aligned : t)));
+      }
+      if (!seededBefore) {
+        setActiveId(existing.id);
+        try {
+          localStorage.setItem(QIANHAI_SEED_FLAG, "1");
+        } catch {}
+      }
     }
   }, [trips, setTrips, setActiveId]);
 
@@ -194,7 +201,7 @@ export default function App() {
     });
   }, [trips, tripId, setItinerary, setSpots]);
 
-  // 前海旅程種入三日行程同附近足跡
+  // 前海旅程種入兩日一夜行程同附近足跡
   useEffect(() => {
     if (!Array.isArray(trips) || trips.length === 0) return;
     trips.filter(isQianhaiTrip).forEach((trip) => {
@@ -371,7 +378,7 @@ export default function App() {
               {QIANHAI_HOTEL.name} · {QIANHAI_HOTEL.area}
             </p>
             <p className="mt-0.5 text-[11px] leading-snug text-sky-900/80">
-              最早入住 {QIANHAI_HOTEL.checkInDate.slice(5).replace("-", "/")} {QIANHAI_HOTEL.earliestCheckIn} · 主口岸深圳灣 · 10/12–10/14
+              最早入住 {QIANHAI_HOTEL.checkInDate.slice(5).replace("-", "/")} {QIANHAI_HOTEL.earliestCheckIn} · 兩日一夜（1 晚）· 10/13 退房
             </p>
           </div>
         )}

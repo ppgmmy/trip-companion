@@ -132,7 +132,7 @@ export default function ItineraryTab({ trip, itinerary, setItinerary, focusDayId
           {trip.city?.includes("大阪") || (trip.city || "").toLowerCase().includes("osaka")
             ? " · 堺筋本町基地 · 食→景點→食→景點"
             : trip.city?.includes("前海") || (trip.city || "").toLowerCase().includes("qianhai")
-              ? " · RANY芮汐酒店（石雲路25號）· 最早入住 08:00"
+              ? " · 兩日一夜 · RANY芮汐酒店（石雲路25號）· 最早入住 08:00 · 10/13 退房"
               : " · 食→景點→食→景點"}
         </p>
       </div>

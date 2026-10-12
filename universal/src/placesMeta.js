@@ -31,11 +31,11 @@ const CITY_GUIDES = [
     keys: ["前海", "qianhai", "深圳", "shenzhen", "海上世界", "蛇口"],
     label: "前海／海上世界精選",
     places: [
-      qianhaiPlace("hotel", "室內", "過夜基地。石雲路25號，最早 10/12 08:00 可入住。最近地鐵東角頭。"),
+      qianhaiPlace("hotel", "室內", "兩日一夜過夜基地。石雲路25號，最早 10/12 08:00 可入住，10/13 退房。最近地鐵東角頭。"),
       qianhaiPlace("seaWorldPlaza", "景點", "望海路1128號明華輪／廣場。Day 1 放行李後行一圈。"),
       qianhaiPlace("nvwa", "景點", "女媧補天像。唔好同鹽田小梅沙海洋世界撈亂。"),
       qianhaiPlace("gatewayMall", "購物", "工業三路1號匯港。唔係華強北茂業天地。"),
-      qianhaiPlace("foodStreet", "美食", "廣場餐飲酒吧街。Day 1、Day 3 晚餐最省來回。"),
+      qianhaiPlace("foodStreet", "美食", "廣場餐飲酒吧街。Day 1 晚餐最省來回。"),
       qianhaiPlace("stonePark", "戶外", "前海大道與金岸中街。Day 2 散步為主。"),
       qianhaiPlace("uniwalkHui", "室內", "聽海大道5059號桂灣商場。唔好去寶安中心壹方城。"),
       qianhaiPlace("kerry", "購物", "桂灣四路99號，同石公園一街之隔。"),
