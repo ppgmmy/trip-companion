@@ -32,16 +32,27 @@ const DEFAULT_GROUPS = [
   },
 ];
 
+const QIANHAI_ITEMS = [
+  { id: "qh-doc-home-return", label: "回鄉證／通行證（同備份）" },
+  { id: "qh-phone-pay", label: "微信／支付寶已開通，手機有電" },
+  { id: "qh-hotel-addr", label: "海底世界 Rany Hotel／海上世界地址已存入手機" },
+  { id: "qh-return-slot", label: "已核對深圳灣 10 月 14 日回程時間，唔追尾班" },
+];
+
 const ADAPT_ITEMS = [
   { id: "adapt-umbrella", label: "摺疊傘／輕便雨具" },
   { id: "adapt-indoor", label: "室內行程後備（商場／博物館）" },
   { id: "adapt-sun", label: "防曬／補充水分計劃" },
 ];
 
-export default function ChecklistTab({ checked, setChecked, adapt = false }) {
-  const groups = adapt
-    ? [{ category: "天氣適應 · 今日加強", items: ADAPT_ITEMS }, ...DEFAULT_GROUPS]
-    : DEFAULT_GROUPS;
+export default function ChecklistTab({ checked, setChecked, adapt = false, trip = null }) {
+  const qianhai =
+    Boolean(trip?.id === "qianhai-2026-10") ||
+    `${trip?.city || ""} ${trip?.country || ""}`.includes("前海");
+  const extra = [];
+  if (adapt) extra.push({ category: "天氣適應 · 今日加強", items: ADAPT_ITEMS });
+  if (qianhai) extra.push({ category: "前海過關", items: QIANHAI_ITEMS });
+  const groups = extra.length ? [...extra, ...DEFAULT_GROUPS] : DEFAULT_GROUPS;
   const total = groups.reduce((s, g) => s + g.items.length, 0);
   const done = groups.reduce((s, g) => s + g.items.filter((i) => checked[i.id]).length, 0);
   const pct = total ? (done / total) * 100 : 0;

@@ -11,6 +11,16 @@ import {
   OSAKA_FOCUS_DAY_ID,
   OSAKA_LOG_BANNER_LABEL,
 } from "./data/osakaTripLog";
+import {
+  findQianhaiTrip,
+  isQianhaiTrip,
+  mergeQianhaiDayItinerary,
+  mergeQianhaiNearbySpots,
+  QIANHAI_HOTEL,
+  QIANHAI_SEED_FLAG,
+  QIANHAI_TRIP,
+  QIANHAI_TRIP_ID,
+} from "./data/qianhaiTrip";
 import TripSwitcher from "./components/TripSwitcher";
 import TripForm from "./components/TripForm";
 import BottomNav from "./components/BottomNav";
@@ -45,8 +55,12 @@ function EmptyState({ onCreate }) {
 }
 
 export default function App() {
-  const [trips, setTrips] = useLocalStorage(REGISTRY_KEYS.trips, [], { migrate: (v) => (Array.isArray(v) ? v : []) });
-  const [activeId, setActiveId] = useLocalStorage(REGISTRY_KEYS.active, null, { migrate: (v) => (typeof v === "string" ? v : null) });
+  const [trips, setTrips] = useLocalStorage(REGISTRY_KEYS.trips, [QIANHAI_TRIP], {
+    migrate: (v) => (Array.isArray(v) ? v : [QIANHAI_TRIP]),
+  });
+  const [activeId, setActiveId] = useLocalStorage(REGISTRY_KEYS.active, QIANHAI_TRIP_ID, {
+    migrate: (v) => (typeof v === "string" ? v : QIANHAI_TRIP_ID),
+  });
   const [activeTab, setActiveTab] = useLocalStorage(REGISTRY_KEYS.activeTab, "expenses", {
     // 上碟：每次開 App 一律由記帳開始（唔跟上次留低嘅分頁）
     migrate: () => "expenses",
@@ -127,6 +141,38 @@ export default function App() {
     { migrate: (v) => v === true || v === "true" || v === 1 },
   );
 
+  // 將前海種子行程加入可切換列表，首次部署設為當前旅程
+  useEffect(() => {
+    if (!Array.isArray(trips)) return;
+    const existing = findQianhaiTrip(trips);
+    let seededBefore = false;
+    try {
+      seededBefore = localStorage.getItem(QIANHAI_SEED_FLAG) === "1";
+    } catch {
+      seededBefore = false;
+    }
+
+    if (!existing && !seededBefore) {
+      setTrips((prev) => {
+        if (!Array.isArray(prev)) return [QIANHAI_TRIP];
+        if (findQianhaiTrip(prev)) return prev;
+        return [QIANHAI_TRIP, ...prev];
+      });
+      setActiveId(QIANHAI_TRIP_ID);
+      try {
+        localStorage.setItem(QIANHAI_SEED_FLAG, "1");
+      } catch {}
+      return;
+    }
+
+    if (existing && !seededBefore) {
+      setActiveId(existing.id);
+      try {
+        localStorage.setItem(QIANHAI_SEED_FLAG, "1");
+      } catch {}
+    }
+  }, [trips, setTrips, setActiveId]);
+
   // 所有大阪旅程都種入真實日程紀錄（唔止而家 active 嗰個）
   useEffect(() => {
     if (!Array.isArray(trips) || trips.length === 0) return;
@@ -148,7 +194,29 @@ export default function App() {
     });
   }, [trips, tripId, setItinerary, setSpots]);
 
+  // 前海旅程種入三日行程同附近足跡
+  useEffect(() => {
+    if (!Array.isArray(trips) || trips.length === 0) return;
+    trips.filter(isQianhaiTrip).forEach((trip) => {
+      try {
+        const itinKey = tripKey(trip.id, TRIP_SECTIONS.itinerary);
+        const spotsKey = tripKey(trip.id, TRIP_SECTIONS.spots);
+        const rawItin = JSON.parse(localStorage.getItem(itinKey) || "{}");
+        const rawSpots = JSON.parse(localStorage.getItem(spotsKey) || "[]");
+        const itin = mergeQianhaiDayItinerary(rawItin && typeof rawItin === "object" ? rawItin : {});
+        const near = mergeQianhaiNearbySpots(Array.isArray(rawSpots) ? rawSpots : []);
+        if (itin.changed) localStorage.setItem(itinKey, JSON.stringify(itin.itinerary));
+        if (near.changed) localStorage.setItem(spotsKey, JSON.stringify(near.spots));
+        if (trip.id === tripId) {
+          if (itin.changed) setItinerary(itin.itinerary);
+          if (near.changed) setSpots(near.spots);
+        }
+      } catch {}
+    });
+  }, [trips, tripId, setItinerary, setSpots]);
+
   const osakaTrip = useMemo(() => findOsakaTrip(trips), [trips]);
+  const qianhaiTrip = useMemo(() => findQianhaiTrip(trips), [trips]);
 
   const { status: fxStatus, refresh: refreshRate } = useExchangeRate(activeTrip, rateState, setRateState);
 
@@ -297,6 +365,17 @@ export default function App() {
           </div>
         )}
 
+        {qianhaiTrip && isQianhaiTrip(activeTrip) && (
+          <div className="mb-2 rounded-2xl border border-sky-200/70 bg-gradient-to-r from-sky-50 to-cyan-50 px-3 py-2.5 shadow-sm">
+            <p className="text-[13px] font-extrabold text-sky-950">
+              {QIANHAI_HOTEL.name} · {QIANHAI_HOTEL.area}
+            </p>
+            <p className="mt-0.5 text-[11px] leading-snug text-sky-900/80">
+              最早入住 {QIANHAI_HOTEL.checkInDate.slice(5).replace("-", "/")} {QIANHAI_HOTEL.earliestCheckIn} · 主口岸深圳灣 · 10/12–10/14
+            </p>
+          </div>
+        )}
+
         {osakaTrip && (
           <button
             type="button"
@@ -350,7 +429,9 @@ export default function App() {
                     />
                   </>
                 )}
-                {activeTab === "checklist" && <ChecklistTab checked={checklist} setChecked={setChecklist} adapt={weatherAdapt} />}
+                {activeTab === "checklist" && (
+                  <ChecklistTab checked={checklist} setChecked={setChecklist} adapt={weatherAdapt} trip={activeTrip} />
+                )}
                 {activeTab === "spots" && (
                   <SpotsTab
                     trip={activeTrip}

@@ -14,6 +14,11 @@ import {
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { tripKey } from "../storage";
 import { isOsakaSeedFootprint } from "../data/osakaTripLog";
+import { isQianhaiSeedFootprint } from "../data/qianhaiTrip";
+
+function isSeedFootprint(spot) {
+  return isOsakaSeedFootprint(spot) || isQianhaiSeedFootprint(spot);
+}
 
 function buildTripDayOptions(trip) {
   if (!trip?.startDate) return [];
@@ -120,7 +125,7 @@ function SpotCard({ spot, variant = "default", dayOptions, allBadges, onRemove, 
   const meta = placeTypeMeta(spot.type);
   const accent = meta.accent || "border-l-jade";
   const day = dayOptions.find((d) => d.id === spot.dayId);
-  const locked = isOsakaSeedFootprint(spot);
+  const locked = isSeedFootprint(spot);
 
   if (variant === "timeline") {
     return (
@@ -249,7 +254,7 @@ function SpotCard({ spot, variant = "default", dayOptions, allBadges, onRemove, 
 function GalleryTile({ spot, dayOptions, onRemove }) {
   const meta = placeTypeMeta(spot.type);
   const day = dayOptions.find((d) => d.id === spot.dayId);
-  const locked = isOsakaSeedFootprint(spot);
+  const locked = isSeedFootprint(spot);
   return (
     <article
       className={`relative flex min-h-[8.5rem] flex-col justify-between overflow-hidden rounded-3xl border p-3.5 shadow-[var(--shadow-soft)] ${meta.tone}`}
@@ -373,7 +378,7 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false, focusDa
   }
 
   function requestRemoveSpot(spot) {
-    if (!spot || isOsakaSeedFootprint(spot)) return;
+    if (!spot || isSeedFootprint(spot)) return;
     setPendingDelete({
       type: "spot",
       id: spot.id,
@@ -396,11 +401,11 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false, focusDa
     if (!pendingDelete) return;
     if (pendingDelete.type === "spot") {
       const id = pendingDelete.id;
-      setSpots((prev) => prev.filter((s) => s.id !== id || isOsakaSeedFootprint(s)));
+      setSpots((prev) => prev.filter((s) => s.id !== id || isSeedFootprint(s)));
     } else if (pendingDelete.type === "day") {
       const dayKey = pendingDelete.dayId;
       setSpots((prev) =>
-        prev.filter((s) => s.dayId !== dayKey || isOsakaSeedFootprint(s)),
+        prev.filter((s) => s.dayId !== dayKey || isSeedFootprint(s)),
       );
     }
     setPendingDelete(null);
@@ -865,7 +870,7 @@ export default function SpotsTab({ trip, spots, setSpots, adapt = false, focusDa
           {timelineGroups.map((group) => {
             const open = expandedDayId === group.day.id;
             const preview = dayPreview(group.spots);
-            const removableCount = group.spots.filter((s) => !isOsakaSeedFootprint(s)).length;
+            const removableCount = group.spots.filter((s) => !isSeedFootprint(s)).length;
             return (
               <section
                 key={group.day.id}
