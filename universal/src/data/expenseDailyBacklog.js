@@ -386,4 +386,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "日子快篩選中舊日時，顯示該日現金／信用卡使費晶片，一撳即篩選該付款方式，翻舊帳對帳更快。",
     pillar: "convenience",
   },
+  {
+    id: "filtered-day-weekday-benchmark",
+    title: "篩選日 vs 同週幾日均",
+    description: "日子快篩選中舊日時，對比該日使費同旅程其餘「同一星期幾」日均，秒懂係典型節奏定異常消費日。",
+    pillar: "analysis",
+  },
 ];

@@ -123,6 +123,10 @@ function weekdayLabel(dateId) {
   return ["日", "一", "二", "三", "四", "五", "六"][wd];
 }
 
+function weekdayIndex(dateId) {
+  return new Date(`${dateId}T12:00:00`).getDay();
+}
+
 function isWeekendDateId(dateId) {
   const wd = new Date(`${dateId}T12:00:00`).getDay();
   return wd === 0 || wd === 6;
@@ -4492,6 +4496,144 @@ export function FilteredDayPaymentChips({
           已篩選「{paymentMethodLabel(filterPaymentMethod)}」· 再撳一次取消
         </p>
       )}
+    </div>
+  );
+}
+
+export function FilteredDayWeekdayBenchmarkPanel({ trip, expenses, filterDate }) {
+  const todayId = toDateId(new Date());
+  const dayId = filterDate !== "all" && filterDate ? filterDate : null;
+
+  const stats = useMemo(() => {
+    if (!dayId || dayId === todayId) return null;
+    const tripStart = trip.startDate;
+    const tripEnd = trip.endDate || todayId;
+    if (dayId < tripStart || dayId > tripEnd) return null;
+
+    const targetWd = weekdayIndex(dayId);
+    const peerDates = elapsedTripDateIds(trip).filter((d) => d !== dayId && weekdayIndex(d) === targetWd);
+    if (peerDates.length === 0) return null;
+
+    const daySpent = sumByDate(expenses, dayId);
+    const peerTotals = peerDates.map((d) => sumByDate(expenses, d));
+    const peerSum = peerTotals.reduce((s, v) => s + v, 0);
+    const peerAvg = peerSum / peerDates.length;
+    const delta = daySpent - peerAvg;
+    let pctChange = null;
+    if (peerAvg > 0) {
+      pctChange = Math.round((delta / peerAvg) * 100);
+    } else if (daySpent > 0) {
+      pctChange = null;
+    }
+
+    const loggedPeerCount = peerTotals.filter((v) => v > 0).length;
+    const dayCount = expenses.filter((e) => e.date === dayId).length;
+
+    return {
+      dayId,
+      daySpent,
+      peerAvg,
+      delta,
+      pctChange,
+      peerDates,
+      peerCount: peerDates.length,
+      loggedPeerCount,
+      dayCount,
+      weekday: weekdayLabel(dayId),
+    };
+  }, [dayId, todayId, trip, expenses]);
+
+  if (!isFeatureEnabled("filtered-day-weekday-benchmark")) return null;
+  if (!stats) return null;
+
+  const { dayId: dId, daySpent, peerAvg, delta, pctChange, peerCount, loggedPeerCount, dayCount, weekday } =
+    stats;
+
+  function dayHeading(dateId) {
+    const y = shiftDateId(todayId, -1);
+    if (dateId === y) return "昨日";
+    return `${formatShortDate(dateId)}（週${weekdayLabel(dateId)}）`;
+  }
+
+  const maxBar = Math.max(daySpent, peerAvg, 1);
+  const barPct = (v) => Math.max(6, Math.round((v / maxBar) * 100));
+
+  let insight = `週${weekday}使費接近旅程其他週${weekday}平均`;
+  let insightClass = "text-ink-soft";
+  if (daySpent === 0 && peerAvg === 0) {
+    insight = `週${weekday}都未有記帳，對照其他 ${peerCount} 個週${weekday}`;
+    insightClass = "text-ink-faint";
+  } else if (peerAvg === 0 && daySpent > 0) {
+    insight = `其他 ${peerCount} 個週${weekday}未記帳，${dayHeading(dId)}先有支出`;
+    insightClass = "text-ink-soft";
+  } else if (delta > 0 && pctChange != null && pctChange >= 35) {
+    insight = `高過其他週${weekday}平均 ${formatMoney(delta, trip.targetCurrency)}（+${pctChange}%），屬偏高`;
+    insightClass = "text-coral";
+  } else if (delta > 0) {
+    insight = `多過其他週${weekday}平均 ${formatMoney(delta, trip.targetCurrency)}`;
+    insightClass = "text-[#b45309]";
+  } else if (delta < 0 && pctChange != null && pctChange <= -25) {
+    insight = `慳咗 ${formatMoney(-delta, trip.targetCurrency)}（${pctChange}%），低過典型週${weekday}`;
+    insightClass = "text-jade-deep";
+  } else if (delta < 0) {
+    insight = `少過其他週${weekday}平均 ${formatMoney(-delta, trip.targetCurrency)}`;
+    insightClass = "text-jade";
+  }
+
+  return (
+    <div className="rounded-2xl border border-[#dbeafe]/80 bg-gradient-to-br from-white to-[#eff6ff]/90 px-3 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="mb-2 flex items-baseline justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">篩選日 vs 同週{weekday}平均</p>
+        <p className="text-[11px] font-bold text-jade-deep">
+          {dayHeading(dId)}
+          {dayCount > 0 ? ` · ${dayCount} 筆` : ""}
+        </p>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <p className="text-[10px] font-semibold text-ink-faint">
+            其他 {peerCount} 個週{weekday}日均
+            {loggedPeerCount > 0 && loggedPeerCount < peerCount
+              ? `（${loggedPeerCount} 日有記帳）`
+              : ""}
+          </p>
+          <p className="font-display text-lg font-black text-ink">{formatMoney(peerAvg, trip.targetCurrency)}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-[10px] font-semibold text-jade-deep">{dayHeading(dId)}</p>
+          <p className="font-display text-lg font-black text-ink">{formatMoney(daySpent, trip.targetCurrency)}</p>
+          <p
+            className={`text-[11px] font-bold ${
+              delta > 0 ? "text-coral" : delta < 0 ? "text-jade" : "text-ink-faint"
+            }`}
+          >
+            {delta === 0
+              ? "持平"
+              : delta > 0
+                ? `↑ ${formatMoney(delta, trip.targetCurrency)}`
+                : `↓ ${formatMoney(-delta, trip.targetCurrency)}`}
+            {pctChange != null && delta !== 0 ? ` · ${pctChange > 0 ? "+" : ""}${pctChange}%` : ""}
+          </p>
+        </div>
+      </div>
+      <div className="mt-2.5 space-y-1.5">
+        <div className="flex items-center gap-2">
+          <span className="w-16 shrink-0 truncate text-[9px] font-semibold text-ink-faint">週{weekday}平均</span>
+          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#efe9e0]">
+            <div className="h-full rounded-full bg-ink-faint/35" style={{ width: `${barPct(peerAvg)}%` }} />
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="w-16 shrink-0 truncate text-[9px] font-semibold text-jade-deep">{formatShortDate(dId)}</span>
+          <div className="h-2 flex-1 overflow-hidden rounded-full bg-[#efe9e0]">
+            <div
+              className={`h-full rounded-full ${delta > 0 ? "bg-coral/85" : delta < 0 ? "bg-jade" : "bg-jade/75"}`}
+              style={{ width: `${barPct(daySpent)}%` }}
+            />
+          </div>
+        </div>
+      </div>
+      <p className={`mt-2 text-center text-[11px] font-semibold leading-snug ${insightClass}`}>{insight}</p>
     </div>
   );
 }

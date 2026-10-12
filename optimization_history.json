@@ -568,6 +568,12 @@
       "title": "近 3 日使費節奏",
       "description": "對比近 3 日日均同全程日均，及早察覺消費升溫或收油。",
       "cycle": true
+    },
+    {
+      "date": "2026-10-12",
+      "id": "filtered-day-weekday-benchmark",
+      "title": "篩選日 vs 同週幾日均",
+      "description": "日子快篩選中舊日時，對比該日使費同旅程其餘「同一星期幾」日均，秒懂係典型節奏定異常消費日。"
     }
   ]
 }
