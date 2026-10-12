@@ -148,9 +148,10 @@ export const QIANHAI_NEARBY_SPOTS = [
   footprintFromPlace("chaoXiangLi", {
     id: "qh-fp-chaoxiangli",
     dayId: "2026-10-12",
+    time: "14:10",
     type: "food",
     badges: ["again", "value"],
-    note: "船尾廣場 B區 L1 B106。潮汕粿条／牛肉。食無定時——想食就去，唔鎖午餐／晚餐鐘點。旅客 2026-10-12 到店。",
+    note: "船尾廣場 B區 L1 B106。潮汕粿条／牛肉。今日已食／到訪（實際紀錄，約 14:10）。附近食玩、唔鎖鐘點——之後想再去都得。",
   }),
 footprintFromPlace("seaWorldPlaza", {
     id: "qh-fp-plaza",

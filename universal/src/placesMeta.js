@@ -38,7 +38,7 @@ const CITY_GUIDES = [
       qianhaiPlace("terraceThai", "美食", "廣場 L2 露台泰菜；氣氛輕鬆，入夜可有駐唱。"),
       qianhaiPlace("liXiaotaiBbq", "美食", "廣場 C 區船後 102。串燒生蠔砂鍋粥，宵夜都得。"),
       qianhaiPlace("nanhaiXiaochu", "美食", "廣場船尾 5 棟 101。正式啲粵菜／海景位。"),
-      qianhaiPlace("chaoXiangLi", "美食", "船尾廣場 B區 B106。潮汕粿条／牛肉；2026-10-12 到店。"),
+      qianhaiPlace("chaoXiangLi", "美食", "船尾廣場 B區 B106。潮汕粿条／牛肉；2026-10-12 約14:10 今日已食（實際紀錄）。"),
 
       qianhaiPlace("daydreamMall", "購物", "現場名白日夢／Daydream。地圖標環船廣場／C區（望海路1128），同明華輪廣場一體；旁邊匯港。"),
       qianhaiPlace("gatewayMall", "購物", "廣場旁邊匯港（工業三路1號）。地鐵 B／D 口；補日用品同冷氣休息。唔係華強北茂業。"),
