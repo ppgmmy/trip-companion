@@ -113,13 +113,44 @@ export const QIANHAI_NEARBY_SPOTS = [
     badges: ["again"],
     note: "兩日一夜過夜基地。最早 10/12 08:00 可入住，10/13 退房。石雲路25號，最近地鐵東角頭。",
   }),
-  footprintFromPlace("seaWorldPlaza", {
+  
+  footprintFromPlace("fanlou", {
+    id: "qh-fp-fanlou",
+    dayId: "2026-10-12",
+    time: "12:30",
+    type: "food",
+    badges: ["again", "value"],
+    note: "石雲路／蛇口新街152號，RANY 對面一帶。粵菜點心，入住後就近醫肚。",
+  }),
+  footprintFromPlace("liXiaotaiBbq", {
+    id: "qh-fp-lixiaotai",
+    dayId: "2026-10-12",
+    time: "18:30",
+    type: "food",
+    badges: ["value"],
+    note: "海上世界 C 區船後廣場 102。串燒、生蠔、砂鍋粥；宵夜都得。",
+  }),
+  footprintFromPlace("nanhaiXiaochu", {
+    id: "qh-fp-nanhai",
+    dayId: "2026-10-12",
+    time: "18:30",
+    type: "food",
+    note: "望海路1128 海上世界 5 棟 101。想正式啲粵菜／海景位可嚟呢度。",
+  }),
+  footprintFromPlace("terraceThai", {
+    id: "qh-fp-terrace",
+    dayId: "2026-10-12",
+    time: "19:00",
+    type: "food",
+    note: "廣場 L2 露台泰菜；想輕鬆同氣氛可揀。入夜可有駐唱。",
+  }),
+footprintFromPlace("seaWorldPlaza", {
     id: "qh-fp-plaza",
     dayId: "2026-10-12",
     time: "15:00",
     type: "spot",
     badges: ["view"],
-    note: "望海路1128號明華輪／廣場。由酒店行或搭兩站到海上世界站。",
+    note: "望海路1128號明華輪／廣場。今晚散步核心；由酒店行或地鐵海上世界站 A 口。",
   }),
   footprintFromPlace("nvwa", {
     id: "qh-fp-ocean",
@@ -172,7 +203,7 @@ export const QIANHAI_NEARBY_SPOTS = [
     time: "18:30",
     type: "food",
     badges: ["value"],
-    note: "望海路廣場餐飲酒吧街。Day 1 晚餐最省來回。先問電子支付。",
+    note: "望海路廣場餐飲酒吧街。今晚食完可沿廣場行夜景；先確認微信／支付寶。",
   }),
   footprintFromPlace("uniwalkHui", {
     id: "qh-fp-uniwalk-food",
