@@ -67,7 +67,13 @@ function resolveFile(urlPath) {
 
 const server = http.createServer((req, res) => {
   const pathname = decodeURIComponent((req.url || "/").split("?")[0]);
-  if (["/taipei", "/tokyo", "/thailand", "/universal", "/qianhai"].includes(pathname)) {
+  if (pathname === "/qianhai" || pathname === "/qianhai/") {
+    res.writeHead(302, { Location: "/universal/" });
+    res.end();
+    return;
+  }
+
+  if (["/taipei", "/tokyo", "/thailand", "/universal"].includes(pathname)) {
     res.writeHead(308, { Location: `${pathname}/` });
     res.end();
     return;
@@ -92,7 +98,6 @@ const server = http.createServer((req, res) => {
 server.listen(port, () => {
   console.log(`Trip Companion hub at http://localhost:${port}`);
   console.log(`  Universal → http://localhost:${port}/universal/`);
-  console.log(`  Qianhai   → http://localhost:${port}/qianhai/`);
   console.log(`  Taipei    → http://localhost:${port}/taipei/`);
   console.log(`  Tokyo     → http://localhost:${port}/tokyo/`);
   console.log(`  Thailand  → http://localhost:${port}/thailand/`);
