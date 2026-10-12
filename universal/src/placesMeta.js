@@ -34,10 +34,12 @@ const CITY_GUIDES = [
       qianhaiPlace("hotel", "室內", "兩日一夜過夜基地。石雲路25號。去廣場步行約15分鐘，或地鐵東角頭一站到海上世界。"),
 
       qianhaiPlace("seaWorldPlaza", "景點", "今日去呢度：望海路1128。明華輪＋環船／船頭／船後廣場＋餐飲酒吧街。RANY 行約15分鐘，或東角頭→海上世界站 A 口。"),
-      qianhaiPlace("foodStreet", "美食", "廣場入面環船餐飲酒吧帶。已核實 Terrace／李小太／南海小廚；夜晚可睇噴泉。"),
+      qianhaiPlace("foodStreet", "美食", "廣場入面環船餐飲酒吧帶。已核實 潮巷里／Terrace／李小太／南海小廚；夜晚可睇噴泉。"),
       qianhaiPlace("terraceThai", "美食", "廣場 L2 露台泰菜；氣氛輕鬆，入夜可有駐唱。"),
       qianhaiPlace("liXiaotaiBbq", "美食", "廣場 C 區船後 102。串燒生蠔砂鍋粥，宵夜都得。"),
       qianhaiPlace("nanhaiXiaochu", "美食", "廣場船尾 5 棟 101。正式啲粵菜／海景位。"),
+      qianhaiPlace("chaoXiangLi", "美食", "船尾廣場 B區 B106。潮汕粿条／牛肉；2026-10-12 到店。"),
+
       qianhaiPlace("daydreamMall", "購物", "現場名白日夢／Daydream。地圖標環船廣場／C區（望海路1128），同明華輪廣場一體；旁邊匯港。"),
       qianhaiPlace("gatewayMall", "購物", "廣場旁邊匯港（工業三路1號）。地鐵 B／D 口；補日用品同冷氣休息。唔係華強北茂業。"),
       qianhaiPlace("nvwa", "景點", "廣場南邊女媧補天像。唔好同鹽田小梅沙海洋世界撈亂。"),
