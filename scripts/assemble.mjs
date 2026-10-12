@@ -17,7 +17,7 @@ for (const file of ["index.html", "hub.css", "storage-migration.js", "sw.js", "m
   copyFileSync(resolve(root, file), resolve(output, file));
 }
 
-for (const folder of ["taipei", "thailand"]) {
+for (const folder of ["taipei", "thailand", "qianhai"]) {
   cpSync(resolve(root, folder), resolve(output, folder), {
     recursive: true,
     filter: (source) => !source.endsWith("server.js"),
