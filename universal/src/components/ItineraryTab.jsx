@@ -131,7 +131,9 @@ export default function ItineraryTab({ trip, itinerary, setItinerary, focusDayId
           {trip.startDate} → {trip.endDate}
           {trip.city?.includes("大阪") || (trip.city || "").toLowerCase().includes("osaka")
             ? " · 堺筋本町基地 · 食→景點→食→景點"
-            : " · 食→景點→食→景點"}
+            : trip.city?.includes("前海") || (trip.city || "").toLowerCase().includes("qianhai")
+              ? " · 海底世界 Rany Hotel · 最早入住 08:00"
+              : " · 食→景點→食→景點"}
         </p>
       </div>
 
