@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { guideForTrip } from "../placesMeta";
 
-function mapsLink(query) {
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+function mapsLink(place) {
+  if (place?.lat != null && place?.lng != null) {
+    return `https://www.google.com/maps/search/?api=1&query=${place.lat},${place.lng}`;
+  }
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place?.maps || place?.name || "")}`;
 }
 
 export default function PlacesPanel({ trip }) {
@@ -50,9 +53,10 @@ export default function PlacesPanel({ trip }) {
                 <span className="text-[10px] font-semibold text-ink-faint">{pl.area}</span>
               </div>
               <h3 className="font-display text-[15px] font-bold text-ink">{pl.name}</h3>
+              {pl.address && <p className="mt-0.5 text-[11px] text-ink-faint">{pl.address}</p>}
               <p className="mt-1 text-sm text-ink-soft">{pl.detail}</p>
               <a
-                href={mapsLink(pl.maps)}
+                href={mapsLink(pl)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-3 inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-jade-soft px-3 text-xs font-bold text-jade-deep transition active:scale-95"

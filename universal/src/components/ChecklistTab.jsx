@@ -35,7 +35,7 @@ const DEFAULT_GROUPS = [
 const QIANHAI_ITEMS = [
   { id: "qh-doc-home-return", label: "回鄉證／通行證（同備份）" },
   { id: "qh-phone-pay", label: "微信／支付寶已開通，手機有電" },
-  { id: "qh-hotel-addr", label: "海底世界 Rany Hotel／海上世界地址已存入手機" },
+  { id: "qh-hotel-addr", label: "RANY芮汐酒店／石雲路25號已存入手機" },
   { id: "qh-return-slot", label: "已核對深圳灣 10 月 14 日回程時間，唔追尾班" },
 ];
 

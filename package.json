@@ -7,7 +7,8 @@
     "dev": "node server.js",
     "build:tokyo": "npm --prefix tokyo ci && npm --prefix tokyo run build",
     "build:universal": "node scripts/daily-optimization/ensure-feature-json.mjs --repair && npm --prefix universal ci && npm --prefix universal run build",
-    "build": "npm run build:tokyo && npm run build:universal && node scripts/assemble.mjs",
+    "assert:places": "node scripts/assert-qianhai-places.mjs",
+    "build": "npm run assert:places && npm run build:tokyo && npm run build:universal && node scripts/assemble.mjs",
     "start": "node server.js"
   },
   "dependencies": {

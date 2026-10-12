@@ -20,6 +20,16 @@ function isSeedFootprint(spot) {
   return isOsakaSeedFootprint(spot) || isQianhaiSeedFootprint(spot);
 }
 
+function spotMapsHref(spot) {
+  if (spot?.lat != null && spot?.lng != null) {
+    return `https://www.google.com/maps/search/?api=1&query=${spot.lat},${spot.lng}`;
+  }
+  if (spot?.mapsQuery) {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(spot.mapsQuery)}`;
+  }
+  return "";
+}
+
 function buildTripDayOptions(trip) {
   if (!trip?.startDate) return [];
   const start = new Date(trip.startDate);
@@ -170,6 +180,17 @@ function SpotCard({ spot, variant = "default", dayOptions, allBadges, onRemove, 
               >
                 {spot.note}
               </p>
+            )}
+            {spot.address && <p className="mt-1 text-[10px] text-ink-faint">{spot.address}</p>}
+            {spotMapsHref(spot) && (
+              <a
+                href={spotMapsHref(spot)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-1 inline-flex text-[10px] font-bold text-jade-deep"
+              >
+                地圖
+              </a>
             )}
             {spot.badges?.length > 0 && (
               <div className="mt-1 flex flex-wrap gap-0.5">

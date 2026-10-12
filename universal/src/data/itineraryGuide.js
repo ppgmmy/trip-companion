@@ -5,6 +5,7 @@
 
 import { guideForTrip } from "../placesMeta";
 import { toDateId, tripDays, WEEKDAY_LABELS } from "../data";
+import { getQianhaiPlace, inShenzhenBbox, QIANHAI_ZONE_CENTERS } from "./places/qianhaiPlaces.js";
 
 const FOOD_TAGS = new Set(["美食", "Cafe"]);
 const SPOT_TAGS = new Set(["景點", "購物", "玩樂", "室內", "戶外", "市集", "河岸", "商場", "景觀", "公園"]);
@@ -29,13 +30,13 @@ export const OSAKA_MAP = {
 };
 
 export const QIANHAI_MAP = {
-  center: { lat: 22.4794, lng: 113.9152, zoom: 13, query: "蛇口海上世界 深圳" },
-  zones: [
-    { id: "seaworld", label: "海上世界", lat: 22.4794, lng: 113.9152, color: "#0369a1" },
-    { id: "shekou", label: "蛇口", lat: 22.479, lng: 113.91, color: "#0ea5e9" },
-    { id: "guiwan", label: "前海桂灣", lat: 22.532, lng: 113.888, color: "#f59e0b" },
-    { id: "border", label: "深圳灣口岸", lat: 22.498, lng: 113.944, color: "#14b8a6" },
-  ],
+  center: {
+    lat: QIANHAI_ZONE_CENTERS.seaworld.lat,
+    lng: QIANHAI_ZONE_CENTERS.seaworld.lng,
+    zoom: 13,
+    query: "深圳海上世界 明华轮 望海路1128号",
+  },
+  zones: Object.values(QIANHAI_ZONE_CENTERS),
 };
 
 const QIANHAI_CURATED = {
@@ -44,24 +45,24 @@ const QIANHAI_CURATED = {
     vibe: "深圳灣入蛇口 · 最早 08:00 可入住 Rany Hotel",
     zone: "seaworld",
     slots: [
-      slot("spot", "08:00", "Rany Hotel 最早可入住", "海底世界 Rany Hotel 最早入住 08:00。趕得及過關就可以直接入房，唔使喺桂灣等晚上。", "海上世界", "海底世界 Rany Hotel 海上世界 蛇口"),
-      slot("spot", "08:30", "香港出發往深圳灣", "港深西部通道直達深圳灣。口岸唔係 24 小時。出閘後的士／網約去海上世界。", "深圳灣口岸", "深圳灣口岸"),
-      slot("spot", "10:30", "入住 Rany Hotel", "先放行李，再決定行商場定休息。報地址用「海上世界海底世界 Rany Hotel」。", "海上世界", "海底世界 Rany Hotel 海上世界 蛇口"),
-      slot("food", "12:30", "海上世界午餐", "酒店附近商場同食街。先確認微信／支付寶。", "海上世界", "海上世界食街 蛇口 深圳"),
-      slot("spot", "15:00", "海上世界廣場／女媧像", "酒店出街即到。想行商場就茂業天地。前海留第二日。", "海上世界", "海上世界廣場 蛇口 深圳"),
-      slot("food", "18:30", "晚餐回酒店", "返海上世界食晚餐同過夜。記下酒店中文地址。", "海上世界", "海底世界 Rany Hotel 海上世界 蛇口"),
+      slot("spot", "08:00", "RANY芮汐最早可入住", "深圳蛇口海上世界RANY芮汐酒店，石雲路25號。最早入住 08:00。最近地鐵東角頭，唔係海上世界站。", "東角頭", "深圳蛇口海上世界RANY芮汐酒店 石云路25号", "hotel"),
+      slot("spot", "08:30", "香港出發往深圳灣", "港深西部通道直達深圳灣。口岸唔係 24 小時。出閘後的士／網約去石雲路。", "深圳灣口岸", "深圳湾口岸 东滨路1号", "shenzhenBayPort"),
+      slot("spot", "10:30", "入住 RANY芮汐酒店", "報地址用「蛇口新街石雲路25號／RANY芮汐酒店」。先放行李再決定行廣場定休息。", "東角頭", "深圳蛇口海上世界RANY芮汐酒店 石云路25号", "hotel"),
+      slot("food", "12:30", "海上世界午餐", "廣場／匯港一帶食肆。先確認微信／支付寶。", "海上世界", "海上世界广场 酒吧街 望海路1128号 深圳", "foodStreet"),
+      slot("spot", "15:00", "海上世界廣場／女媧像", "明華輪同女媧補天像喺望海路。想行商場去匯港，唔係華強北茂業天地。前海留第二日。", "海上世界", "女娲补天像 海上世界 深圳", "nvwa"),
+      slot("food", "18:30", "晚餐回酒店", "返石雲路 overnight。記下「RANY芮汐酒店／石雲路25號」。", "東角頭", "深圳蛇口海上世界RANY芮汐酒店 石云路25号", "hotel"),
     ],
   },
   "2026-10-13": {
     title: "前海桂灣全日",
-    vibe: "壹方城 Uniwalk · 前海石 · 晚上返海上世界",
+    vibe: "壹方匯 Uniwalk · 前海石 · 晚上返石雲路",
     zone: "guiwan",
     slots: [
-      slot("spot", "09:30", "出發去前海桂灣", "基地仍係 Rany Hotel。地鐵或的士去桂灣。行李留酒店。", "前海桂灣", "前海桂灣 深圳"),
-      slot("spot", "10:30", "前海石公園", "散步為主。合作區範圍大，唔好當一個商場行得完。", "前海桂灣", "前海石公園 深圳"),
-      slot("food", "12:30", "壹方城食樓", "壹方城、嘉里中心食樓選擇穩定。", "前海桂灣", "前海壹方城 美食 深圳"),
-      slot("spot", "15:00", "壹方城 Uniwalk", "前海主力商場。同一日唔使兩個商場都行完。傍晚預留時間返海上世界。", "前海桂灣", "前海壹方城 Uniwalk 深圳"),
-      slot("food", "18:30", "返回海上世界", "回酒店過夜。唔係住桂灣。", "海上世界", "海底世界 Rany Hotel 海上世界 蛇口"),
+      slot("spot", "09:30", "出發去前海桂灣", "基地仍係石雲路 RANY。地鐵東角頭轉綫或的士去桂灣。行李留酒店。", "前海桂灣", "桂湾站 深圳地铁5号线", "guiwanStation"),
+      slot("spot", "10:30", "前海石公園", "前海大道與金岸中街。散步為主。合作區範圍大，唔好當一個商場行得完。", "前海桂灣", "前海石公园 前海大道 南山", "stonePark"),
+      slot("food", "12:30", "壹方匯食樓", "聽海大道5059號前海壹方匯（桂灣站 A2）。唔好去寶安中心壹方城。", "前海桂灣", "前海壹方汇 听海大道5059号 桂湾", "uniwalkHui"),
+      slot("spot", "15:00", "前海壹方匯 Uniwalk", "桂灣商場。嘉里中心喺石公園隔籬，同一日唔使兩個商場都行完。", "前海桂灣", "前海壹方汇 听海大道5059号 桂湾", "uniwalkHui"),
+      slot("food", "18:30", "返回 RANY 過夜", "回石雲路酒店。唔係住桂灣。", "東角頭", "深圳蛇口海上世界RANY芮汐酒店 石云路25号", "hotel"),
     ],
   },
   "2026-10-14": {
@@ -69,11 +70,11 @@ const QIANHAI_CURATED = {
     vibe: "海上世界出發 · 預留過關時間",
     zone: "border",
     slots: [
-      slot("spot", "10:00", "退房", "辦理退房。如要行多一陣海上世界，可先寄行李。", "海上世界", "海底世界 Rany Hotel 海上世界 蛇口"),
-      slot("food", "12:00", "回程前午餐", "海上世界或蛇口進食，避免過關前後捱餓。", "海上世界", "海上世界食街 蛇口 深圳"),
-      slot("spot", "14:00", "前往深圳灣口岸", "由海上世界的士或網約返口岸。唔好當步行。", "深圳灣口岸", "深圳灣口岸"),
-      slot("spot", "15:30", "回程過關", "深圳灣唔係 24 小時。預留最少 60–90 分鐘過關加接駁。", "深圳灣口岸", "深圳灣口岸"),
-      slot("spot", "17:00", "返回香港", "過關後乘巴士返港。唔追尾班。", "深圳灣口岸", "深圳灣口岸巴士"),
+      slot("spot", "10:00", "RANY 退房", "石雲路25號辦理退房。如要行多一陣廣場，可先寄行李。", "東角頭", "深圳蛇口海上世界RANY芮汐酒店 石云路25号", "hotel"),
+      slot("food", "12:00", "回程前午餐", "海上世界廣場或匯港進食，避免過關前後捱餓。", "海上世界", "海上世界广场 酒吧街 望海路1128号 深圳", "foodStreet"),
+      slot("spot", "14:00", "前往深圳灣口岸", "由石雲路／海上世界的士或網約返東濱路1號口岸。唔好當步行。", "深圳灣口岸", "深圳湾口岸 东滨路1号", "shenzhenBayPort"),
+      slot("spot", "15:30", "回程過關", "深圳灣唔係 24 小時。預留最少 60–90 分鐘過關加接駁。", "深圳灣口岸", "深圳湾口岸 东滨路1号", "shenzhenBayPort"),
+      slot("spot", "17:00", "返回香港", "過關後乘巴士返港。唔追尾班。", "深圳灣口岸", "深圳湾口岸 东滨路1号", "shenzhenBayPort"),
     ],
   },
 };
@@ -91,7 +92,7 @@ export const BANGKOK_MAP = {
   ],
 };
 
-function slot(kind, time, title, detail, area, maps) {
+function slot(kind, time, title, detail, area, maps, placeId) {
   return {
     id: `${time}-${title}`,
     kind,
@@ -100,6 +101,7 @@ function slot(kind, time, title, detail, area, maps) {
     detail,
     area,
     maps,
+    placeId,
     tag: kind === "food" ? "美食" : "景點",
   };
 }
@@ -520,6 +522,7 @@ export function slotsToItineraryItems(slots) {
     note: s.detail,
     area: s.area,
     maps: s.maps,
+    placeId: s.placeId,
     kind: s.kind,
   }));
 }
@@ -555,9 +558,12 @@ const AREA_ZONE_HINTS = [
   ["Siam", "siam"],
   ["Chong Nonsi", "chong"],
   ["海上世界", "seaworld"],
+  ["東角頭", "dongjiaotou"],
+  ["石雲", "dongjiaotou"],
   ["蛇口", "shekou"],
   ["桂灣", "guiwan"],
   ["前海", "guiwan"],
+  ["壹方匯", "guiwan"],
   ["壹方城", "guiwan"],
   ["深圳灣", "border"],
 ];
@@ -570,30 +576,65 @@ function zoneIdForArea(area, fallbackZoneId, zones) {
   return direct?.id || fallbackZoneId;
 }
 
-/** 將當日行程變成地圖標記（頁內顯示，唔使跳轉） */
+function resolveSlotPlace(trip, slot) {
+  if (slot?.placeId) {
+    const catalog = getQianhaiPlace(slot.placeId);
+    if (catalog) return catalog;
+  }
+  if (isFiniteNumber(slot?.lat) && isFiniteNumber(slot?.lng)) {
+    return {
+      lat: slot.lat,
+      lng: slot.lng,
+      address: slot.area,
+      mapsQuery: slot.maps,
+      officialName: slot.title,
+    };
+  }
+  return null;
+}
+
+function isFiniteNumber(value) {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+/** 將當日行程變成地圖標記。有核實坐標先落針；唔再亂偏移，亦唔會跌去大阪預設。 */
 export function markersForDayPlan(trip, dayPlan) {
   if (!dayPlan?.slots?.length) return [];
   const config = mapConfigForTrip(trip, dayPlan.zone);
   const zones = config.zones || [];
-  const fallback = zones.find((z) => z.id === dayPlan.zone) || zones[0];
-  const baseLat = config.lat ?? fallback?.lat ?? 34.6819;
-  const baseLng = config.lng ?? fallback?.lng ?? 135.5068;
+  const qianhai = isQianhaiTrip(trip);
 
-  return dayPlan.slots.map((s, i) => {
-    const zoneId = zoneIdForArea(s.area, dayPlan.zone, zones);
-    const zone = zones.find((z) => z.id === zoneId) || fallback;
-    const lat = (zone?.lat ?? baseLat) + (i - 1.5) * 0.002;
-    const lng = (zone?.lng ?? baseLng) + (i % 2 === 0 ? 0.0015 : -0.0015);
-    return {
-      id: `${s.time}-${s.title}`,
-      lat,
-      lng,
-      time: s.time,
-      title: s.title,
-      detail: s.detail,
-      area: s.area,
-      kind: s.kind,
-      color: s.kind === "food" ? "#f97316" : "#0d9488",
-    };
-  });
+  return dayPlan.slots
+    .map((s) => {
+      const verified = resolveSlotPlace(trip, s);
+      let lat = verified?.lat;
+      let lng = verified?.lng;
+      let address = verified?.address || s.area;
+      let mapsQuery = verified?.mapsQuery || s.maps;
+
+      if (!isFiniteNumber(lat) || !isFiniteNumber(lng)) {
+        if (qianhai) return null;
+        const zoneId = zoneIdForArea(s.area, dayPlan.zone, zones);
+        const zone = zones.find((z) => z.id === zoneId) || zones.find((z) => z.id === dayPlan.zone) || zones[0];
+        if (!isFiniteNumber(zone?.lat) || !isFiniteNumber(zone?.lng)) return null;
+        lat = zone.lat;
+        lng = zone.lng;
+      }
+
+      if (qianhai && !inShenzhenBbox(lat, lng)) return null;
+
+      return {
+        id: `${s.time}-${s.title}`,
+        lat,
+        lng,
+        time: s.time,
+        title: s.title,
+        detail: s.detail,
+        area: address,
+        mapsQuery,
+        kind: s.kind,
+        color: s.kind === "food" ? "#f97316" : "#0d9488",
+      };
+    })
+    .filter(Boolean);
 }
