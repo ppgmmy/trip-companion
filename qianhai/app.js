@@ -16,7 +16,7 @@
   const DEFAULT_BUDGET_CNY = 2500;
   const RATE_TTL_MS = 12 * 60 * 60 * 1000;
   const WEEKDAY_LABELS = ["日", "一", "二", "三", "四", "五", "六"];
-  const ITINERARY_VERSION = 1;
+  const ITINERARY_VERSION = 2;
 
   const EXPENSE_CATEGORIES = [
     { id: "breakfast", label: "早餐", note: "早餐" },
@@ -50,8 +50,8 @@
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
   }
 
-  function item(time, title, detail, tag, zone, mapsQuery) {
-    return { time, title, detail, tag, zone, mapsQuery };
+  function item(time, title, detail, tag, zone, mapsQuery, place) {
+    return { time, title, detail, tag, zone, mapsQuery, place };
   }
 
   const PLACES = [
@@ -219,7 +219,8 @@
           "酒店最早入住時間係 08:00。趕得及過關就可以直接入房放行李，唔使喺桂灣等晚上先住。",
           "住宿",
           "near",
-          "海底世界 Rany Hotel 海上世界 蛇口"
+          "海底世界 Rany Hotel 海上世界 蛇口",
+          "蛇口海上世界 · 海底世界 Rany Hotel"
         ),
         item(
           "08:30",
@@ -227,7 +228,8 @@
           "港深西部通道直達深圳灣。預留上車同入閘時間；口岸唔係 24 小時。出閘後的士／網約去海上世界，唔係先入桂灣酒店。",
           "交通",
           "near",
-          "深圳灣口岸巴士"
+          "深圳灣口岸巴士",
+          "各區深圳灣口岸巴士"
         ),
         item(
           "09:30",
@@ -235,6 +237,7 @@
           "備妥回鄉證／通行證。出閘後跟旅客指示往的士或網約，報「海上世界海底世界 Rany Hotel」。",
           "交通",
           "near",
+          "深圳灣口岸",
           "深圳灣口岸"
         ),
         item(
@@ -243,7 +246,8 @@
           "最早 08:00 已可入住；遲到都係呢間。先放行李，再決定行商場定休息。",
           "住宿",
           "near",
-          "海底世界 Rany Hotel 海上世界 蛇口"
+          "海底世界 Rany Hotel 海上世界 蛇口",
+          "海底世界 Rany Hotel"
         ),
         item(
           "12:30",
@@ -251,7 +255,8 @@
           "酒店附近商場同食街選擇多。先確認微信／支付寶。",
           "美食",
           "near",
-          "海上世界食街 蛇口 深圳"
+          "海上世界食街 蛇口 深圳",
+          "海上世界食肆（自選）"
         ),
         item(
           "15:00",
@@ -259,7 +264,8 @@
           "酒店出街即到。想行商場就茂業天地；想行園可睇深圳海洋世界。前海留畀第二日。",
           "景點",
           "near",
-          "海上世界廣場 蛇口 深圳"
+          "海上世界廣場 蛇口 深圳",
+          "海上世界廣場／女媧像"
         ),
         item(
           "18:30",
@@ -267,7 +273,8 @@
           "返海上世界食晚餐同過夜。記下酒店中文地址，方便之後來回前海。",
           "美食",
           "near",
-          "海底世界 Rany Hotel 海上世界 蛇口"
+          "海底世界 Rany Hotel 海上世界 蛇口",
+          "海底世界 Rany Hotel"
         ),
       ],
     },
@@ -282,7 +289,8 @@
           "基地仍係 Rany Hotel。地鐵或的士去桂灣。景點睇前海石公園，購物以壹方城 Uniwalk 為主。行李留喺酒店。",
           "交通",
           "expedition",
-          "前海桂灣 深圳"
+          "前海桂灣 深圳",
+          "蛇口海上世界 → 桂灣"
         ),
         item(
           "10:30",
@@ -290,7 +298,8 @@
           "散步為主，合作區範圍大，唔好當一個商場行得完。",
           "景點",
           "expedition",
-          "前海石公園 深圳"
+          "前海石公園 深圳",
+          "前海石公園"
         ),
         item(
           "12:30",
@@ -298,7 +307,8 @@
           "壹方城、嘉里中心食樓選擇穩定。",
           "美食",
           "expedition",
-          "前海壹方城 美食 深圳"
+          "前海壹方城 美食 深圳",
+          "前海商場食樓（自選）"
         ),
         item(
           "15:00",
@@ -306,7 +316,8 @@
           "未去壹方城可轉嘉里中心。同一日唔使兩個商場都行完。傍晚預留時間返海上世界食飯。",
           "購物",
           "expedition",
-          "前海嘉里中心 深圳"
+          "前海嘉里中心 深圳",
+          "前海合作區"
         ),
         item(
           "18:30",
@@ -314,7 +325,8 @@
           "回酒店過夜。唔係住桂灣。",
           "交通",
           "near",
-          "海底世界 Rany Hotel 海上世界 蛇口"
+          "海底世界 Rany Hotel 海上世界 蛇口",
+          "海底世界 Rany Hotel"
         ),
       ],
     },
@@ -329,7 +341,8 @@
           "辦理退房。如要行多一陣海上世界，可先寄行李（視酒店當日安排）。",
           "住宿",
           "near",
-          "海底世界 Rany Hotel 海上世界 蛇口"
+          "海底世界 Rany Hotel 海上世界 蛇口",
+          "海底世界 Rany Hotel"
         ),
         item(
           "12:00",
@@ -337,23 +350,26 @@
           "回程前進食，避免過關前後捱餓。海上世界或蛇口都得。",
           "美食",
           "near",
-          "海上世界食街 蛇口 深圳"
+          "海上世界食街 蛇口 深圳",
+          "海上世界或蛇口"
         ),
         item(
           "14:00",
-          "前往口岸",
-          "由海上世界的士或網約返深圳灣。蛇口船班係備選，需另查當日時間。",
+          "前往深圳灣口岸",
+          "由海上世界的士或網約返深圳灣口岸。蛇口船班係備選，需另查當日時間。",
           "交通",
           "near",
-          "深圳灣口岸"
+          "深圳灣口岸",
+          "海上世界 → 深圳灣口岸"
         ),
         item(
           "15:30",
-          "回程過關",
+          "回程過關：深圳灣口岸",
           "深圳灣唔係 24 小時。預留最少 60–90 分鐘過關加接駁，對住巴士尾班。",
           "交通",
           "near",
-          "深圳灣口岸"
+          "深圳灣口岸",
+          "深圳灣口岸 → 香港"
         ),
         item(
           "17:00",
@@ -361,6 +377,7 @@
           "過關後乘巴士返港。",
           "交通",
           "near",
+          "深圳灣口岸巴士",
           "深圳灣口岸巴士"
         ),
       ],
@@ -525,6 +542,7 @@
             tag: entry.tag || "",
             zone: entry.zone === "expedition" ? "expedition" : "near",
             mapsQuery: entry.mapsQuery || "",
+            place: entry.place || "",
           }))
         : [],
     }));
@@ -655,6 +673,7 @@
                 </div>
               </div>
               <h4 class="font-display text-base font-bold text-ink">${escapeHtml(entry.title)}</h4>
+              ${entry.place ? `<p class="mt-0.5 text-xs font-semibold text-jade-700">${escapeHtml(entry.place)}</p>` : ""}
               <p class="mt-1 text-sm leading-relaxed text-ink-soft">${escapeHtml(entry.detail)}</p>
               ${mapButton(entry.mapsQuery)}
             </div>
