@@ -75,6 +75,8 @@ export const QIANHAI_DAY_ITINERARY = {
     { id: "qh-1012-2000", time: "20:00", text: "🍜 可選：嘉華小吃（石雲路店）· 酒店樓下（唔鎖鐘點）", placeId: "jiahuaSnackShiyun" },
   ],
   "2026-10-13": [
+    { id: "qh-1013-0730", time: "07:30", text: "🍜 嘉華小吃（石雲路店）· 早餐（實際紀錄；唔鎖鐘點）", placeId: "jiahuaSnackShiyun" },
+    { id: "qh-1013-0800", time: "08:00", text: "☕ 瑞幸咖啡（萬科蛇口公館店）· 拎咖啡返酒店（唔鎖鐘點）", placeId: "luckinCoffeeVanke" },
     { id: "qh-1013-0900", time: "09:00", text: "🏨 RANY 退房 · 兩日一夜，行李一齊帶走或先寄一陣", placeId: "hotel" },
     { id: "qh-1013-0930", time: "09:30", text: "出發去前海桂灣（地鐵／的士）", placeId: "guiwanStation" },
     { id: "qh-1013-1030", time: "10:30", text: "📍 前海石公園散步（前海大道／金岸中街）", placeId: "stonePark" },
@@ -130,7 +132,15 @@ export const QIANHAI_NEARBY_SPOTS = [
     time: "20:00",
     type: "food",
     badges: ["again", "value"],
-    note: "酒店樓下／石雲路店（註冊石云路10號一帶）。本地小吃；今晚約 20:00 可去，唔鎖鐘點。唔好導航去漁村路市場店。",
+    note: "酒店樓下／石雲路店（註冊石云路10號一帶）。本地小吃。2026-10-12 晚可選；2026-10-13 朝已食早餐（實際紀錄）。唔鎖鐘點。唔好導航去漁村路市場店。",
+  }),
+  footprintFromPlace("luckinCoffeeVanke", {
+    id: "qh-fp-luckin-vanke",
+    dayId: "2026-10-13",
+    time: "08:00",
+    type: "food",
+    badges: ["again", "value"],
+    note: "灣廈路72號萬科蛇口公館，距 RANY／嘉華約 500m。2026-10-13 朝嘉華早餐後拎咖啡返酒店（實際紀錄）。附近咖啡、唔鎖鐘點。",
   }),
   footprintFromPlace("liXiaotaiBbq", {
     id: "qh-fp-lixiaotai",
