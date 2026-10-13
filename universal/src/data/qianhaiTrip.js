@@ -81,7 +81,10 @@ export const QIANHAI_DAY_ITINERARY = {
     { id: "qh-1013-0930", time: "09:30", text: "出發去前海桂灣（地鐵／的士）", placeId: "guiwanStation" },
     { id: "qh-1013-1030", time: "10:30", text: "📍 前海石公園散步（前海大道／金岸中街）", placeId: "stonePark" },
     { id: "qh-1013-1230", time: "12:30", text: "🍜 午餐 · 前海壹方匯食樓（聽海大道5059號）", placeId: "uniwalkHui" },
+    { id: "qh-1013-1300", time: "13:00", text: "🏨 返酒店（實際紀錄 13:00）", placeId: "hotel" },
     { id: "qh-1013-1430", time: "14:30", text: "🛍️ 壹方匯／嘉里短暫走動（唔好去寶安壹方城）", placeId: "uniwalkHui" },
+    { id: "qh-1013-1500", time: "15:00", text: "🛍️ C 品牌袋 · 消費 ¥79（實際紀錄；唔鎖鐘點）", placeId: "hotel" },
+    { id: "qh-1013-1530", time: "15:30", text: "🍜 我杯茶（深圳湾万象城二期一楼）· 消費 ¥244（實際紀錄；唔鎖鐘點）", placeId: "woBeiChaMixc" },
     { id: "qh-1013-1600", time: "16:00", text: "前往深圳灣口岸（東濱路1號，唔好當步行）", placeId: "shenzhenBayPort" },
     { id: "qh-1013-1700", time: "17:00", text: "回程過關：深圳灣口岸 → 香港（預留 60–90 分鐘）", placeId: "shenzhenBayPort" },
     { id: "qh-1013-1800", time: "18:00", text: "過關後乘巴士返港 · 唔追尾班", placeId: "shenzhenBayPort" },
@@ -142,6 +145,30 @@ export const QIANHAI_NEARBY_SPOTS = [
     badges: ["again", "value"],
     note: "灣廈路72號萬科蛇口公館，距 RANY／嘉華約 500m。2026-10-13 朝嘉華早餐後拎咖啡返酒店（實際紀錄）。附近咖啡、唔鎖鐘點。",
   }),
+  footprintFromPlace("woBeiChaMixc", {
+    id: "qh-fp-wobeicha-mixc",
+    dayId: "2026-10-13",
+    time: "15:30",
+    type: "food",
+    badges: ["again", "value"],
+    note: "深圳湾万象城二期一楼港式。2026-10-13 行完街後到訪；消費 ¥244（實際紀錄，開支分頁可睇）。商場針科苑南路2888號／OSM 萬象城。唔鎖鐘點。",
+  }),
+  {
+    id: "qh-fp-c-bag-79",
+    dayId: "2026-10-13",
+    time: "15:00",
+    type: "shop",
+    name: "C 品牌袋",
+    area: "購物（實際紀錄）",
+    note: "2026-10-13 買 C 品牌袋 · 消費 ¥79（實際紀錄，開支分頁可睇）。",
+    address: "",
+    lat: 22.49043,
+    lng: 113.92248,
+    mapsQuery: "RANY芮汐酒店 石云路25号",
+    placeId: "hotel",
+    rating: 0,
+    badges: ["value"],
+  },
   footprintFromPlace("liXiaotaiBbq", {
     id: "qh-fp-lixiaotai",
     dayId: "2026-10-12",
@@ -288,6 +315,79 @@ footprintFromPlace("seaWorldPlaza", {
     note: "東濱路1號。來回酒店都坐車。報「石雲路25號 RANY芮汐酒店」。",
   }),
 ];
+
+
+/** 前海旅程種子開支（實際口述紀錄）；開支分頁可見 */
+export const QIANHAI_SEEDED_EXPENSES = [
+  {
+    id: "qh-exp-1013-c-bag",
+    categoryId: "shopping",
+    amount: 79,
+    baseAmount: 92.43,
+    storedRate: 1.17,
+    note: "C 品牌袋 · ¥79",
+    date: "2026-10-13",
+    payer: "ppg",
+    paymentMethod: "cash",
+    createdAt: 1760328000000,
+    seeded: true,
+  },
+  {
+    id: "qh-exp-1013-wobeicha",
+    categoryId: "food",
+    amount: 244,
+    baseAmount: 285.48,
+    storedRate: 1.17,
+    note: "我杯茶（深圳湾万象城）· ¥244",
+    date: "2026-10-13",
+    payer: "ppg",
+    paymentMethod: "cash",
+    createdAt: 1760335200000,
+    seeded: true,
+  },
+];
+
+export function isQianhaiSeedExpense(entry) {
+  return typeof entry?.id === "string" && entry.id.startsWith("qh-exp-");
+}
+
+export function mergeQianhaiExpenses(existingExpenses = []) {
+  const list = Array.isArray(existingExpenses) ? [...existingExpenses] : [];
+  const indexById = new Map(list.map((e, i) => [e.id, i]));
+  let changed = false;
+  QIANHAI_SEEDED_EXPENSES.forEach((entry) => {
+    const at = indexById.get(entry.id);
+    if (at == null) {
+      list.push({ ...entry });
+      indexById.set(entry.id, list.length - 1);
+      changed = true;
+      return;
+    }
+    const prev = list[at];
+    // Only refresh seed fields; keep user payment tweaks if they cleared seeded flag by edit? Always sync amount/note/date for seed ids.
+    const next = {
+      ...prev,
+      categoryId: entry.categoryId,
+      amount: entry.amount,
+      baseAmount: entry.baseAmount,
+      storedRate: entry.storedRate,
+      note: entry.note,
+      date: entry.date,
+      seeded: true,
+      createdAt: prev.createdAt || entry.createdAt,
+    };
+    if (
+      prev.categoryId !== next.categoryId ||
+      Number(prev.amount) !== Number(next.amount) ||
+      prev.note !== next.note ||
+      prev.date !== next.date
+    ) {
+      list[at] = next;
+      changed = true;
+    }
+  });
+  return { expenses: list, changed };
+}
 
 export function isQianhaiSeedFootprint(spot) {
   if (!spot) return false;

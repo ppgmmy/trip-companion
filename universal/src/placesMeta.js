@@ -48,6 +48,7 @@ const CITY_GUIDES = [
       qianhaiPlace("fanlou", "美食", "RANY 石雲路口對面一帶。粵菜／點心；返酒店就近醫肚。"),
       qianhaiPlace("jiahuaSnackShiyun", "美食", "酒店樓下／石雲路店。本地小吃；唔好導航去漁村路市場店。2026-10-13 朝已食早餐。"),
       qianhaiPlace("luckinCoffeeVanke", "Cafe", "灣廈路萬科蛇口公館店。酒店／嘉華附近最近瑞幸；拎咖啡返酒店。"),
+      qianhaiPlace("woBeiChaMixc", "美食", "深圳湾万象城二期一楼港式。2026-10-13 已食／消費 ¥244（實際紀錄）。"),
       qianhaiPlace("stonePark", "戶外", "前海大道與金岸中街。Day 2 散步為主。"),
       qianhaiPlace("uniwalkHui", "室內", "聽海大道5059號桂灣商場。唔好去寶安中心壹方城。"),
       qianhaiPlace("kerry", "購物", "桂灣四路99號，同石公園一街之隔。"),
