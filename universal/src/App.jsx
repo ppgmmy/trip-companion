@@ -16,6 +16,7 @@ import {
   findQianhaiTrip,
   isQianhaiTrip,
   mergeQianhaiDayItinerary,
+  mergeQianhaiExpenses,
   mergeQianhaiNearbySpots,
   QIANHAI_HOTEL,
   QIANHAI_SEED_FLAG,
@@ -201,26 +202,31 @@ export default function App() {
     });
   }, [trips, tripId, setItinerary, setSpots]);
 
-  // 前海旅程種入兩日一夜行程同附近足跡
+  // 前海旅程種入兩日一夜行程、附近足跡同實際開支紀錄
   useEffect(() => {
     if (!Array.isArray(trips) || trips.length === 0) return;
     trips.filter(isQianhaiTrip).forEach((trip) => {
       try {
         const itinKey = tripKey(trip.id, TRIP_SECTIONS.itinerary);
         const spotsKey = tripKey(trip.id, TRIP_SECTIONS.spots);
+        const expKey = tripKey(trip.id, TRIP_SECTIONS.expenses);
         const rawItin = JSON.parse(localStorage.getItem(itinKey) || "{}");
         const rawSpots = JSON.parse(localStorage.getItem(spotsKey) || "[]");
+        const rawExp = JSON.parse(localStorage.getItem(expKey) || "[]");
         const itin = mergeQianhaiDayItinerary(rawItin && typeof rawItin === "object" ? rawItin : {});
         const near = mergeQianhaiNearbySpots(Array.isArray(rawSpots) ? rawSpots : []);
+        const exp = mergeQianhaiExpenses(Array.isArray(rawExp) ? rawExp : []);
         if (itin.changed) localStorage.setItem(itinKey, JSON.stringify(itin.itinerary));
         if (near.changed) localStorage.setItem(spotsKey, JSON.stringify(near.spots));
+        if (exp.changed) localStorage.setItem(expKey, JSON.stringify(exp.expenses));
         if (trip.id === tripId) {
           if (itin.changed) setItinerary(itin.itinerary);
           if (near.changed) setSpots(near.spots);
+          if (exp.changed) setExpenses(exp.expenses);
         }
       } catch {}
     });
-  }, [trips, tripId, setItinerary, setSpots]);
+  }, [trips, tripId, setItinerary, setSpots, setExpenses]);
 
   const osakaTrip = useMemo(() => findOsakaTrip(trips), [trips]);
   const qianhaiTrip = useMemo(() => findQianhaiTrip(trips), [trips]);

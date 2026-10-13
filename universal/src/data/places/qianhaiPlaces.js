@@ -15,7 +15,7 @@ export const SHENZHEN_BBOX = {
   maxLng: 114.65,
 };
 
-export const QIANHAI_PLACE_SEED_VERSION = "qianhai-places-v16-2026-10-13-luckin";
+export const QIANHAI_PLACE_SEED_VERSION = "qianhai-places-v17-2026-10-13-wobeicha-spend";
 
 /** @typedef {{ id: string, name: string, officialName: string, address: string, lat: number, lng: number, mapsQuery: string, zone: string, source: string, note?: string }} VerifiedPlace */
 
@@ -244,6 +244,19 @@ export const QIANHAI_PLACES = {
     source: "OSM node/13290050816 湾厦路 22.491199,113.9276739 brand=瑞幸/Luckin; Dianping shop/1726890392 湾厦路72 万科蛇口公馆店; 万科蛇口公馆 OSM way/903452928 附近。距 RANY 石雲路25號約 540m，嘉華小吃（石雲路10號）早餐後步行可到。",
     note: "酒店／東角頭最近瑞幸（灣廈路萬科蛇口公館）。嘉華小吃食完行過去拎咖啡再返石雲路；唔鎖鐘點。",
   },
+
+  woBeiChaMixc: {
+    id: "woBeiChaMixc",
+    name: "我杯茶（深圳湾万象城店）",
+    officialName: "我杯茶(深圳湾万象城店)",
+    address: "广东省深圳市南山区后海科苑南路2888号深圳湾万象城二期一楼",
+    lat: 22.5179038,
+    lng: 113.9389111,
+    mapsQuery: "我杯茶 深圳湾万象城二期一楼 科苑南路2888号",
+    zone: "houhai",
+    source: "旅客確認 2026-10-13 到訪＋消費 ¥244；去哪儿 UGC：深圳湾万象城二期一楼港式；商場針 OSM relation/19692109 深圳湾万象城 22.5179038,113.9389111（登良路／科苑南路一帶）。舖位針＝商場中心，唔另造偏移。",
+    note: "後海深圳湾万象城二期一楼港式茶餐廳／小吃。商場地址科苑南路2888號；地圖針貼商場（已核實），入商場搵二期一樓。2026-10-13 已食／消費 ¥244（實際紀錄）。唔鎖鐘點。",
+  },
   liXiaotaiBbq: {
     id: "liXiaotaiBbq",
     name: "李小太燒烤（海上世界）",
@@ -323,6 +336,7 @@ export const QIANHAI_ZONE_CENTERS = {
   seaworld: { id: "seaworld", label: "海上世界", lat: 22.486343, lng: 113.91193, color: "#0369a1" },
   dongjiaotou: { id: "dongjiaotou", label: "東角頭／酒店", lat: 22.49043, lng: 113.92248, color: "#0284c7" },
   shekou: { id: "shekou", label: "蛇口", lat: 22.488845, lng: 113.922432, color: "#0ea5e9" },
+  houhai: { id: "houhai", label: "後海／深圳湾万象城", lat: 22.5179038, lng: 113.9389111, color: "#8b5cf6" },
   guiwan: { id: "guiwan", label: "前海桂灣", lat: 22.532102, lng: 113.891836, color: "#f59e0b" },
   border: { id: "border", label: "深圳灣口岸", lat: 22.506033, lng: 113.945354, color: "#14b8a6" },
 };
