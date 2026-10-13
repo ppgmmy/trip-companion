@@ -15,7 +15,7 @@ export const SHENZHEN_BBOX = {
   maxLng: 114.65,
 };
 
-export const QIANHAI_PLACE_SEED_VERSION = "qianhai-places-v17-2026-10-13-wobeicha-spend";
+export const QIANHAI_PLACE_SEED_VERSION = "qianhai-places-v18-2026-10-13-daylog";
 
 /** @typedef {{ id: string, name: string, officialName: string, address: string, lat: number, lng: number, mapsQuery: string, zone: string, source: string, note?: string }} VerifiedPlace */
 
