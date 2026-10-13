@@ -15,7 +15,7 @@ export const SHENZHEN_BBOX = {
   maxLng: 114.65,
 };
 
-export const QIANHAI_PLACE_SEED_VERSION = "qianhai-places-v19-2026-10-13-bread";
+export const QIANHAI_PLACE_SEED_VERSION = "qianhai-places-v20-2026-10-13-no-itin-prices";
 
 /** @typedef {{ id: string, name: string, officialName: string, address: string, lat: number, lng: number, mapsQuery: string, zone: string, source: string, note?: string }} VerifiedPlace */
 
@@ -255,7 +255,7 @@ export const QIANHAI_PLACES = {
     mapsQuery: "我杯茶 深圳湾万象城二期一楼 科苑南路2888号",
     zone: "houhai",
     source: "旅客確認 2026-10-13 到訪＋消費 ¥244；去哪儿 UGC：深圳湾万象城二期一楼港式；商場針 OSM relation/19692109 深圳湾万象城 22.5179038,113.9389111（登良路／科苑南路一帶）。舖位針＝商場中心，唔另造偏移。",
-    note: "後海深圳湾万象城二期一楼港式茶餐廳／小吃。商場地址科苑南路2888號；地圖針貼商場（已核實），入商場搵二期一樓。2026-10-13 已食／消費 ¥244（實際紀錄）。唔鎖鐘點。",
+    note: "後海深圳湾万象城二期一楼港式茶餐廳／小吃。商場地址科苑南路2888號；地圖針貼商場（已核實），入商場搵二期一樓。2026-10-13 已食（實際紀錄；價錢睇開支分頁）。唔鎖鐘點。",
   },
   liXiaotaiBbq: {
     id: "liXiaotaiBbq",
