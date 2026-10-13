@@ -82,7 +82,7 @@ export const QIANHAI_DAY_ITINERARY = {
     { id: "qh-1013-1030", time: "10:30", text: "可選：📍 前海石公園散步（前海大道／金岸中街）", placeId: "stonePark" },
     { id: "qh-1013-1230", time: "12:30", text: "可選：🍜 壹方匯食樓（聽海大道5059號）", placeId: "uniwalkHui" },
     { id: "qh-1013-1300", time: "13:00", text: "🏨 返酒店（實際紀錄 13:00）", placeId: "hotel" },
-    { id: "qh-1013-1500", time: "15:00", text: "🛍️ C 品牌袋 · 消費 ¥79（實際紀錄；唔鎖鐘點）", placeId: "hotel" },
+    { id: "qh-1013-1500", time: "15:00", text: "🍞 C 面包 · 消費 ¥79（實際紀錄；唔鎖鐘點）", placeId: "hotel" },
     { id: "qh-1013-1515", time: "15:15", text: "🚶 行咗好耐 → 深圳湾万象城一帶（實際紀錄；唔鎖鐘點）", placeId: "woBeiChaMixc" },
     { id: "qh-1013-1530", time: "15:30", text: "🍜 我杯茶（深圳湾万象城二期一楼）· 晚餐／消費 ¥244（實際紀錄；唔鎖鐘點）", placeId: "woBeiChaMixc" },
     { id: "qh-1013-1600", time: "16:00", text: "可選：前往深圳灣口岸（東濱路1號，唔好當步行）", placeId: "shenzhenBayPort" },
@@ -157,10 +157,10 @@ export const QIANHAI_NEARBY_SPOTS = [
     id: "qh-fp-c-bag-79",
     dayId: "2026-10-13",
     time: "15:00",
-    type: "shop",
-    name: "C 品牌袋",
-    area: "購物（實際紀錄）",
-    note: "2026-10-13 買 C 品牌袋 · 消費 ¥79（實際紀錄，開支分頁可睇）。其後長途步行去万象城我杯茶。",
+    type: "food",
+    name: "C 面包",
+    area: "餐飲（實際紀錄）",
+    note: "2026-10-13 買面包 · 消費 ¥79（實際紀錄，開支分頁可睇；原「c 買包」＝面包）。其後長途步行去万象城我杯茶。",
     address: "",
     lat: 22.49043,
     lng: 113.92248,
@@ -267,7 +267,7 @@ footprintFromPlace("seaWorldPlaza", {
     time: "12:30",
     type: "shop",
     badges: ["value"],
-    note: "聽海大道5059號，桂灣站 A2。Day 2 可選；唔好去寶安中心新湖路99號壹方城。實際主線：嘉華→瑞幸→13:00酒店→C袋→行街→我杯茶。",
+    note: "聽海大道5059號，桂灣站 A2。Day 2 可選；唔好去寶安中心新湖路99號壹方城。實際主線：嘉華→瑞幸→13:00酒店→C面包¥79→行街→我杯茶。",
   }),
   footprintFromPlace("kerry", {
     id: "qh-fp-kerry",
@@ -321,11 +321,11 @@ footprintFromPlace("seaWorldPlaza", {
 export const QIANHAI_SEEDED_EXPENSES = [
   {
     id: "qh-exp-1013-c-bag",
-    categoryId: "shopping",
+    categoryId: "food",
     amount: 79,
     baseAmount: 92.43,
     storedRate: 1.17,
-    note: "C 品牌袋 · ¥79",
+    note: "C 面包 · ¥79",
     date: "2026-10-13",
     payer: "ppg",
     paymentMethod: "cash",
@@ -469,6 +469,7 @@ export function mergeQianhaiNearbySpots(existingSpots = []) {
       prev.name !== nextSpot.name ||
       prev.note !== nextSpot.note ||
       prev.area !== nextSpot.area ||
+      prev.type !== nextSpot.type ||
       prev.time !== nextSpot.time ||
       prev.dayId !== nextSpot.dayId ||
       prev.address !== nextSpot.address ||
