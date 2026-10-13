@@ -15,7 +15,7 @@ export const SHENZHEN_BBOX = {
   maxLng: 114.65,
 };
 
-export const QIANHAI_PLACE_SEED_VERSION = "qianhai-places-v15-2026-10-12-jiahua-shiyun";
+export const QIANHAI_PLACE_SEED_VERSION = "qianhai-places-v16-2026-10-13-luckin";
 
 /** @typedef {{ id: string, name: string, officialName: string, address: string, lat: number, lng: number, mapsQuery: string, zone: string, source: string, note?: string }} VerifiedPlace */
 
@@ -230,7 +230,19 @@ export const QIANHAI_PLACES = {
     mapsQuery: "嘉华小吃 石云路店 石云路10号 蛇口",
     zone: "dongjiaotou",
     source: "旅客確認 2026-10-12 酒店樓下／石雲路店晚餐；工商註冊「嘉华潮乡里餐饮店」石云路10号（海滨社区）；針貼 RANY 石雲路25號一帶（hotel 同座標，樓下）。唔好用漁村路「嘉华小吃(蛇口市场店)」Amap B02F38JDXH 22.485825,113.927975——嗰間偏東，係同品牌唔同舖。",
-    note: "酒店樓下／石雲路本地小吃。同漁村路市場店可能係同品牌唔同舖；導航認石雲路／RANY 樓下，唔好去漁村路。今晚約 20:00 可去（唔鎖鐘點）。",
+    note: "酒店樓下／石雲路本地小吃。同漁村路市場店可能係同品牌唔同舖；導航認石雲路／RANY 樓下，唔好去漁村路。2026-10-12 晚可選晚餐；2026-10-13 朝已食早餐（實際紀錄）。唔鎖鐘點。",
+  },
+  luckinCoffeeVanke: {
+    id: "luckinCoffeeVanke",
+    name: "瑞幸咖啡（萬科蛇口公館店）",
+    officialName: "瑞幸咖啡(万科蛇口公馆店)",
+    address: "广东省深圳市南山区湾厦路72号（万科蛇口公馆）",
+    lat: 22.491199,
+    lng: 113.9276739,
+    mapsQuery: "瑞幸咖啡 万科蛇口公馆店 湾厦路72号",
+    zone: "dongjiaotou",
+    source: "OSM node/13290050816 湾厦路 22.491199,113.9276739 brand=瑞幸/Luckin; Dianping shop/1726890392 湾厦路72 万科蛇口公馆店; 万科蛇口公馆 OSM way/903452928 附近。距 RANY 石雲路25號約 540m，嘉華小吃（石雲路10號）早餐後步行可到。",
+    note: "酒店／東角頭最近瑞幸（灣廈路萬科蛇口公館）。嘉華小吃食完行過去拎咖啡再返石雲路；唔鎖鐘點。",
   },
   liXiaotaiBbq: {
     id: "liXiaotaiBbq",
