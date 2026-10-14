@@ -62,9 +62,10 @@
     "filtered-day-avg-per-entry",
     "filtered-day-category-leader",
     "filtered-day-payment-chips",
-    "filtered-day-weekday-benchmark"
+    "filtered-day-weekday-benchmark",
+    "filtered-day-budget-result"
   ],
-  "updatedAt": "2026-10-13T17:32:18.979Z",
-  "lastFeatureId": "today-category-chips",
-  "lastTitle": "今日分類快篩"
+  "updatedAt": "2026-10-14T02:00:00.000Z",
+  "lastFeatureId": "filtered-day-budget-result",
+  "lastTitle": "篩選日預算達標"
 }

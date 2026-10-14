@@ -392,4 +392,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "日子快篩選中舊日時，對比該日使費同旅程其餘「同一星期幾」日均，秒懂係典型節奏定異常消費日。",
     pillar: "analysis",
   },
+  {
+    id: "filtered-day-budget-result",
+    title: "篩選日預算達標",
+    description: "日子快篩選中舊日時，顯示該日係咪喺當日建議上限內，兼截至該日連續收油日數，回顧邊啲日子守預算做得好。",
+    pillar: "stickiness",
+  },
 ];

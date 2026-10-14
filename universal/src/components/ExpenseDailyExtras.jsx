@@ -91,6 +91,26 @@ function underBudgetStreak(expenses, trip, budget) {
   return streak;
 }
 
+/** 截至 endDateId（含）向後數連續幾日喺當日建議上限內 */
+function underBudgetStreakThrough(expenses, trip, budget, endDateId) {
+  if (budget <= 0 || !endDateId) return 0;
+  const startDate = trip.startDate;
+  const tripEnd = trip.endDate || toDateId(new Date());
+  let cursor = endDateId;
+  if (cursor > tripEnd) cursor = tripEnd;
+  if (cursor < startDate) return 0;
+
+  let streak = 0;
+  while (cursor >= startDate) {
+    const status = underBudgetDayStatus(expenses, trip, budget, cursor);
+    if (!status) break;
+    if (!status.under) break;
+    streak += 1;
+    cursor = shiftDateId(cursor, -1);
+  }
+  return streak;
+}
+
 function weekBounds(offsetWeeks = 0) {
   const now = new Date();
   const day = (now.getDay() + 6) % 7; // Mon=0
@@ -4496,6 +4516,125 @@ export function FilteredDayPaymentChips({
           已篩選「{paymentMethodLabel(filterPaymentMethod)}」· 再撳一次取消
         </p>
       )}
+    </div>
+  );
+}
+
+export function FilteredDayBudgetResultPanel({ trip, expenses, filterDate, budget = 0 }) {
+  const todayId = toDateId(new Date());
+  const dayId = filterDate !== "all" && filterDate ? filterDate : null;
+
+  const stats = useMemo(() => {
+    if (budget <= 0 || !dayId || dayId === todayId) return null;
+    const tripStart = trip.startDate;
+    const tripEnd = trip.endDate || todayId;
+    if (dayId < tripStart || dayId > tripEnd) return null;
+
+    const status = underBudgetDayStatus(expenses, trip, budget, dayId);
+    if (!status) return null;
+
+    const streakThrough = underBudgetStreakThrough(expenses, trip, budget, dayId);
+    const usedPct =
+      status.allowance > 0 ? Math.min(100, Math.round((status.spent / status.allowance) * 100)) : null;
+    const count = expenses.filter((e) => e.date === dayId).length;
+
+    return { ...status, streakThrough, usedPct, count };
+  }, [budget, dayId, todayId, trip, expenses]);
+
+  if (!isFeatureEnabled("filtered-day-budget-result")) return null;
+  if (!stats) return null;
+
+  const { dateId, spent, allowance, under, delta, streakThrough, usedPct, count } = stats;
+
+  function dayHeading(dateId) {
+    const y = shiftDateId(todayId, -1);
+    if (dateId === y) return "昨日";
+    return `${formatShortDate(dateId)}（週${weekdayLabel(dateId)}）`;
+  }
+
+  const badgeLabel = under ? "預算內" : "超支日";
+  const badgeClass = under
+    ? "border-jade/25 bg-jade/10 text-jade-deep"
+    : "border-coral/30 bg-coral/10 text-coral";
+
+  let insight = under
+    ? `喺當日建議上限內，仲剩 ${formatMoney(delta, trip.targetCurrency)}`
+    : `超過當日建議上限 ${formatMoney(-delta, trip.targetCurrency)}`;
+  let insightClass = under ? "text-jade-deep" : "text-coral";
+  if (spent === 0 && count === 0) {
+    insight = "該日未有記帳，建議上限僅供對照";
+    insightClass = "text-ink-faint";
+  } else if (under && streakThrough >= 3) {
+    insight = `截至${dayHeading(dateId)}，連續 ${streakThrough} 日喺建議上限內 🎉`;
+    insightClass = "text-jade-deep";
+  } else if (under && streakThrough >= 2) {
+    insight = `連續第 ${streakThrough} 日守預算，保持節奏`;
+    insightClass = "text-jade";
+  } else if (!under && allowance > 0 && spent / allowance >= 1.35) {
+    insight = `使咗建議上限 ${usedPct}%，屬明顯超支日`;
+    insightClass = "text-coral";
+  }
+
+  const barPct = allowance > 0 ? Math.min(100, Math.max(6, usedPct ?? 0)) : 0;
+  const capPct =
+    allowance > 0 && spent > allowance
+      ? Math.min(100, Math.round((allowance / spent) * 100))
+      : barPct;
+
+  return (
+    <div className="rounded-2xl border border-jade/15 bg-gradient-to-br from-white to-[#ecfdf5]/70 px-3 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="mb-2 flex items-start justify-between gap-2">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">篩選日預算達標</p>
+          <p className="text-[11px] font-bold text-jade-deep">
+            {dayHeading(dateId)}
+            {count > 0 ? ` · ${count} 筆` : ""}
+          </p>
+        </div>
+        <span
+          className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide ${badgeClass}`}
+        >
+          {badgeLabel}
+        </span>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <p className="text-[10px] font-semibold text-ink-faint">當日建議上限</p>
+          <p className="font-display text-lg font-black text-ink">{formatMoney(allowance, trip.targetCurrency)}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-[10px] font-semibold text-ink-faint">實際使費</p>
+          <p className="font-display text-lg font-black text-ink">{formatMoney(spent, trip.targetCurrency)}</p>
+          {usedPct != null && spent > 0 && (
+            <p className={`text-[11px] font-bold ${under ? "text-jade" : "text-coral"}`}>
+              {under ? "仲剩" : "超出"} {formatMoney(Math.abs(delta), trip.targetCurrency)}
+              {usedPct != null ? ` · ${usedPct}%` : ""}
+            </p>
+          )}
+        </div>
+      </div>
+      {allowance > 0 && spent > 0 && (
+        <div className="mt-2.5">
+          <div className="flex items-center justify-between text-[9px] font-semibold text-ink-faint">
+            <span>已用 vs 建議上限</span>
+            <span>{usedPct}%</span>
+          </div>
+          <div className="relative mt-1 h-2 overflow-hidden rounded-full bg-[#efe9e0]">
+            <div
+              className={`h-full rounded-full ${under ? "bg-jade" : "bg-coral/90"}`}
+              style={{ width: `${under ? barPct : 100}%` }}
+            />
+            {!under && capPct < 100 && (
+              <div
+                className="absolute inset-y-0 left-0 rounded-full border-r-2 border-dashed border-jade/60 bg-jade/20"
+                style={{ width: `${capPct}%` }}
+                title="建議上限"
+              />
+            )}
+          </div>
+        </div>
+      )}
+      <p className={`mt-2 text-center text-[11px] font-semibold leading-snug ${insightClass}`}>{insight}</p>
     </div>
   );
 }
