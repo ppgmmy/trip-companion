@@ -584,16 +584,23 @@
     },
     {
       "date": "2026-10-14",
+      "id": "filtered-day-budget-result",
+      "title": "篩選日預算達標",
+      "description": "日子快篩選中舊日時，顯示該日係咪喺當日建議上限內，兼截至該日連續收油日數，回顧邊啲日子守預算做得好。"
+    },
+    {
+      "date": "2026-10-14",
       "id": "today-category-chips",
       "title": "今日分類快篩",
       "description": "記帳頁顯示今日各分類使費晶片，一撳即篩選該類支出，出街對帳更快。",
       "cycle": true
     },
     {
-      "date": "2026-10-14",
-      "id": "filtered-day-budget-result",
-      "title": "篩選日預算達標",
-      "description": "日子快篩選中舊日時，顯示該日係咪喺當日建議上限內，兼截至該日連續收油日數，回顧邊啲日子守預算做得好。"
+      "date": "2026-10-15",
+      "id": "ledger-daily-pulse",
+      "title": "記帳頁每日脈搏",
+      "description": "記帳頁頂部顯示今日 vs 昨日使費對比同記帳 streak，記帳時即刻掌握消費節奏。",
+      "cycle": true
     }
   ]
 }
