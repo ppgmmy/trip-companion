@@ -398,4 +398,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "日子快篩選中舊日時，顯示該日係咪喺當日建議上限內，兼截至該日連續收油日數，回顧邊啲日子守預算做得好。",
     pillar: "stickiness",
   },
+  {
+    id: "filtered-day-payer-chips",
+    title: "篩選日付款人快篩",
+    description: "日子快篩選中舊日時，顯示該日各付款人使費晶片，一撳即篩選該人支出，同行翻舊帳分帳更快。",
+    pillar: "convenience",
+  },
 ];

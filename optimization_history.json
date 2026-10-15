@@ -601,6 +601,12 @@
       "title": "記帳頁每日脈搏",
       "description": "記帳頁頂部顯示今日 vs 昨日使費對比同記帳 streak，記帳時即刻掌握消費節奏。",
       "cycle": true
+    },
+    {
+      "date": "2026-10-15",
+      "id": "filtered-day-payer-chips",
+      "title": "篩選日付款人快篩",
+      "description": "日子快篩選中舊日時，顯示該日各付款人使費晶片，一撳即篩選該人支出，同行翻舊帳分帳更快。"
     }
   ]
 }

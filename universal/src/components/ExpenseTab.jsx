@@ -63,6 +63,7 @@ import {
   FilteredDayAvgPerEntryPanel,
   FilteredDayCategoryLeaderPanel,
   FilteredDayPaymentChips,
+  FilteredDayPayerChips,
   FilteredDayWeekdayBenchmarkPanel,
   FilteredDayBudgetResultPanel,
 } from "./ExpenseDailyExtras";
@@ -1038,6 +1039,14 @@ export default function ExpenseTab({
               filterDate={filterDate}
               filterPaymentMethod={filterPaymentMethod}
               setFilterPaymentMethod={setFilterPaymentMethod}
+            />
+
+            <FilteredDayPayerChips
+              trip={trip}
+              expenses={expenses}
+              filterDate={filterDate}
+              filterPayer={filterPayer}
+              setFilterPayer={setFilterPayer}
             />
 
             <FilteredDayPrevComparePanel

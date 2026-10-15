@@ -63,9 +63,10 @@
     "filtered-day-category-leader",
     "filtered-day-payment-chips",
     "filtered-day-weekday-benchmark",
-    "filtered-day-budget-result"
+    "filtered-day-budget-result",
+    "filtered-day-payer-chips"
   ],
-  "updatedAt": "2026-10-14T17:58:19.823Z",
-  "lastFeatureId": "ledger-daily-pulse",
-  "lastTitle": "記帳頁每日脈搏"
+  "updatedAt": "2026-10-15T02:10:00.000Z",
+  "lastFeatureId": "filtered-day-payer-chips",
+  "lastTitle": "篩選日付款人快篩"
 }
