@@ -610,16 +610,23 @@
     },
     {
       "date": "2026-10-16",
+      "id": "filtered-day-seven-day-window",
+      "title": "篩選日 7 日走勢",
+      "description": "日子快篩選中舊日時，以該日為終點顯示近 7 日迷你走勢，對照前後消費節奏，回顧爆煲日更有上下文。"
+    },
+    {
+      "date": "2026-10-16",
       "id": "seven-day-logging-dots",
       "title": "近 7 日記帳圓點",
       "description": "七粒圓點顯示最近一週邊幾日有記帳，一眼睇記帳密度，唔使只靠連續 streak。",
       "cycle": true
     },
     {
-      "date": "2026-10-16",
-      "id": "filtered-day-seven-day-window",
-      "title": "篩選日 7 日走勢",
-      "description": "日子快篩選中舊日時，以該日為終點顯示近 7 日迷你走勢，對照前後消費節奏，回顧爆煲日更有上下文。"
+      "date": "2026-10-17",
+      "id": "today-entry-pace",
+      "title": "今日記帳節奏",
+      "description": "對比今日記帳筆數同旅程日均，兼顯示平均每筆使費，分辨細碎消費日同大單日。",
+      "cycle": true
     }
   ]
 }
