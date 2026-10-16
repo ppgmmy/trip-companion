@@ -1339,7 +1339,7 @@ function UnderBudgetStreakPanel({ trip, expenses, budget }) {
   );
 }
 
-function Sparkline({ values, dateIds, formatValue }) {
+function Sparkline({ values, dateIds, formatValue, lastPointLabel = "今日", lastAxisLabel = "今", avgLabel = "7 日" }) {
   const [activeIdx, setActiveIdx] = useState(null);
   const max = Math.max(...values, 1);
   const avg = values.reduce((s, v) => s + v, 0) / values.length;
@@ -1372,11 +1372,11 @@ function Sparkline({ values, dateIds, formatValue }) {
         <p className="text-sm font-bold text-ink">
           {formatValue(coords[focusIdx]?.v ?? 0)}
           <span className="ml-1.5 text-[11px] font-semibold text-ink-faint">
-            {focusIdx === values.length - 1 ? "今日" : shortLabel(dateIds[focusIdx])}
+            {focusIdx === values.length - 1 ? lastPointLabel : shortLabel(dateIds[focusIdx])}
           </span>
         </p>
         <p className={`text-[11px] font-semibold ${vsAvg > 0 ? "text-coral" : vsAvg < 0 ? "text-jade" : "text-ink-faint"}`}>
-          {vsAvg === 0 ? "同 7 日平均" : vsAvg > 0 ? `高於平均 ${formatValue(vsAvg)}` : `低於平均 ${formatValue(-vsAvg)}`}
+          {vsAvg === 0 ? `同 ${avgLabel}平均` : vsAvg > 0 ? `高於平均 ${formatValue(vsAvg)}` : `低於平均 ${formatValue(-vsAvg)}`}
         </p>
       </div>
       <svg viewBox={`0 0 ${w} ${h}`} className="h-16 w-full touch-manipulation" role="img" aria-label="近 7 日支出趨勢">
@@ -1411,13 +1411,13 @@ function Sparkline({ values, dateIds, formatValue }) {
             onClick={() => setActiveIdx(i === activeIdx ? null : i)}
             className={`min-h-8 rounded-lg py-0.5 transition ${i === focusIdx ? "bg-jade-soft font-bold text-jade-deep" : "hover:bg-shell"}`}
           >
-            <span className="block">{i === values.length - 1 ? "今" : shortLabel(id)}</span>
+            <span className="block">{i === values.length - 1 ? lastAxisLabel : shortLabel(id)}</span>
             <span className="block truncate text-[8px] opacity-80">{values[i] > 0 ? formatValue(values[i]).replace(/[^\d.,]/g, "").slice(0, 6) : "—"}</span>
           </button>
         ))}
       </div>
       <p className="mt-2 text-center text-[10px] text-ink-faint">
-        虛線 = 7 日平均 {formatValue(avg)} · 橙點 = 最高日
+        虛線 = {avgLabel}平均 {formatValue(avg)} · 橙點 = 最高日
       </p>
     </div>
   );
@@ -4874,6 +4874,81 @@ export function FilteredDayWeekdayBenchmarkPanel({ trip, expenses, filterDate })
         </div>
       </div>
       <p className={`mt-2 text-center text-[11px] font-semibold leading-snug ${insightClass}`}>{insight}</p>
+    </div>
+  );
+}
+
+export function FilteredDaySevenDayWindowPanel({ trip, expenses, filterDate }) {
+  const todayId = toDateId(new Date());
+  const dayId = filterDate !== "all" && filterDate ? filterDate : null;
+
+  const windowStats = useMemo(() => {
+    if (!dayId || dayId === todayId) return null;
+    const tripStart = trip.startDate;
+    const tripEnd = trip.endDate || todayId;
+    if (dayId < tripStart || dayId > tripEnd) return null;
+
+    const sparkDays = [];
+    for (let offset = 6; offset >= 0; offset -= 1) {
+      const dateId = shiftDateId(dayId, -offset);
+      if (dateId < tripStart) continue;
+      sparkDays.push({ dateId, value: sumByDate(expenses, dateId) });
+    }
+    if (!sparkDays.length) return null;
+
+    const values = sparkDays.map((d) => d.value);
+    const dateIds = sparkDays.map((d) => d.dateId);
+    const endVal = values[values.length - 1] ?? 0;
+    const avg = values.reduce((s, v) => s + v, 0) / values.length;
+    const peak = Math.max(...values, 0);
+    const peakIdx = values.indexOf(peak);
+    const hasAny = values.some((v) => v > 0);
+
+    return { sparkDays, values, dateIds, endVal, avg, peak, peakIdx, hasAny, dayId };
+  }, [dayId, todayId, trip, expenses]);
+
+  if (!isFeatureEnabled("filtered-day-seven-day-window")) return null;
+  if (!windowStats) return null;
+
+  const { values, dateIds, endVal, avg, peak, peakIdx, hasAny, dayId: dId } = windowStats;
+  if (!hasAny) return null;
+
+  const endLabel = `${formatShortDate(dId)}（週${weekdayLabel(dId)}）`;
+  const endAxis = formatShortDate(dId);
+
+  let caption = "窗口內使費平穩";
+  if (peak > 0 && peakIdx === values.length - 1) {
+    caption = `篩選日係窗口最高，使咗 ${formatMoney(peak, trip.targetCurrency)}`;
+  } else if (peak > 0) {
+    caption = `窗口最高係 ${formatShortDate(dateIds[peakIdx])}（${formatMoney(peak, trip.targetCurrency)}），篩選日 ${formatMoney(endVal, trip.targetCurrency)}`;
+  }
+
+  const windowLen = values.length;
+  const avgLabel = windowLen >= 7 ? "7 日" : `${windowLen} 日`;
+
+  return (
+    <div className="rounded-2xl border border-jade/15 bg-gradient-to-br from-white to-[#ecfdf5]/70 px-3 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="mb-2 flex items-baseline justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">篩選日前後走勢</p>
+        <p className="text-[11px] font-bold text-jade-deep">{endLabel}</p>
+      </div>
+      <p className="mb-2 text-[11px] font-semibold leading-snug text-ink-soft">{caption}</p>
+      <Sparkline
+        values={values}
+        dateIds={dateIds}
+        formatValue={(v) => formatMoney(v, trip.targetCurrency)}
+        lastPointLabel={endLabel}
+        lastAxisLabel={endAxis.length > 5 ? formatShortDate(dId).split("/").slice(-2).join("/") : endAxis}
+        avgLabel={avgLabel}
+      />
+      {endVal !== avg && (
+        <p className="mt-1 text-center text-[10px] font-semibold text-ink-faint">
+          篩選日
+          {endVal > avg
+            ? ` 高過窗口平均 ${formatMoney(endVal - avg, trip.targetCurrency)}`
+            : ` 低過窗口平均 ${formatMoney(avg - endVal, trip.targetCurrency)}`}
+        </p>
+      )}
     </div>
   );
 }

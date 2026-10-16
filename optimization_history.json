@@ -614,6 +614,12 @@
       "title": "近 7 日記帳圓點",
       "description": "七粒圓點顯示最近一週邊幾日有記帳，一眼睇記帳密度，唔使只靠連續 streak。",
       "cycle": true
+    },
+    {
+      "date": "2026-10-16",
+      "id": "filtered-day-seven-day-window",
+      "title": "篩選日 7 日走勢",
+      "description": "日子快篩選中舊日時，以該日為終點顯示近 7 日迷你走勢，對照前後消費節奏，回顧爆煲日更有上下文。"
     }
   ]
 }

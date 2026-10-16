@@ -404,4 +404,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "日子快篩選中舊日時，顯示該日各付款人使費晶片，一撳即篩選該人支出，同行翻舊帳分帳更快。",
     pillar: "convenience",
   },
+  {
+    id: "filtered-day-seven-day-window",
+    title: "篩選日 7 日走勢",
+    description: "日子快篩選中舊日時，以該日為終點顯示近 7 日迷你走勢，對照前後消費節奏，回顧爆煲日更有上下文。",
+    pillar: "analysis",
+  },
 ];
