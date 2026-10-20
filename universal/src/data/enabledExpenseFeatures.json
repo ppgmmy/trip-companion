@@ -67,7 +67,7 @@
     "filtered-day-payer-chips",
     "filtered-day-seven-day-window"
   ],
-  "updatedAt": "2026-10-19T16:55:56.777Z",
-  "lastFeatureId": "today-biggest-entry",
-  "lastTitle": "今日最大單筆"
+  "updatedAt": "2026-10-20T17:56:47.235Z",
+  "lastFeatureId": "today-vs-seven-day-avg",
+  "lastTitle": "今日 vs 近 7 日平均"
 }
