@@ -65,9 +65,10 @@
     "filtered-day-weekday-benchmark",
     "filtered-day-budget-result",
     "filtered-day-payer-chips",
-    "filtered-day-seven-day-window"
+    "filtered-day-seven-day-window",
+    "filtered-day-step-nav"
   ],
-  "updatedAt": "2026-10-20T17:56:47.235Z",
-  "lastFeatureId": "today-vs-seven-day-avg",
-  "lastTitle": "今日 vs 近 7 日平均"
+  "updatedAt": "2026-10-21T02:10:00.000Z",
+  "lastFeatureId": "filtered-day-step-nav",
+  "lastTitle": "篩選日左右切換"
 }

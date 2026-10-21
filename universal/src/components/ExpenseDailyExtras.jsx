@@ -3592,6 +3592,84 @@ export function TripDayQuickFilterPanel({ trip, expenses, filterDate, setFilterD
   );
 }
 
+export function FilteredDayStepNavPanel({ trip, expenses, filterDate, setFilterDate }) {
+  const todayId = toDateId(new Date());
+
+  const nav = useMemo(() => {
+    const dayId = filterDate !== "all" && filterDate ? filterDate : null;
+    if (!dayId) return null;
+
+    const ids = elapsedTripDateIds(trip);
+    const idx = ids.indexOf(dayId);
+    if (idx < 0) return null;
+
+    const prevId = idx > 0 ? ids[idx - 1] : null;
+    const nextId = idx < ids.length - 1 ? ids[idx + 1] : null;
+    const spent = sumByDate(expenses, dayId);
+    const count = expenses.filter((e) => e.date === dayId).length;
+
+    return { dayId, prevId, nextId, idx, total: ids.length, spent, count };
+  }, [trip, expenses, filterDate]);
+
+  if (!isFeatureEnabled("filtered-day-step-nav")) return null;
+  if (!nav || !setFilterDate) return null;
+
+  function labelForDay(dateId) {
+    if (dateId === todayId) return "今日";
+    const y = shiftDateId(todayId, -1);
+    if (dateId === y) return "昨日";
+    return `${formatShortDate(dateId)}（週${weekdayLabel(dateId)}）`;
+  }
+
+  function shortNavLabel(dateId) {
+    if (dateId === todayId) return "今日";
+    const y = shiftDateId(todayId, -1);
+    if (dateId === y) return "昨日";
+    const [, m, d] = dateId.split("-");
+    return `${Number(m)}/${Number(d)}`;
+  }
+
+  const stepBtnClass =
+    "flex min-h-11 min-w-[4.5rem] flex-col items-center justify-center rounded-xl border border-jade/15 bg-mist/80 px-2 py-1.5 text-xs font-bold transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-35";
+
+  return (
+    <div className="rounded-2xl border border-jade/10 bg-gradient-to-r from-white via-mist/40 to-white px-2 py-2 shadow-[var(--shadow-soft)]">
+      <div className="flex items-center gap-1.5">
+        <button
+          type="button"
+          disabled={!nav.prevId}
+          onClick={() => nav.prevId && setFilterDate(nav.prevId)}
+          className={stepBtnClass}
+          aria-label={nav.prevId ? `前一日 ${shortNavLabel(nav.prevId)}` : "已是旅程第一日"}
+        >
+          <span className="text-[10px] text-ink-faint">←</span>
+          <span className="text-jade-deep">{nav.prevId ? shortNavLabel(nav.prevId) : "—"}</span>
+        </button>
+        <div className="min-w-0 flex-1 px-1 text-center">
+          <p className="text-[9px] font-bold uppercase tracking-wider text-ink-faint">
+            逐日翻帳 · 第 {nav.idx + 1}/{nav.total} 日
+          </p>
+          <p className="truncate text-sm font-extrabold text-ink">{labelForDay(nav.dayId)}</p>
+          <p className="text-[10px] font-semibold text-jade-deep">
+            {formatMoney(nav.spent, trip.targetCurrency)}
+            {nav.count > 0 ? ` · ${nav.count} 筆` : " · 未記帳"}
+          </p>
+        </div>
+        <button
+          type="button"
+          disabled={!nav.nextId}
+          onClick={() => nav.nextId && setFilterDate(nav.nextId)}
+          className={stepBtnClass}
+          aria-label={nav.nextId ? `後一日 ${shortNavLabel(nav.nextId)}` : "已是最近一日"}
+        >
+          <span className="text-[10px] text-ink-faint">→</span>
+          <span className="text-jade-deep">{nav.nextId ? shortNavLabel(nav.nextId) : "—"}</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function FilteredDayBenchmarkPanel({ trip, expenses, filterDate, budget = 0 }) {
   const todayId = toDateId(new Date());
 

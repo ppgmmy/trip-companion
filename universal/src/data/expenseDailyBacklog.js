@@ -410,4 +410,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "日子快篩選中舊日時，以該日為終點顯示近 7 日迷你走勢，對照前後消費節奏，回顧爆煲日更有上下文。",
     pillar: "analysis",
   },
+  {
+    id: "filtered-day-step-nav",
+    title: "篩選日左右切換",
+    description: "日子快篩選中某一時，一撳跳去前一日或後一日，唔使再搵柱狀圖，逐日翻帳更順手。",
+    pillar: "convenience",
+  },
 ];

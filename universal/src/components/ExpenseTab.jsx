@@ -67,6 +67,7 @@ import {
   FilteredDayWeekdayBenchmarkPanel,
   FilteredDayBudgetResultPanel,
   FilteredDaySevenDayWindowPanel,
+  FilteredDayStepNavPanel,
 } from "./ExpenseDailyExtras";
 import PayerPaymentFields from "./PayerPaymentFields";
 import { useLocalStorage } from "../hooks/useLocalStorage";
@@ -1017,6 +1018,13 @@ export default function ExpenseTab({
                 setEntryDate(dateId);
                 window.requestAnimationFrame(() => amountRef.current?.focus({ preventScroll: true }));
               }}
+            />
+
+            <FilteredDayStepNavPanel
+              trip={trip}
+              expenses={expenses}
+              filterDate={filterDate}
+              setFilterDate={setFilterDate}
             />
 
             <FilteredDayBenchmarkPanel
