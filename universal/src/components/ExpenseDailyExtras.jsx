@@ -4044,6 +4044,155 @@ export function FilteredDayPrevComparePanel({ trip, expenses, filterDate }) {
   );
 }
 
+export function FilteredDayCategoryShiftPanel({
+  trip,
+  expenses,
+  filterDate,
+  filterCategory,
+  setFilterCategory,
+}) {
+  const todayId = toDateId(new Date());
+  const dayId = filterDate !== "all" && filterDate ? filterDate : null;
+  const tripStart = trip.startDate;
+  const tripEnd = trip.endDate || todayId;
+
+  const ctx = useMemo(() => {
+    if (!dayId || dayId === todayId) return null;
+    if (dayId < tripStart || dayId > tripEnd) return null;
+    const prevId = shiftDateId(dayId, -1);
+    if (prevId < tripStart) return null;
+
+    const dayMap = {};
+    const prevMap = {};
+    expenses.forEach((e) => {
+      const amt = Number(e.amount) || 0;
+      if (e.date === dayId) dayMap[e.categoryId] = (dayMap[e.categoryId] || 0) + amt;
+      if (e.date === prevId) prevMap[e.categoryId] = (prevMap[e.categoryId] || 0) + amt;
+    });
+    const ids = new Set([...Object.keys(dayMap), ...Object.keys(prevMap)]);
+    const rows = [...ids]
+      .map((id) => {
+        const meta = EXPENSE_CATEGORIES.find((c) => c.id === id);
+        const dayVal = dayMap[id] || 0;
+        const prevVal = prevMap[id] || 0;
+        return {
+          id,
+          label: meta?.label || id,
+          color: meta?.color || "#64748b",
+          dayVal,
+          prevVal,
+          delta: dayVal - prevVal,
+        };
+      })
+      .filter((r) => r.dayVal > 0 || r.prevVal > 0)
+      .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
+      .slice(0, 5);
+
+    return { dayId, prevId, rows };
+  }, [dayId, todayId, tripStart, tripEnd, expenses]);
+
+  if (!isFeatureEnabled("filtered-day-category-shift")) return null;
+  if (!ctx || !ctx.rows.length) return null;
+
+  const { dayId: dId, prevId, rows } = ctx;
+  const hasPrev = rows.some((r) => r.prevVal > 0);
+  const maxBar = Math.max(...rows.flatMap((r) => [r.dayVal, r.prevVal]), 1);
+  const canFilter = isFeatureEnabled("category-filter") && typeof setFilterCategory === "function";
+
+  function dayLabel(dateId) {
+    const y = shiftDateId(todayId, -1);
+    if (dateId === y) return "昨日";
+    return formatShortDate(dateId);
+  }
+
+  function handleRowClick(catId) {
+    if (!canFilter) return;
+    setFilterCategory(filterCategory === catId ? "all" : catId);
+  }
+
+  return (
+    <div className="rounded-2xl border border-jade/10 bg-white/90 p-3 shadow-[var(--shadow-soft)]">
+      <div className="mb-2 flex items-baseline justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">
+          篩選日分類變化 · vs 前一日
+        </p>
+        <p className="text-[11px] font-bold text-jade-deep">
+          {dayLabel(dId)}
+          {!hasPrev && <span className="ml-1 font-semibold text-ink-faint">· 前日無記帳</span>}
+        </p>
+      </div>
+      <ul className="space-y-2.5">
+        {rows.map((r) => {
+          const dayW = Math.max(4, Math.round((r.dayVal / maxBar) * 100));
+          const prevW = Math.max(4, Math.round((r.prevVal / maxBar) * 100));
+          let deltaLabel = "—";
+          let deltaClass = "text-ink-faint";
+          if (r.delta > 0) {
+            deltaLabel = `+${formatMoney(r.delta, trip.targetCurrency)}`;
+            deltaClass = "text-coral";
+          } else if (r.delta < 0) {
+            deltaLabel = formatMoney(r.delta, trip.targetCurrency);
+            deltaClass = "text-jade";
+          } else if (r.dayVal > 0 && r.prevVal > 0) {
+            deltaLabel = "持平";
+          }
+          const isActive = canFilter && filterCategory === r.id;
+          return (
+            <li key={r.id}>
+              <button
+                type="button"
+                disabled={!canFilter}
+                onClick={() => handleRowClick(r.id)}
+                className={`w-full text-left transition active:scale-[0.99] ${canFilter ? "cursor-pointer" : "cursor-default"}`}
+                aria-pressed={isActive}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="flex min-w-0 items-center gap-1.5 text-xs font-bold text-ink">
+                    <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: r.color }} aria-hidden="true" />
+                    <span className={`truncate ${isActive ? "text-jade-deep" : ""}`}>{r.label}</span>
+                  </span>
+                  <span className={`shrink-0 text-[11px] font-bold ${deltaClass}`}>{deltaLabel}</span>
+                </div>
+                <div className="mt-1 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="w-10 shrink-0 truncate text-[9px] font-semibold text-jade-deep">{dayLabel(dId)}</span>
+                    <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-[#efe9e0]">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-jade to-[#34d399] transition-all duration-500"
+                        style={{ width: `${dayW}%` }}
+                      />
+                    </div>
+                    <span className="w-14 shrink-0 text-right text-[10px] font-semibold text-ink-soft">
+                      {r.dayVal > 0 ? formatMoney(r.dayVal, trip.targetCurrency) : "—"}
+                    </span>
+                  </div>
+                  {hasPrev && (
+                    <div className="flex items-center gap-2">
+                      <span className="w-10 shrink-0 truncate text-[9px] font-semibold text-ink-faint">{dayLabel(prevId)}</span>
+                      <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-[#efe9e0]">
+                        <div
+                          className="h-full rounded-full bg-[#cbd5e1] transition-all duration-500"
+                          style={{ width: `${prevW}%` }}
+                        />
+                      </div>
+                      <span className="w-14 shrink-0 text-right text-[10px] font-semibold text-ink-faint">
+                        {r.prevVal > 0 ? formatMoney(r.prevVal, trip.targetCurrency) : "—"}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      {canFilter && filterCategory !== "all" && rows.some((r) => r.id === filterCategory) && (
+        <p className="mt-2 text-center text-[10px] font-semibold text-jade-deep">撳分類列可篩選清單 · 再撳取消</p>
+      )}
+    </div>
+  );
+}
+
 export function FilteredDayTripBudgetSharePanel({
   trip,
   expenses,

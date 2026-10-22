@@ -416,4 +416,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "日子快篩選中某一時，一撳跳去前一日或後一日，唔使再搵柱狀圖，逐日翻帳更順手。",
     pillar: "convenience",
   },
+  {
+    id: "filtered-day-category-shift",
+    title: "篩選日分類變化",
+    description: "日子快篩選中舊日時，逐類對比該日與前一日使費，秒懂邊個分類升溫或收油，翻舊帳更有上下文。",
+    pillar: "analysis",
+  },
 ];

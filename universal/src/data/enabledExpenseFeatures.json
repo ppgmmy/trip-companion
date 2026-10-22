@@ -66,9 +66,10 @@
     "filtered-day-budget-result",
     "filtered-day-payer-chips",
     "filtered-day-seven-day-window",
-    "filtered-day-step-nav"
+    "filtered-day-step-nav",
+    "filtered-day-category-shift"
   ],
-  "updatedAt": "2026-10-21T17:59:46.429Z",
-  "lastFeatureId": "remaining-budget-countdown",
-  "lastTitle": "剩餘預算倒數"
+  "updatedAt": "2026-10-22T02:05:00.000Z",
+  "lastFeatureId": "filtered-day-category-shift",
+  "lastTitle": "篩選日分類變化"
 }
