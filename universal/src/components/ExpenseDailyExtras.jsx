@@ -20,6 +20,26 @@ function shiftDateId(dateId, deltaDays) {
   return toDateId(d);
 }
 
+/** Longest run of consecutive calendar days among sorted gap date ids (length ≥ 2). */
+function longestConsecutiveGapRun(gaps) {
+  if (gaps.length < 2) return null;
+  let best = { length: 1, start: gaps[0], end: gaps[0] };
+  let cur = { length: 1, start: gaps[0], end: gaps[0] };
+  for (let i = 1; i < gaps.length; i += 1) {
+    const prev = gaps[i - 1];
+    const next = gaps[i];
+    if (shiftDateId(prev, 1) === next) {
+      cur.length += 1;
+      cur.end = next;
+    } else {
+      if (cur.length > best.length) best = { ...cur };
+      cur = { length: 1, start: next, end: next };
+    }
+  }
+  if (cur.length > best.length) best = { ...cur };
+  return best.length >= 2 ? best : null;
+}
+
 function sumByDate(expenses, dateId, field = "amount") {
   return expenses
     .filter((e) => e.date === dateId)
@@ -1144,8 +1164,11 @@ export function LoggingGapHintPanel({ trip, expenses, onPickDate }) {
   if (!isFeatureEnabled("logging-gap-hint")) return null;
   if (!gapStats || gapStats.gaps.length === 0) return null;
 
+  const fillOrderEnabled = isFeatureEnabled("logging-gap-fill-order");
   const { gaps, elapsedCount, loggedDays } = gapStats;
-  const recentGaps = [...gaps].slice(-8).reverse();
+  const oldestGap = gaps[0] ?? null;
+  const consecutiveRun = fillOrderEnabled ? longestConsecutiveGapRun(gaps) : null;
+  const chipGaps = fillOrderEnabled ? gaps.slice(0, 8) : [...gaps].slice(-8).reverse();
   const coveragePct = Math.round((loggedDays / elapsedCount) * 100);
 
   let statusLabel = `${gaps.length} 日未記`;
@@ -1179,8 +1202,34 @@ export function LoggingGapHintPanel({ trip, expenses, onPickDate }) {
         <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${statusClass}`}>{statusLabel}</span>
       </div>
 
+      {fillOrderEnabled && consecutiveRun && (
+        <div className="mb-3 rounded-2xl border border-[#fcd34d]/50 bg-[#fffbeb] px-3 py-2">
+          <p className="text-[11px] font-bold text-[#92400e]">
+            連續 {consecutiveRun.length} 日漏記 · {formatShortDate(consecutiveRun.start)}
+            {consecutiveRun.end !== consecutiveRun.start ? ` → ${formatShortDate(consecutiveRun.end)}` : ""}
+          </p>
+          <p className="mt-0.5 text-[10px] font-semibold text-[#b45309]">建議由最早一日開始逐日補返，唔好跳漏中段</p>
+        </div>
+      )}
+
+      {fillOrderEnabled && oldestGap && onPickDate && (
+        <button
+          type="button"
+          onClick={() => onPickDate(oldestGap)}
+          className="mb-3 w-full rounded-2xl border border-jade/25 bg-jade-soft/70 px-3 py-2.5 text-left transition active:scale-[0.99]"
+        >
+          <p className="text-[10px] font-bold uppercase tracking-wider text-jade">建議下一步</p>
+          <p className="mt-0.5 font-display text-sm font-black text-jade-deep">
+            補最早漏記 · {oldestGap === todayId ? "今日" : formatShortDate(oldestGap)}
+            {oldestGap !== todayId && (
+              <span className="ml-1 text-xs font-semibold text-ink-soft">（週{weekdayLabel(oldestGap)}）</span>
+            )}
+          </p>
+        </button>
+      )}
+
       <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5">
-        {recentGaps.map((dateId) => {
+        {chipGaps.map((dateId) => {
           const isToday = dateId === todayId;
           return (
             <button
@@ -1200,9 +1249,11 @@ export function LoggingGapHintPanel({ trip, expenses, onPickDate }) {
         })}
       </div>
 
-      {gaps.length > recentGaps.length && (
+      {gaps.length > chipGaps.length && (
         <p className="mt-2 text-center text-[10px] font-semibold text-ink-faint">
-          顯示最近 {recentGaps.length} 日 · 共 {gaps.length} 日未記
+          {fillOrderEnabled
+            ? `顯示待補 ${chipGaps.length} 日（由舊至新）· 共 ${gaps.length} 日未記`
+            : `顯示最近 ${chipGaps.length} 日 · 共 ${gaps.length} 日未記`}
         </p>
       )}
 

@@ -422,4 +422,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "日子快篩選中舊日時，逐類對比該日與前一日使費，秒懂邊個分類升溫或收油，翻舊帳更有上下文。",
     pillar: "analysis",
   },
+  {
+    id: "logging-gap-fill-order",
+    title: "漏記順序補帳",
+    description: "標出連續漏記日，並以由舊至新列出待補日子、一鍵跳去最早漏記日，逐日補返唔會跳漏中段。",
+    pillar: "convenience",
+  },
 ];
