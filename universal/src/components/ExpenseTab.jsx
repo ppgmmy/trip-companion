@@ -39,6 +39,7 @@ import {
   SpendingTimelineAlignPanel,
   TodayCategoryChips,
   TodayPaymentChips,
+  TodayPaymentMixPanel,
   TodayPayerChips,
   TodayCategoryShiftPanel,
   EveningLoggingNudgePanel,
@@ -875,6 +876,13 @@ export default function ExpenseTab({
             />
 
             <TodayPaymentChips
+              trip={trip}
+              expenses={expenses}
+              filterPaymentMethod={filterPaymentMethod}
+              setFilterPaymentMethod={setFilterPaymentMethod}
+            />
+
+            <TodayPaymentMixPanel
               trip={trip}
               expenses={expenses}
               filterPaymentMethod={filterPaymentMethod}

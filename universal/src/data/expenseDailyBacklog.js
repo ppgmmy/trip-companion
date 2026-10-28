@@ -428,4 +428,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "標出連續漏記日，並以由舊至新列出待補日子、一鍵跳去最早漏記日，逐日補返唔會跳漏中段。",
     pillar: "convenience",
   },
+  {
+    id: "today-payment-mix",
+    title: "今日付款結構",
+    description: "對比今日現金／信用卡佔比同全程習慣，出門前知要預多現金定繼續刷卡。",
+    pillar: "analysis",
+  },
 ];

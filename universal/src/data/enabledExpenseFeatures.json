@@ -68,9 +68,10 @@
     "filtered-day-seven-day-window",
     "filtered-day-step-nav",
     "filtered-day-category-shift",
-    "logging-gap-fill-order"
+    "logging-gap-fill-order",
+    "today-payment-mix"
   ],
-  "updatedAt": "2026-10-27T18:39:01.284Z",
-  "lastFeatureId": "evening-logging-nudge",
-  "lastTitle": "傍晚記帳提醒"
+  "updatedAt": "2026-10-28T02:15:00.000Z",
+  "lastFeatureId": "today-payment-mix",
+  "lastTitle": "今日付款結構"
 }

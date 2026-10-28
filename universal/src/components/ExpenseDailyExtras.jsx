@@ -2985,6 +2985,142 @@ export function TodayPaymentChips({ trip, expenses, filterPaymentMethod, setFilt
   );
 }
 
+function paymentMixAmounts(expenses, dateId = null) {
+  const map = { cash: 0, card: 0 };
+  for (const e of expenses) {
+    if (dateId && e.date !== dateId) continue;
+    const key = normalizePaymentMethod(e.paymentMethod);
+    if (key !== "cash" && key !== "card") continue;
+    map[key] += Number(e.amount) || 0;
+  }
+  const total = map.cash + map.card;
+  return {
+    ...map,
+    total,
+    cashPct: total > 0 ? map.cash / total : 0,
+    cardPct: total > 0 ? map.card / total : 0,
+  };
+}
+
+export function TodayPaymentMixPanel({ trip, expenses, filterPaymentMethod, setFilterPaymentMethod }) {
+  const todayId = toDateId(new Date());
+
+  const stats = useMemo(() => {
+    const today = paymentMixAmounts(expenses, todayId);
+    const tripMix = paymentMixAmounts(expenses);
+    if (today.total <= 0 || tripMix.total <= 0) return null;
+    const cashDeltaPp = Math.round((today.cashPct - tripMix.cashPct) * 100);
+    const cardDeltaPp = Math.round((today.cardPct - tripMix.cardPct) * 100);
+    return { today, tripMix, cashDeltaPp, cardDeltaPp };
+  }, [expenses, todayId]);
+
+  if (!isFeatureEnabled("today-payment-mix")) return null;
+  if (!stats) return null;
+
+  const { today, tripMix, cashDeltaPp, cardDeltaPp } = stats;
+  const methods = [
+    { id: "cash", label: paymentMethodLabel("cash"), ...PAYMENT_CHIP_META.cash },
+    { id: "card", label: paymentMethodLabel("card"), ...PAYMENT_CHIP_META.card },
+  ];
+
+  let insight = "今日付款方式同旅程整體接近";
+  let insightClass = "text-ink-soft";
+  if (Math.abs(cashDeltaPp) >= 20) {
+    if (cashDeltaPp > 0) {
+      insight = `今日現金佔比高過全程 ${cashDeltaPp} 點 · 留意找換／提款`;
+      insightClass = "text-[#b45309]";
+    } else {
+      insight = `今日刷卡為主，比全程多 ${Math.abs(cashDeltaPp)} 點現金佔比 · 現金可能仲有剩`;
+      insightClass = "text-jade-deep";
+    }
+  } else if (Math.abs(cardDeltaPp) >= 20) {
+    if (cardDeltaPp > 0) {
+      insight = `今日信用卡佔比高過習慣 ${cardDeltaPp} 點 · 留意外卡手續／匯率`;
+      insightClass = "text-[#4338ca]";
+    } else {
+      insight = "今日現金比率高過平常，適合市集或小舖";
+      insightClass = "text-jade-deep";
+    }
+  }
+
+  function handleFilter(methodId) {
+    if (!setFilterPaymentMethod) return;
+    setFilterPaymentMethod((prev) => (prev === methodId ? "all" : methodId));
+  }
+
+  return (
+    <div className="rounded-2xl border border-jade/10 bg-gradient-to-br from-white to-[#f5f3ff]/60 px-3 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">今日付款結構 · vs 全程</p>
+        <p className="text-[11px] font-bold text-jade-deep">{formatMoney(today.total, trip.targetCurrency)}</p>
+      </div>
+      <div className="mt-2.5 space-y-2.5">
+        {methods.map((m) => {
+          const todayAmt = today[m.id];
+          const tripAmt = tripMix[m.id];
+          const todayPct = Math.round(today[`${m.id}Pct`] * 100);
+          const tripPct = Math.round(tripMix[`${m.id}Pct`] * 100);
+          const deltaPp = m.id === "cash" ? cashDeltaPp : cardDeltaPp;
+          const isActive = filterPaymentMethod === m.id;
+          if (todayAmt <= 0 && tripAmt <= 0) return null;
+
+          return (
+            <button
+              key={m.id}
+              type="button"
+              onClick={() => handleFilter(m.id)}
+              disabled={!setFilterPaymentMethod || todayAmt <= 0}
+              className={`w-full rounded-xl border px-2.5 py-2 text-left transition active:scale-[0.99] ${
+                isActive ? "border-jade/35 bg-jade-soft/50" : "border-jade/10 bg-white/90"
+              } ${!setFilterPaymentMethod || todayAmt <= 0 ? "cursor-default" : ""}`}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-ink">
+                  <span aria-hidden="true">{m.emoji}</span>
+                  {m.label}
+                </span>
+                <span className={`text-[10px] font-bold ${deltaPp > 0 ? "text-[#b45309]" : deltaPp < 0 ? "text-jade-deep" : "text-ink-faint"}`}>
+                  {deltaPp > 0 ? `+${deltaPp}%` : deltaPp < 0 ? `${deltaPp}%` : "≈平均"}
+                </span>
+              </div>
+              <div className="mt-1.5 grid grid-cols-2 gap-2">
+                <div>
+                  <p className="text-[9px] font-semibold text-ink-faint">今日 {todayPct}%</p>
+                  <div className="mt-0.5 h-1.5 overflow-hidden rounded-full bg-[#efe9e0]">
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{ width: `${Math.max(todayPct, todayAmt > 0 ? 6 : 0)}%`, backgroundColor: m.dot }}
+                    />
+                  </div>
+                  <p className="mt-0.5 text-[10px] font-semibold text-ink-soft">
+                    {todayAmt > 0 ? formatMoney(todayAmt, trip.targetCurrency) : "—"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[9px] font-semibold text-ink-faint">全程 {tripPct}%</p>
+                  <div className="mt-0.5 h-1.5 overflow-hidden rounded-full bg-[#efe9e0]">
+                    <div
+                      className="h-full rounded-full opacity-45 transition-all duration-500"
+                      style={{ width: `${Math.max(tripPct, tripAmt > 0 ? 6 : 0)}%`, backgroundColor: m.dot }}
+                    />
+                  </div>
+                  <p className="mt-0.5 text-[10px] font-semibold text-ink-faint">
+                    {tripAmt > 0 ? formatMoney(tripAmt, trip.targetCurrency) : "—"}
+                  </p>
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+      <p className={`mt-2 text-center text-[11px] font-semibold leading-snug ${insightClass}`}>{insight}</p>
+      {setFilterPaymentMethod && (today.cash > 0 || today.card > 0) && (
+        <p className="mt-1 text-center text-[10px] font-semibold text-ink-faint">撳列可篩選該付款方式</p>
+      )}
+    </div>
+  );
+}
+
 export function TodayPayerChips({ trip, expenses, filterPayer, setFilterPayer }) {
   const todayId = toDateId(new Date());
 
