@@ -735,6 +735,12 @@
       "title": "昨日快記",
       "description": "記帳欄上一鍵切換昨日日期並聚焦金額，晨間或漏記時補記昨天消費更快。",
       "cycle": true
+    },
+    {
+      "date": "2026-10-29",
+      "id": "logging-streak-milestone",
+      "title": "記帳里程碑進度",
+      "description": "顯示連續記帳距離 3／7／14 日等下一個里程碑仲差幾日，附進度條同今日守 streak 提示，養成習慣更有動力。"
     }
   ]
 }

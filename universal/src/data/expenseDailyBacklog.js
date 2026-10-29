@@ -434,4 +434,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "對比今日現金／信用卡佔比同全程習慣，出門前知要預多現金定繼續刷卡。",
     pillar: "analysis",
   },
+  {
+    id: "logging-streak-milestone",
+    title: "記帳里程碑進度",
+    description: "顯示連續記帳距離 3／7／14 日等下一個里程碑仲差幾日，附進度條同今日守 streak 提示，養成習慣更有動力。",
+    pillar: "stickiness",
+  },
 ];

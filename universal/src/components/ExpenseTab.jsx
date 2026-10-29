@@ -40,6 +40,7 @@ import {
   TodayCategoryChips,
   TodayPaymentChips,
   TodayPaymentMixPanel,
+  LoggingStreakMilestonePanel,
   TodayPayerChips,
   TodayCategoryShiftPanel,
   EveningLoggingNudgePanel,
@@ -851,6 +852,8 @@ export default function ExpenseTab({
             <EveningLoggingNudgePanel trip={trip} expenses={expenses} onFocusQuickAdd={focusQuickAdd} />
 
             <SevenDayLoggingDots expenses={expenses} />
+
+            <LoggingStreakMilestonePanel expenses={expenses} onFocusQuickAdd={focusQuickAdd} />
 
             <TripLogCoveragePanel trip={trip} expenses={expenses} onPickGapDate={pickGapDate} />
 

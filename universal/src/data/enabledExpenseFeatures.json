@@ -69,9 +69,10 @@
     "filtered-day-step-nav",
     "filtered-day-category-shift",
     "logging-gap-fill-order",
-    "today-payment-mix"
+    "today-payment-mix",
+    "logging-streak-milestone"
   ],
-  "updatedAt": "2026-10-28T16:34:17.350Z",
-  "lastFeatureId": "yesterday-quick-add",
-  "lastTitle": "昨日快記"
+  "updatedAt": "2026-10-29T02:05:00.000Z",
+  "lastFeatureId": "logging-streak-milestone",
+  "lastTitle": "記帳里程碑進度"
 }

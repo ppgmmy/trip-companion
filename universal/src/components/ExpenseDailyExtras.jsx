@@ -60,6 +60,24 @@ function loggingStreak(expenses) {
   return streak;
 }
 
+const LOGGING_STREAK_MILESTONES = [3, 7, 14, 21, 30];
+
+function loggingStreakMilestone(streak) {
+  if (streak <= 0) {
+    return { streak: 0, prev: 0, target: LOGGING_STREAK_MILESTONES[0], progressPct: 0, remaining: LOGGING_STREAK_MILESTONES[0], master: false };
+  }
+  let prev = 0;
+  for (const target of LOGGING_STREAK_MILESTONES) {
+    if (streak < target) {
+      const span = target - prev;
+      const progressPct = span > 0 ? Math.min(100, Math.round(((streak - prev) / span) * 100)) : 0;
+      return { streak, prev, target, progressPct, remaining: target - streak, master: false };
+    }
+    prev = target;
+  }
+  return { streak, prev: 30, target: null, progressPct: 100, remaining: 0, master: true };
+}
+
 function daysInclusive(startDateId, endDateId) {
   const start = new Date(`${startDateId}T12:00:00`).getTime();
   const end = new Date(`${endDateId}T12:00:00`).getTime();
@@ -3116,6 +3134,107 @@ export function TodayPaymentMixPanel({ trip, expenses, filterPaymentMethod, setF
       <p className={`mt-2 text-center text-[11px] font-semibold leading-snug ${insightClass}`}>{insight}</p>
       {setFilterPaymentMethod && (today.cash > 0 || today.card > 0) && (
         <p className="mt-1 text-center text-[10px] font-semibold text-ink-faint">撳列可篩選該付款方式</p>
+      )}
+    </div>
+  );
+}
+
+export function LoggingStreakMilestonePanel({ expenses, onFocusQuickAdd }) {
+  const todayId = toDateId(new Date());
+  const streak = useMemo(() => loggingStreak(expenses), [expenses]);
+  const todayLogged = useMemo(() => expenses.some((e) => e.date === todayId), [expenses, todayId]);
+  const meta = useMemo(() => loggingStreakMilestone(streak), [streak]);
+
+  if (!isFeatureEnabled("logging-streak-milestone")) return null;
+
+  const milestones = LOGGING_STREAK_MILESTONES;
+  let headline = "記一筆就開始 streak";
+  let insight = "連續記帳 3 日就達第一個小目標";
+  let insightClass = "text-ink-soft";
+  let barClass = "bg-gradient-to-r from-jade to-[#34d399]";
+
+  if (meta.master) {
+    headline = `${streak} 日連續 · 記帳達人`;
+    insight = "已超越 30 日里程碑，旅行帳目好完整";
+    insightClass = "text-jade-deep";
+    barClass = "bg-gradient-to-r from-[#f59e0b] to-[#fbbf24]";
+  } else if (streak > 0 && meta.target != null) {
+    headline = `連續 ${streak} 日 · 下一關 ${meta.target} 日`;
+    if (LOGGING_STREAK_MILESTONES.includes(streak)) {
+      insight = `啱啱達成 ${streak} 日連續記帳 · 繼續衝 ${meta.target} 日`;
+      insightClass = "text-jade-deep";
+    } else if (meta.remaining === 1) {
+      insight = "再記多 1 日就達標，唔好斷咗";
+      insightClass = "text-[#b45309]";
+    } else {
+      insight = `仲差 ${meta.remaining} 日就到 ${meta.target} 日連續記帳`;
+      insightClass = "text-ink-soft";
+    }
+  }
+
+  const needsTodayLog = streak > 0 && !todayLogged;
+
+  return (
+    <div
+      className={`rounded-2xl border px-3 py-2.5 shadow-[var(--shadow-soft)] ${
+        needsTodayLog ? "border-amber-300/60 bg-gradient-to-br from-[#fffbeb] to-white" : "border-jade/10 bg-gradient-to-br from-white to-jade-soft/30"
+      }`}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">記帳里程碑</p>
+          <p className="mt-0.5 font-display text-base font-black leading-tight text-jade-deep">{headline}</p>
+        </div>
+        {!meta.master && meta.target != null && (
+          <span className="shrink-0 rounded-full bg-jade-soft px-2 py-0.5 text-[10px] font-bold text-jade-deep">
+            {meta.progressPct}%
+          </span>
+        )}
+      </div>
+
+      {!meta.master && meta.target != null && (
+        <div className="mt-2.5">
+          <div className="flex justify-between text-[9px] font-semibold text-ink-faint">
+            <span>{meta.prev > 0 ? `${meta.prev} 日` : "起點"}</span>
+            <span>{meta.target} 日</span>
+          </div>
+          <div className="mt-1 h-2.5 overflow-hidden rounded-full bg-[#efe9e0]">
+            <div className={`h-full rounded-full transition-all duration-500 ${barClass}`} style={{ width: `${Math.max(meta.progressPct, streak > 0 ? 8 : 0)}%` }} />
+          </div>
+        </div>
+      )}
+
+      <div className="mt-2 flex flex-wrap gap-1">
+        {milestones.map((m) => {
+          const hit = streak >= m;
+          return (
+            <span
+              key={m}
+              className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${
+                hit ? "bg-jade text-white" : streak > 0 && meta.target === m ? "border border-jade/40 bg-white text-jade-deep" : "bg-[#efe9e0] text-ink-faint"
+              }`}
+            >
+              {m}日{hit ? " ✓" : ""}
+            </span>
+          );
+        })}
+      </div>
+
+      <p className={`mt-2 text-center text-[11px] font-semibold leading-snug ${insightClass}`}>{insight}</p>
+
+      {needsTodayLog && (
+        <div className="mt-2 flex flex-col items-center gap-1.5">
+          <p className="text-center text-[11px] font-semibold text-[#b45309]">今日仲未記帳 · 記一筆先可以延續 streak</p>
+          {onFocusQuickAdd && (
+            <button
+              type="button"
+              onClick={onFocusQuickAdd}
+              className="rounded-xl bg-jade px-3 py-1.5 text-xs font-bold text-white shadow-sm active:scale-[0.98]"
+            >
+              即刻記一筆
+            </button>
+          )}
+        </div>
       )}
     </div>
   );
