@@ -755,6 +755,12 @@
       "title": "分帳平衡度",
       "description": "對比各付款人實際使費與平均應付比例，一眼睇邊個多付、邊個欠數，同行分帳更清晰。",
       "cycle": true
+    },
+    {
+      "date": "2026-10-31",
+      "id": "today-yesterday-entry-compare",
+      "title": "今日 vs 昨日記帳筆數",
+      "description": "對比兩日記帳筆數同平均每筆使費，秒懂係細碎多筆定少筆大額嘅變化，唔使只靠總額猜。"
     }
   ]
 }

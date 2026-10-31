@@ -1965,6 +1965,109 @@ export function TodayEntryPacePanel({ trip, expenses }) {
   );
 }
 
+export function TodayYesterdayEntryComparePanel({ trip, expenses }) {
+  const todayId = toDateId(new Date());
+  const yesterdayId = shiftDateId(todayId, -1);
+
+  const stats = useMemo(() => {
+    const todayEntries = expenses.filter((e) => e.date === todayId);
+    const yesterdayEntries = expenses.filter((e) => e.date === yesterdayId);
+    const todayCount = todayEntries.length;
+    const yesterdayCount = yesterdayEntries.length;
+    const todaySpent = todayEntries.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+    const yesterdaySpent = yesterdayEntries.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+    const todayAvg = todayCount > 0 ? todaySpent / todayCount : 0;
+    const yesterdayAvg = yesterdayCount > 0 ? yesterdaySpent / yesterdayCount : 0;
+    return {
+      todayCount,
+      yesterdayCount,
+      todaySpent,
+      yesterdaySpent,
+      todayAvg,
+      yesterdayAvg,
+      countDelta: todayCount - yesterdayCount,
+      spentDelta: todaySpent - yesterdaySpent,
+    };
+  }, [expenses, todayId, yesterdayId]);
+
+  if (!isFeatureEnabled("today-yesterday-entry-compare")) return null;
+  if (stats.todayCount === 0 && stats.yesterdayCount === 0) return null;
+
+  const maxCount = Math.max(stats.todayCount, stats.yesterdayCount, 1);
+  const todayBar = Math.max(8, Math.round((stats.todayCount / maxCount) * 100));
+  const yesterdayBar = Math.max(8, Math.round((stats.yesterdayCount / maxCount) * 100));
+
+  let insight = "兩日記帳密度相近";
+  let insightTone = "text-ink-soft";
+  const { countDelta, spentDelta, todayAvg, yesterdayAvg, todayCount, yesterdayCount } = stats;
+
+  if (todayCount === 0 && yesterdayCount > 0) {
+    insight = "今日未記帳；昨日有記，補返就唔會漏";
+    insightTone = "text-ink-faint";
+  } else if (countDelta >= 2 && spentDelta <= 0) {
+    insight = "今日筆數多但總額唔升，可能係細碎消費";
+    insightTone = "text-[#b45309]";
+  } else if (countDelta <= -1 && spentDelta >= 0 && yesterdayCount > 0) {
+    insight = "今日筆數少但使費唔減，可能係少筆大額";
+    insightTone = "text-[#b45309]";
+  } else if (countDelta >= 2) {
+    insight = `比昨日多 ${countDelta} 筆，記帳更密`;
+    insightTone = "text-jade-deep";
+  } else if (countDelta <= -2) {
+    insight = `比昨日少 ${-countDelta} 筆，大單為主`;
+    insightTone = "text-jade-deep";
+  } else if (todayAvg > 0 && yesterdayAvg > 0 && todayAvg > yesterdayAvg * 1.4) {
+    insight = "平均每筆高過昨日，留意大額支出";
+    insightTone = "text-coral";
+  } else if (todayAvg > 0 && yesterdayAvg > 0 && todayAvg < yesterdayAvg * 0.72) {
+    insight = "平均每筆低過昨日，可能係零碎小買";
+    insightTone = "text-jade";
+  }
+
+  const countDeltaLabel =
+    countDelta === 0 ? "同昨日" : countDelta > 0 ? `+${countDelta} 筆` : `${countDelta} 筆`;
+
+  return (
+    <div className="rounded-2xl border border-jade/10 bg-gradient-to-br from-white to-mist/40 px-3 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">今日 vs 昨日 · 記帳筆數</p>
+        <span className={`text-[10px] font-bold ${countDelta > 0 ? "text-coral" : countDelta < 0 ? "text-jade" : "text-ink-faint"}`}>
+          {countDeltaLabel}
+        </span>
+      </div>
+      <div className="mt-2 grid grid-cols-2 gap-3">
+        <div>
+          <p className="text-[10px] font-semibold text-ink-faint">今日</p>
+          <p className="font-display text-2xl font-black text-jade-deep">{stats.todayCount}</p>
+          <p className="text-[10px] font-semibold text-ink-soft">
+            {stats.todayCount > 0 ? `均 ${formatMoney(todayAvg, trip.targetCurrency)}/筆` : "—"}
+          </p>
+          <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-[#efe9e0]">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-jade to-[#34d399] transition-all duration-500"
+              style={{ width: `${todayBar}%` }}
+            />
+          </div>
+        </div>
+        <div>
+          <p className="text-[10px] font-semibold text-ink-faint">昨日</p>
+          <p className="font-display text-2xl font-black text-ink-soft">{stats.yesterdayCount}</p>
+          <p className="text-[10px] font-semibold text-ink-soft">
+            {stats.yesterdayCount > 0 ? `均 ${formatMoney(yesterdayAvg, trip.targetCurrency)}/筆` : "—"}
+          </p>
+          <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-[#efe9e0]">
+            <div
+              className="h-full rounded-full bg-[#cbd5e1] transition-all duration-500"
+              style={{ width: `${yesterdayBar}%` }}
+            />
+          </div>
+        </div>
+      </div>
+      <p className={`mt-2 text-center text-[11px] font-semibold ${insightTone}`}>{insight}</p>
+    </div>
+  );
+}
+
 export function TodayVsMedianDayPanel({ trip, expenses }) {
   const todayId = toDateId(new Date());
 

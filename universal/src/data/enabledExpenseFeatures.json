@@ -70,9 +70,10 @@
     "filtered-day-category-shift",
     "logging-gap-fill-order",
     "today-payment-mix",
-    "logging-streak-milestone"
+    "logging-streak-milestone",
+    "today-yesterday-entry-compare"
   ],
-  "updatedAt": "2026-10-30T16:39:45.397Z",
-  "lastFeatureId": "payer-split-balance",
-  "lastTitle": "分帳平衡度"
+  "updatedAt": "2026-10-31T02:04:53.513Z",
+  "lastFeatureId": "today-yesterday-entry-compare",
+  "lastTitle": "今日 vs 昨日記帳筆數"
 }

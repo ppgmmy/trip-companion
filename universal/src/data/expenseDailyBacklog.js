@@ -440,4 +440,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "顯示連續記帳距離 3／7／14 日等下一個里程碑仲差幾日，附進度條同今日守 streak 提示，養成習慣更有動力。",
     pillar: "stickiness",
   },
+  {
+    id: "today-yesterday-entry-compare",
+    title: "今日 vs 昨日記帳筆數",
+    description: "對比兩日記帳筆數同平均每筆使費，秒懂係細碎多筆定少筆大額嘅變化，唔使只靠總額猜。",
+    pillar: "convenience",
+  },
 ];

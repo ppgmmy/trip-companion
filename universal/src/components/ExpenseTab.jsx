@@ -25,6 +25,7 @@ import {
   LedgerDailyPulse,
   SevenDayLoggingDots,
   TodayEntryPacePanel,
+  TodayYesterdayEntryComparePanel,
   TodayVsMedianDayPanel,
   TodayVsSevenDayAvgPanel,
   TodayPaceProjectionPanel,
@@ -860,6 +861,8 @@ export default function ExpenseTab({
             <LoggingGapHintPanel trip={trip} expenses={expenses} onPickDate={pickGapDate} />
 
             <TodayEntryPacePanel trip={trip} expenses={expenses} />
+
+            <TodayYesterdayEntryComparePanel trip={trip} expenses={expenses} />
 
             <TodayVsMedianDayPanel trip={trip} expenses={expenses} />
 
