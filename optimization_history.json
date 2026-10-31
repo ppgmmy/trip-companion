@@ -761,6 +761,13 @@
       "id": "today-yesterday-entry-compare",
       "title": "今日 vs 昨日記帳筆數",
       "description": "對比兩日記帳筆數同平均每筆使費，秒懂係細碎多筆定少筆大額嘅變化，唔使只靠總額猜。"
+    },
+    {
+      "date": "2026-11-01",
+      "id": "today-trip-budget-share",
+      "title": "今日佔旅程預算",
+      "description": "顯示今日使費佔全程預算百分比，對照平均一日應佔比例，大額消費前知會唔會一次食咗太多總預算。",
+      "cycle": true
     }
   ]
 }
