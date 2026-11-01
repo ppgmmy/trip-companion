@@ -774,6 +774,13 @@
       "id": "today-vs-trip-pace",
       "title": "今日 vs 至今日均",
       "description": "對比今日使費同旅程至今嘅日均，一眼知今日快定慢過整趟節奏，出門前更易收油。"
+    },
+    {
+      "date": "2026-11-02",
+      "id": "tomorrow-daily-cap",
+      "title": "聽日建議上限",
+      "description": "依剩餘預算同旅程剩日計出聽日每 day 建議使費；今日若超支會自動收緊聽日上限，方便計劃翌日行程。",
+      "cycle": true
     }
   ]
 }
