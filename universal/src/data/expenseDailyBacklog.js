@@ -446,4 +446,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "對比兩日記帳筆數同平均每筆使費，秒懂係細碎多筆定少筆大額嘅變化，唔使只靠總額猜。",
     pillar: "convenience",
   },
+  {
+    id: "today-vs-trip-pace",
+    title: "今日 vs 至今日均",
+    description: "對比今日使費同旅程至今嘅日均，一眼知今日快定慢過整趟節奏，出門前更易收油。",
+    pillar: "analysis",
+  },
 ];

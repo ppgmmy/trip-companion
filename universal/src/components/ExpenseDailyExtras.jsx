@@ -2068,6 +2068,89 @@ export function TodayYesterdayEntryComparePanel({ trip, expenses }) {
   );
 }
 
+export function TodayVsTripPacePanel({ trip, expenses, elapsedDays = 1 }) {
+  const todayId = toDateId(new Date());
+
+  const stats = useMemo(() => {
+    const totalSpent = expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+    const daysElapsed = Math.max(1, elapsedDays);
+    const tripPace = totalSpent / daysElapsed;
+    const todaySum = sumByDate(expenses, todayId);
+    const ratio = tripPace > 0 ? todaySum / tripPace : todaySum > 0 ? 2 : 0;
+    const delta = todaySum - tripPace;
+    return { tripPace, todaySum, ratio, delta, daysElapsed, totalSpent };
+  }, [expenses, elapsedDays, todayId]);
+
+  if (!isFeatureEnabled("today-vs-trip-pace")) return null;
+  if (stats.totalSpent <= 0 && stats.todaySum <= 0) return null;
+
+  const { tripPace, todaySum, ratio, delta, daysElapsed } = stats;
+  const maxBar = Math.max(tripPace, todaySum, 1);
+  const paceBar = Math.max(6, Math.round((tripPace / maxBar) * 100));
+  const todayBar = Math.max(6, Math.round((todaySum / maxBar) * 100));
+
+  let insight = "今日同旅程至今日均接近";
+  let insightClass = "text-ink-soft";
+  if (todaySum === 0 && tripPace > 0) {
+    insight = `至今日均約 ${formatMoney(tripPace, trip.targetCurrency)} · 今日未記帳`;
+    insightClass = "text-ink-faint";
+  } else if (ratio >= 1.5) {
+    insight = `比至今日均多 ${formatMoney(delta, trip.targetCurrency)}，今日節奏偏快`;
+    insightClass = "text-coral";
+  } else if (ratio >= 1.15) {
+    insight = `略高過至今日均 ${formatMoney(delta, trip.targetCurrency)}`;
+    insightClass = "text-[#b45309]";
+  } else if (ratio <= 0.65 && todaySum > 0) {
+    insight = `慳咗 ${formatMoney(-delta, trip.targetCurrency)}，低過旅程至今日均`;
+    insightClass = "text-jade-deep";
+  } else if (ratio <= 0.85 && todaySum > 0) {
+    insight = `比至今日均少 ${formatMoney(-delta, trip.targetCurrency)}，節奏健康`;
+    insightClass = "text-jade";
+  }
+
+  const deltaLabel =
+    delta === 0 ? "同均" : delta > 0 ? `+${formatMoney(delta, trip.targetCurrency)}` : `−${formatMoney(-delta, trip.targetCurrency)}`;
+
+  return (
+    <div className="rounded-2xl border border-sky-200/60 bg-gradient-to-br from-white to-sky-50/50 px-3 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">今日 vs 至今日均</p>
+        <span className="rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-bold text-ink-soft">
+          第 {daysElapsed} 日 · 日均基準
+        </span>
+      </div>
+      <div className="mt-2 grid grid-cols-2 gap-2">
+        <div>
+          <p className="text-[10px] font-semibold text-ink-faint">至今日均</p>
+          <p className="font-display text-lg font-black text-ink">{formatMoney(tripPace, trip.targetCurrency)}</p>
+          <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-[#efe9e0]">
+            <div className="h-full rounded-full bg-ink-faint/35 transition-all duration-500" style={{ width: `${paceBar}%` }} />
+          </div>
+        </div>
+        <div>
+          <p className="text-[10px] font-semibold text-sky-700">今日</p>
+          <p className="font-display text-lg font-black text-ink">{formatMoney(todaySum, trip.targetCurrency)}</p>
+          <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-[#efe9e0]">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${ratio > 1.15 ? "bg-coral" : ratio < 0.85 && todaySum > 0 ? "bg-jade" : "bg-sky-500/70"}`}
+              style={{ width: `${todayBar}%` }}
+            />
+          </div>
+        </div>
+      </div>
+      <div className="mt-2 flex items-center justify-center gap-2">
+        <span
+          className={`text-[10px] font-bold ${delta > 0 ? "text-coral" : delta < 0 ? "text-jade-deep" : "text-ink-faint"}`}
+        >
+          {deltaLabel}
+        </span>
+        <span className="text-[10px] text-ink-faint">·</span>
+        <p className={`text-[11px] font-semibold ${insightClass}`}>{insight}</p>
+      </div>
+    </div>
+  );
+}
+
 export function TodayVsMedianDayPanel({ trip, expenses }) {
   const todayId = toDateId(new Date());
 

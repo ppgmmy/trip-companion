@@ -71,9 +71,10 @@
     "logging-gap-fill-order",
     "today-payment-mix",
     "logging-streak-milestone",
-    "today-yesterday-entry-compare"
+    "today-yesterday-entry-compare",
+    "today-vs-trip-pace"
   ],
-  "updatedAt": "2026-10-31T17:41:21.957Z",
-  "lastFeatureId": "today-trip-budget-share",
-  "lastTitle": "今日佔旅程預算"
+  "updatedAt": "2026-11-01T02:10:00.000Z",
+  "lastFeatureId": "today-vs-trip-pace",
+  "lastTitle": "今日 vs 至今日均"
 }
