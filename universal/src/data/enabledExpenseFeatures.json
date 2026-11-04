@@ -72,9 +72,10 @@
     "today-payment-mix",
     "logging-streak-milestone",
     "today-yesterday-entry-compare",
-    "today-vs-trip-pace"
+    "today-vs-trip-pace",
+    "today-category-leader"
   ],
-  "updatedAt": "2026-11-03T17:43:52.557Z",
-  "lastFeatureId": "ledger-jump-today",
-  "lastTitle": "跳至今日記錄"
+  "updatedAt": "2026-11-04T02:15:00.000Z",
+  "lastFeatureId": "today-category-leader",
+  "lastTitle": "今日主導分類"
 }

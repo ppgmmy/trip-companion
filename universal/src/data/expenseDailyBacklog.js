@@ -452,4 +452,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "對比今日使費同旅程至今嘅日均，一眼知今日快定慢過整趟節奏，出門前更易收油。",
     pillar: "analysis",
   },
+  {
+    id: "today-category-leader",
+    title: "今日主導分類",
+    description: "突出今日使費最大分類、佔今日比例，並對照全程該類佔比，秒懂今日係「食飲日／購物日」定混合消費。",
+    pillar: "analysis",
+  },
 ];

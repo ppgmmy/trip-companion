@@ -31,6 +31,7 @@ import {
   TodayVsSevenDayAvgPanel,
   TodayPaceProjectionPanel,
   TodayBiggestEntryPanel,
+  TodayCategoryLeaderPanel,
   LedgerSummaryBar,
   PinnedBudgetAlert,
   PayerPaymentBreakdown,
@@ -876,6 +877,13 @@ export default function ExpenseTab({
             <TodayPaceProjectionPanel trip={trip} expenses={expenses} budget={budget} />
 
             <TodayBiggestEntryPanel trip={trip} expenses={expenses} />
+
+            <TodayCategoryLeaderPanel
+              trip={trip}
+              expenses={expenses}
+              filterCategory={filterCategory}
+              setFilterCategory={setFilterCategory}
+            />
 
             <TodayCategoryChips
               trip={trip}
