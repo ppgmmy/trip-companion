@@ -801,6 +801,13 @@
       "id": "today-category-leader",
       "title": "今日主導分類",
       "description": "突出今日使費最大分類、佔今日比例，並對照全程該類佔比，秒懂今日係「食飲日／購物日」定混合消費。"
+    },
+    {
+      "date": "2026-11-05",
+      "id": "expense-time-of-day",
+      "title": "消費時段分布",
+      "description": "依記帳時間統計清晨至深夜各時段支出佔比，了解邊個時段最易使費。",
+      "cycle": true
     }
   ]
 }
