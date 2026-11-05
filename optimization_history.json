@@ -814,6 +814,13 @@
       "id": "today-spend-day-rank",
       "title": "今日使費排名",
       "description": "將今日使費同旅程至今各日對比，顯示排第幾高、距離爆煲日仲差幾多，大額消費日一眼有數。"
+    },
+    {
+      "date": "2026-11-06",
+      "id": "trip-log-coverage",
+      "title": "旅程記帳覆蓋率",
+      "description": "圓環顯示已過旅程日子嘅記帳覆蓋百分比，同累計筆數成就，鼓勵補齊漏記、養成完整帳目。",
+      "cycle": true
     }
   ]
 }
