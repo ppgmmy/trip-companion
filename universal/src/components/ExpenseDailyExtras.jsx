@@ -2481,6 +2481,175 @@ export function TodayCategoryLeaderPanel({ trip, expenses, filterCategory, setFi
   return <div className={cardClass}>{cardInner}</div>;
 }
 
+export function TodaySpendDayRankPanel({ trip, expenses }) {
+  const todayId = toDateId(new Date());
+
+  const stats = useMemo(() => {
+    const elapsed = elapsedTripDateIds(trip).filter((d) => d <= todayId);
+    const dayRows = elapsed
+      .map((dateId) => ({ dateId, total: sumByDate(expenses, dateId) }))
+      .filter((d) => d.total > 0)
+      .sort((a, b) => b.total - a.total);
+
+    const todayTotal = sumByDate(expenses, todayId);
+    if (dayRows.length === 0 && todayTotal <= 0) return null;
+
+    const rank = todayTotal > 0 ? dayRows.findIndex((d) => d.dateId === todayId) + 1 : 0;
+    const topDay = dayRows[0] ?? null;
+    const loggedDays = dayRows.length;
+    const isTop = rank === 1 && todayTotal > 0;
+    const gapToTop =
+      topDay && todayTotal > 0 && !isTop ? Math.max(0, topDay.total - todayTotal) : 0;
+    const secondDay = dayRows.length > 1 ? dayRows[1] : null;
+    const leadOverSecond =
+      isTop && secondDay ? Math.max(0, todayTotal - secondDay.total) : 0;
+
+    const totalsAsc = dayRows.map((d) => d.total).sort((a, b) => a - b);
+    let median = 0;
+    if (totalsAsc.length) {
+      const mid = Math.floor(totalsAsc.length / 2);
+      median =
+        totalsAsc.length % 2 === 1
+          ? totalsAsc[mid]
+          : (totalsAsc[mid - 1] + totalsAsc[mid]) / 2;
+    }
+
+    return {
+      todayTotal,
+      rank,
+      loggedDays,
+      topDay,
+      isTop,
+      gapToTop,
+      leadOverSecond,
+      secondDay,
+      median,
+    };
+  }, [expenses, trip, todayId]);
+
+  if (!isFeatureEnabled("today-spend-day-rank")) return null;
+  if (!stats) return null;
+
+  const { todayTotal, rank, loggedDays, topDay, isTop, gapToTop, leadOverSecond, median } = stats;
+
+  if (loggedDays === 0) return null;
+
+  const maxBar = Math.max(todayTotal, topDay?.total ?? 0, median, 1);
+  const todayBar = Math.max(6, Math.round((todayTotal / maxBar) * 100));
+  const topBar = topDay ? Math.max(6, Math.round((topDay.total / maxBar) * 100)) : 0;
+  const medianBar = median > 0 ? Math.max(6, Math.round((median / maxBar) * 100)) : 0;
+
+  let headline = todayTotal > 0 ? `第 ${rank} 高` : "今日未記帳";
+  let headlineClass = "text-ink";
+  if (isTop && loggedDays >= 2) {
+    headline = "旅程最高日 🥇";
+    headlineClass = "text-[#b45309]";
+  } else if (isTop && loggedDays === 1) {
+    headline = "首個有支出日";
+    headlineClass = "text-jade-deep";
+  } else if (todayTotal === 0) {
+    headlineClass = "text-ink-faint";
+  } else if (rank <= 3 && loggedDays >= 4) {
+    headlineClass = "text-coral";
+  }
+
+  let insight = "對照旅程各日使費，掌握今日喺整趟嘅位置";
+  let insightClass = "text-ink-soft";
+  if (todayTotal === 0 && topDay) {
+    insight = `目前最高係 ${formatShortDate(topDay.dateId)} · ${formatMoney(topDay.total, trip.targetCurrency)}`;
+    insightClass = "text-ink-faint";
+  } else if (isTop && leadOverSecond > 0 && loggedDays >= 2) {
+    insight = `領先第二高 ${formatMoney(leadOverSecond, trip.targetCurrency)} · 留意今日節奏`;
+    insightClass = "text-[#b45309]";
+  } else if (isTop && loggedDays === 1) {
+    insight = "繼續記帳就會同其他日子排名對比";
+    insightClass = "text-jade-deep";
+  } else if (gapToTop > 0 && topDay) {
+    const pct = topDay.total > 0 ? Math.round((gapToTop / topDay.total) * 100) : 0;
+    insight = `距離最高日（${formatShortDate(topDay.dateId)}）仲差 ${formatMoney(gapToTop, trip.targetCurrency)}${pct >= 15 ? `（${pct}%）` : ""}`;
+    insightClass = rank <= 3 ? "text-coral" : "text-ink-soft";
+  } else if (median > 0 && todayTotal > 0) {
+    const vsMed = todayTotal - median;
+    if (vsMed <= -median * 0.2) {
+      insight = `低過各日使費中位 ${formatMoney(-vsMed, trip.targetCurrency)} · 收油日`;
+      insightClass = "text-jade-deep";
+    } else if (vsMed >= median * 0.25) {
+      insight = `高過各日使費中位 ${formatMoney(vsMed, trip.targetCurrency)}`;
+      insightClass = "text-[#b45309]";
+    }
+  }
+
+  const badge =
+    loggedDays >= 2
+      ? `${loggedDays} 個有支出日`
+      : "1 個有支出日";
+
+  return (
+    <div
+      className={`rounded-2xl border px-3 py-2.5 shadow-[var(--shadow-soft)] ${
+        isTop && loggedDays >= 2
+          ? "border-amber-300/45 bg-gradient-to-br from-[#fffbeb]/90 to-white"
+          : "border-jade/15 bg-gradient-to-br from-white to-[#f0f7f5]/85"
+      }`}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">今日使費排名</p>
+        <span className="rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-bold text-jade-deep">{badge}</span>
+      </div>
+      <div className="mt-2 flex items-end justify-between gap-3">
+        <div>
+          <p className={`font-display text-2xl font-black leading-none ${headlineClass}`}>{headline}</p>
+          {todayTotal > 0 && (
+            <p className="mt-1 text-sm font-semibold text-ink-soft">
+              {formatMoney(todayTotal, trip.targetCurrency)}
+              {loggedDays >= 2 && rank > 0 && (
+                <span className="text-ink-faint"> · 共 {loggedDays} 日排第 {rank}</span>
+              )}
+            </p>
+          )}
+        </div>
+        {topDay && !isTop && todayTotal > 0 && (
+          <div className="shrink-0 text-right">
+            <p className="text-[10px] font-semibold text-ink-faint">最高日</p>
+            <p className="text-xs font-bold text-ink">{formatShortDate(topDay.dateId)}</p>
+            <p className="text-[11px] font-semibold text-coral">{formatMoney(topDay.total, trip.targetCurrency)}</p>
+          </div>
+        )}
+      </div>
+      {todayTotal > 0 && loggedDays >= 2 && (
+        <div className="mt-2.5 space-y-1.5">
+          {topDay && (
+            <div className="flex items-center gap-2">
+              <span className="w-14 shrink-0 text-[10px] font-semibold text-ink-faint">最高</span>
+              <div className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-[#efe9e0]">
+                <div className="h-full rounded-full bg-coral/80" style={{ width: `${topBar}%` }} />
+              </div>
+            </div>
+          )}
+          {median > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="w-14 shrink-0 text-[10px] font-semibold text-ink-faint">中位</span>
+              <div className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-[#efe9e0]">
+                <div className="h-full rounded-full bg-ink-faint/35" style={{ width: `${medianBar}%` }} />
+              </div>
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            <span className="w-14 shrink-0 text-[10px] font-semibold text-jade-deep">今日</span>
+            <div className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-[#efe9e0]">
+              <div
+                className={`h-full rounded-full ${isTop ? "bg-amber-500" : rank <= 3 ? "bg-coral/70" : "bg-jade/70"}`}
+                style={{ width: `${todayBar}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+      <p className={`mt-2 text-center text-[11px] font-semibold leading-snug ${insightClass}`}>{insight}</p>
+    </div>
+  );
+}
+
 export function TodayBiggestEntryPanel({ trip, expenses }) {
   const todayId = toDateId(new Date());
 

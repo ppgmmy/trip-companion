@@ -458,4 +458,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "突出今日使費最大分類、佔今日比例，並對照全程該類佔比，秒懂今日係「食飲日／購物日」定混合消費。",
     pillar: "analysis",
   },
+  {
+    id: "today-spend-day-rank",
+    title: "今日使費排名",
+    description: "將今日使費同旅程至今各日對比，顯示排第幾高、距離爆煲日仲差幾多，大額消費日一眼有數。",
+    pillar: "stickiness",
+  },
 ];

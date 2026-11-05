@@ -73,9 +73,10 @@
     "logging-streak-milestone",
     "today-yesterday-entry-compare",
     "today-vs-trip-pace",
-    "today-category-leader"
+    "today-category-leader",
+    "today-spend-day-rank"
   ],
-  "updatedAt": "2026-11-04T17:56:34.760Z",
-  "lastFeatureId": "expense-time-of-day",
-  "lastTitle": "消費時段分布"
+  "updatedAt": "2026-11-05T02:05:00.000Z",
+  "lastFeatureId": "today-spend-day-rank",
+  "lastTitle": "今日使費排名"
 }
