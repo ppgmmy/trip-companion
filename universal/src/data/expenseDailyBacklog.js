@@ -464,4 +464,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "將今日使費同旅程至今各日對比，顯示排第幾高、距離爆煲日仲差幾多，大額消費日一眼有數。",
     pillar: "stickiness",
   },
+  {
+    id: "today-biggest-trip-rank",
+    title: "今日最大單筆旅程排名",
+    description: "將今日最高一筆同全程所有支出對比，顯示排第幾大、距離旅程紀錄仲差幾多，大額消費更有參考。",
+    pillar: "convenience",
+  },
 ];

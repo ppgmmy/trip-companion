@@ -2736,6 +2736,153 @@ export function TodayBiggestEntryPanel({ trip, expenses }) {
   );
 }
 
+export function TodayBiggestTripRankPanel({ trip, expenses }) {
+  const todayId = toDateId(new Date());
+
+  const stats = useMemo(() => {
+    const amounts = expenses
+      .map((e) => ({ id: e.id, amount: Number(e.amount) || 0, date: e.date, categoryId: e.categoryId, note: e.note }))
+      .filter((e) => e.amount > 0);
+    if (!amounts.length) return null;
+
+    const todayEntries = amounts.filter((e) => e.date === todayId);
+    if (!todayEntries.length) return null;
+
+    const todayTopRow = todayEntries.reduce((best, e) => (e.amount > best.amount ? e : best), todayEntries[0]);
+    const todayTopEntry = expenses.find((e) => e.id === todayTopRow.id) ?? todayTopRow;
+    const sorted = [...amounts].sort((a, b) => b.amount - a.amount);
+    const tripTop = sorted[0];
+    const rank = sorted.findIndex((e) => e.id === todayTopRow.id) + 1;
+    const totalEntries = sorted.length;
+    const isRecord = rank === 1;
+    const gapToRecord = !isRecord && tripTop ? Math.max(0, tripTop.amount - todayTopRow.amount) : 0;
+    const second = sorted.length > 1 ? sorted[1] : null;
+    const leadOverSecond = isRecord && second ? Math.max(0, todayTopRow.amount - second.amount) : 0;
+
+    const cat = EXPENSE_CATEGORIES.find((c) => c.id === todayTopRow.categoryId);
+
+    return {
+      todayTop: todayTopRow,
+      todayTopEntry,
+      tripTop,
+      rank,
+      totalEntries,
+      isRecord,
+      gapToRecord,
+      leadOverSecond,
+      second,
+      cat,
+    };
+  }, [expenses, todayId]);
+
+  if (!isFeatureEnabled("today-biggest-trip-rank")) return null;
+  if (!stats) return null;
+
+  const { todayTop, todayTopEntry, tripTop, rank, totalEntries, isRecord, gapToRecord, leadOverSecond, cat } = stats;
+
+  const maxBar = Math.max(todayTop.amount, tripTop?.amount ?? 0, 1);
+  const todayBar = Math.max(6, Math.round((todayTop.amount / maxBar) * 100));
+  const recordBar = tripTop ? Math.max(6, Math.round((tripTop.amount / maxBar) * 100)) : 0;
+
+  let headline = `全程第 ${rank} 大`;
+  let headlineClass = "text-ink";
+  if (isRecord && totalEntries >= 2) {
+    headline = "旅程最高單筆 🏆";
+    headlineClass = "text-[#b45309]";
+  } else if (isRecord && totalEntries === 1) {
+    headline = "首筆記帳";
+    headlineClass = "text-jade-deep";
+  } else if (rank <= 3 && totalEntries >= 5) {
+    headlineClass = "text-coral";
+  }
+
+  let insight = `共 ${totalEntries} 筆支出 · 對照全程單筆大小`;
+  let insightClass = "text-ink-soft";
+  if (isRecord && leadOverSecond > 0 && totalEntries >= 2) {
+    insight = `領先第二高 ${formatMoney(leadOverSecond, trip.targetCurrency)} · 留意大額`;
+    insightClass = "text-[#b45309]";
+  } else if (isRecord && totalEntries === 1) {
+    insight = "繼續記帳就會同其他單筆排名對比";
+    insightClass = "text-jade-deep";
+  } else if (gapToRecord > 0 && tripTop) {
+    const tripTopCat = EXPENSE_CATEGORIES.find((c) => c.id === tripTop.categoryId);
+    insight = `距離紀錄（${formatShortDate(tripTop.date)} · ${tripTopCat?.label || "其他"}）仲差 ${formatMoney(gapToRecord, trip.targetCurrency)}`;
+    insightClass = rank <= 3 ? "text-coral" : "text-ink-soft";
+  } else if (second && rank === 2) {
+    insight = `僅次於 ${formatMoney(tripTop.amount, trip.targetCurrency)} 嘅紀錄`;
+    insightClass = "text-[#b45309]";
+  }
+
+  const meta = expenseMetaLine(todayTopEntry);
+
+  return (
+    <div
+      className={`rounded-2xl border px-3 py-2.5 shadow-[var(--shadow-soft)] ${
+        isRecord && totalEntries >= 2
+          ? "border-amber-300/40 bg-gradient-to-br from-[#fffbeb]/95 to-white"
+          : rank <= 3 && totalEntries >= 5
+            ? "border-coral/20 bg-gradient-to-br from-[#fff5f3]/90 to-white"
+            : "border-jade/15 bg-gradient-to-br from-white to-[#f0f7f5]/90"
+      }`}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">今日最大單 · 全程排名</p>
+        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${isRecord ? "bg-amber-100 text-[#b45309]" : "bg-[#f1f5f4] text-ink-soft"}`}>
+          {headline}
+        </span>
+      </div>
+      <div className="mt-2 flex items-start gap-3">
+        <div
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-base font-black text-white shadow-sm"
+          style={{ backgroundColor: cat?.color || "#0d9488" }}
+          aria-hidden
+        >
+          {(cat?.label || "?").slice(0, 1)}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className={`font-display text-2xl font-black leading-none ${headlineClass}`}>
+            {formatMoney(todayTop.amount, trip.targetCurrency)}
+          </p>
+          <p className="mt-0.5 truncate text-sm font-semibold text-ink">
+            {cat?.label || "其他"}
+            {todayTop.note ? ` · ${todayTop.note}` : ""}
+          </p>
+          {meta && <p className="mt-0.5 truncate text-[10px] font-semibold text-ink-faint">{meta}</p>}
+        </div>
+        <div className="shrink-0 text-right">
+          <p className="text-[10px] font-semibold text-ink-faint">排名</p>
+          <p className={`font-display text-xl font-black ${headlineClass}`}>
+            {rank}
+            <span className="text-sm font-bold text-ink-faint">/{totalEntries}</span>
+          </p>
+        </div>
+      </div>
+      {totalEntries >= 2 && (
+        <div className="mt-2.5 space-y-1.5">
+          {tripTop && !isRecord && (
+            <div className="flex items-center gap-2">
+              <span className="w-14 shrink-0 text-[10px] font-semibold text-ink-faint">紀錄</span>
+              <div className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-[#efe9e0]">
+                <div className="h-full rounded-full bg-coral/80" style={{ width: `${recordBar}%` }} />
+              </div>
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            <span className="w-14 shrink-0 text-[10px] font-semibold text-jade-deep">今日</span>
+            <div className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-[#efe9e0]">
+              <div
+                className={`h-full rounded-full ${isRecord ? "bg-amber-500" : rank <= 3 ? "bg-coral/70" : "bg-jade/70"}`}
+                style={{ width: `${todayBar}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+      <p className={`mt-2 text-center text-[11px] font-semibold leading-snug ${insightClass}`}>{insight}</p>
+    </div>
+  );
+}
+
 export function RemainingBudgetCountdownPanel({
   trip,
   budget = 0,

@@ -74,9 +74,10 @@
     "today-yesterday-entry-compare",
     "today-vs-trip-pace",
     "today-category-leader",
-    "today-spend-day-rank"
+    "today-spend-day-rank",
+    "today-biggest-trip-rank"
   ],
-  "updatedAt": "2026-11-05T17:57:19.595Z",
-  "lastFeatureId": "trip-log-coverage",
-  "lastTitle": "旅程記帳覆蓋率"
+  "updatedAt": "2026-11-06T02:05:00.000Z",
+  "lastFeatureId": "today-biggest-trip-rank",
+  "lastTitle": "今日最大單筆旅程排名"
 }

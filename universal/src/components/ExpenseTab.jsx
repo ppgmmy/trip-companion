@@ -31,6 +31,7 @@ import {
   TodayVsSevenDayAvgPanel,
   TodayPaceProjectionPanel,
   TodayBiggestEntryPanel,
+  TodayBiggestTripRankPanel,
   TodayCategoryLeaderPanel,
   TodaySpendDayRankPanel,
   LedgerSummaryBar,
@@ -878,6 +879,8 @@ export default function ExpenseTab({
             <TodayPaceProjectionPanel trip={trip} expenses={expenses} budget={budget} />
 
             <TodayBiggestEntryPanel trip={trip} expenses={expenses} />
+
+            <TodayBiggestTripRankPanel trip={trip} expenses={expenses} />
 
             <TodayCategoryLeaderPanel
               trip={trip}
