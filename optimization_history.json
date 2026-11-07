@@ -840,6 +840,13 @@
       "id": "week-to-date-today-share",
       "title": "本週累計與今日佔比",
       "description": "顯示本週（週一至今日）累計使費，標示今日佔本週比例，附逐日迷你條，掌握週內消費節奏。"
+    },
+    {
+      "date": "2026-11-08",
+      "id": "filtered-day-benchmark",
+      "title": "篩選日 vs 日均",
+      "description": "日子快篩選中某一日時，對比該日使費同旅程日均、中位日同當日預算建議，秒懂偏高定偏低。",
+      "cycle": true
     }
   ]
 }
