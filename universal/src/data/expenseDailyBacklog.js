@@ -470,4 +470,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "將今日最高一筆同全程所有支出對比，顯示排第幾大、距離旅程紀錄仲差幾多，大額消費更有參考。",
     pillar: "convenience",
   },
+  {
+    id: "week-to-date-today-share",
+    title: "本週累計與今日佔比",
+    description: "顯示本週（週一至今日）累計使費，標示今日佔本週比例，附逐日迷你條，掌握週內消費節奏。",
+    pillar: "analysis",
+  },
 ];

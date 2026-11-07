@@ -2883,6 +2883,155 @@ export function TodayBiggestTripRankPanel({ trip, expenses }) {
   );
 }
 
+export function WeekToDateTodaySharePanel({ trip, expenses }) {
+  const todayId = toDateId(new Date());
+
+  const stats = useMemo(() => {
+    const week = weekBounds(0);
+    const cap = todayId < week.end ? todayId : week.end;
+    const startTrip = trip.startDate;
+    const endTrip = trip.endDate;
+
+    const days = [];
+    let cursor = week.start;
+    while (cursor <= cap) {
+      if (startTrip && cursor < startTrip) {
+        cursor = shiftDateId(cursor, 1);
+        continue;
+      }
+      if (endTrip && cursor > endTrip) break;
+      days.push({
+        dateId: cursor,
+        total: sumByDate(expenses, cursor),
+        isToday: cursor === todayId,
+      });
+      cursor = shiftDateId(cursor, 1);
+    }
+
+    const weekSum = days.reduce((s, d) => s + d.total, 0);
+    const todaySum = sumByDate(expenses, todayId);
+    const loggedDays = days.filter((d) => d.total > 0).length;
+    const todayInWeek = days.some((d) => d.dateId === todayId);
+    const maxDay = days.reduce((best, d) => (d.total > (best?.total ?? 0) ? d : best), null);
+
+    const todayShare = weekSum > 0 && todaySum > 0 ? (todaySum / weekSum) * 100 : 0;
+    const avgOnLogged = loggedDays > 0 ? weekSum / loggedDays : 0;
+
+    return {
+      days,
+      weekSum,
+      todaySum,
+      loggedDays,
+      todayInWeek,
+      todayShare,
+      avgOnLogged,
+      maxDay,
+      week,
+    };
+  }, [expenses, trip, todayId]);
+
+  if (!isFeatureEnabled("week-to-date-today-share")) return null;
+  if (!stats.days.length) return null;
+  if (stats.weekSum <= 0 && stats.todaySum <= 0) return null;
+
+  const { days, weekSum, todaySum, loggedDays, todayInWeek, todayShare, avgOnLogged, maxDay, week } = stats;
+  const maxBar = Math.max(...days.map((d) => d.total), 1);
+
+  let headline = formatMoney(weekSum, trip.targetCurrency);
+  let headlineClass = "text-ink";
+  let badge = `週一至今 · ${formatWeekRange({ ...week, end: todayId < week.end ? todayId : week.end })}`;
+
+  let insight = `${loggedDays} 日有記帳 · 掌握本週節奏`;
+  let insightClass = "text-ink-soft";
+
+  if (!todayInWeek) {
+    insight = "今日唔喺本週統計範圍內";
+    insightClass = "text-ink-faint";
+  } else if (todaySum === 0 && weekSum > 0) {
+    insight = `本週已使 ${formatMoney(weekSum, trip.targetCurrency)} · 今日未記帳`;
+    headlineClass = "text-jade-deep";
+  } else if (todayShare >= 55 && loggedDays >= 2) {
+    headlineClass = "text-[#b45309]";
+    insight = `今日佔本週 ${Math.round(todayShare)}% · 消費集中喺今日`;
+    insightClass = "text-[#b45309]";
+  } else if (todayShare >= 40) {
+    insight = `今日佔本週 ${Math.round(todayShare)}% · 留意週內節奏`;
+    insightClass = "text-coral";
+  } else if (avgOnLogged > 0 && todaySum > avgOnLogged * 1.25) {
+    insight = `高過本週日均 ${formatMoney(todaySum - avgOnLogged, trip.targetCurrency)}`;
+    insightClass = "text-[#b45309]";
+  } else if (avgOnLogged > 0 && todaySum > 0 && todaySum <= avgOnLogged * 0.75) {
+    insight = `低過本週日均 · 收油日`;
+    insightClass = "text-jade-deep";
+  } else if (todaySum > 0) {
+    insight = `今日佔本週 ${Math.round(todayShare)}%${maxDay && maxDay.dateId === todayId && loggedDays >= 2 ? " · 本週最高日" : ""}`;
+    insightClass = "text-ink-soft";
+  }
+
+  return (
+    <div
+      className={`rounded-2xl border px-3 py-2.5 shadow-[var(--shadow-soft)] ${
+        todayShare >= 55 && todaySum > 0
+          ? "border-coral/25 bg-gradient-to-br from-[#fff5f3]/90 to-white"
+          : "border-jade/15 bg-gradient-to-br from-white to-[#f0f7f5]/85"
+      }`}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">本週累計 · 今日佔比</p>
+        <span className="rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-bold text-ink-soft">{badge}</span>
+      </div>
+      <div className="mt-2 flex items-end justify-between gap-3">
+        <div>
+          <p className={`font-display text-2xl font-black leading-none ${headlineClass}`}>{headline}</p>
+          <p className="mt-1 text-sm font-semibold text-ink-soft">本週累計（週一至今）</p>
+        </div>
+        {todaySum > 0 && weekSum > 0 && (
+          <div className="shrink-0 text-right">
+            <p className="text-[10px] font-semibold text-ink-faint">今日佔比</p>
+            <p className={`font-display text-xl font-black ${todayShare >= 40 ? "text-coral" : "text-jade-deep"}`}>
+              {Math.round(todayShare)}%
+            </p>
+            <p className="text-[10px] font-semibold text-ink-faint">{formatMoney(todaySum, trip.targetCurrency)}</p>
+          </div>
+        )}
+      </div>
+      {days.length >= 2 && weekSum > 0 && (
+        <div className="mt-2.5 flex items-end gap-1">
+          {days.map((d) => {
+            const h = Math.max(4, Math.round((d.total / maxBar) * 100));
+            const label = weekdayLabel(d.dateId).replace("週", "");
+            return (
+              <div key={d.dateId} className="flex min-w-0 flex-1 flex-col items-center gap-0.5">
+                <div className="flex h-12 w-full items-end justify-center">
+                  <div
+                    title={`${formatShortDate(d.dateId)} · ${formatMoney(d.total, trip.targetCurrency)}`}
+                    className={`w-full max-w-[28px] rounded-t-md transition-all ${
+                      d.isToday
+                        ? todayShare >= 40
+                          ? "bg-coral/80"
+                          : "bg-jade/80"
+                        : d.total > 0
+                          ? "bg-ink-faint/30"
+                          : "bg-[#efe9e0]"
+                    }`}
+                    style={{ height: `${h}%` }}
+                  />
+                </div>
+                <span
+                  className={`text-[9px] font-bold ${d.isToday ? "text-jade-deep" : "text-ink-faint"}`}
+                >
+                  {d.isToday ? "今" : label}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      <p className={`mt-2 text-center text-[11px] font-semibold leading-snug ${insightClass}`}>{insight}</p>
+    </div>
+  );
+}
+
 export function RemainingBudgetCountdownPanel({
   trip,
   budget = 0,

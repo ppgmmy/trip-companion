@@ -75,9 +75,10 @@
     "today-vs-trip-pace",
     "today-category-leader",
     "today-spend-day-rank",
-    "today-biggest-trip-rank"
+    "today-biggest-trip-rank",
+    "week-to-date-today-share"
   ],
-  "updatedAt": "2026-11-06T17:24:39.032Z",
-  "lastFeatureId": "ledger-day-quick-filter",
-  "lastTitle": "日子快篩"
+  "updatedAt": "2026-11-07T02:10:00.000Z",
+  "lastFeatureId": "week-to-date-today-share",
+  "lastTitle": "本週累計與今日佔比"
 }

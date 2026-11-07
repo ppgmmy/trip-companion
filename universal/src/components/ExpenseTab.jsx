@@ -32,6 +32,7 @@ import {
   TodayPaceProjectionPanel,
   TodayBiggestEntryPanel,
   TodayBiggestTripRankPanel,
+  WeekToDateTodaySharePanel,
   TodayCategoryLeaderPanel,
   TodaySpendDayRankPanel,
   LedgerSummaryBar,
@@ -784,6 +785,9 @@ export default function ExpenseTab({
                 <WeekendWeekdayComparePanel trip={trip} expenses={expenses} />
               </div>
               <div className="mt-4">
+                <WeekToDateTodaySharePanel trip={trip} expenses={expenses} />
+              </div>
+              <div className="mt-4">
                 <p className="expense-stat-label">旅程每週使費（港幣）</p>
                 <BarChart bars={weeklyTotals} formatLabel={(v) => `HK$${Math.round(v)}`} />
               </div>
@@ -875,6 +879,8 @@ export default function ExpenseTab({
             <TodayVsSevenDayAvgPanel trip={trip} expenses={expenses} />
 
             <WeekendWeekdayComparePanel trip={trip} expenses={expenses} />
+
+            <WeekToDateTodaySharePanel trip={trip} expenses={expenses} />
 
             <TodayPaceProjectionPanel trip={trip} expenses={expenses} budget={budget} />
 
