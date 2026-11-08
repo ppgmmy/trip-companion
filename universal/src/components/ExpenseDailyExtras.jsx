@@ -3032,6 +3032,158 @@ export function WeekToDateTodaySharePanel({ trip, expenses }) {
   );
 }
 
+function sumSpendingInTripRange(expenses, trip, startId, endId) {
+  if (!startId || !endId || startId > endId) return 0;
+  const startTrip = trip.startDate;
+  const endTrip = trip.endDate;
+  let sum = 0;
+  let cursor = startId;
+  while (cursor <= endId) {
+    if (startTrip && cursor < startTrip) {
+      cursor = shiftDateId(cursor, 1);
+      continue;
+    }
+    if (endTrip && cursor > endTrip) break;
+    sum += sumByDate(expenses, cursor);
+    cursor = shiftDateId(cursor, 1);
+  }
+  return sum;
+}
+
+function countCalendarDaysInclusive(startId, endId) {
+  if (!startId || !endId || startId > endId) return 0;
+  let n = 0;
+  let cursor = startId;
+  while (cursor <= endId) {
+    n += 1;
+    if (cursor === endId) break;
+    cursor = shiftDateId(cursor, 1);
+  }
+  return n;
+}
+
+export function WeekToDateSameSpanComparePanel({ trip, expenses }) {
+  const todayId = toDateId(new Date());
+
+  const stats = useMemo(() => {
+    const thisWeek = weekBounds(0);
+    const lastWeek = weekBounds(1);
+    const thisEnd = todayId < thisWeek.end ? todayId : thisWeek.end;
+
+    let dayOffset = 0;
+    let cursor = thisWeek.start;
+    while (cursor <= thisEnd) {
+      dayOffset += 1;
+      if (cursor === thisEnd) break;
+      cursor = shiftDateId(cursor, 1);
+    }
+
+    let lastEnd = shiftDateId(lastWeek.start, dayOffset - 1);
+    if (lastEnd > lastWeek.end) lastEnd = lastWeek.end;
+
+    const thisSum = sumSpendingInTripRange(expenses, trip, thisWeek.start, thisEnd);
+    const lastSum = sumSpendingInTripRange(expenses, trip, lastWeek.start, lastEnd);
+    const delta = thisSum - lastSum;
+    const pctChange = lastSum > 0 ? Math.round((delta / lastSum) * 100) : null;
+    const spanDays = countCalendarDaysInclusive(thisWeek.start, thisEnd);
+
+    const wdToday = weekdayLabel(todayId);
+
+    return {
+      thisWeek,
+      lastWeek,
+      thisEnd,
+      lastEnd,
+      thisSum,
+      lastSum,
+      delta,
+      pctChange,
+      spanDays,
+      wdToday,
+    };
+  }, [expenses, trip, todayId]);
+
+  if (!isFeatureEnabled("week-to-date-same-span-compare")) return null;
+  if (stats.thisSum <= 0 && stats.lastSum <= 0) return null;
+
+  const { thisWeek, lastWeek, thisEnd, lastEnd, thisSum, lastSum, delta, pctChange, spanDays, wdToday } = stats;
+  const max = Math.max(thisSum, lastSum, 1);
+  const thisBar = Math.max(8, Math.round((thisSum / max) * 100));
+  const lastBar = Math.max(8, Math.round((lastSum / max) * 100));
+
+  let insight = `週一至今共 ${spanDays} 日 · 同進度對比上週`;
+  let insightClass = "text-ink-soft";
+  if (lastSum === 0 && thisSum > 0) {
+    insight = "上週同段未有記帳，本週係新起點";
+    insightClass = "text-jade-deep";
+  } else if (delta > 0) {
+    insight =
+      pctChange !== null && pctChange >= 25
+        ? `比上週同段多 ${formatMoney(delta, trip.targetCurrency)} · 消費升溫`
+        : `比上週同段多 ${formatMoney(delta, trip.targetCurrency)}`;
+    insightClass = pctChange !== null && pctChange >= 25 ? "text-[#b45309]" : "text-coral";
+  } else if (delta < 0) {
+    insight =
+      pctChange !== null && pctChange <= -25
+        ? `比上週同段慳 ${formatMoney(Math.abs(delta), trip.targetCurrency)} · 收油做得好`
+        : `比上週同段慳 ${formatMoney(Math.abs(delta), trip.targetCurrency)}`;
+    insightClass = "text-jade-deep";
+  } else if (thisSum > 0) {
+    insight = "兩段同進度使費持平";
+    insightClass = "text-ink-soft";
+  }
+
+  return (
+    <div className="rounded-2xl border border-jade/15 bg-gradient-to-br from-white to-[#f0f7f5]/85 px-3 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">本週至今 vs 上週同段</p>
+          <p className="mt-0.5 text-[11px] text-ink-faint">
+            本週 {formatWeekRange({ ...thisWeek, end: thisEnd })} · 上週至週{wdToday.replace("週", "")}
+          </p>
+        </div>
+        {delta !== 0 && (thisSum > 0 || lastSum > 0) && (
+          <span
+            className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+              delta > 0 ? "bg-coral/15 text-coral" : "bg-jade-soft text-jade-deep"
+            }`}
+          >
+            {delta > 0 ? "↑" : "↓"}{" "}
+            {pctChange !== null ? `${Math.abs(pctChange)}%` : formatMoney(Math.abs(delta), trip.targetCurrency)}
+          </span>
+        )}
+      </div>
+
+      <div className="mt-2.5 space-y-2">
+        <div>
+          <div className="mb-1 flex items-baseline justify-between gap-2">
+            <p className="text-[11px] font-semibold text-jade-deep">本週至今</p>
+            <p className="font-display text-sm font-bold text-ink">{formatMoney(thisSum, trip.targetCurrency)}</p>
+          </div>
+          <div className="h-2.5 overflow-hidden rounded-full bg-[#efe9e0]">
+            <div className="h-full rounded-full bg-gradient-to-r from-jade to-[#34d399]" style={{ width: `${thisBar}%` }} />
+          </div>
+        </div>
+        <div>
+          <div className="mb-1 flex items-baseline justify-between gap-2">
+            <p className="text-[11px] font-semibold text-ink-soft">
+              上週同段
+              <span className="ml-1 text-[10px] font-normal text-ink-faint">
+                （{formatShortDate(lastWeek.start)}–{formatShortDate(lastEnd)}）
+              </span>
+            </p>
+            <p className="font-display text-sm font-bold text-ink-faint">{formatMoney(lastSum, trip.targetCurrency)}</p>
+          </div>
+          <div className="h-2.5 overflow-hidden rounded-full bg-[#efe9e0]">
+            <div className="h-full rounded-full bg-[#94a3b8]" style={{ width: `${lastBar}%` }} />
+          </div>
+        </div>
+      </div>
+      <p className={`mt-2 text-center text-[11px] font-semibold leading-snug ${insightClass}`}>{insight}</p>
+    </div>
+  );
+}
+
 export function RemainingBudgetCountdownPanel({
   trip,
   budget = 0,

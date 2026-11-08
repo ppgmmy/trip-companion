@@ -476,4 +476,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "顯示本週（週一至今日）累計使費，標示今日佔本週比例，附逐日迷你條，掌握週內消費節奏。",
     pillar: "analysis",
   },
+  {
+    id: "week-to-date-same-span-compare",
+    title: "本週至今 vs 上週同段",
+    description: "將本週週一至今累計使費，同上一週由週一至同一星期幾對比，週初幾日就知消費升溫定收油，唔使等到週日先睇全週總數。",
+    pillar: "convenience",
+  },
 ];
