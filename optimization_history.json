@@ -853,6 +853,13 @@
       "id": "week-to-date-same-span-compare",
       "title": "本週至今 vs 上週同段",
       "description": "將本週週一至今累計使費，同上一週由週一至同一星期幾對比，週初幾日就知消費升溫定收油，唔使等到週日先睇全週總數。"
+    },
+    {
+      "date": "2026-11-09",
+      "id": "filtered-day-category-chips",
+      "title": "篩選日分類快篩",
+      "description": "日子快篩選中舊日時，顯示該日各分類使費晶片，一撳即篩選該類支出，翻舊帳對帳更快。",
+      "cycle": true
     }
   ]
 }
