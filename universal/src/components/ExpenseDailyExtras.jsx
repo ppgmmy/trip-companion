@@ -3184,6 +3184,230 @@ export function WeekToDateSameSpanComparePanel({ trip, expenses }) {
   );
 }
 
+function expenseInTripOnDate(trip, dateId) {
+  if (trip.startDate && dateId < trip.startDate) return false;
+  if (trip.endDate && dateId > trip.endDate) return false;
+  return true;
+}
+
+export function CategoryWeekMomentumPanel({ trip, expenses, filterCategory, setFilterCategory }) {
+  const todayId = toDateId(new Date());
+
+  const stats = useMemo(() => {
+    const thisWeek = weekBounds(0);
+    const lastWeek = weekBounds(1);
+    const thisEnd = todayId < thisWeek.end ? todayId : thisWeek.end;
+
+    let dayOffset = 0;
+    let cursor = thisWeek.start;
+    while (cursor <= thisEnd) {
+      dayOffset += 1;
+      if (cursor === thisEnd) break;
+      cursor = shiftDateId(cursor, 1);
+    }
+
+    let lastEnd = shiftDateId(lastWeek.start, dayOffset - 1);
+    if (lastEnd > lastWeek.end) lastEnd = lastWeek.end;
+
+    const thisMap = {};
+    const lastMap = {};
+    expenses.forEach((e) => {
+      const amt = Number(e.amount) || 0;
+      const cat = e.categoryId;
+      const date = e.date;
+      if (!cat || !date || amt <= 0) return;
+      if (!expenseInTripOnDate(trip, date)) return;
+      if (inRange(date, thisWeek.start, thisEnd)) {
+        thisMap[cat] = (thisMap[cat] || 0) + amt;
+      }
+      if (inRange(date, lastWeek.start, lastEnd)) {
+        lastMap[cat] = (lastMap[cat] || 0) + amt;
+      }
+    });
+
+    const ids = new Set([...Object.keys(thisMap), ...Object.keys(lastMap)]);
+    const rows = [...ids]
+      .map((id) => {
+        const meta = EXPENSE_CATEGORIES.find((c) => c.id === id);
+        const thisSum = thisMap[id] || 0;
+        const lastSum = lastMap[id] || 0;
+        const delta = thisSum - lastSum;
+        const pctChange = lastSum > 0 ? Math.round((delta / lastSum) * 100) : thisSum > 0 ? null : 0;
+        return {
+          id,
+          label: meta?.label || id,
+          color: meta?.color || "#64748b",
+          thisSum,
+          lastSum,
+          delta,
+          pctChange,
+        };
+      })
+      .filter((r) => r.thisSum > 0 || r.lastSum > 0)
+      .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+
+    const topRiser = rows.filter((r) => r.delta > 0).sort((a, b) => b.delta - a.delta)[0] ?? null;
+    const topFaller = rows.filter((r) => r.delta < 0).sort((a, b) => a.delta - b.delta)[0] ?? null;
+
+    return {
+      thisWeek,
+      lastWeek,
+      thisEnd,
+      lastEnd,
+      rows: rows.slice(0, 5),
+      topRiser,
+      topFaller,
+      wdToday: weekdayLabel(todayId),
+      hasLastWeek: rows.some((r) => r.lastSum > 0),
+    };
+  }, [expenses, trip, todayId]);
+
+  if (!isFeatureEnabled("category-week-momentum")) return null;
+  if (!stats.rows.length) return null;
+
+  const { thisWeek, lastWeek, thisEnd, lastEnd, rows, topRiser, topFaller, wdToday, hasLastWeek } = stats;
+  const maxBar = Math.max(...rows.flatMap((r) => [r.thisSum, r.lastSum]), 1);
+  const canFilter = isFeatureEnabled("category-filter") && typeof setFilterCategory === "function";
+
+  let insight = "對比本週至今同上週同段 · 掌握分類節奏";
+  let insightClass = "text-ink-soft";
+  if (!hasLastWeek && rows.some((r) => r.thisSum > 0)) {
+    insight = "上週同段未有記帳，本週分類係新起點";
+    insightClass = "text-jade-deep";
+  } else if (topRiser && topFaller) {
+    insight = `升溫：${topRiser.label} · 收油：${topFaller.label}`;
+    insightClass = "text-ink-soft";
+  } else if (topRiser) {
+    insight = `${topRiser.label} 比上週同段多 ${formatMoney(topRiser.delta, trip.targetCurrency)}`;
+    insightClass = "text-[#b45309]";
+  } else if (topFaller) {
+    insight = `${topFaller.label} 比上週同段慳 ${formatMoney(Math.abs(topFaller.delta), trip.targetCurrency)}`;
+    insightClass = "text-jade-deep";
+  }
+
+  return (
+    <div className="rounded-2xl border border-jade/15 bg-gradient-to-br from-white to-[#f8faf9]/90 px-3 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="mb-2 flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">分類週環比動能</p>
+          <p className="mt-0.5 text-[11px] text-ink-faint">
+            本週 {formatWeekRange({ ...thisWeek, end: thisEnd })} · 上週至週{wdToday.replace("週", "")}
+          </p>
+        </div>
+        {(topRiser || topFaller) && hasLastWeek && (
+          <div className="flex flex-wrap gap-1">
+            {topRiser && (
+              <span className="rounded-full bg-coral/12 px-2 py-0.5 text-[10px] font-bold text-coral">
+                ↑ {topRiser.label}
+              </span>
+            )}
+            {topFaller && (
+              <span className="rounded-full bg-jade-soft px-2 py-0.5 text-[10px] font-bold text-jade-deep">
+                ↓ {topFaller.label}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+      <ul className="space-y-2.5">
+        {rows.map((r) => {
+          const thisW = Math.max(4, Math.round((r.thisSum / maxBar) * 100));
+          const lastW = Math.max(4, Math.round((r.lastSum / maxBar) * 100));
+          const isActive = filterCategory === r.id;
+          let deltaLabel = "—";
+          let deltaClass = "text-ink-faint";
+          if (r.delta > 0) {
+            deltaLabel =
+              r.pctChange !== null && r.pctChange >= 20
+                ? `+${r.pctChange}%`
+                : `+${formatMoney(r.delta, trip.targetCurrency)}`;
+            deltaClass = "text-coral";
+          } else if (r.delta < 0) {
+            deltaLabel =
+              r.pctChange !== null && r.pctChange <= -20
+                ? `${r.pctChange}%`
+                : formatMoney(r.delta, trip.targetCurrency);
+            deltaClass = "text-jade-deep";
+          } else if (r.thisSum > 0 && r.lastSum > 0) {
+            deltaLabel = "持平";
+          } else if (r.thisSum > 0 && r.lastSum === 0) {
+            deltaLabel = "本週新";
+            deltaClass = "text-jade-deep";
+          }
+
+          const RowTag = canFilter ? "button" : "li";
+          const rowProps = canFilter
+            ? {
+                type: "button",
+                onClick: () => setFilterCategory(isActive ? "all" : r.id),
+                className: `w-full rounded-xl text-left transition-colors ${
+                  isActive ? "bg-jade/10 ring-1 ring-jade/30" : "hover:bg-white/80"
+                }`,
+              }
+            : {};
+
+          return (
+            <li key={r.id} className="list-none">
+              <RowTag {...rowProps}>
+                <div className={`${canFilter ? "px-1 py-1" : ""}`}>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="flex min-w-0 items-center gap-1.5 text-xs font-bold text-ink">
+                      <span
+                        className="h-2 w-2 shrink-0 rounded-full"
+                        style={{ backgroundColor: r.color }}
+                        aria-hidden="true"
+                      />
+                      <span className="truncate">{r.label}</span>
+                      {isActive && (
+                        <span className="shrink-0 text-[9px] font-bold text-jade-deep">已篩選</span>
+                      )}
+                    </span>
+                    <span className={`shrink-0 text-[11px] font-bold ${deltaClass}`}>{deltaLabel}</span>
+                  </div>
+                  <div className="mt-1 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="w-12 shrink-0 text-[9px] font-semibold text-jade-deep">本週</span>
+                      <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-[#efe9e0]">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-jade to-[#34d399]"
+                          style={{ width: `${thisW}%` }}
+                        />
+                      </div>
+                      <span className="w-14 shrink-0 text-right text-[10px] font-semibold text-ink-soft">
+                        {r.thisSum > 0 ? formatMoney(r.thisSum, trip.targetCurrency) : "—"}
+                      </span>
+                    </div>
+                    {hasLastWeek && (
+                      <div className="flex items-center gap-2">
+                        <span className="w-12 shrink-0 text-[9px] font-semibold text-ink-faint">上週段</span>
+                        <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-[#efe9e0]">
+                          <div className="h-full rounded-full bg-[#cbd5e1]" style={{ width: `${lastW}%` }} />
+                        </div>
+                        <span className="w-14 shrink-0 text-right text-[10px] font-semibold text-ink-faint">
+                          {r.lastSum > 0 ? formatMoney(r.lastSum, trip.targetCurrency) : "—"}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  {canFilter && (
+                    <p className="mt-0.5 text-[9px] font-semibold text-ink-faint">撳一下篩選該分類</p>
+                  )}
+                </div>
+              </RowTag>
+            </li>
+          );
+        })}
+      </ul>
+      <p className={`mt-2 text-center text-[11px] font-semibold leading-snug ${insightClass}`}>{insight}</p>
+      {hasLastWeek && (
+        <p className="mt-0.5 text-center text-[9px] text-ink-faint">
+          上週段 {formatShortDate(lastWeek.start)}–{formatShortDate(lastEnd)}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export function RemainingBudgetCountdownPanel({
   trip,
   budget = 0,

@@ -482,4 +482,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "將本週週一至今累計使費，同上一週由週一至同一星期幾對比，週初幾日就知消費升溫定收油，唔使等到週日先睇全週總數。",
     pillar: "convenience",
   },
+  {
+    id: "category-week-momentum",
+    title: "分類週環比動能",
+    description: "對比本週至今同上週同段各分類使費，標出升溫與收油最大類別，調整行程消費更有方向。",
+    pillar: "analysis",
+  },
 ];

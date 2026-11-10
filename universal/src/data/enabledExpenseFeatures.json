@@ -77,9 +77,10 @@
     "today-spend-day-rank",
     "today-biggest-trip-rank",
     "week-to-date-today-share",
-    "week-to-date-same-span-compare"
+    "week-to-date-same-span-compare",
+    "category-week-momentum"
   ],
-  "updatedAt": "2026-11-09T20:38:48.230Z",
-  "lastFeatureId": "filtered-day-prev-compare",
-  "lastTitle": "篩選日 vs 前一日"
+  "updatedAt": "2026-11-10T02:02:00.000Z",
+  "lastFeatureId": "category-week-momentum",
+  "lastTitle": "分類週環比動能"
 }

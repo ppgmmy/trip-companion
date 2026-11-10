@@ -34,6 +34,7 @@ import {
   TodayBiggestTripRankPanel,
   WeekToDateTodaySharePanel,
   WeekToDateSameSpanComparePanel,
+  CategoryWeekMomentumPanel,
   TodayCategoryLeaderPanel,
   TodaySpendDayRankPanel,
   LedgerSummaryBar,
@@ -747,6 +748,14 @@ export default function ExpenseTab({
                   onJumpToLedger={jumpToLedgerCategory}
                 />
               </div>
+              <div className="mt-4">
+                <CategoryWeekMomentumPanel
+                  trip={trip}
+                  expenses={expenses}
+                  filterCategory={filterCategory}
+                  setFilterCategory={setFilterCategory}
+                />
+              </div>
             </CollapsibleSection>
 
             <CollapsibleSection
@@ -852,6 +861,13 @@ export default function ExpenseTab({
             />
 
             <TodayCategoryShiftPanel trip={trip} expenses={expenses} />
+
+            <CategoryWeekMomentumPanel
+              trip={trip}
+              expenses={expenses}
+              filterCategory={filterCategory}
+              setFilterCategory={setFilterCategory}
+            />
 
             <MorningLoggingBriefPanel
               trip={trip}
