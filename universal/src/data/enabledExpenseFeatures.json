@@ -78,9 +78,10 @@
     "today-biggest-trip-rank",
     "week-to-date-today-share",
     "week-to-date-same-span-compare",
-    "category-week-momentum"
+    "category-week-momentum",
+    "week-logging-goal"
   ],
-  "updatedAt": "2026-11-10T17:41:14.949Z",
-  "lastFeatureId": "filtered-day-trip-budget-share",
-  "lastTitle": "篩選日佔旅程預算"
+  "updatedAt": "2026-11-11T02:10:00.000Z",
+  "lastFeatureId": "week-logging-goal",
+  "lastTitle": "本週記帳目標"
 }

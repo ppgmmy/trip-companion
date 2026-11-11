@@ -35,6 +35,7 @@ import {
   WeekToDateTodaySharePanel,
   WeekToDateSameSpanComparePanel,
   CategoryWeekMomentumPanel,
+  WeekLoggingGoalPanel,
   TodayCategoryLeaderPanel,
   TodaySpendDayRankPanel,
   LedgerSummaryBar,
@@ -881,6 +882,8 @@ export default function ExpenseTab({
             <EveningLoggingNudgePanel trip={trip} expenses={expenses} onFocusQuickAdd={focusQuickAdd} />
 
             <SevenDayLoggingDots expenses={expenses} />
+
+            <WeekLoggingGoalPanel trip={trip} expenses={expenses} onPickGapDate={pickGapDate} />
 
             <LoggingStreakMilestonePanel expenses={expenses} onFocusQuickAdd={focusQuickAdd} />
 

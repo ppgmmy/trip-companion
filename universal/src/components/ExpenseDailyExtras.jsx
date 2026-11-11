@@ -3408,6 +3408,123 @@ export function CategoryWeekMomentumPanel({ trip, expenses, filterCategory, setF
   );
 }
 
+export function WeekLoggingGoalPanel({ trip, expenses, onPickGapDate }) {
+  const todayId = toDateId(new Date());
+
+  const stats = useMemo(() => {
+    const week = weekBounds(0);
+    let start = week.start;
+    let end = todayId < week.end ? todayId : week.end;
+    if (trip.startDate && start < trip.startDate) start = trip.startDate;
+    if (trip.endDate && end > trip.endDate) end = trip.endDate;
+    if (start > end) return { days: [], loggedCount: 0, total: 0, remaining: 0, week };
+
+    const loggedDates = new Set(expenses.map((e) => e.date).filter(Boolean));
+    const days = [];
+    let cursor = start;
+    while (cursor <= end) {
+      const logged = loggedDates.has(cursor);
+      const inTrip = expenseInTripOnDate(trip, cursor);
+      days.push({
+        dateId: cursor,
+        logged: logged && inTrip,
+        isToday: cursor === todayId,
+        future: false,
+      });
+      if (cursor === end) break;
+      cursor = shiftDateId(cursor, 1);
+    }
+
+    const loggedCount = days.filter((d) => d.logged).length;
+    const total = days.length;
+    const remaining = total - loggedCount;
+
+    return { days, loggedCount, total, remaining, week };
+  }, [expenses, trip, todayId]);
+
+  if (!isFeatureEnabled("week-logging-goal")) return null;
+  if (!stats.days.length) return null;
+
+  const { days, loggedCount, total, remaining, week } = stats;
+  const pct = total > 0 ? Math.round((loggedCount / total) * 100) : 0;
+  const canPick = typeof onPickGapDate === "function";
+
+  let insight = "記一筆就亮起今日";
+  let insightClass = "text-ink-soft";
+  if (loggedCount >= total && total > 0) {
+    insight = "本週至今日日有記帳，帳目完整 🎉";
+    insightClass = "text-jade-deep";
+  } else if (remaining === 1) {
+    insight = "仲差 1 日就滿本週至今，補返就完美";
+    insightClass = "text-jade-deep";
+  } else if (remaining > 0 && loggedCount > 0) {
+    insight = `再有 ${remaining} 日未記 · 撳漏記日子可快速補帳`;
+    insightClass = "text-ink-soft";
+  } else if (loggedCount === 0) {
+    insight = "本週未開始記帳 · 今日記第一筆";
+    insightClass = "text-[#b45309]";
+  }
+
+  return (
+    <div className="rounded-2xl border border-jade/15 bg-gradient-to-br from-white to-[#f8faf9]/90 px-3 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">本週記帳目標</p>
+          <p className="mt-0.5 text-[11px] text-ink-faint">
+            週一至今 · {formatWeekRange({ ...week, end: days[days.length - 1]?.dateId || week.end })}
+          </p>
+        </div>
+        <span className="rounded-full bg-jade-soft px-2.5 py-0.5 text-[10px] font-bold text-jade-deep">
+          {loggedCount}/{total} 日 · {pct}%
+        </span>
+      </div>
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#efe9e0]">
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-jade/70 to-jade transition-all duration-500"
+          style={{ width: `${Math.max(pct, loggedCount > 0 ? 6 : 0)}%` }}
+        />
+      </div>
+      <div className="mt-2.5 flex justify-between gap-0.5">
+        {days.map((d) => {
+          const missed = !d.logged && !d.isToday;
+          const Tag = missed && canPick ? "button" : "div";
+          return (
+            <Tag
+              key={d.dateId}
+              type={missed && canPick ? "button" : undefined}
+              onClick={missed && canPick ? () => onPickGapDate(d.dateId) : undefined}
+              className={`flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-lg p-0.5 ${
+                missed && canPick ? "active:scale-95" : ""
+              }`}
+            >
+              <span
+                className={`flex h-8 w-full max-w-[2.25rem] items-center justify-center rounded-full border-2 text-[10px] font-black transition-all ${
+                  d.logged
+                    ? d.isToday
+                      ? "border-jade bg-jade text-white shadow-[0_2px_6px_rgba(45,125,108,0.35)]"
+                      : "border-jade/40 bg-jade-soft text-jade-deep"
+                    : d.isToday
+                      ? "border-dashed border-jade/50 bg-white text-ink-faint"
+                      : missed && canPick
+                        ? "border-amber-300/60 bg-amber-50 text-amber-800"
+                        : "border-transparent bg-[#efe9e0] text-ink-faint"
+                }`}
+                title={`${formatShortDate(d.dateId)}${d.logged ? " · 有記" : d.isToday ? " · 今日未記" : " · 未記"}`}
+              >
+                {d.logged ? "✓" : d.isToday ? "今" : "·"}
+              </span>
+              <span className={`text-[8px] font-semibold ${d.isToday ? "text-jade-deep" : "text-ink-faint"}`}>
+                週{weekdayLabel(d.dateId)}
+              </span>
+            </Tag>
+          );
+        })}
+      </div>
+      <p className={`mt-2 text-center text-[11px] font-semibold leading-snug ${insightClass}`}>{insight}</p>
+    </div>
+  );
+}
+
 export function RemainingBudgetCountdownPanel({
   trip,
   budget = 0,

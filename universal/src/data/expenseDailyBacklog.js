@@ -488,4 +488,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "對比本週至今同上週同段各分類使費，標出升溫與收油最大類別，調整行程消費更有方向。",
     pillar: "analysis",
   },
+  {
+    id: "week-logging-goal",
+    title: "本週記帳目標",
+    description: "以週一至今日為範圍顯示記帳覆蓋率與未記日子，一撳補記，養成每週填滿帳目嘅習慣。",
+    pillar: "stickiness",
+  },
 ];
