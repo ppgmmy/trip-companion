@@ -899,6 +899,13 @@
       "id": "today-dual-currency",
       "title": "今日雙幣對照",
       "description": "記帳儀表板突出今日當地幣與折算港幣，並對比昨日港幣使費，出門對錢包同信用卡帳更易心里有數。"
+    },
+    {
+      "date": "2026-11-13",
+      "id": "filtered-day-avg-per-entry",
+      "title": "篩選日每筆平均",
+      "description": "日子快篩選中舊日時，對比該日平均每筆使費同全旅程每筆平均，秒懂係細碎消費定少筆大額。",
+      "cycle": true
     }
   ]
 }
