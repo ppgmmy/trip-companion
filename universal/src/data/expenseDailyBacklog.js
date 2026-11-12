@@ -494,4 +494,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "以週一至今日為範圍顯示記帳覆蓋率與未記日子，一撳補記，養成每週填滿帳目嘅習慣。",
     pillar: "stickiness",
   },
+  {
+    id: "today-dual-currency",
+    title: "今日雙幣對照",
+    description: "記帳儀表板突出今日當地幣與折算港幣，並對比昨日港幣使費，出門對錢包同信用卡帳更易心里有數。",
+    pillar: "convenience",
+  },
 ];

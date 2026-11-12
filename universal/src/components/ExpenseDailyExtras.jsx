@@ -1821,6 +1821,79 @@ export function LedgerDailyPulse({ trip, expenses, dailyAllowance = null }) {
   );
 }
 
+export function TodayDualCurrencyPanel({ trip, expenses, rate = 0 }) {
+  const todayId = toDateId(new Date());
+  const yesterdayId = shiftDateId(todayId, -1);
+  const currency = trip.targetCurrency || "JPY";
+
+  const stats = useMemo(() => {
+    const todayLocal = sumByDate(expenses, todayId);
+    const todayHkd = sumByDate(expenses, todayId, "baseAmount");
+    const yesterdayHkd = sumByDate(expenses, yesterdayId, "baseAmount");
+    const count = expenses.filter((e) => e.date === todayId).length;
+    const avgHkd = count > 0 ? todayHkd / count : 0;
+    return { todayLocal, todayHkd, yesterdayHkd, count, avgHkd };
+  }, [expenses, todayId, yesterdayId]);
+
+  if (!isFeatureEnabled("today-dual-currency")) return null;
+  if (currency === "HKD") return null;
+  if (stats.todayLocal <= 0 && stats.todayHkd <= 0) return null;
+
+  const { todayLocal, todayHkd, yesterdayHkd, count, avgHkd } = stats;
+  const hkdDelta = todayHkd - yesterdayHkd;
+  const liveRate = rate > 0 ? rate : null;
+  const lockedRate = todayLocal > 0 && todayHkd > 0 ? todayHkd / todayLocal : null;
+
+  let insight = "當地幣同港幣並排，對帳唔使心算";
+  let insightClass = "text-ink-soft";
+  if (hkdDelta > 0 && yesterdayHkd > 0) {
+    insight = `港幣口徑比昨日多 ${formatHkd(hkdDelta)}，留意信用卡帳`;
+    insightClass = "text-[#b45309]";
+  } else if (hkdDelta < 0 && yesterdayHkd > 0) {
+    insight = `港幣口徑比昨日少 ${formatHkd(-hkdDelta)}，今日收油`;
+    insightClass = "text-jade-deep";
+  } else if (hkdDelta === 0 && yesterdayHkd > 0 && todayHkd > 0) {
+    insight = "港幣口徑同昨日一樣，節奏穩定";
+    insightClass = "text-jade-deep";
+  } else if (count === 1) {
+    insight = `今日 1 筆 · 平均每筆約 ${formatHkd(avgHkd)}`;
+  }
+
+  return (
+    <div className="rounded-2xl border border-jade/15 bg-gradient-to-br from-white via-[#f0fdfa]/40 to-jade-soft/30 px-3 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">今日雙幣對照</p>
+        {count > 0 && (
+          <span className="rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-bold text-ink-soft">{count} 筆</span>
+        )}
+      </div>
+      <div className="mt-2 flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[10px] font-semibold text-ink-faint">當地幣 · 今日</p>
+          <p className="font-display text-3xl font-black leading-none text-ink">{formatMoney(todayLocal, currency)}</p>
+        </div>
+        <div className="shrink-0 text-right">
+          <p className="text-[10px] font-semibold text-jade">≈ 港幣</p>
+          <p className="font-display text-2xl font-black leading-none text-jade-deep">{formatHkd(todayHkd)}</p>
+        </div>
+      </div>
+      {(liveRate != null || lockedRate != null) && todayLocal > 0 && (
+        <p className="mt-2 text-center text-[10px] font-semibold text-ink-faint">
+          {lockedRate != null && (
+            <span>
+              記帳匯率約 1 {currency} ≈ HK$ {lockedRate.toFixed(4)}
+            </span>
+          )}
+          {liveRate != null && lockedRate != null && Math.abs(liveRate - lockedRate) / liveRate > 0.02 && (
+            <span className="text-[#b45309]"> · 即時匯率已有變動</span>
+          )}
+        </p>
+      )}
+      <p className={`mt-2 text-center text-[11px] font-semibold leading-snug ${insightClass}`}>{insight}</p>
+    </div>
+  );
+}
+
 export function SevenDayLoggingDots({ expenses }) {
   const todayId = toDateId(new Date());
   const days = useMemo(() => {

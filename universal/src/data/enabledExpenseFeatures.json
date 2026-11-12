@@ -79,9 +79,10 @@
     "week-to-date-today-share",
     "week-to-date-same-span-compare",
     "category-week-momentum",
-    "week-logging-goal"
+    "week-logging-goal",
+    "today-dual-currency"
   ],
-  "updatedAt": "2026-11-11T17:50:37.157Z",
-  "lastFeatureId": "filtered-day-biggest-entry",
-  "lastTitle": "篩選日最大單筆"
+  "updatedAt": "2026-11-12T02:10:00.000Z",
+  "lastFeatureId": "today-dual-currency",
+  "lastTitle": "今日雙幣對照"
 }

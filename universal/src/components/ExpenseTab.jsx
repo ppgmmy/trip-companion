@@ -23,6 +23,7 @@ import {
   FilteredCategorySummary,
   FxRateImpactPanel,
   LedgerDailyPulse,
+  TodayDualCurrencyPanel,
   SevenDayLoggingDots,
   TodayEntryPacePanel,
   TodayYesterdayEntryComparePanel,
@@ -860,6 +861,8 @@ export default function ExpenseTab({
               expenses={expenses}
               dailyAllowance={budget > 0 ? dailyAllowance : null}
             />
+
+            <TodayDualCurrencyPanel trip={trip} expenses={expenses} rate={rate} />
 
             <TodayCategoryShiftPanel trip={trip} expenses={expenses} />
 
