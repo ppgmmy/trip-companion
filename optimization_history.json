@@ -912,6 +912,13 @@
       "id": "rolling-3-vs-3-pace",
       "title": "近 3 日 vs 再前 3 日",
       "description": "對比最近三日同再前三日嘅日均使費，附六日迷你柱，及早察覺旅程後段消費有冇突然升溫。"
+    },
+    {
+      "date": "2026-11-14",
+      "id": "filtered-day-category-leader",
+      "title": "篩選日主導分類",
+      "description": "日子快篩選中舊日時，突出當日使費最大分類同佔比，並對照全程該類佔比，回顧「食飲日／購物日」更有記憶點。",
+      "cycle": true
     }
   ]
 }
