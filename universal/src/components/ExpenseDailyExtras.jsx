@@ -1894,6 +1894,120 @@ export function TodayDualCurrencyPanel({ trip, expenses, rate = 0 }) {
   );
 }
 
+export function Rolling3Vs3PacePanel({ trip, expenses }) {
+  const todayId = toDateId(new Date());
+
+  const windows = useMemo(() => {
+    const days = Array.from({ length: 6 }, (_, i) => {
+      const offset = i - 5;
+      const dateId = shiftDateId(todayId, offset);
+      const value = sumByDate(expenses, dateId);
+      return {
+        dateId,
+        value,
+        offset,
+        label: offset === 0 ? "今" : formatShortDate(dateId),
+      };
+    });
+    const prior3 = days.slice(0, 3);
+    const recent3 = days.slice(3);
+    const priorSum = prior3.reduce((s, d) => s + d.value, 0);
+    const recentSum = recent3.reduce((s, d) => s + d.value, 0);
+    const priorAvg = priorSum / 3;
+    const recentAvg = recentSum / 3;
+    return { days, prior3, recent3, priorAvg, recentAvg, priorSum, recentSum };
+  }, [expenses, todayId]);
+
+  if (!isFeatureEnabled("rolling-3-vs-3-pace")) return null;
+  if (windows.priorSum <= 0 && windows.recentSum <= 0) return null;
+
+  const { days, priorAvg, recentAvg } = windows;
+  const delta = recentAvg - priorAvg;
+  const ratio = priorAvg > 0 ? recentAvg / priorAvg : recentAvg > 0 ? 2 : 1;
+  const pacePct = priorAvg > 0 ? Math.round(ratio * 100) : null;
+  const maxBar = Math.max(priorAvg, recentAvg, ...days.map((d) => d.value), 1);
+
+  let statusLabel = "節奏平穩";
+  let statusClass = "bg-jade-soft text-jade-deep";
+  let insight = "近段同再前段日均接近，消費節奏冇大跳";
+  let insightClass = "text-ink-soft";
+
+  if (priorAvg <= 0 && recentAvg > 0) {
+    statusLabel = "近期啟動";
+    statusClass = "bg-[#fef3c7] text-[#b45309]";
+    insight = "再前 3 日幾乎冇使費，近 3 日先開始記帳節奏";
+    insightClass = "text-[#b45309]";
+  } else if (ratio >= 1.3) {
+    statusLabel = "明顯升溫";
+    statusClass = "bg-coral/15 text-coral";
+    insight = `近 3 日日均比再前 3 日高 ${formatMoney(delta, trip.targetCurrency)}，留意收油`;
+    insightClass = "text-coral";
+  } else if (ratio >= 1.12) {
+    statusLabel = "略為加快";
+    statusClass = "bg-[#fef3c7] text-[#b45309]";
+    insight = `近 3 日日均多 ${formatMoney(delta, trip.targetCurrency)}，消費略升溫`;
+    insightClass = "text-[#b45309]";
+  } else if (ratio <= 0.8 && priorAvg > 0) {
+    statusLabel = "近期收油";
+    statusClass = "bg-jade-soft text-jade-deep";
+    insight = `近 3 日日均慳咗 ${formatMoney(-delta, trip.targetCurrency)}，節奏控制好`;
+    insightClass = "text-jade-deep";
+  }
+
+  return (
+    <div className="rounded-2xl border border-jade/15 bg-gradient-to-br from-white via-[#f8fafc]/60 to-jade-soft/25 px-3 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">近 3 日 vs 再前 3 日</p>
+          <p className="mt-0.5 text-[10px] font-semibold text-ink-faint">六日窗口日均對比 · 察覺消費加速度</p>
+        </div>
+        {pacePct != null && recentAvg > 0 && (
+          <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${statusClass}`}>
+            {statusLabel}
+            {priorAvg > 0 ? ` · ${pacePct}%` : ""}
+          </span>
+        )}
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <div className="rounded-xl bg-shell/80 px-2.5 py-2 text-center">
+          <p className="text-[9px] font-bold uppercase tracking-wide text-ink-faint">再前 3 日日均</p>
+          <p className="font-display text-lg font-black text-ink">
+            {priorAvg > 0 ? formatMoney(priorAvg, trip.targetCurrency) : "—"}
+          </p>
+        </div>
+        <div className="rounded-xl bg-jade-soft/50 px-2.5 py-2 text-center">
+          <p className="text-[9px] font-bold uppercase tracking-wide text-jade">近 3 日日均</p>
+          <p className="font-display text-lg font-black text-jade-deep">
+            {recentAvg > 0 ? formatMoney(recentAvg, trip.targetCurrency) : "—"}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-3 flex items-end justify-between gap-1" aria-hidden>
+        {days.map((day) => {
+          const h = Math.max(12, Math.round((day.value / maxBar) * 44));
+          const isRecent = day.offset >= -2;
+          return (
+            <div key={day.dateId} className="flex min-w-0 flex-1 flex-col items-center gap-0.5">
+              <div
+                className={`w-full max-w-[2rem] rounded-t-md ${isRecent ? "bg-jade" : "bg-jade/35"}`}
+                style={{ height: `${h}px` }}
+              />
+              <span className={`text-[8px] font-bold ${day.offset === 0 ? "text-jade-deep" : "text-ink-faint"}`}>
+                {day.label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+      <p className="mt-0.5 text-center text-[9px] font-semibold text-ink-faint">左三格 · 再前段｜右三格 · 近段</p>
+
+      <p className={`mt-2 text-center text-[11px] font-semibold leading-snug ${insightClass}`}>{insight}</p>
+    </div>
+  );
+}
+
 export function SevenDayLoggingDots({ expenses }) {
   const todayId = toDateId(new Date());
   const days = useMemo(() => {

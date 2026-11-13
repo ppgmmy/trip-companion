@@ -500,4 +500,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "記帳儀表板突出今日當地幣與折算港幣，並對比昨日港幣使費，出門對錢包同信用卡帳更易心里有數。",
     pillar: "convenience",
   },
+  {
+    id: "rolling-3-vs-3-pace",
+    title: "近 3 日 vs 再前 3 日",
+    description: "對比最近三日同再前三日嘅日均使費，附六日迷你柱，及早察覺旅程後段消費有冇突然升溫。",
+    pillar: "analysis",
+  },
 ];

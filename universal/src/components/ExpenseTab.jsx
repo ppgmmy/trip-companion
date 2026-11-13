@@ -24,6 +24,7 @@ import {
   FxRateImpactPanel,
   LedgerDailyPulse,
   TodayDualCurrencyPanel,
+  Rolling3Vs3PacePanel,
   SevenDayLoggingDots,
   TodayEntryPacePanel,
   TodayYesterdayEntryComparePanel,
@@ -863,6 +864,8 @@ export default function ExpenseTab({
             />
 
             <TodayDualCurrencyPanel trip={trip} expenses={expenses} rate={rate} />
+
+            <Rolling3Vs3PacePanel trip={trip} expenses={expenses} />
 
             <TodayCategoryShiftPanel trip={trip} expenses={expenses} />
 

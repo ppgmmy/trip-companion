@@ -80,9 +80,10 @@
     "week-to-date-same-span-compare",
     "category-week-momentum",
     "week-logging-goal",
-    "today-dual-currency"
+    "today-dual-currency",
+    "rolling-3-vs-3-pace"
   ],
-  "updatedAt": "2026-11-12T18:09:54.704Z",
-  "lastFeatureId": "filtered-day-avg-per-entry",
-  "lastTitle": "篩選日每筆平均"
+  "updatedAt": "2026-11-13T02:10:00.000Z",
+  "lastFeatureId": "rolling-3-vs-3-pace",
+  "lastTitle": "近 3 日 vs 再前 3 日"
 }
