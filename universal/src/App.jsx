@@ -295,6 +295,37 @@ export default function App() {
     } catch {}
   }, [personal.length, setPersonal, trips]);
 
+  // 一次性：加入 2026-11-21 荃灣永遠墳場約會（刪除後唔會再種入）
+  useEffect(() => {
+    const flag = "universal_seed_20261121_cemetery";
+    const seedId = "personal-20261121-tsuen-wan-cemetery";
+    try {
+      if (localStorage.getItem(flag) === "1") return;
+    } catch {
+      return;
+    }
+    setPersonal((prev) => {
+      const list = Array.isArray(prev) ? prev : [];
+      if (list.some((item) => item?.id === seedId)) return list;
+      return [
+        ...list,
+        {
+          id: seedId,
+          title: "荃灣永遠墳場（9:30 荃灣西站，或 10:00 門口）",
+          date: "2026-11-21",
+          time: "09:30",
+          kind: "event",
+          note: "照舊：上午 9:30 在荃灣西站等，再行過去。或 10:00 在荃灣永遠墳場門口等。",
+          done: false,
+          createdAt: Date.now(),
+        },
+      ];
+    });
+    try {
+      localStorage.setItem(flag, "1");
+    } catch {}
+  }, [setPersonal]);
+
   // 舊版「現金」付款人（cash-pool）寫入 storage 後持久化為 ppg + 現金
   useEffect(() => {
     if (!tripId) return;
