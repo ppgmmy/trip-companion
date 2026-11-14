@@ -506,4 +506,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "對比最近三日同再前三日嘅日均使費，附六日迷你柱，及早察覺旅程後段消費有冇突然升溫。",
     pillar: "analysis",
   },
+  {
+    id: "trip-spend-heatmap",
+    title: "旅程使費熱圖",
+    description: "以顏色方格顯示每日使費相對建議上限，一撳跳到該日篩選，快速回顧邊日爆煲、邊日慳咗。",
+    pillar: "stickiness",
+  },
 ];

@@ -2008,6 +2008,130 @@ export function Rolling3Vs3PacePanel({ trip, expenses }) {
   );
 }
 
+function spendHeatmapTier(spent, ratio, hasLog) {
+  if (!hasLog && spent <= 0) return "empty";
+  if (ratio >= 1.05) return "over";
+  if (ratio >= 0.85) return "warn";
+  if (ratio >= 0.55) return "ok";
+  return "calm";
+}
+
+const HEATMAP_TIER_CLASS = {
+  empty: "bg-[#efe9e0] text-ink-faint",
+  calm: "bg-jade/25 text-jade-deep",
+  ok: "bg-jade/70 text-white",
+  warn: "bg-[#f59e0b]/75 text-white",
+  over: "bg-coral text-white",
+};
+
+export function TripSpendHeatmapPanel({ trip, expenses, budget = 0, onViewDay }) {
+  const todayId = toDateId(new Date());
+
+  const grid = useMemo(() => {
+    const ids = elapsedTripDateIds(trip);
+    if (!ids.length) return [];
+    const medianSpend = median(dailySpendTotalsInTrip(expenses, trip));
+    return ids.map((dateId) => {
+      const spent = sumByDate(expenses, dateId);
+      const hasLog = expenses.some((e) => e.date === dateId);
+      let ratio = 0;
+      if (budget > 0) {
+        const allowance = dailyAllowanceForDate(expenses, trip, budget, dateId);
+        ratio = allowance > 0 ? spent / allowance : spent > 0 ? 1.25 : 0;
+      } else if (medianSpend > 0) {
+        ratio = spent / medianSpend;
+      } else if (spent > 0) {
+        ratio = 0.7;
+      }
+      const tier = spendHeatmapTier(spent, ratio, hasLog);
+      const dayNum = tripDayNumber(trip.startDate, dateId);
+      return {
+        dateId,
+        spent,
+        ratio,
+        tier,
+        dayNum,
+        isToday: dateId === todayId,
+        label: dateId === todayId ? "今" : formatShortDate(dateId),
+      };
+    });
+  }, [expenses, trip, budget, todayId]);
+
+  if (!isFeatureEnabled("trip-spend-heatmap")) return null;
+  if (grid.length < 2) return null;
+
+  const withSpend = grid.filter((d) => d.spent > 0).length;
+  const overDays = grid.filter((d) => d.tier === "over").length;
+  const calmDays = grid.filter((d) => d.tier === "calm" || d.tier === "ok").length;
+
+  let insight = "撳方格可跳到該日開支，邊日有色一目了然";
+  let insightClass = "text-ink-soft";
+  if (overDays >= 2) {
+    insight = `${overDays} 日超過建議上限 · 撳紅格回看邊日大手`;
+    insightClass = "text-coral";
+  } else if (calmDays >= Math.max(3, Math.floor(grid.length * 0.6))) {
+    insight = `${calmDays}/${grid.length} 日節奏穩定 · 繼續保持`;
+    insightClass = "text-jade-deep";
+  } else if (withSpend < grid.length) {
+    insight = `${grid.length - withSpend} 日未記帳 · 撳空格補返帳更完整`;
+    insightClass = "text-[#b45309]";
+  }
+
+  return (
+    <div className="rounded-2xl border border-jade/15 bg-gradient-to-br from-white via-[#f8fafc]/50 to-jade-soft/20 px-3 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">旅程使費熱圖</p>
+          <p className="mt-0.5 text-[10px] font-semibold text-ink-faint">
+            {budget > 0 ? "相對當日建議上限" : "相對旅程日均"}
+          </p>
+        </div>
+        <span className="rounded-full bg-shell px-2 py-0.5 text-[10px] font-bold text-ink-soft">
+          {grid.length} 日
+        </span>
+      </div>
+
+      <div className="-mx-1 mt-2.5 flex flex-wrap gap-1.5 overflow-x-auto px-1 pb-0.5">
+        {grid.map((day) => {
+          const cellClass = HEATMAP_TIER_CLASS[day.tier] ?? HEATMAP_TIER_CLASS.empty;
+          return (
+            <button
+              key={day.dateId}
+              type="button"
+              onClick={() => onViewDay?.(day.dateId)}
+              disabled={!onViewDay}
+              className={`flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-xl text-[9px] font-bold transition active:scale-95 disabled:cursor-default ${cellClass} ${
+                day.isToday ? "ring-2 ring-jade-deep ring-offset-1" : ""
+              }`}
+              title={`第 ${day.dayNum} 日 · ${day.label}${day.spent > 0 ? ` · ${formatMoney(day.spent, trip.targetCurrency)}` : " · 未記"}`}
+            >
+              <span className="text-[8px] opacity-80">D{day.dayNum}</span>
+              <span className="text-[10px] font-black leading-none">{day.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mt-2 flex flex-wrap justify-center gap-x-3 gap-y-0.5 text-[9px] font-semibold text-ink-faint" aria-hidden="true">
+        <span className="flex items-center gap-1">
+          <span className="inline-block h-2 w-2 rounded-sm bg-jade/30" /> 慳
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="inline-block h-2 w-2 rounded-sm bg-jade" /> 正常
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="inline-block h-2 w-2 rounded-sm bg-[#f59e0b]" /> 快滿
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="inline-block h-2 w-2 rounded-sm bg-coral" /> 超額
+        </span>
+      </div>
+
+      <p className={`mt-2 text-center text-[11px] font-semibold leading-snug ${insightClass}`}>{insight}</p>
+    </div>
+  );
+}
+
 export function SevenDayLoggingDots({ expenses }) {
   const todayId = toDateId(new Date());
   const days = useMemo(() => {

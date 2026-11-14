@@ -25,6 +25,7 @@ import {
   LedgerDailyPulse,
   TodayDualCurrencyPanel,
   Rolling3Vs3PacePanel,
+  TripSpendHeatmapPanel,
   SevenDayLoggingDots,
   TodayEntryPacePanel,
   TodayYesterdayEntryComparePanel,
@@ -509,6 +510,15 @@ export default function ExpenseTab({
     showToast(`已選 ${Number(m)}/${Number(d)}，補記開支`);
   }
 
+  function viewDayInLedger(dateId) {
+    if (!dateId) return;
+    setFilterDate(dateId);
+    setListTodayOnly(false);
+    setPanel("ledger");
+    const [, m, d] = dateId.split("-");
+    showToast(`已篩選 ${Number(m)}/${Number(d)} 開支`);
+  }
+
   function focusQuickAdd() {
     setPanel("ledger");
     window.requestAnimationFrame(() => {
@@ -866,6 +876,13 @@ export default function ExpenseTab({
             <TodayDualCurrencyPanel trip={trip} expenses={expenses} rate={rate} />
 
             <Rolling3Vs3PacePanel trip={trip} expenses={expenses} />
+
+            <TripSpendHeatmapPanel
+              trip={trip}
+              expenses={expenses}
+              budget={budget}
+              onViewDay={viewDayInLedger}
+            />
 
             <TodayCategoryShiftPanel trip={trip} expenses={expenses} />
 

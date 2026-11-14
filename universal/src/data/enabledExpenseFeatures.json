@@ -81,9 +81,10 @@
     "category-week-momentum",
     "week-logging-goal",
     "today-dual-currency",
-    "rolling-3-vs-3-pace"
+    "rolling-3-vs-3-pace",
+    "trip-spend-heatmap"
   ],
-  "updatedAt": "2026-11-13T17:39:00.045Z",
-  "lastFeatureId": "filtered-day-category-leader",
-  "lastTitle": "篩選日主導分類"
+  "updatedAt": "2026-11-14T02:00:00.000Z",
+  "lastFeatureId": "trip-spend-heatmap",
+  "lastTitle": "旅程使費熱圖"
 }
