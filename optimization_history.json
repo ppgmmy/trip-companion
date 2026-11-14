@@ -925,6 +925,13 @@
       "id": "trip-spend-heatmap",
       "title": "旅程使費熱圖",
       "description": "以顏色方格顯示每日使費相對建議上限，一撳跳到該日篩選，快速回顧邊日爆煲、邊日慳咗。"
+    },
+    {
+      "date": "2026-11-15",
+      "id": "filtered-day-payment-chips",
+      "title": "篩選日付款快篩",
+      "description": "日子快篩選中舊日時，顯示該日現金／信用卡使費晶片，一撳即篩選該付款方式，翻舊帳對帳更快。",
+      "cycle": true
     }
   ]
 }
