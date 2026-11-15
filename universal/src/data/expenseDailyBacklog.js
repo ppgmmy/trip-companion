@@ -512,4 +512,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "以顏色方格顯示每日使費相對建議上限，一撳跳到該日篩選，快速回顧邊日爆煲、邊日慳咗。",
     pillar: "stickiness",
   },
+  {
+    id: "trip-spend-concentration",
+    title: "使費集中日洞察",
+    description: "列出耗費最高嘅 Top 3 日子同佔全程比例，附堆疊比例條，一撳跳去該日，秒懂使費係分散定集中喺爆煲日。",
+    pillar: "convenience",
+  },
 ];

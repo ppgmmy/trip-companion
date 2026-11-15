@@ -82,9 +82,10 @@
     "week-logging-goal",
     "today-dual-currency",
     "rolling-3-vs-3-pace",
-    "trip-spend-heatmap"
+    "trip-spend-heatmap",
+    "trip-spend-concentration"
   ],
-  "updatedAt": "2026-11-14T16:31:49.491Z",
-  "lastFeatureId": "filtered-day-payment-chips",
-  "lastTitle": "篩選日付款快篩"
+  "updatedAt": "2026-11-15T02:10:00.000Z",
+  "lastFeatureId": "trip-spend-concentration",
+  "lastTitle": "使費集中日洞察"
 }

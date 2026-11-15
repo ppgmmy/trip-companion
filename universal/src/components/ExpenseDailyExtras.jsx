@@ -2132,6 +2132,146 @@ export function TripSpendHeatmapPanel({ trip, expenses, budget = 0, onViewDay })
   );
 }
 
+const CONCENTRATION_BAR_COLORS = ["bg-coral", "bg-[#f59e0b]", "bg-jade/80", "bg-jade/25"];
+
+export function TripSpendConcentrationPanel({ trip, expenses, onViewDay }) {
+  const stats = useMemo(() => {
+    const start = trip.startDate;
+    const end = trip.endDate || toDateId(new Date());
+    if (!start) return null;
+
+    const byDate = {};
+    expenses.forEach((e) => {
+      if (!e.date || e.date < start || e.date > end) return;
+      const amt = Number(e.amount) || 0;
+      if (amt <= 0) return;
+      byDate[e.date] = (byDate[e.date] || 0) + amt;
+    });
+
+    const days = Object.entries(byDate)
+      .map(([dateId, amount]) => ({ dateId, amount }))
+      .sort((a, b) => b.amount - a.amount);
+    if (days.length < 2) return null;
+
+    const total = days.reduce((s, d) => s + d.amount, 0);
+    if (total <= 0) return null;
+
+    const top3 = days.slice(0, 3);
+    const top3Sum = top3.reduce((s, d) => s + d.amount, 0);
+    const restSum = Math.max(0, total - top3Sum);
+    const activeDays = days.length;
+    const tripDayCount = elapsedTripDateIds(trip).length || activeDays;
+
+    return {
+      total,
+      top3,
+      restSum,
+      top3Share: Math.round((top3Sum / total) * 100),
+      top1Share: Math.round((top3[0].amount / total) * 100),
+      activeDays,
+      tripDayCount,
+    };
+  }, [expenses, trip]);
+
+  if (!isFeatureEnabled("trip-spend-concentration")) return null;
+  if (!stats) return null;
+
+  const { total, top3, restSum, top3Share, top1Share, activeDays, tripDayCount } = stats;
+
+  let statusLabel = "分散";
+  let statusClass = "bg-jade-soft text-jade-deep";
+  let insight = `最高 3 日合共佔 ${top3Share}% · 消費分散，節奏較平均`;
+  let insightClass = "text-ink-soft";
+
+  if (top1Share >= 45) {
+    statusLabel = "高度集中";
+    statusClass = "bg-coral/15 text-coral";
+    insight = `單一爆煲日佔全程 ${top1Share}% · 撳日子回看大額消費`;
+    insightClass = "text-coral";
+  } else if (top3Share >= 70) {
+    statusLabel = "集中";
+    statusClass = "bg-[#fef3c7] text-[#b45309]";
+    insight = `Top 3 日吃掉 ${top3Share}% 預算 · 尾段可參考呢幾日調整`;
+    insightClass = "text-[#b45309]";
+  } else if (top3Share >= 55) {
+    statusLabel = "略集中";
+    statusClass = "bg-shell text-ink-soft";
+    insight = `Top 3 日佔 ${top3Share}% · 有幾日消費明顯偏高`;
+    insightClass = "text-ink-faint";
+  }
+
+  const segments = [
+    ...top3.map((d, i) => ({ key: d.dateId, amount: d.amount, color: CONCENTRATION_BAR_COLORS[i] })),
+    ...(restSum > 0 ? [{ key: "rest", amount: restSum, color: CONCENTRATION_BAR_COLORS[3] }] : []),
+  ];
+
+  return (
+    <div className="rounded-2xl border border-jade/15 bg-gradient-to-br from-white via-[#fff7ed]/30 to-shell/40 px-3 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">使費集中日洞察</p>
+          <p className="mt-0.5 text-[10px] font-semibold text-ink-faint">
+            {activeDays}/{tripDayCount} 日有記帳 · 全程 {formatMoney(total, trip.targetCurrency)}
+          </p>
+        </div>
+        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${statusClass}`}>{statusLabel}</span>
+      </div>
+
+      <div className="mt-2.5 flex h-3 overflow-hidden rounded-full bg-[#efe9e0]" aria-hidden>
+        {segments.map((seg) => (
+          <div
+            key={seg.key}
+            className={`h-full min-w-[4px] ${seg.color}`}
+            style={{ width: `${Math.max(4, Math.round((seg.amount / total) * 100))}%` }}
+          />
+        ))}
+      </div>
+
+      <ul className="mt-2.5 space-y-1.5">
+        {top3.map((day, i) => {
+          const share = Math.round((day.amount / total) * 100);
+          const dayNum = tripDayNumber(trip.startDate, day.dateId);
+          return (
+            <li key={day.dateId}>
+              <button
+                type="button"
+                onClick={() => onViewDay?.(day.dateId)}
+                disabled={!onViewDay}
+                className="flex w-full items-center gap-2 rounded-xl bg-white/70 px-2 py-1.5 text-left transition active:scale-[0.99] disabled:cursor-default"
+              >
+                <span
+                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-[10px] font-black text-white ${CONCENTRATION_BAR_COLORS[i]}`}
+                >
+                  {i + 1}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold text-ink">
+                    {formatShortDate(day.dateId)}
+                    {dayNum ? ` · D${dayNum}` : ""}
+                  </p>
+                  <p className="text-[10px] font-semibold text-ink-faint">{share}% 全程</p>
+                </div>
+                <p className="shrink-0 font-display text-sm font-black text-jade-deep">
+                  {formatMoney(day.amount, trip.targetCurrency)}
+                </p>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+
+      {restSum > 0 && (
+        <p className="mt-1 text-center text-[10px] font-semibold text-ink-faint">
+          其餘 {activeDays - top3.length > 0 ? activeDays - top3.length : 0} 日 · {formatMoney(restSum, trip.targetCurrency)}（
+          {Math.max(0, 100 - top3Share)}%）
+        </p>
+      )}
+
+      <p className={`mt-2 text-center text-[11px] font-semibold leading-snug ${insightClass}`}>{insight}</p>
+    </div>
+  );
+}
+
 export function SevenDayLoggingDots({ expenses }) {
   const todayId = toDateId(new Date());
   const days = useMemo(() => {

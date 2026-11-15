@@ -26,6 +26,7 @@ import {
   TodayDualCurrencyPanel,
   Rolling3Vs3PacePanel,
   TripSpendHeatmapPanel,
+  TripSpendConcentrationPanel,
   SevenDayLoggingDots,
   TodayEntryPacePanel,
   TodayYesterdayEntryComparePanel,
@@ -883,6 +884,8 @@ export default function ExpenseTab({
               budget={budget}
               onViewDay={viewDayInLedger}
             />
+
+            <TripSpendConcentrationPanel trip={trip} expenses={expenses} onViewDay={viewDayInLedger} />
 
             <TodayCategoryShiftPanel trip={trip} expenses={expenses} />
 
