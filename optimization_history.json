@@ -938,6 +938,13 @@
       "id": "trip-spend-concentration",
       "title": "使費集中日洞察",
       "description": "列出耗費最高嘅 Top 3 日子同佔全程比例，附堆疊比例條，一撳跳去該日，秒懂使費係分散定集中喺爆煲日。"
+    },
+    {
+      "date": "2026-11-16",
+      "id": "filtered-day-weekday-benchmark",
+      "title": "篩選日 vs 同週幾日均",
+      "description": "日子快篩選中舊日時，對比該日使費同旅程其餘「同一星期幾」日均，秒懂係典型節奏定異常消費日。",
+      "cycle": true
     }
   ]
 }
