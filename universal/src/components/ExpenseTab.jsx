@@ -27,6 +27,7 @@ import {
   Rolling3Vs3PacePanel,
   TripSpendHeatmapPanel,
   TripSpendConcentrationPanel,
+  CategoryPaceDriftPanel,
   SevenDayLoggingDots,
   TodayEntryPacePanel,
   TodayYesterdayEntryComparePanel,
@@ -766,6 +767,16 @@ export default function ExpenseTab({
                 <CategoryWeekMomentumPanel
                   trip={trip}
                   expenses={expenses}
+                  filterCategory={filterCategory}
+                  setFilterCategory={setFilterCategory}
+                />
+              </div>
+              <div className="mt-4">
+                <CategoryPaceDriftPanel
+                  trip={trip}
+                  expenses={expenses}
+                  days={days}
+                  elapsedDays={elapsedDays}
                   filterCategory={filterCategory}
                   setFilterCategory={setFilterCategory}
                 />

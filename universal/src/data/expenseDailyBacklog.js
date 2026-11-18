@@ -518,4 +518,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "列出耗費最高嘅 Top 3 日子同佔全程比例，附堆疊比例條，一撳跳去該日，秒懂使費係分散定集中喺爆煲日。",
     pillar: "convenience",
   },
+  {
+    id: "category-pace-drift",
+    title: "分類節奏漂移",
+    description: "對比各分類已用佔比同旅程時間進度，標出超前同落後類別，後段調整消費更有方向。",
+    pillar: "analysis",
+  },
 ];

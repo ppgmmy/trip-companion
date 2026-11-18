@@ -2272,6 +2272,164 @@ export function TripSpendConcentrationPanel({ trip, expenses, onViewDay }) {
   );
 }
 
+export function CategoryPaceDriftPanel({
+  trip,
+  expenses,
+  days = 1,
+  elapsedDays = 1,
+  filterCategory,
+  setFilterCategory,
+}) {
+  const stats = useMemo(() => {
+    if (!days || elapsedDays < 2) return null;
+
+    const timePct = Math.min(100, Math.round((elapsedDays / days) * 100));
+    const byCat = {};
+
+    expenses.forEach((e) => {
+      const amt = Number(e.amount) || 0;
+      const cat = e.categoryId;
+      if (!cat || !e.date || amt <= 0) return;
+      if (!expenseInTripOnDate(trip, e.date)) return;
+      byCat[cat] = (byCat[cat] || 0) + amt;
+    });
+
+    const total = Object.values(byCat).reduce((s, v) => s + v, 0);
+    if (total <= 0) return null;
+
+    const rows = Object.entries(byCat)
+      .map(([id, amount]) => {
+        const meta = EXPENSE_CATEGORIES.find((c) => c.id === id);
+        const spendPct = (amount / total) * 100;
+        const drift = spendPct - timePct;
+        return {
+          id,
+          label: meta?.label || id,
+          color: meta?.color || "#64748b",
+          amount,
+          spendPct,
+          spendPctRounded: Math.round(spendPct),
+          drift,
+          driftRounded: Math.round(drift),
+        };
+      })
+      .sort((a, b) => Math.abs(b.drift) - Math.abs(a.drift));
+
+    if (rows.length < 2) return null;
+
+    const topAhead = rows.filter((r) => r.drift > 2).sort((a, b) => b.drift - a.drift)[0] ?? null;
+    const topBehind = rows.filter((r) => r.drift < -2).sort((a, b) => a.drift - b.drift)[0] ?? null;
+    const displayRows = rows.filter((r) => Math.abs(r.drift) >= 2).slice(0, 4);
+    const visibleRows = displayRows.length > 0 ? displayRows : rows.slice(0, 3);
+
+    return { timePct, total, rows, visibleRows, topAhead, topBehind, elapsedDays, days };
+  }, [expenses, trip, days, elapsedDays]);
+
+  if (!isFeatureEnabled("category-pace-drift")) return null;
+  if (!stats) return null;
+
+  const { timePct, total, visibleRows, topAhead, topBehind, elapsedDays: elapsed, days: tripDays } = stats;
+  const canFilter = isFeatureEnabled("category-filter") && typeof setFilterCategory === "function";
+  const maxSpendPct = Math.max(...visibleRows.map((r) => r.spendPct), timePct, 1);
+
+  let statusLabel = "大致平衡";
+  let statusClass = "bg-jade-soft text-jade-deep";
+  let insight = `旅程已過 ${timePct}% · 各分類佔比同行程節奏大致對齊`;
+  let insightClass = "text-ink-soft";
+
+  if (topAhead && topAhead.driftRounded >= 12) {
+    statusLabel = "明顯超前";
+    statusClass = "bg-coral/15 text-coral";
+    insight = `「${topAhead.label}」已用 ${topAhead.spendPctRounded}% 總支出，超前行程 ${topAhead.driftRounded}% · 後段宜收`;
+    insightClass = "text-coral";
+  } else if (topAhead && topAhead.driftRounded >= 5) {
+    statusLabel = "略有超前";
+    statusClass = "bg-[#fef3c7] text-[#b45309]";
+    insight = `「${topAhead.label}」超前行程約 ${topAhead.driftRounded}% · 留意後段預算`;
+    insightClass = "text-[#b45309]";
+  } else if (topBehind && topBehind.driftRounded <= -8) {
+    statusLabel = "有餘裕";
+    statusClass = "bg-jade-soft text-jade-deep";
+    insight = `「${topBehind.label}」落後行程 ${-topBehind.driftRounded}% · 後段仲有空間加碼`;
+    insightClass = "text-jade-deep";
+  }
+
+  return (
+    <div className="rounded-2xl border border-jade/15 bg-gradient-to-br from-white via-[#f0fdf4]/25 to-shell/30 px-3 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">分類節奏漂移</p>
+          <p className="mt-0.5 text-[10px] font-semibold text-ink-faint">
+            行程 {elapsed}/{tripDays} 日（{timePct}%）· 全程 {formatMoney(total, trip.targetCurrency)}
+          </p>
+        </div>
+        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${statusClass}`}>{statusLabel}</span>
+      </div>
+
+      <div className="relative mt-3">
+        <div className="relative mb-1 h-2 overflow-hidden rounded-full bg-[#efe9e0]" aria-hidden>
+          <div className="absolute inset-y-0 w-px bg-ink/25" style={{ left: `${Math.min(98, timePct)}%` }} title={`行程進度 ${timePct}%`} />
+        </div>
+        <p className="text-center text-[9px] font-semibold text-ink-faint">│ 豎線 = 旅程時間進度 {timePct}%</p>
+      </div>
+
+      <ul className="mt-2 space-y-2">
+        {visibleRows.map((row) => {
+          const barW = Math.max(4, Math.round((row.spendPct / maxSpendPct) * 100));
+          const markerLeft = Math.min(98, Math.round((timePct / maxSpendPct) * 100));
+          const driftLabel =
+            row.driftRounded === 0
+              ? "對齊"
+              : row.driftRounded > 0
+                ? `超前 ${row.driftRounded}%`
+                : `落後 ${-row.driftRounded}%`;
+          const driftClass =
+            row.driftRounded > 5 ? "text-coral" : row.driftRounded < -4 ? "text-jade-deep" : "text-ink-faint";
+          const active = filterCategory === row.id;
+
+          return (
+            <li key={row.id}>
+              <button
+                type="button"
+                disabled={!canFilter}
+                onClick={() => canFilter && setFilterCategory(active ? "all" : row.id)}
+                className={`w-full rounded-xl px-2 py-1.5 text-left transition active:scale-[0.99] disabled:cursor-default ${
+                  active ? "bg-jade/15 ring-1 ring-jade/40" : "bg-white/70"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex min-w-0 items-center gap-1.5">
+                    <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: row.color }} />
+                    <p className="truncate text-xs font-bold text-ink">{row.label}</p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="text-[10px] font-bold text-ink-soft">{row.spendPctRounded}% 總支出</p>
+                    <p className={`text-[10px] font-semibold ${driftClass}`}>{driftLabel}</p>
+                  </div>
+                </div>
+                <div className="relative mt-1.5 h-2 overflow-hidden rounded-full bg-[#efe9e0]">
+                  <div className="h-full rounded-full" style={{ width: `${barW}%`, backgroundColor: row.color }} />
+                  <div
+                    className="absolute inset-y-0 w-0.5 bg-ink/40"
+                    style={{ left: `${markerLeft}%` }}
+                    aria-hidden
+                  />
+                </div>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+
+      {canFilter && (
+        <p className="mt-1 text-center text-[9px] font-semibold text-ink-faint">撳分類可篩選記帳清單</p>
+      )}
+
+      <p className={`mt-2 text-center text-[11px] font-semibold leading-snug ${insightClass}`}>{insight}</p>
+    </div>
+  );
+}
+
 export function SevenDayLoggingDots({ expenses }) {
   const todayId = toDateId(new Date());
   const days = useMemo(() => {

@@ -83,9 +83,10 @@
     "today-dual-currency",
     "rolling-3-vs-3-pace",
     "trip-spend-heatmap",
-    "trip-spend-concentration"
+    "trip-spend-concentration",
+    "category-pace-drift"
   ],
-  "updatedAt": "2026-11-17T19:05:49.424Z",
-  "lastFeatureId": "filtered-day-payer-chips",
-  "lastTitle": "篩選日付款人快篩"
+  "updatedAt": "2026-11-18T02:02:25.879Z",
+  "lastFeatureId": "category-pace-drift",
+  "lastTitle": "分類節奏漂移"
 }
