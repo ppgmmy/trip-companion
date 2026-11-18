@@ -955,16 +955,23 @@
     },
     {
       "date": "2026-11-18",
+      "id": "category-pace-drift",
+      "title": "分類節奏漂移",
+      "description": "對比各分類已用佔比同旅程時間進度，標出超前同落後類別，後段調整消費更有方向。"
+    },
+    {
+      "date": "2026-11-18",
       "id": "filtered-day-payer-chips",
       "title": "篩選日付款人快篩",
       "description": "日子快篩選中舊日時，顯示該日各付款人使費晶片，一撳即篩選該人支出，同行翻舊帳分帳更快。",
       "cycle": true
     },
     {
-      "date": "2026-11-18",
-      "id": "category-pace-drift",
-      "title": "分類節奏漂移",
-      "description": "對比各分類已用佔比同旅程時間進度，標出超前同落後類別，後段調整消費更有方向。"
+      "date": "2026-11-19",
+      "id": "filtered-day-seven-day-window",
+      "title": "篩選日 7 日走勢",
+      "description": "日子快篩選中舊日時，以該日為終點顯示近 7 日迷你走勢，對照前後消費節奏，回顧爆煲日更有上下文。",
+      "cycle": true
     }
   ]
 }

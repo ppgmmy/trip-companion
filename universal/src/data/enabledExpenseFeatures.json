@@ -86,7 +86,7 @@
     "trip-spend-concentration",
     "category-pace-drift"
   ],
-  "updatedAt": "2026-11-18T02:02:25.879Z",
-  "lastFeatureId": "category-pace-drift",
-  "lastTitle": "分類節奏漂移"
+  "updatedAt": "2026-11-18T18:47:03.675Z",
+  "lastFeatureId": "filtered-day-seven-day-window",
+  "lastTitle": "篩選日 7 日走勢"
 }
