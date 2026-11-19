@@ -978,6 +978,13 @@
       "id": "trip-budget-milestones",
       "title": "旅程預算里程碑",
       "description": "以 25／50／75／90% 關卡顯示預算進度，標示已達成關卡與距離下一關，回顧邊日跨線更有感。"
+    },
+    {
+      "date": "2026-11-20",
+      "id": "filtered-day-step-nav",
+      "title": "篩選日左右切換",
+      "description": "日子快篩選中某一時，一撳跳去前一日或後一日，唔使再搵柱狀圖，逐日翻帳更順手。",
+      "cycle": true
     }
   ]
 }
