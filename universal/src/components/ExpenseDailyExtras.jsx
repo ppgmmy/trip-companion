@@ -2430,6 +2430,161 @@ export function CategoryPaceDriftPanel({
   );
 }
 
+const TRIP_BUDGET_MILESTONES = [25, 50, 75, 90, 100];
+
+export function TripBudgetMilestonesPanel({
+  trip,
+  expenses,
+  totalSpent = 0,
+  budget = 0,
+  days = 1,
+  elapsedDays = 1,
+}) {
+  const stats = useMemo(() => {
+    if (budget <= 0) return null;
+
+    const budgetPct = Math.min(100, Math.round((totalSpent / budget) * 100));
+    const timePct = days > 0 ? Math.min(100, Math.round((elapsedDays / days) * 100)) : 0;
+
+    const byDate = {};
+    expenses.forEach((e) => {
+      if (!e.date || !expenseInTripOnDate(trip, e.date)) return;
+      const amt = Number(e.amount) || 0;
+      if (amt <= 0) return;
+      byDate[e.date] = (byDate[e.date] || 0) + amt;
+    });
+
+    const elapsed = elapsedTripDateIds(trip);
+    let cumulative = 0;
+    const crossDates = {};
+    for (const dateId of elapsed) {
+      cumulative += byDate[dateId] || 0;
+      const pct = (cumulative / budget) * 100;
+      for (const m of TRIP_BUDGET_MILESTONES) {
+        if (crossDates[m] == null && pct >= m) {
+          crossDates[m] = dateId;
+        }
+      }
+    }
+
+    const nextMilestone = TRIP_BUDGET_MILESTONES.find((m) => budgetPct < m) ?? null;
+    const lastPassed = [...TRIP_BUDGET_MILESTONES].reverse().find((m) => budgetPct >= m) ?? 0;
+    const toNextPct = nextMilestone != null ? Math.max(0, nextMilestone - budgetPct) : 0;
+    const toNextAmount = nextMilestone != null ? Math.max(0, (nextMilestone / 100) * budget - totalSpent) : 0;
+
+    const rows = TRIP_BUDGET_MILESTONES.map((m) => ({
+      pct: m,
+      reached: budgetPct >= m,
+      crossDate: crossDates[m] ?? null,
+      dayNum: crossDates[m] && trip.startDate ? tripDayNumber(trip.startDate, crossDates[m]) : null,
+    }));
+
+    return { budgetPct, timePct, nextMilestone, lastPassed, toNextPct, toNextAmount, rows };
+  }, [trip, expenses, totalSpent, budget, days, elapsedDays]);
+
+  if (!isFeatureEnabled("trip-budget-milestones")) return null;
+  if (!stats) return null;
+
+  const { budgetPct, timePct, nextMilestone, lastPassed, toNextPct, toNextAmount, rows } = stats;
+
+  let statusLabel = "進行中";
+  let statusClass = "bg-jade-soft text-jade-deep";
+  let insight = `已用 ${budgetPct}% 預算 · 行程 ${timePct}%`;
+  let insightClass = "text-ink-soft";
+
+  if (budgetPct >= 100) {
+    statusLabel = "已用盡";
+    statusClass = "bg-coral/15 text-coral";
+    insight = "預算已用盡 · 後段要靠應急款或收油";
+    insightClass = "text-coral";
+  } else if (budgetPct >= 90) {
+    statusLabel = "臨界";
+    statusClass = "bg-coral/15 text-coral";
+    insight = `距滿額仲要 ${formatMoney(toNextAmount, trip.targetCurrency)} · 宜收緊非必要支出`;
+    insightClass = "text-coral";
+  } else if (nextMilestone != null) {
+    insight = `距 ${nextMilestone}% 關仲差 ${toNextPct}%（約 ${formatMoney(toNextAmount, trip.targetCurrency)}）`;
+    if (budgetPct > timePct + 8) {
+      statusLabel = "快線";
+      statusClass = "bg-[#fef3c7] text-[#b45309]";
+      insight = `使費快過行程進度 · ${insight}`;
+      insightClass = "text-[#b45309]";
+    } else if (budgetPct < timePct - 12) {
+      statusLabel = "有餘裕";
+      insight = `預算落後行程 · ${insight}，後段有空間加碼體驗`;
+      insightClass = "text-jade-deep";
+    }
+  }
+
+  if (lastPassed >= 50 && lastPassed < 100 && budgetPct <= timePct + 5) {
+    const crossed = rows.find((r) => r.pct === lastPassed);
+    if (crossed?.dayNum) {
+      insight = `已過 ${lastPassed}% 關（第 ${crossed.dayNum} 日）· 節奏尚算穩定`;
+      insightClass = "text-jade-deep";
+    }
+  }
+
+  return (
+    <div className="rounded-2xl border border-amber-200/40 bg-gradient-to-br from-white via-[#fffbeb]/40 to-shell/30 px-3 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">旅程預算里程碑</p>
+          <p className="mt-0.5 text-[10px] font-semibold text-ink-faint">
+            {formatMoney(totalSpent, trip.targetCurrency)} / {formatMoney(budget, trip.targetCurrency)}
+          </p>
+        </div>
+        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${statusClass}`}>{statusLabel}</span>
+      </div>
+
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#efe9e0]">
+        <div
+          className={`h-full rounded-full transition-all duration-700 ${budgetPct >= 90 ? "bg-coral" : budgetPct >= 70 ? "bg-[#f59e0b]" : "bg-jade"}`}
+          style={{ width: `${Math.max(4, budgetPct)}%` }}
+        />
+      </div>
+      <div className="mt-1 flex justify-between text-[9px] font-semibold text-ink-faint">
+        <span>0%</span>
+        <span className="font-bold text-ink-soft">{budgetPct}%</span>
+        <span>100%</span>
+      </div>
+
+      <div className="mt-2.5 flex gap-1 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {rows.map((row) => {
+          const isNext = nextMilestone === row.pct;
+          const reached = row.reached;
+          const chipClass = reached
+            ? "border-jade/30 bg-jade-soft/80 text-jade-deep"
+            : isNext
+              ? "border-amber-300/70 bg-[#fffbeb] text-[#b45309] ring-1 ring-amber-200/50"
+              : "border-[#efe9e0] bg-white/70 text-ink-faint";
+          const sub =
+            reached && row.crossDate
+              ? row.dayNum
+                ? `D${row.dayNum}`
+                : formatShortDate(row.crossDate)
+              : isNext
+                ? `差 ${Math.max(0, row.pct - budgetPct)}%`
+                : "—";
+          return (
+            <div
+              key={row.pct}
+              className={`flex min-w-[3.1rem] shrink-0 flex-col items-center rounded-xl border px-1.5 py-1.5 ${chipClass}`}
+            >
+              <span className="text-[10px] font-black leading-none">
+                {reached ? "✓" : ""}
+                {row.pct}%
+              </span>
+              <span className="mt-0.5 text-[8px] font-semibold leading-tight opacity-90">{sub}</span>
+            </div>
+          );
+        })}
+      </div>
+
+      <p className={`mt-2 text-center text-[11px] font-semibold leading-snug ${insightClass}`}>{insight}</p>
+    </div>
+  );
+}
+
 export function SevenDayLoggingDots({ expenses }) {
   const todayId = toDateId(new Date());
   const days = useMemo(() => {

@@ -84,9 +84,10 @@
     "rolling-3-vs-3-pace",
     "trip-spend-heatmap",
     "trip-spend-concentration",
-    "category-pace-drift"
+    "category-pace-drift",
+    "trip-budget-milestones"
   ],
-  "updatedAt": "2026-11-18T18:47:03.675Z",
-  "lastFeatureId": "filtered-day-seven-day-window",
-  "lastTitle": "篩選日 7 日走勢"
+  "updatedAt": "2026-11-19T02:10:00.000Z",
+  "lastFeatureId": "trip-budget-milestones",
+  "lastTitle": "旅程預算里程碑"
 }

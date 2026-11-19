@@ -524,4 +524,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "對比各分類已用佔比同旅程時間進度，標出超前同落後類別，後段調整消費更有方向。",
     pillar: "analysis",
   },
+  {
+    id: "trip-budget-milestones",
+    title: "旅程預算里程碑",
+    description: "以 25／50／75／90% 關卡顯示預算進度，標示已達成關卡與距離下一關，回顧邊日跨線更有感。",
+    pillar: "stickiness",
+  },
 ];

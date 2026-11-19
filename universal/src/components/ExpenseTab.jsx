@@ -28,6 +28,7 @@ import {
   TripSpendHeatmapPanel,
   TripSpendConcentrationPanel,
   CategoryPaceDriftPanel,
+  TripBudgetMilestonesPanel,
   SevenDayLoggingDots,
   TodayEntryPacePanel,
   TodayYesterdayEntryComparePanel,
@@ -640,6 +641,15 @@ export default function ExpenseTab({
 
             <SpendingTimelineAlignPanel
               trip={trip}
+              totalSpent={totalSpent}
+              budget={budget}
+              days={days}
+              elapsedDays={elapsedDays}
+            />
+
+            <TripBudgetMilestonesPanel
+              trip={trip}
+              expenses={expenses}
               totalSpent={totalSpent}
               budget={budget}
               days={days}
