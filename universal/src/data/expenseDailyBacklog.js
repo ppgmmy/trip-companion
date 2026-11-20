@@ -530,4 +530,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "以 25／50／75／90% 關卡顯示預算進度，標示已達成關卡與距離下一關，回顧邊日跨線更有感。",
     pillar: "stickiness",
   },
+  {
+    id: "discretionary-headroom",
+    title: "購物緩衝參考",
+    description: "為旅程尾段預留理想日均後，顯示今刻尚可再使嘅金額，購物或加單前更容易掂量預算。",
+    pillar: "analysis",
+  },
 ];

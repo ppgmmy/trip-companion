@@ -29,6 +29,7 @@ import {
   TripSpendConcentrationPanel,
   CategoryPaceDriftPanel,
   TripBudgetMilestonesPanel,
+  DiscretionaryHeadroomPanel,
   SevenDayLoggingDots,
   TodayEntryPacePanel,
   TodayYesterdayEntryComparePanel,
@@ -887,6 +888,15 @@ export default function ExpenseTab({
               remainingDays={remainingDays}
               todaySpent={todaySpent}
               dailyAllowance={dailyAllowance}
+            />
+
+            <DiscretionaryHeadroomPanel
+              trip={trip}
+              budget={budget}
+              remaining={remaining}
+              remainingDays={remainingDays}
+              days={days}
+              todaySpent={todaySpent}
             />
 
             <LedgerDailyPulse

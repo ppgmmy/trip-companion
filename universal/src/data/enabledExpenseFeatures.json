@@ -85,9 +85,10 @@
     "trip-spend-heatmap",
     "trip-spend-concentration",
     "category-pace-drift",
-    "trip-budget-milestones"
+    "trip-budget-milestones",
+    "discretionary-headroom"
   ],
-  "updatedAt": "2026-11-19T18:56:55.599Z",
-  "lastFeatureId": "filtered-day-step-nav",
-  "lastTitle": "篩選日左右切換"
+  "updatedAt": "2026-11-20T02:10:00.000Z",
+  "lastFeatureId": "discretionary-headroom",
+  "lastTitle": "購物緩衝參考"
 }
