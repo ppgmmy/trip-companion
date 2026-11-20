@@ -981,16 +981,23 @@
     },
     {
       "date": "2026-11-20",
+      "id": "discretionary-headroom",
+      "title": "購物緩衝參考",
+      "description": "為旅程尾段預留理想日均後，顯示今刻尚可再使嘅金額，購物或加單前更容易掂量預算。"
+    },
+    {
+      "date": "2026-11-20",
       "id": "filtered-day-step-nav",
       "title": "篩選日左右切換",
       "description": "日子快篩選中某一時，一撳跳去前一日或後一日，唔使再搵柱狀圖，逐日翻帳更順手。",
       "cycle": true
     },
     {
-      "date": "2026-11-20",
-      "id": "discretionary-headroom",
-      "title": "購物緩衝參考",
-      "description": "為旅程尾段預留理想日均後，顯示今刻尚可再使嘅金額，購物或加單前更容易掂量預算。"
+      "date": "2026-11-21",
+      "id": "filtered-day-category-shift",
+      "title": "篩選日分類變化",
+      "description": "日子快篩選中舊日時，逐類對比該日與前一日使費，秒懂邊個分類升溫或收油，翻舊帳更有上下文。",
+      "cycle": true
     }
   ]
 }
