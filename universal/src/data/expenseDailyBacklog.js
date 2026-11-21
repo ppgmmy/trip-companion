@@ -536,4 +536,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "為旅程尾段預留理想日均後，顯示今刻尚可再使嘅金額，購物或加單前更容易掂量預算。",
     pillar: "analysis",
   },
+  {
+    id: "budget-win-tally",
+    title: "慳預算累積",
+    description: "累計旅程中守預算日子省下嘅緩衝金額，附達標日數同兌換「多一日」進度，睇住數字增長更有動力收油。",
+    pillar: "stickiness",
+  },
 ];

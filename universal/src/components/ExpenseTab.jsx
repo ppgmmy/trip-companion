@@ -30,6 +30,7 @@ import {
   CategoryPaceDriftPanel,
   TripBudgetMilestonesPanel,
   DiscretionaryHeadroomPanel,
+  BudgetWinTallyPanel,
   SevenDayLoggingDots,
   TodayEntryPacePanel,
   TodayYesterdayEntryComparePanel,
@@ -656,6 +657,8 @@ export default function ExpenseTab({
               days={days}
               elapsedDays={elapsedDays}
             />
+
+            <BudgetWinTallyPanel trip={trip} expenses={expenses} budget={budget} days={days} />
 
             {budget > 0 && (
               <div className="rounded-3xl bg-white p-4 shadow-[var(--shadow-soft)]">

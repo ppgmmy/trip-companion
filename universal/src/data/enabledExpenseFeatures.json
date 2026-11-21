@@ -86,9 +86,10 @@
     "trip-spend-concentration",
     "category-pace-drift",
     "trip-budget-milestones",
-    "discretionary-headroom"
+    "discretionary-headroom",
+    "budget-win-tally"
   ],
-  "updatedAt": "2026-11-20T18:30:24.991Z",
-  "lastFeatureId": "filtered-day-category-shift",
-  "lastTitle": "篩選日分類變化"
+  "updatedAt": "2026-11-21T02:15:00.000Z",
+  "lastFeatureId": "budget-win-tally",
+  "lastTitle": "慳預算累積"
 }

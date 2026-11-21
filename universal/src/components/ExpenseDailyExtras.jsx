@@ -5806,6 +5806,142 @@ export function DiscretionaryHeadroomPanel({
   );
 }
 
+function computeBudgetWinTally(expenses, trip, budget, days) {
+  if (budget <= 0 || !trip.startDate) return null;
+  const idealDaily = budget / Math.max(1, days);
+  const elapsed = elapsedTripDateIds(trip);
+  let winDays = 0;
+  let totalSaved = 0;
+  let bestDay = null;
+  const recentWins = [];
+
+  for (const dateId of elapsed) {
+    const status = underBudgetDayStatus(expenses, trip, budget, dateId);
+    if (!status || !status.under || status.spent <= 0) continue;
+    winDays += 1;
+    totalSaved += Math.max(0, status.delta);
+    if (status.delta > (bestDay?.delta ?? 0)) {
+      bestDay = { dateId, delta: status.delta, spent: status.spent };
+    }
+    recentWins.push({ dateId, delta: status.delta, spent: status.spent });
+  }
+
+  if (winDays === 0) return { winDays, totalSaved, idealDaily, extraDays: 0, nextDayProgress: 0, bestDay, recentWins: [] };
+
+  const extraDays = idealDaily > 0 ? totalSaved / idealDaily : 0;
+  const wholeDays = Math.floor(extraDays);
+  const remainder = idealDaily > 0 ? totalSaved - wholeDays * idealDaily : 0;
+  const nextDayProgress = idealDaily > 0 ? Math.min(100, Math.round((remainder / idealDaily) * 100)) : 0;
+
+  return {
+    winDays,
+    totalSaved,
+    idealDaily,
+    extraDays,
+    wholeDays,
+    nextDayProgress,
+    bestDay,
+    recentWins: recentWins.slice(-5).reverse(),
+  };
+}
+
+export function BudgetWinTallyPanel({ trip, expenses, budget, days }) {
+  const stats = useMemo(() => computeBudgetWinTally(expenses, trip, budget, days), [expenses, trip, budget, days]);
+
+  if (!isFeatureEnabled("budget-win-tally") || budget <= 0) return null;
+  if (!stats || stats.winDays === 0) {
+    const todayId = toDateId(new Date());
+    const inTrip = trip.startDate && todayId >= trip.startDate && todayId <= (trip.endDate || todayId);
+    if (!inTrip) return null;
+    return (
+      <div className="rounded-2xl border border-jade/15 bg-gradient-to-br from-white to-jade-soft/30 px-3 py-2.5 shadow-[var(--shadow-soft)]">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">慳預算累積</p>
+        <p className="mt-2 text-center text-[11px] font-semibold text-ink-soft">未有守預算達標日 · 今日使費喺可用額內就開始累積緩衝</p>
+      </div>
+    );
+  }
+
+  const { winDays, totalSaved, idealDaily, wholeDays, nextDayProgress, bestDay, recentWins } = stats;
+
+  let badge = "累積中";
+  let badgeClass = "bg-jade-soft text-jade-deep";
+  let insight = `累積 ${formatMoney(totalSaved, trip.targetCurrency)} 緩衝 · 等於約 ${wholeDays} 日理想日均`;
+  let insightClass = "text-jade-deep";
+
+  if (wholeDays >= 2) {
+    badge = "收油達人";
+    insight = `已慳到約 ${wholeDays} 個「多一日」購物空間 · 繼續守預算就愈滾愈大`;
+  } else if (winDays >= 4) {
+    badge = `${winDays} 日達標`;
+    insight = `連續守預算氛圍好好 · 再差少少就換到完整 1 日緩衝`;
+  } else if (nextDayProgress >= 70) {
+    badge = "快解鎖";
+    insight = `距換到下一個完整「多一日」仲差約 ${formatMoney(idealDaily - (totalSaved % idealDaily || idealDaily), trip.targetCurrency)}`;
+    insightClass = "text-[#b45309]";
+    badgeClass = "bg-[#fef3c7] text-[#b45309]";
+  }
+
+  if (bestDay) {
+    insight = `${insight} · 單日最多慳咗 ${formatMoney(bestDay.delta, trip.targetCurrency)}（${formatShortDate(bestDay.dateId)}）`;
+  }
+
+  return (
+    <div className="rounded-2xl border border-jade/20 bg-gradient-to-br from-white via-[#f0fdf4]/50 to-shell/20 px-3 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">慳預算累積</p>
+        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${badgeClass}`}>{badge}</span>
+      </div>
+
+      <div className="mt-2 flex items-end justify-between gap-3">
+        <div>
+          <p className="font-display text-3xl font-black leading-none text-jade-deep">
+            {formatMoney(totalSaved, trip.targetCurrency)}
+          </p>
+          <p className="mt-0.5 text-[10px] font-semibold text-ink-faint">守預算日子累積緩衝</p>
+        </div>
+        <div className="text-right">
+          <p className="font-display text-2xl font-black text-ink">{winDays}</p>
+          <p className="text-[10px] font-semibold text-ink-faint">達標日數</p>
+          {wholeDays > 0 && (
+            <p className="text-[9px] font-bold text-jade-deep">≈ {wholeDays} 日理想日均</p>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-2.5">
+        <div className="flex items-center justify-between text-[9px] font-semibold text-ink-faint">
+          <span>換「多一日」進度</span>
+          <span>{nextDayProgress}%</span>
+        </div>
+        <div className="mt-1 h-2 overflow-hidden rounded-full bg-jade/10">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-jade to-jade-deep transition-all duration-500"
+            style={{ width: `${Math.max(nextDayProgress > 0 ? 6 : 0, nextDayProgress)}%` }}
+          />
+        </div>
+        <p className="mt-0.5 text-center text-[9px] font-semibold text-ink-faint">
+          基準理想日均 {formatMoney(idealDaily, trip.targetCurrency)}
+        </p>
+      </div>
+
+      {recentWins.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {recentWins.map((w) => (
+            <span
+              key={w.dateId}
+              className="rounded-lg border border-jade/20 bg-white/80 px-2 py-0.5 text-[9px] font-semibold text-jade-deep"
+            >
+              {formatShortDate(w.dateId)} +{formatMoney(w.delta, trip.targetCurrency)}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <p className={`mt-2 text-center text-[11px] font-semibold leading-snug ${insightClass}`}>{insight}</p>
+    </div>
+  );
+}
+
 const EXPENSE_TIME_BUCKETS = [
   { id: "dawn", label: "清晨", emoji: "🌙", start: 0, end: 6 },
   { id: "morning", label: "上午", emoji: "☀️", start: 6, end: 11 },
