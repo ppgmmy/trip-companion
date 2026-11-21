@@ -997,6 +997,13 @@
       "id": "budget-win-tally",
       "title": "慳預算累積",
       "description": "累計旅程中守預算日子省下嘅緩衝金額，附達標日數同兌換「多一日」進度，睇住數字增長更有動力收油。"
+    },
+    {
+      "date": "2026-11-22",
+      "id": "filtered-day-category-shift",
+      "title": "篩選日分類變化",
+      "description": "日子快篩選中舊日時，逐類對比該日與前一日使費，秒懂邊個分類升溫或收油，翻舊帳更有上下文。",
+      "cycle": true
     }
   ]
 }
