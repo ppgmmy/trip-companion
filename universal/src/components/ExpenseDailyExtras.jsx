@@ -4492,6 +4492,158 @@ export function TodayPaceProjectionPanel({ trip, expenses, budget }) {
   );
 }
 
+export function MedianPaceForecastPanel({ trip, expenses, budget }) {
+  const todayId = toDateId(new Date());
+
+  const stats = useMemo(() => {
+    const startDate = trip.startDate;
+    const endDate = trip.endDate || todayId;
+    if (!startDate || budget <= 0) return null;
+    if (todayId < startDate || todayId > endDate) return null;
+
+    const elapsed = elapsedTripDateIds(trip);
+    const pastDays = elapsed.filter((d) => d < todayId);
+    const dailyPast = pastDays.map((d) => sumByDate(expenses, d));
+    const withSpend = dailyPast.filter((v) => v > 0);
+
+    let medianDaily = 0;
+    let basis = "median";
+    if (withSpend.length >= 2) {
+      medianDaily = median(withSpend);
+    } else if (withSpend.length === 1) {
+      medianDaily = withSpend[0];
+      basis = "single";
+    } else if (pastDays.length > 0) {
+      const totalPast = dailyPast.reduce((a, b) => a + b, 0);
+      medianDaily = totalPast / Math.max(1, pastDays.length);
+      basis = "avg";
+    } else {
+      medianDaily = sumByDate(expenses, todayId);
+      basis = "today";
+    }
+
+    if (medianDaily <= 0) return null;
+
+    const remainingTripDays = daysInclusive(todayId, endDate);
+    const daysAfterToday = Math.max(0, remainingTripDays - 1);
+    const totalSpent = expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+    const projectedTotal = totalSpent + medianDaily * daysAfterToday;
+    const vsBudget = budget - projectedTotal;
+    const pctOfBudget = budget > 0 ? (projectedTotal / budget) * 100 : 0;
+
+    const todaySum = sumByDate(expenses, todayId);
+    let todayProjected = null;
+    let paceDelta = null;
+    if (todaySum > 0 && daysAfterToday > 0) {
+      todayProjected = totalSpent + todaySum * daysAfterToday;
+      paceDelta = todayProjected - projectedTotal;
+    }
+
+    return {
+      medianDaily,
+      daysAfterToday,
+      projectedTotal,
+      vsBudget,
+      pctOfBudget,
+      todaySum,
+      todayProjected,
+      paceDelta,
+      sampleDays: withSpend.length >= 2 ? withSpend.length : pastDays.length,
+      basis,
+      remainingTripDays,
+    };
+  }, [expenses, trip, todayId, budget]);
+
+  if (!isFeatureEnabled("median-pace-forecast")) return null;
+  if (!stats) return null;
+
+  const {
+    medianDaily,
+    daysAfterToday,
+    projectedTotal,
+    vsBudget,
+    pctOfBudget,
+    todaySum,
+    paceDelta,
+    sampleDays,
+    basis,
+    remainingTripDays,
+  } = stats;
+
+  let insight = `跟典型一日節奏，旅程結束應該喺預算內`;
+  let insightClass = "text-jade-deep";
+  if (vsBudget < 0) {
+    insight =
+      daysAfterToday <= 0
+        ? `已超預算 ${formatMoney(-vsBudget, trip.targetCurrency)}`
+        : `若餘下 ${daysAfterToday} 日都跟中位節奏，仍會超預算 ${formatMoney(-vsBudget, trip.targetCurrency)}`;
+    insightClass = "text-coral";
+  } else if (pctOfBudget >= 95) {
+    insight = `預估會用晒 ${Math.round(pctOfBudget)}% 預算，尾段要收油`;
+    insightClass = "text-[#b45309]";
+  } else if (vsBudget > 0) {
+    insight = `預估仲剩 ${formatMoney(vsBudget, trip.targetCurrency)} 緩衝 · 節奏穩定`;
+    insightClass = "text-jade";
+  }
+
+  if (paceDelta != null && Math.abs(paceDelta) > medianDaily * 0.35) {
+    if (paceDelta > 0) {
+      insight = `${insight} · 若跟今日節奏會多使 ${formatMoney(paceDelta, trip.targetCurrency)}`;
+      insightClass = paceDelta > medianDaily ? "text-coral" : insightClass;
+    } else {
+      insight = `${insight} · 今日偏高，中位節奏比跟今日慳 ${formatMoney(-paceDelta, trip.targetCurrency)}`;
+    }
+  }
+
+  const basisLabel =
+    basis === "median"
+      ? `${sampleDays} 日中位`
+      : basis === "avg"
+        ? "已過日均"
+        : basis === "single"
+          ? "僅 1 日樣本"
+          : "今日參考";
+
+  const barPct = Math.min(100, Math.max(0, pctOfBudget));
+
+  return (
+    <div className="rounded-2xl border border-sky-200/60 bg-gradient-to-br from-[#f0f9ff]/90 to-white px-3 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">中位節奏預估</p>
+        <span className="rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-bold text-sky-800">
+          餘 {remainingTripDays > 1 ? daysAfterToday : 0} 日 × {formatMoney(medianDaily, trip.targetCurrency)}
+        </span>
+      </div>
+      <p className="mt-0.5 text-center text-[9px] font-semibold text-ink-faint">基準：{basisLabel}典型一日</p>
+      <div className="mt-2 flex items-end justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-semibold text-ink-faint">預估旅程總使費</p>
+          <p className="font-display text-2xl font-black text-ink">{formatMoney(projectedTotal, trip.targetCurrency)}</p>
+          <p className="mt-0.5 text-[10px] font-semibold text-ink-soft">預算 {formatMoney(budget, trip.targetCurrency)}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-[10px] font-semibold text-ink-faint">{vsBudget >= 0 ? "預估結餘" : "預估超支"}</p>
+          <p className={`font-display text-xl font-black ${vsBudget >= 0 ? "text-jade-deep" : "text-coral"}`}>
+            {formatMoney(Math.abs(vsBudget), trip.targetCurrency)}
+          </p>
+          {todaySum > 0 && daysAfterToday > 0 && (
+            <p className="mt-0.5 text-[9px] font-semibold text-ink-faint">
+              今日 {formatMoney(todaySum, trip.targetCurrency)}/日
+            </p>
+          )}
+        </div>
+      </div>
+      <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#efe9e0]">
+        <div
+          className={`h-full rounded-full transition-all ${pctOfBudget >= 100 ? "bg-coral" : pctOfBudget >= 90 ? "bg-[#f59e0b]" : "bg-sky-500"}`}
+          style={{ width: `${barPct}%` }}
+        />
+      </div>
+      <p className={`mt-2 text-center text-[11px] font-semibold leading-snug ${insightClass}`}>{insight}</p>
+    </div>
+  );
+}
+
 export function TodayCategoryChips({ trip, expenses, filterCategory, setFilterCategory }) {
   const todayId = toDateId(new Date());
 

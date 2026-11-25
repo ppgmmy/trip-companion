@@ -542,4 +542,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "累計旅程中守預算日子省下嘅緩衝金額，附達標日數同兌換「多一日」進度，睇住數字增長更有動力收油。",
     pillar: "stickiness",
   },
+  {
+    id: "median-pace-forecast",
+    title: "中位節奏預估",
+    description: "假設餘下旅程每日跟典型一日（中位日）使費，預估總支出同預算結餘；附同今日節奏預估對比，唔會被單日爆煲或零記帳誤導。",
+    pillar: "convenience",
+  },
 ];

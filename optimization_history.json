@@ -1021,10 +1021,9 @@
     },
     {
       "date": "2026-11-25",
-      "id": "logging-streak-milestone",
-      "title": "記帳里程碑進度",
-      "description": "顯示連續記帳距離 3／7／14 日等下一個里程碑仲差幾日，附進度條同今日守 streak 提示，養成習慣更有動力。",
-      "cycle": true
+      "id": "median-pace-forecast",
+      "title": "中位節奏預估",
+      "description": "假設餘下旅程每日跟典型一日（中位日）使費，預估總支出同預算結餘；附同今日節奏預估對比，唔會被單日爆煲或零記帳誤導。"
     }
   ]
 }

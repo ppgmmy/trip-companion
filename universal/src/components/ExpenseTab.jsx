@@ -38,6 +38,7 @@ import {
   TodayVsMedianDayPanel,
   TodayVsSevenDayAvgPanel,
   TodayPaceProjectionPanel,
+  MedianPaceForecastPanel,
   TodayBiggestEntryPanel,
   TodayBiggestTripRankPanel,
   WeekToDateTodaySharePanel,
@@ -968,6 +969,8 @@ export default function ExpenseTab({
             <WeekToDateSameSpanComparePanel trip={trip} expenses={expenses} />
 
             <TodayPaceProjectionPanel trip={trip} expenses={expenses} budget={budget} />
+
+            <MedianPaceForecastPanel trip={trip} expenses={expenses} budget={budget} />
 
             <TodayBiggestEntryPanel trip={trip} expenses={expenses} />
 
