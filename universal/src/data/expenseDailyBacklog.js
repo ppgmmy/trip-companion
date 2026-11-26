@@ -548,4 +548,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "假設餘下旅程每日跟典型一日（中位日）使費，預估總支出同預算結餘；附同今日節奏預估對比，唔會被單日爆煲或零記帳誤導。",
     pillar: "convenience",
   },
+  {
+    id: "over-budget-day-streak",
+    title: "連續超支日警示",
+    description: "由今日往回數連續幾日超過當日可用額，附近 7 日超支標記同累計多使金額，及早收油避免尾段預算爆炸。",
+    pillar: "analysis",
+  },
 ];

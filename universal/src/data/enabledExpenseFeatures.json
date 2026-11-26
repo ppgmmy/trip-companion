@@ -88,9 +88,10 @@
     "trip-budget-milestones",
     "discretionary-headroom",
     "budget-win-tally",
-    "median-pace-forecast"
+    "median-pace-forecast",
+    "over-budget-day-streak"
   ],
-  "updatedAt": "2026-11-25T19:52:44.606Z",
-  "lastFeatureId": "logging-streak-milestone",
-  "lastTitle": "記帳里程碑進度"
+  "updatedAt": "2026-11-26T02:15:00.000Z",
+  "lastFeatureId": "over-budget-day-streak",
+  "lastTitle": "連續超支日警示"
 }

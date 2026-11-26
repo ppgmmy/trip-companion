@@ -39,6 +39,7 @@ import {
   TodayVsSevenDayAvgPanel,
   TodayPaceProjectionPanel,
   MedianPaceForecastPanel,
+  OverBudgetDayStreakPanel,
   TodayBiggestEntryPanel,
   TodayBiggestTripRankPanel,
   WeekToDateTodaySharePanel,
@@ -661,6 +662,8 @@ export default function ExpenseTab({
 
             <BudgetWinTallyPanel trip={trip} expenses={expenses} budget={budget} days={days} />
 
+            <OverBudgetDayStreakPanel trip={trip} expenses={expenses} budget={budget} />
+
             {budget > 0 && (
               <div className="rounded-3xl bg-white p-4 shadow-[var(--shadow-soft)]">
                 <div className="flex items-center justify-between">
@@ -971,6 +974,8 @@ export default function ExpenseTab({
             <TodayPaceProjectionPanel trip={trip} expenses={expenses} budget={budget} />
 
             <MedianPaceForecastPanel trip={trip} expenses={expenses} budget={budget} />
+
+            <OverBudgetDayStreakPanel trip={trip} expenses={expenses} budget={budget} />
 
             <TodayBiggestEntryPanel trip={trip} expenses={expenses} />
 

@@ -129,6 +129,44 @@ function underBudgetStreak(expenses, trip, budget) {
   return streak;
 }
 
+function overBudgetStreak(expenses, trip, budget) {
+  if (budget <= 0) return 0;
+  const startDate = trip.startDate;
+  const endDate = trip.endDate || toDateId(new Date());
+  let cursor = toDateId(new Date());
+  if (cursor > endDate) cursor = endDate;
+  if (cursor < startDate) return 0;
+
+  let streak = 0;
+  while (cursor >= startDate) {
+    const status = underBudgetDayStatus(expenses, trip, budget, cursor);
+    if (!status) break;
+    if (status.under) break;
+    streak += 1;
+    cursor = shiftDateId(cursor, -1);
+  }
+  return streak;
+}
+
+function overBudgetExcessInStreak(expenses, trip, budget) {
+  if (budget <= 0) return 0;
+  const startDate = trip.startDate;
+  const endDate = trip.endDate || toDateId(new Date());
+  let cursor = toDateId(new Date());
+  if (cursor > endDate) cursor = endDate;
+  if (cursor < startDate) return 0;
+
+  let excess = 0;
+  while (cursor >= startDate) {
+    const status = underBudgetDayStatus(expenses, trip, budget, cursor);
+    if (!status) break;
+    if (status.under) break;
+    excess += Math.max(0, -status.delta);
+    cursor = shiftDateId(cursor, -1);
+  }
+  return excess;
+}
+
 /** 截至 endDateId（含）向後數連續幾日喺當日建議上限內 */
 function underBudgetStreakThrough(expenses, trip, budget, endDateId) {
   if (budget <= 0 || !endDateId) return 0;
@@ -1404,6 +1442,125 @@ function UnderBudgetStreakPanel({ trip, expenses, budget }) {
       )}
 
       <p className={`mt-3 text-center text-xs font-semibold ${insightClass}`}>{insight}</p>
+    </div>
+  );
+}
+
+export function OverBudgetDayStreakPanel({ trip, expenses, budget }) {
+  const todayId = toDateId(new Date());
+
+  const recentDays = useMemo(() => {
+    const days = [];
+    let cursor = todayId;
+    const startDate = trip.startDate;
+    const endDate = trip.endDate || todayId;
+    if (cursor > endDate) cursor = endDate;
+    for (let i = 0; i < 7 && cursor >= startDate; i += 1) {
+      const status = underBudgetDayStatus(expenses, trip, budget, cursor);
+      if (status) {
+        days.unshift({
+          ...status,
+          label: cursor === todayId ? "今日" : formatShortDate(cursor),
+        });
+      }
+      cursor = shiftDateId(cursor, -1);
+    }
+    return days;
+  }, [expenses, trip, budget, todayId]);
+
+  const streak = useMemo(() => overBudgetStreak(expenses, trip, budget), [expenses, trip, budget]);
+  const excessTotal = useMemo(() => overBudgetExcessInStreak(expenses, trip, budget), [expenses, trip, budget]);
+  const todayStatus = useMemo(
+    () => underBudgetDayStatus(expenses, trip, budget, todayId),
+    [expenses, trip, budget, todayId],
+  );
+
+  if (!isFeatureEnabled("over-budget-day-streak") || budget <= 0) return null;
+  if (streak <= 0) return null;
+
+  const startDate = trip.startDate;
+  const endDate = trip.endDate || todayId;
+  const inTrip = todayId >= startDate && todayId <= endDate;
+
+  let statusLabel = `${streak} 日連續`;
+  let statusClass = "bg-coral/15 text-coral";
+  let insight = `連續 ${streak} 日超過當日可用額，累計多使 ${formatMoney(excessTotal, trip.targetCurrency)}`;
+  let insightClass = "text-coral";
+
+  if (streak >= 3) {
+    statusLabel = "要收油";
+    insight = `${insight} · 再爆會愈嚟愈難守尾段預算`;
+    insightClass = "text-[#b45309]";
+  } else if (streak === 1 && todayStatus) {
+    insight = `今日超咗可用額 ${formatMoney(-todayStatus.delta, trip.targetCurrency)} · 聽日守返額就斷鏈`;
+  }
+
+  const tomorrowId = shiftDateId(todayId, 1);
+  const tomorrowAllowance =
+    inTrip && tomorrowId <= endDate ? dailyAllowanceForDate(expenses, trip, budget, tomorrowId) : null;
+
+  return (
+    <div className="rounded-2xl border border-coral/25 bg-gradient-to-br from-[#fff7ed]/90 to-white px-3 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">連續超支日</p>
+          <p className="mt-0.5 text-[10px] font-semibold text-ink-faint">每日使費 &gt; 當日可用額（剩餘預算 ÷ 剩餘日數）</p>
+        </div>
+        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${statusClass}`}>{statusLabel}</span>
+      </div>
+
+      <div className="mt-2 flex items-end justify-between gap-3">
+        <div className="flex items-baseline gap-1.5">
+          <p className="font-display text-4xl font-black text-coral">{streak}</p>
+          <p className="text-sm font-semibold text-ink-soft">日連續超額</p>
+        </div>
+        <div className="text-right">
+          <p className="text-[10px] font-semibold text-ink-faint">累計多使</p>
+          <p className="font-display text-xl font-black text-coral">{formatMoney(excessTotal, trip.targetCurrency)}</p>
+        </div>
+      </div>
+
+      {todayStatus && inTrip && !todayStatus.under && (
+        <div className="mt-2 rounded-xl bg-white/80 px-3 py-2">
+          <div className="flex items-baseline justify-between gap-2">
+            <p className="text-[11px] font-semibold text-ink-soft">今日上限 {formatMoney(todayStatus.allowance, trip.targetCurrency)}</p>
+            <p className="text-sm font-black text-coral">已使 {formatMoney(todayStatus.spent, trip.targetCurrency)}</p>
+          </div>
+          <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-[#efe9e0]">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-[#f59e0b] to-coral"
+              style={{
+                width: `${Math.min(100, Math.max(12, Math.round((todayStatus.spent / Math.max(todayStatus.allowance, 1)) * 100)))}%`,
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {tomorrowAllowance != null && tomorrowAllowance > 0 && (
+        <p className="mt-2 text-center text-[10px] font-semibold text-ink-soft">
+          聽日建議守喺 {formatMoney(tomorrowAllowance, trip.targetCurrency)} 內 · 可打斷超支鏈
+        </p>
+      )}
+
+      {recentDays.length > 0 && (
+        <div className="mt-2 flex gap-1">
+          {recentDays.map((day) => (
+            <div
+              key={day.dateId}
+              className={`min-w-0 flex-1 rounded-lg px-1 py-1.5 text-center ${day.under ? "bg-shell/80" : "bg-coral/15"}`}
+              title={`${day.label} · ${formatMoney(day.spent, trip.targetCurrency)} / ${formatMoney(day.allowance, trip.targetCurrency)}`}
+            >
+              <p className="text-[8px] font-bold uppercase tracking-wide text-ink-faint">{day.label.replace("今日", "今")}</p>
+              <p className={`text-[10px] font-black ${day.under ? "text-ink-faint" : "text-coral"}`}>
+                {day.under ? "·" : "!"}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <p className={`mt-2 text-center text-[11px] font-semibold leading-snug ${insightClass}`}>{insight}</p>
     </div>
   );
 }
@@ -8266,6 +8423,8 @@ export function ExpenseInsightCards({ trip, expenses, days, totalSpent, budget, 
       <WeekendWeekdayComparePanel trip={trip} expenses={expenses} />
 
       <UnderBudgetStreakPanel trip={trip} expenses={expenses} budget={budget} />
+
+      <OverBudgetDayStreakPanel trip={trip} expenses={expenses} budget={budget} />
 
       {showTrend && isFeatureEnabled("seven-day-sparkline") && (
         <div className="rounded-3xl bg-white/85 p-4 shadow-[var(--shadow-soft)]">
