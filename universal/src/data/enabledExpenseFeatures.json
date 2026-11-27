@@ -89,9 +89,10 @@
     "discretionary-headroom",
     "budget-win-tally",
     "median-pace-forecast",
-    "over-budget-day-streak"
+    "over-budget-day-streak",
+    "budget-recovery-route"
   ],
-  "updatedAt": "2026-11-26T19:30:48.537Z",
-  "lastFeatureId": "logging-streak-milestone",
-  "lastTitle": "記帳里程碑進度"
+  "updatedAt": "2026-11-27T02:10:00.000Z",
+  "lastFeatureId": "budget-recovery-route",
+  "lastTitle": "尾段追預算路線"
 }

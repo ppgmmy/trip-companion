@@ -40,6 +40,7 @@ import {
   TodayPaceProjectionPanel,
   MedianPaceForecastPanel,
   OverBudgetDayStreakPanel,
+  BudgetRecoveryRoutePanel,
   TodayBiggestEntryPanel,
   TodayBiggestTripRankPanel,
   WeekToDateTodaySharePanel,
@@ -664,6 +665,18 @@ export default function ExpenseTab({
 
             <OverBudgetDayStreakPanel trip={trip} expenses={expenses} budget={budget} />
 
+            <BudgetRecoveryRoutePanel
+              trip={trip}
+              expenses={expenses}
+              budget={budget}
+              totalSpent={totalSpent}
+              remaining={remaining}
+              remainingDays={remainingDays}
+              days={days}
+              elapsedDays={elapsedDays}
+              pace={pace}
+            />
+
             {budget > 0 && (
               <div className="rounded-3xl bg-white p-4 shadow-[var(--shadow-soft)]">
                 <div className="flex items-center justify-between">
@@ -897,6 +910,18 @@ export default function ExpenseTab({
               dailyAllowance={dailyAllowance}
             />
 
+            <BudgetRecoveryRoutePanel
+              trip={trip}
+              expenses={expenses}
+              budget={budget}
+              totalSpent={totalSpent}
+              remaining={remaining}
+              remainingDays={remainingDays}
+              days={days}
+              elapsedDays={elapsedDays}
+              pace={pace}
+            />
+
             <DiscretionaryHeadroomPanel
               trip={trip}
               budget={budget}
@@ -976,6 +1001,18 @@ export default function ExpenseTab({
             <MedianPaceForecastPanel trip={trip} expenses={expenses} budget={budget} />
 
             <OverBudgetDayStreakPanel trip={trip} expenses={expenses} budget={budget} />
+
+            <BudgetRecoveryRoutePanel
+              trip={trip}
+              expenses={expenses}
+              budget={budget}
+              totalSpent={totalSpent}
+              remaining={remaining}
+              remainingDays={remainingDays}
+              days={days}
+              elapsedDays={elapsedDays}
+              pace={pace}
+            />
 
             <TodayBiggestEntryPanel trip={trip} expenses={expenses} />
 

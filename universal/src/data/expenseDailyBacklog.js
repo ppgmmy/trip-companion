@@ -554,4 +554,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "由今日往回數連續幾日超過當日可用額，附近 7 日超支標記同累計多使金額，及早收油避免尾段預算爆炸。",
     pillar: "analysis",
   },
+  {
+    id: "budget-recovery-route",
+    title: "尾段追預算路線",
+    description: "當預計會超總預算或連續超日額時，對比而家日均、旅程理想日均同餘下每日必守上限，話你知之後每日要收幾多才守得住尾段預算。",
+    pillar: "convenience",
+  },
 ];

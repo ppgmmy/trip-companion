@@ -1565,6 +1565,144 @@ export function OverBudgetDayStreakPanel({ trip, expenses, budget }) {
   );
 }
 
+export function BudgetRecoveryRoutePanel({
+  trip,
+  expenses,
+  budget = 0,
+  totalSpent = 0,
+  remaining = 0,
+  remainingDays = 1,
+  days = 1,
+  elapsedDays = 1,
+  pace = 0,
+}) {
+  const todayId = toDateId(new Date());
+
+  const stats = useMemo(() => {
+    if (budget <= 0 || remainingDays <= 0 || days <= 0) return null;
+    const endDate = trip.endDate || todayId;
+    if (!trip.startDate || todayId < trip.startDate || todayId > endDate) return null;
+
+    const idealDaily = budget / days;
+    const recoveryDaily = Math.max(0, remaining) / remainingDays;
+    const projectedTotal = pace * days;
+    const streak = overBudgetStreak(expenses, trip, budget);
+
+    const aheadPace = totalSpent > idealDaily * Math.max(1, elapsedDays) + idealDaily * 0.02;
+    const willOvershoot = projectedTotal > budget;
+    const needsRecovery = willOvershoot || streak >= 1 || remaining < 0 || aheadPace;
+
+    if (!needsRecovery) return null;
+
+    const cutVsPace = pace > 0 ? pace - recoveryDaily : 0;
+    const cutVsIdeal = idealDaily - recoveryDaily;
+
+    return {
+      idealDaily,
+      recoveryDaily,
+      projectedTotal,
+      willOvershoot,
+      streak,
+      cutVsPace: Math.max(0, cutVsPace),
+      cutVsIdeal,
+      overshootAmt: Math.max(0, projectedTotal - budget),
+      remainingNegative: remaining < 0,
+    };
+  }, [budget, days, elapsedDays, expenses, pace, remaining, remainingDays, todayId, totalSpent, trip]);
+
+  if (!isFeatureEnabled("budget-recovery-route")) return null;
+  if (!stats) return null;
+
+  const { idealDaily, recoveryDaily, streak, cutVsPace, overshootAmt, remainingNegative, projectedTotal, willOvershoot } = stats;
+
+  const maxRef = Math.max(idealDaily, pace, recoveryDaily, 1);
+  const paceBar = Math.min(100, Math.round((pace / maxRef) * 100));
+  const idealBar = Math.min(100, Math.round((idealDaily / maxRef) * 100));
+  const recoveryBar = Math.min(100, Math.max(recoveryDaily > 0 ? 8 : 0, Math.round((recoveryDaily / maxRef) * 100)));
+
+  let badge = "收油";
+  let badgeClass = "bg-[#fef3c7] text-[#b45309]";
+  let barClass = "bg-gradient-to-r from-[#f59e0b] to-jade";
+  let insight = `餘下 ${remainingDays} 日每日守喺 ${formatMoney(recoveryDaily, trip.targetCurrency)} 就啱數`;
+  let insightClass = "text-[#b45309]";
+
+  if (remainingNegative) {
+    badge = "已超總預算";
+    badgeClass = "bg-coral/15 text-coral";
+    barClass = "bg-gradient-to-r from-coral to-[#dc2626]";
+    insight = `已超 ${formatMoney(-remaining, trip.targetCurrency)} · 餘下每日盡量貼近 ${formatMoney(recoveryDaily, trip.targetCurrency)} 減輕尾段壓力`;
+    insightClass = "text-coral";
+  } else if (cutVsPace > idealDaily * 0.08) {
+    badge = "要減速";
+    badgeClass = "bg-coral/15 text-coral";
+    barClass = "bg-gradient-to-r from-[#f97316] to-jade";
+    insight = `而家日均 ${formatMoney(pace, trip.targetCurrency)} · 之後每日要收 ${formatMoney(cutVsPace, trip.targetCurrency)} 先守得住`;
+    insightClass = "text-coral";
+  } else if (streak >= 2) {
+    insight = `連續 ${streak} 日超日額 · 跟路線每日 ${formatMoney(recoveryDaily, trip.targetCurrency)} 可扭轉預估`;
+    insightClass = "text-[#b45309]";
+  } else if (willOvershoot) {
+    insight = `照而家速度預計超 ${formatMoney(overshootAmt, trip.targetCurrency)} · 改跟路線上限可拉回`;
+    insightClass = "text-coral";
+  } else {
+    insightClass = "text-jade-deep";
+    badge = "微調";
+    badgeClass = "bg-jade-soft text-jade-deep";
+  }
+
+  return (
+    <div className="rounded-2xl border border-[#fde68a]/60 bg-gradient-to-br from-[#fffbeb] to-white px-3 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">尾段追預算路線</p>
+          <p className="mt-0.5 text-[10px] font-semibold text-ink-faint">餘下旅程每日必守上限（對比而家節奏）</p>
+        </div>
+        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${badgeClass}`}>{badge}</span>
+      </div>
+
+      <div className="mt-2 flex items-end justify-between gap-3">
+        <div>
+          <p className="font-display text-3xl font-black leading-none text-jade-deep">
+            {formatMoney(recoveryDaily, trip.targetCurrency)}
+          </p>
+          <p className="mt-0.5 text-[10px] font-semibold text-ink-faint">餘下 {remainingDays} 日 · 每日路線上限</p>
+        </div>
+        <div className="text-right">
+          <p className="text-[10px] font-semibold text-ink-faint">而家日均</p>
+          <p className="font-display text-lg font-bold text-ink-soft">{formatMoney(pace, trip.targetCurrency)}</p>
+          <p className="text-[9px] font-semibold text-ink-faint">理想 {formatMoney(idealDaily, trip.targetCurrency)}</p>
+        </div>
+      </div>
+
+      <div className="mt-2.5 space-y-1.5">
+        <div className="flex items-center gap-2">
+          <span className="w-14 shrink-0 text-[9px] font-bold text-ink-faint">而家</span>
+          <div className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-[#efe9e0]">
+            <div className="h-full rounded-full bg-ink/25" style={{ width: `${paceBar}%` }} />
+          </div>
+          <span className="w-12 shrink-0 text-right text-[9px] font-semibold text-ink-soft">{formatMoney(pace, trip.targetCurrency)}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="w-14 shrink-0 text-[9px] font-bold text-jade-deep">路線</span>
+          <div className="h-2.5 min-w-0 flex-1 overflow-hidden rounded-full bg-jade/10">
+            <div className={`h-full rounded-full transition-all ${barClass}`} style={{ width: `${recoveryBar}%` }} />
+          </div>
+          <span className="w-12 shrink-0 text-right text-[9px] font-bold text-jade-deep">{formatMoney(recoveryDaily, trip.targetCurrency)}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="w-14 shrink-0 text-[9px] font-bold text-ink-faint">理想</span>
+          <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-[#efe9e0]">
+            <div className="h-full rounded-full bg-jade/40" style={{ width: `${idealBar}%` }} />
+          </div>
+          <span className="w-12 shrink-0 text-right text-[9px] font-semibold text-ink-faint">{formatMoney(idealDaily, trip.targetCurrency)}</span>
+        </div>
+      </div>
+
+      <p className={`mt-2 text-center text-[11px] font-semibold leading-snug ${insightClass}`}>{insight}</p>
+    </div>
+  );
+}
+
 function Sparkline({ values, dateIds, formatValue, lastPointLabel = "今日", lastAxisLabel = "今", avgLabel = "7 日" }) {
   const [activeIdx, setActiveIdx] = useState(null);
   const max = Math.max(...values, 1);
@@ -8425,6 +8563,18 @@ export function ExpenseInsightCards({ trip, expenses, days, totalSpent, budget, 
       <UnderBudgetStreakPanel trip={trip} expenses={expenses} budget={budget} />
 
       <OverBudgetDayStreakPanel trip={trip} expenses={expenses} budget={budget} />
+
+      <BudgetRecoveryRoutePanel
+        trip={trip}
+        expenses={expenses}
+        budget={budget}
+        totalSpent={totalSpent}
+        remaining={budget - totalSpent}
+        remainingDays={remainingDays}
+        days={days}
+        elapsedDays={elapsedDays}
+        pace={elapsedDays > 0 ? totalSpent / elapsedDays : 0}
+      />
 
       {showTrend && isFeatureEnabled("seven-day-sparkline") && (
         <div className="rounded-3xl bg-white/85 p-4 shadow-[var(--shadow-soft)]">
