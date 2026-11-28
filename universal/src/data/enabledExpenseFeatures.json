@@ -93,7 +93,7 @@
     "budget-recovery-route",
     "today-weekday-trip-benchmark"
   ],
-  "updatedAt": "2026-11-28T02:10:00.000Z",
-  "lastFeatureId": "today-weekday-trip-benchmark",
-  "lastTitle": "今日 vs 同週幾平均"
+  "updatedAt": "2026-11-28T18:09:36.153Z",
+  "lastFeatureId": "today-vs-trip-pace",
+  "lastTitle": "今日 vs 至今日均"
 }

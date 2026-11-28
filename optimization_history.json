@@ -1046,16 +1046,23 @@
     },
     {
       "date": "2026-11-28",
+      "id": "today-weekday-trip-benchmark",
+      "title": "今日 vs 同週幾平均",
+      "description": "將今日使費對照旅程中其他同一星期幾嘅平均，週末或固定購物日係咪又使多咗，一眼知今日節奏係咪典型。"
+    },
+    {
+      "date": "2026-11-28",
       "id": "today-yesterday-entry-compare",
       "title": "今日 vs 昨日記帳筆數",
       "description": "對比兩日記帳筆數同平均每筆使費，秒懂係細碎多筆定少筆大額嘅變化，唔使只靠總額猜。",
       "cycle": true
     },
     {
-      "date": "2026-11-28",
-      "id": "today-weekday-trip-benchmark",
-      "title": "今日 vs 同週幾平均",
-      "description": "將今日使費對照旅程中其他同一星期幾嘅平均，週末或固定購物日係咪又使多咗，一眼知今日節奏係咪典型。"
+      "date": "2026-11-29",
+      "id": "today-vs-trip-pace",
+      "title": "今日 vs 至今日均",
+      "description": "對比今日使費同旅程至今嘅日均，一眼知今日快定慢過整趟節奏，出門前更易收油。",
+      "cycle": true
     }
   ]
 }
