@@ -90,9 +90,10 @@
     "budget-win-tally",
     "median-pace-forecast",
     "over-budget-day-streak",
-    "budget-recovery-route"
+    "budget-recovery-route",
+    "today-weekday-trip-benchmark"
   ],
-  "updatedAt": "2026-11-27T19:25:46.003Z",
-  "lastFeatureId": "today-yesterday-entry-compare",
-  "lastTitle": "今日 vs 昨日記帳筆數"
+  "updatedAt": "2026-11-28T02:10:00.000Z",
+  "lastFeatureId": "today-weekday-trip-benchmark",
+  "lastTitle": "今日 vs 同週幾平均"
 }

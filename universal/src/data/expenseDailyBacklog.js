@@ -560,4 +560,10 @@ export const EXPENSE_DAILY_BACKLOG = [
     description: "當預計會超總預算或連續超日額時，對比而家日均、旅程理想日均同餘下每日必守上限，話你知之後每日要收幾多才守得住尾段預算。",
     pillar: "convenience",
   },
+  {
+    id: "today-weekday-trip-benchmark",
+    title: "今日 vs 同週幾平均",
+    description: "將今日使費對照旅程中其他同一星期幾嘅平均，週末或固定購物日係咪又使多咗，一眼知今日節奏係咪典型。",
+    pillar: "analysis",
+  },
 ];

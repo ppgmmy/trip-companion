@@ -8159,6 +8159,152 @@ export function FilteredDayWeekdayBenchmarkPanel({ trip, expenses, filterDate })
   );
 }
 
+export function TodayWeekdayTripBenchmarkPanel({ trip, expenses }) {
+  const todayId = toDateId(new Date());
+
+  const stats = useMemo(() => {
+    const tripStart = trip.startDate;
+    const tripEnd = trip.endDate || todayId;
+    if (!tripStart || todayId < tripStart || todayId > tripEnd) return null;
+
+    const targetWd = weekdayIndex(todayId);
+    const peerDates = elapsedTripDateIds(trip).filter((d) => d !== todayId && weekdayIndex(d) === targetWd);
+    if (peerDates.length === 0) return null;
+
+    const todaySpent = sumByDate(expenses, todayId);
+    const peerTotals = peerDates.map((d) => sumByDate(expenses, d));
+    const peerSum = peerTotals.reduce((s, v) => s + v, 0);
+    const peerAvg = peerSum / peerDates.length;
+    const delta = todaySpent - peerAvg;
+    let pctChange = null;
+    if (peerAvg > 0) {
+      pctChange = Math.round((delta / peerAvg) * 100);
+    }
+
+    const loggedPeerCount = peerTotals.filter((v) => v > 0).length;
+    const todayCount = expenses.filter((e) => e.date === todayId).length;
+    const peerSamples = peerDates
+      .map((dateId, i) => ({ dateId, value: peerTotals[i] ?? 0 }))
+      .sort((a, b) => a.dateId.localeCompare(b.dateId));
+
+    return {
+      todaySpent,
+      peerAvg,
+      delta,
+      pctChange,
+      peerCount: peerDates.length,
+      loggedPeerCount,
+      todayCount,
+      weekday: weekdayLabel(todayId),
+      peerSamples,
+    };
+  }, [expenses, todayId, trip]);
+
+  if (!isFeatureEnabled("today-weekday-trip-benchmark")) return null;
+  if (!stats) return null;
+
+  const { todaySpent, peerAvg, delta, pctChange, peerCount, loggedPeerCount, todayCount, weekday, peerSamples } =
+    stats;
+
+  const maxBar = Math.max(todaySpent, peerAvg, 1);
+  const barPct = (v) => Math.max(6, Math.round((v / maxBar) * 100));
+
+  let insight = `週${weekday}使費接近旅程其他週${weekday}平均`;
+  let insightClass = "text-ink-soft";
+  if (todaySpent === 0 && peerAvg === 0) {
+    insight = `其他 ${peerCount} 個週${weekday}都未有記帳，今日可開始對照`;
+    insightClass = "text-ink-faint";
+  } else if (peerAvg === 0 && todaySpent > 0) {
+    insight = `其他 ${peerCount} 個週${weekday}未記帳，今日係第一個有支出嘅同週幾`;
+    insightClass = "text-ink-soft";
+  } else if (delta > 0 && pctChange != null && pctChange >= 35) {
+    insight = `高過其他週${weekday}平均 ${formatMoney(delta, trip.targetCurrency)}（+${pctChange}%），今日偏高`;
+    insightClass = "text-coral";
+  } else if (delta > 0) {
+    insight = `多過其他週${weekday}平均 ${formatMoney(delta, trip.targetCurrency)}`;
+    insightClass = "text-[#b45309]";
+  } else if (delta < 0 && pctChange != null && pctChange <= -25) {
+    insight = `慳咗 ${formatMoney(-delta, trip.targetCurrency)}（${pctChange}%），低過典型週${weekday}`;
+    insightClass = "text-jade-deep";
+  } else if (delta < 0) {
+    insight = `少過其他週${weekday}平均 ${formatMoney(-delta, trip.targetCurrency)}`;
+    insightClass = "text-jade";
+  }
+
+  return (
+    <div className="rounded-2xl border border-[#dbeafe]/80 bg-gradient-to-br from-white to-[#eff6ff]/90 px-3 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="mb-2 flex items-baseline justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">今日 vs 同週{weekday}平均</p>
+        <p className="text-[11px] font-bold text-jade-deep">
+          今日
+          {todayCount > 0 ? ` · ${todayCount} 筆` : ""}
+        </p>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <p className="text-[10px] font-semibold text-ink-faint">
+            其他 {peerCount} 個週{weekday}日均
+            {loggedPeerCount > 0 && loggedPeerCount < peerCount
+              ? `（${loggedPeerCount} 日有記帳）`
+              : ""}
+          </p>
+          <p className="font-display text-lg font-black text-ink">{formatMoney(peerAvg, trip.targetCurrency)}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-[10px] font-semibold text-jade-deep">今日</p>
+          <p className="font-display text-lg font-black text-ink">{formatMoney(todaySpent, trip.targetCurrency)}</p>
+          <p
+            className={`text-[11px] font-bold ${
+              delta > 0 ? "text-coral" : delta < 0 ? "text-jade" : "text-ink-faint"
+            }`}
+          >
+            {delta === 0
+              ? "持平"
+              : delta > 0
+                ? `↑ ${formatMoney(delta, trip.targetCurrency)}`
+                : `↓ ${formatMoney(-delta, trip.targetCurrency)}`}
+            {pctChange != null && delta !== 0 ? ` · ${pctChange > 0 ? "+" : ""}${pctChange}%` : ""}
+          </p>
+        </div>
+      </div>
+      <div className="mt-2.5 space-y-1.5">
+        <div className="flex items-center gap-2">
+          <span className="w-16 shrink-0 truncate text-[9px] font-semibold text-ink-faint">週{weekday}平均</span>
+          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#efe9e0]">
+            <div className="h-full rounded-full bg-ink-faint/35" style={{ width: `${barPct(peerAvg)}%` }} />
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="w-16 shrink-0 truncate text-[9px] font-semibold text-jade-deep">今日</span>
+          <div className="h-2 flex-1 overflow-hidden rounded-full bg-[#efe9e0]">
+            <div
+              className={`h-full rounded-full ${delta > 0 ? "bg-coral/85" : delta < 0 ? "bg-jade" : "bg-jade/75"}`}
+              style={{ width: `${barPct(todaySpent)}%` }}
+            />
+          </div>
+        </div>
+      </div>
+      {peerSamples.length > 0 && loggedPeerCount > 0 && (
+        <div className="mt-2.5 flex flex-wrap gap-1">
+          {peerSamples.map((sample) => (
+            <span
+              key={sample.dateId}
+              className={`rounded-lg px-1.5 py-0.5 text-[9px] font-semibold ${
+                sample.value > 0 ? "bg-white/90 text-ink-soft" : "bg-shell/70 text-ink-faint"
+              }`}
+              title={`${formatShortDate(sample.dateId)} · ${formatMoney(sample.value, trip.targetCurrency)}`}
+            >
+              {formatShortDate(sample.dateId)}
+              {sample.value > 0 ? ` ${formatMoney(sample.value, trip.targetCurrency)}` : " ·"}
+            </span>
+          ))}
+        </div>
+      )}
+      <p className={`mt-2 text-center text-[11px] font-semibold leading-snug ${insightClass}`}>{insight}</p>
+    </div>
+  );
+}
+
 export function FilteredDaySevenDayWindowPanel({ trip, expenses, filterDate }) {
   const todayId = toDateId(new Date());
   const dayId = filterDate !== "all" && filterDate ? filterDate : null;

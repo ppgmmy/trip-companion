@@ -37,6 +37,7 @@ import {
   TodayVsTripPacePanel,
   TodayVsMedianDayPanel,
   TodayVsSevenDayAvgPanel,
+  TodayWeekdayTripBenchmarkPanel,
   TodayPaceProjectionPanel,
   MedianPaceForecastPanel,
   OverBudgetDayStreakPanel,
@@ -851,6 +852,9 @@ export default function ExpenseTab({
                 <WeekendWeekdayComparePanel trip={trip} expenses={expenses} />
               </div>
               <div className="mt-4">
+                <TodayWeekdayTripBenchmarkPanel trip={trip} expenses={expenses} />
+              </div>
+              <div className="mt-4">
                 <WeekToDateTodaySharePanel trip={trip} expenses={expenses} />
               </div>
               <div className="mt-4">
@@ -989,6 +993,8 @@ export default function ExpenseTab({
             <TodayVsMedianDayPanel trip={trip} expenses={expenses} />
 
             <TodayVsSevenDayAvgPanel trip={trip} expenses={expenses} />
+
+            <TodayWeekdayTripBenchmarkPanel trip={trip} expenses={expenses} />
 
             <WeekendWeekdayComparePanel trip={trip} expenses={expenses} />
 
